@@ -1,0 +1,28 @@
+let t_field = [obj
+     :scar_type = "t_field"
+
+     :object   = :i_expression
+     :field = @main.t_token
+]
+
+fn field_independent?(field, independent_consts)
+     field:object.independent?(independent_consts)
+
+fn analyze_field(field, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     field:object.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+fn field_to_operand(field, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let [box object_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          field:object.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, true, true)
+
+     let raw_field_tkn     = str_to_tkn(field:field:text.drop(1))
+     let field_tkn_operand = comptime_token(raw_field_tkn, field:field)
+
+     let code = new (object_operand:code):text => _ ++ field:field:text
+
+     if object_operand.maybe_has_type?([set "obj", "null"])
+          ir__get_field_call(object_operand, field_tkn_operand, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else if object_operand.has_type?("holder")
+          ir__partial_application("get_obj_field__partial_version", [array object_operand, field_tkn_operand], code, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     else error__invalid_type(object_operand:code, [set "obj", "null"], object_operand:possible_types)
+}

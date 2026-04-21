@@ -1,0 +1,13 @@
+fn ir__core_fn_zip_n(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arrays, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+     let [box func, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, true, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arrays:code:text ++ ", " ++ func:code:text ++ ")")
+
+     arrays.maybe_has_type!("box")
+     func.maybe_has_type!(@main.fn_types)
+
+     ir__fn_call("McoreFNzip_n", [array arrays, func], code, @main.common_types__error, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

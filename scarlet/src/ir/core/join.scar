@@ -1,0 +1,24 @@
+fn ir__core_fn_join(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box parts, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box separator, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ parts:code:text ++ ", " ++ separator:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+     parts.maybe_has_type!([set "array", "table", "set", "obj"])
+     separator.maybe_has_type!(valid_types)
+
+     if separator:comptime_val:type === "obj" && separator:comptime_val:value[:_][:core_join].null?()
+          error__invalid_type(separator:code, ".core_join", "obj")
+     else null
+
+     ir__fn_call(
+          "McoreFNjoin", [array parts, separator], code
+          if separator:possible_types.null?()
+               valid_types.append("error")
+          else separator:possible_types.filter(_.in?(valid_types)).append("error").prepare_types_for_cmp()
+          exp_data, ir, final_data, dependencies, src_gconsts, is_last
+     )
+}

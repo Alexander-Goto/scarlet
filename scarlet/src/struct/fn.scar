@@ -1,0 +1,179 @@
+let t_src_fn = [obj
+     :scar_type = "t_src_fn"
+
+     :name        = @main.t_token
+     :params      = [array] # [array @t_token{,16}]
+     :body        = null    # (@i_expression|null) # null - if external
+     :attributes  = [table] # [table attribute_id:@string = @i_attribute]
+     :doc_comment = ""
+]
+
+let t_final_fn = [obj
+     :scar_type = "t_final_fn"
+
+     :ir_name      = ""
+     :params       = [array] # [array @string*]
+     :ir           = ""
+     :attributes   = [table] # [table attribute_id:@string = @i_final_attribute|:no_final_data]
+     :dependencies = @main.t_dependencies
+     :doc_comment  = ""
+]
+
+fn prepare_fn_to_final(func, final_data) {
+     let ir_name = "M" ++ @main.compiled_module_name ++ "FN" ++ suffix__scar_to_ir(func:name:text)
+
+     let final_data = if @main.compiled_module_name == "main" || not "export".key_of?(func:attributes)
+          new (final_data):always_use_fns[ir_name] <= @main.compiled_module_name ++ "." ++ func:name:text
+     else final_data
+
+     new (final_data):fns[func:name:text][@main.compiled_module_name] <= new (@main.t_final_fn) {
+          :ir_name     <= ir_name
+          :params      <= func:params.foldl([array].init(func:params.len()), fn (params, param) params.append(param:text))
+          :attributes  <= func:attributes.map(attribute_to_final(_))
+          :doc_comment <= func:doc_comment
+     }
+}
+
+fn fn_to_final(func, final_data) {
+     if "external".key_of?(func:attributes)
+          final_data
+     else {
+          let [box name_ids, def_ids] = func:params.foldl([box [table], [set]], fn (state, param)
+               if param:text == "_"
+                    state
+               else {
+                    let [box name_ids, def_ids] = state
+
+                    let param_id = param.get_token_id()
+                    [box new (name_ids)[param:text] <= param_id, def_ids.append(param_id)]
+               }
+          )
+
+          let [box last_use_info, lambdas_data, def_ids]   = func:body.analyze(@main.t_last_use_info, @main.t_lambdas_data, [set], name_ids, def_ids)
+          let [box last_use_ids, contexts, unused_def_ids] = last_use_info.foldl_kv([box [set], [table], def_ids], fn (state, def_id, use_id_and_contexts) {
+               let [box last_use_ids, contexts, unused_def_ids] = state
+
+               let [box last_use_ids, contexts] = use_id_and_contexts.foldl_kv([box last_use_ids, contexts], fn (state, last_use_id, last_use_contexts) {
+                    let [box last_use_ids, contexts] = state
+                    [box
+                         last_use_ids.append(last_use_id)
+                         last_use_contexts.foldl(contexts, fn (contexts, context) new (contexts)[context] => fn (context_def_ids) (context_def_ids <? [set]).append(def_id))
+                    ]
+               })
+
+               [box last_use_ids, contexts, unused_def_ids.remove(def_id)]
+          })
+
+          let [box named_consts, name_ids, ir] = func:params.foldl_kv([box [table], [table], ""], fn (state, idx, param) {
+               let [box named_consts, name_ids, ir] = state
+
+               let [box fn_arg, ir] = ir__fn_arg(idx, param, ir)
+
+               if param:text == "_"
+                    [box named_consts, name_ids, ir__raw_ref_cnt__dec(fn_arg:ir, ir)]
+               else {
+                    let param_id = param.get_token_id()
+                    if param_id.in?(unused_def_ids) {
+                         warning__constant_not_used(param)
+                         [box named_consts, name_ids, ir__raw_ref_cnt__dec(fn_arg:ir, ir)]
+                    } else [box
+                         new (named_consts)[param:text] <= new (@main.t_named_const) {
+                              :name_id <= param_id
+                              :operand <= fn_arg
+                         }
+
+                         new (name_ids)[param_id] <= param:text
+                         ir
+                    ]
+               }
+          })
+
+          let owner_name                                          = "function - " ++ @main.compiled_module_name ++ "." ++ func:name:text
+          let [box owner_name_ir_const, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ owner_name ++ "\";\n", final_data, @main.t_dependencies)
+
+          let exp_data = new (@main.t_exp_data) {
+               :owner_id            <= "M" ++ @main.compiled_module_name ++ "FN" ++ suffix__scar_to_ir(func:name:text)
+               :owner_name_ir_const <= owner_name_ir_const
+               :named_consts        <= named_consts
+               :name_ids            <= name_ids
+          }
+
+          let ir = ir ++ "call_stack__push(thrd_data," ++ owner_name_ir_const ++ ");\n"
+
+          let [box _, _, ir, final_data, dependencies] = func:body.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, [table], true, false, false, true)
+          new (final_data):fns[func:name:text][@main.compiled_module_name] => fn (final_fn) new (final_fn) {
+               :ir           <= ir
+               :dependencies <= dependencies
+          }
+     }
+}
+
+fn suffix__scar_to_ir(name) {
+     let suffix_idx = name.foldr_kv(0, fn (_, idx, char) break(not char.in?("?!"), idx + 1))
+     switch name.drop(suffix_idx)
+     case "?":
+          new (name)[name.len() - 1] <= 'B'
+     case "!":
+          new (name)[name.len() - 1] <= 'A'
+     case "!!!":
+          copy(name, name.len() - 3, "AAA")
+     case "":
+          name
+     default: unreachable()
+}
+
+fn get_signature(func) {
+     let [box attributes, prefix_attributes, is_static] = func:attributes.foldl_kv([box [array], "", true], fn (state, attribute_name, _) {
+          let [box attributes, prefix_attributes, is_static] = state
+
+          switch attribute_name
+          case "hot":
+               [box attributes.append("gnu::hot"), prefix_attributes, is_static]
+          case "cold":
+               [box attributes.append("gnu::cold"), prefix_attributes, is_static]
+          case "noinline":
+               [box attributes.append("clang::noinline"), prefix_attributes, is_static]
+          case "external":
+               [box attributes, prefix_attributes ++ "extern ", false]
+          case "ir_inline":
+               [box attributes, prefix_attributes ++ "inline ", is_static]
+          case "export":
+               [box attributes, prefix_attributes, is_static]
+          default:
+               unreachable()
+     })
+
+     (if attributes.empty?(); "" else "[[" ++ attributes.join(",") ++ "]]\n") ++
+          (if is_static; "static " else "") ++ prefix_attributes ++ "t_any " ++ func:ir_name ++ "(t_thrd_data*const thrd_data,const t_any*const args)"
+}
+
+fn serialize_fn(func, bytes) {
+     let bytes = func:ir_name.serialize(bytes)
+     let bytes = func:params.serialize(bytes)
+     let bytes = func:ir.serialize(bytes)
+     let bytes = func:attributes.serialize(bytes)
+     let bytes = func:dependencies.serialize(bytes)
+     func:doc_comment.serialize(bytes)
+}
+
+fn deserialize_fn(bytes) {
+     let [box ir_name, bytes]      = deserialize(bytes)
+     let [box params, bytes]       = deserialize(bytes)
+     let [box ir, bytes]           = deserialize(bytes)
+     let [box attributes, bytes]   = deserialize(bytes)
+     let [box dependencies, bytes] = deserialize(bytes)
+     let [box doc_comment, bytes]  = deserialize(bytes)
+
+     [box
+          new (@main.t_final_fn) {
+               :ir_name      <= ir_name
+               :params       <= params
+               :ir           <= ir
+               :attributes   <= attributes
+               :dependencies <= dependencies
+               :doc_comment  <= doc_comment
+          }
+
+          bytes
+     ]
+}

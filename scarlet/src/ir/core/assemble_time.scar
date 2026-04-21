@@ -1,0 +1,51 @@
+fn ir__core_fn_assemble_time(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box args, state] = exp:args.map_with_state([box exp_data, ir, final_data, dependencies, src_gconsts], fn (state, arg) {
+          let [box exp_data, ir, final_data, dependencies, src_gconsts] = state
+
+          let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+               arg.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+          [box [box exp_data, ir, final_data, dependencies, src_gconsts], arg]
+     })
+
+     let [box exp_data, ir, final_data, dependencies, src_gconsts] = state
+
+     args.foldl(null, fn (_, arg) arg.maybe_has_type!("int"))
+     let all_ints     = args.all(true, _.has_type?("int"))
+     let all_comptime = not args.any(true, fn (arg) arg:comptime_val.null?())
+
+     let [array timezone, year, month, day, hour, minute, second] = args
+
+     let code = new (exp:name):text => _ ++ (
+          "(" ++ timezone:code:text ++ ", " ++
+          year:code:text ++ ", " ++ month:code:text ++ ", " ++ day:code:text ++ ", " ++
+          hour:code:text ++ ", " ++ minute:code:text ++ ", " ++ second:code:text ++ ")"
+     )
+
+     if not (timezone:comptime_val.null?() || timezone:comptime_val:value.in_range?(-86400, 86401))
+          error__out_of_bounds(timezone:code)
+     else null
+
+     if not all_comptime
+          ir__fn_call("McoreFNassemble_time", args, code, if all_ints && not timezone:comptime_val.null?(); [set "null", "time"] else [set "null", "time", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else {
+          let value   = assemble_time(timezone:comptime_val:value, year:comptime_val:value, month:comptime_val:value, day:comptime_val:value, hour:comptime_val:value, minute:comptime_val:value, second:comptime_val:value)
+          let operand = if value.null?()
+               comptime_null(code)
+          else new (timezone) {
+               :ir           <= null
+               :code         <= code
+               :comptime_val <= new (@main.t_comptime_val) {
+                    :type  <= "time"
+                    :value <= value
+               }
+               :possible_types <= [set "time"]
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

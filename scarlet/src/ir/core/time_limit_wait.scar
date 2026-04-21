@@ -1,0 +1,17 @@
+fn ir__core_fn_time_limit_wait(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box thread, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+     let [box nano_sec, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ thread:code:text ++ ", " ++ nano_sec:code:text ++ ")")
+
+     thread.maybe_has_type!("thread")
+     if nano_sec:comptime_val:type === "int"
+          if nano_sec:comptime_val:value < 0
+               error__out_of_bounds(nano_sec:code)
+          else null
+     else nano_sec.maybe_has_type!("int")
+
+     ir__fn_call("McoreFNtime_limit_wait", [array thread, nano_sec], code, [set "box", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

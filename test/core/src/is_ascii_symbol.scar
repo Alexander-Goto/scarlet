@@ -1,0 +1,93 @@
+let char__ascii_symbol = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_symbol? = fn (char) char:value.ascii_symbol?()
+     ]
+]
+
+fn to_char__ascii_symbol?(arg) new (@main.char__ascii_symbol):value <= arg
+
+fn to_custom_char__ascii_symbol?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_symbol? = fn (char) char.custom__get_data().ascii_symbol?()
+     ]
+)
+
+let broken_char__ascii_symbol = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_symbol? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_char__ascii_symbol?(arg) new (@main.broken_char__ascii_symbol):value <= arg
+
+fn to_broken_custom_char__ascii_symbol?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_symbol? = fn (_) heap_string()
+     ]
+)
+
+let error_char__ascii_symbol = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_symbol? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__ascii_symbol?(arg) new (@main.error_char__ascii_symbol):value <= arg
+
+fn to_error_custom_char__ascii_symbol?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_symbol? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__ascii_symbol?() {
+     test(not '\000001'.ascii_symbol?())
+     test(not '\000008'.ascii_symbol?())
+     test(not '\00000a'.ascii_symbol?())
+     test(not '\00001f'.ascii_symbol?())
+     test(not '\00007f'.ascii_symbol?())
+     test(not '\000009'.ascii_symbol?())
+     test(not '\t'.ascii_symbol?())
+     test(not '\000020'.ascii_symbol?())
+     test(not ' '.ascii_symbol?())
+     test('\00007e'.ascii_symbol?())
+     test(not 'a'.ascii_symbol?())
+     test(not 'z'.ascii_symbol?())
+     test(not 'A'.ascii_symbol?())
+     test(not 'Z'.ascii_symbol?())
+     test(not '\00008b'.ascii_symbol?())
+     test(not '\0000ac'.ascii_symbol?())
+     test(not '0'.ascii_symbol?())
+     test(not '9'.ascii_symbol?())
+     test('!'.ascii_symbol?())
+     test('?'.ascii_symbol?())
+     test('~'.ascii_symbol?())
+
+     let string = rnd_string()
+     test(string.filter(fn (char) char.in_range?('!', '0') || char.in_range?(':', 'A') || char.in_range?('[', 'a') || char.in_range?('{', '\00007f')) === string.filter(ascii_symbol?(_)))
+
+     test(to_char__ascii_symbol?('!').ascii_symbol?())
+     test(not to_char__ascii_symbol?('a').ascii_symbol?())
+
+     test(to_custom_char__ascii_symbol?('!').ascii_symbol?())
+     test(not to_custom_char__ascii_symbol?('a').ascii_symbol?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.ascii_symbol?().get_error_id() === :1)
+     test(heap_table().ascii_symbol?().get_error_id() === :invalid_type)
+
+     test(to_broken_char__ascii_symbol?('a').ascii_symbol?().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__ascii_symbol?('a').ascii_symbol?().get_error_id() === :invalid_type)
+     test(to_error_char__ascii_symbol?('a').ascii_symbol?().get_error_id() === :3)
+     test(to_error_custom_char__ascii_symbol?('a').ascii_symbol?().get_error_id() === :4)
+}

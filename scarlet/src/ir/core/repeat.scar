@@ -1,0 +1,26 @@
+fn ir__core_fn_repeat(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box array, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box count, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ array:code:text ++ ", " ++ count:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+     array.maybe_has_type!(valid_types)
+     count.maybe_has_type!("int")
+
+     if not count:comptime_val.null?() && count:comptime_val:value < 0
+          error__out_of_bounds(count:code)
+     else null
+
+     if array:comptime_val:type === "obj" && array:comptime_val:value[:_][:core_repeat].null?()
+          error__invalid_type(array:code, ".core_repeat", "obj")
+     else null
+
+     let result_possible_types = if array:possible_types.null?()
+          valid_types.append("error")
+     else array:possible_types.filter(_.in?(valid_types)).append("error").prepare_types_for_cmp()
+
+     ir__fn_call("McoreFNrepeat", [array array, count], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

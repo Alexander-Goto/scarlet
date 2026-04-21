@@ -1,0 +1,527 @@
+let container__any = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_any = fn (container, default_result, func) container:value.any(default_result, func)
+     ]
+]
+
+fn to_container__any(arg) new (@main.container__any):value <= arg
+
+fn to_custom_container__any(arg) custom__create(
+     arg
+     [obj
+          :core_any = fn (container, default_result, func) custom__get_data(container).any(default_result, func)
+     ]
+)
+
+let broken_container__any = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_any = fn (_, _, _) heap_string()
+     ]
+]
+
+fn to_broken_container__any(arg) new (@main.broken_container__any):value <= arg
+
+fn to_broken_custom_container__any(arg) custom__create(
+     arg
+     [obj
+          :core_any = fn (_, _, _) heap_string()
+     ]
+)
+
+let error_container__any = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_any = fn (_, _, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__any(arg) new (@main.error_container__any):value <= arg
+
+fn to_error_custom_container__any(arg) custom__create(
+     arg
+     [obj
+          :core_any = fn (_, _, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__any() {
+     let items = "3".to_array()
+     test("".any(true, fn (_) items))
+     test(not "".any(false, fn (_) items))
+     test(not "1".any(true, fn (char) items[0] === char))
+     test("3".any(true, fn (char) items[0] === char))
+     test("333333333333333".any(true, fn (char) items[0] === char))
+     test("233333333333333".any(true, fn (char) items[0] === char))
+     test("333333333333332".any(true, fn (char) items[0] === char))
+     test("322222222222222".any(true, fn (char) items[0] === char))
+     test("222222222222223".any(true, fn (char) items[0] === char))
+     test(not "222222222222222".any(true, fn (char) items[0] === char))
+     test("0123456789abcde".any(true, fn (char) items[0] === char))
+
+     let items = "\000093".to_array()
+     test(not "\000091".any(true, fn (char) items[0] === char))
+     test("\000093".any(true, fn (char) items[0] === char))
+     test("\000093\000093\000093\000093\000093\000093\000093".any(true, fn (char) items[0] === char))
+     test("\000092\000093\000093\000093\000093\000093\000093".any(true, fn (char) items[0] === char))
+     test("2\000093\000093\000093\000093\000093\000093\000093".any(true, fn (char) items[0] === char))
+     test("\000093\000093\000093\000093\000093\000093\0000933".any(true, fn (char) items[0] === char))
+     test("\000093\000092\000092\000092\000092\000092\000092".any(true, fn (char) items[0] === char))
+     test("\000092\000092\000092\000092\000092\000092\000093".any(true, fn (char) items[0] === char))
+     test(not "\000092\000092\000092\000092\0000923\000092\000092".any(true, fn (char) items[0] === char))
+     test(not "\000092\000092\000092\000092\000092\000092\0000923".any(true, fn (char) items[0] === char))
+     test(not "\000092\000092\000092\000092\000092\000092\0000923".any(true, fn (char) items[0] === char))
+     test("012\000093456789abcd".any(true, fn (char) items[0] === char))
+
+     let items = "3".to_array()
+     test("3333333333333333".any(true, fn (char) items[0] === char))
+     test("2333333333333333".any(true, fn (char) items[0] === char))
+     test("3333333333333332".any(true, fn (char) items[0] === char))
+     test("3222222222222222".any(true, fn (char) items[0] === char))
+     test("2222222222222223".any(true, fn (char) items[0] === char))
+     test(not "2222222222222222".any(true, fn (char) items[0] === char))
+     test("0123456789abcdef".any(true, fn (char) items[0] === char))
+
+     let string = ("033333333333333" ++ "330")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("023333333333333" ++ "330")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("033333333333333" ++ "320")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("022222222222222" ++ "220")[1, 17]
+     test(not string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("032222222222222" ++ "220")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("022222222222222" ++ "230")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("00123456789abcd" ++ "ef0")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     test(("033333333333333" ++ "330")[1, 17].any(true, fn (char) items[0] === char))
+     test(("023333333333333" ++ "330")[1, 17].any(true, fn (char) items[0] === char))
+     test(("033333333333333" ++ "320")[1, 17].any(true, fn (char) items[0] === char))
+     test(("032222222222222" ++ "220")[1, 17].any(true, fn (char) items[0] === char))
+     test(("022222222222222" ++ "230")[1, 17].any(true, fn (char) items[0] === char))
+     test(not ("022222222222222" ++ "220")[1, 17].any(true, fn (char) items[0] === char))
+     test(("00123456789abcd" ++ "ef0")[1, 17].any(true, fn (char) items[0] === char))
+
+     let items = "\000093".to_array()
+     test("\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093".any(true, fn (char) items[0] === char))
+     test("\000092\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093".any(true, fn (char) items[0] === char))
+     test("\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000092".any(true, fn (char) items[0] === char))
+     test("\000093\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092".any(true, fn (char) items[0] === char))
+     test("\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000093".any(true, fn (char) items[0] === char))
+     test(not "\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092".any(true, fn (char) items[0] === char))
+     test("\000090\000091\000092\000093\000094\000095\000096\000097\000098\000099\00009a\00009b\00009c\00009d\00009e\00009f".any(true, fn (char) items[0] === char))
+
+     let string = ("0\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\000093\000090")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("0\000092\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\0000930")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("0\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\0000920")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("0\000093\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092" ++ "\000092\0000920")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("0\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092" ++ "\000092\0000930")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("0\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092" ++ "\000092\0000920")[1, 17]
+     test(not string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("0\000090\000091\000092\000093\000094\000095\000096\000097\000098\000099\00009a\00009b\00009c\00009d" ++ "\00009e\00009f0")[1, 17]
+     test(string.any(true, fn (char) items[0] === char))
+     string.ignore()
+
+     test(("0\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\0000930")[1, 17].any(true, fn (char) items[0] === char))
+     test(("0\000092\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\0000930")[1, 17].any(true, fn (char) items[0] === char))
+     test(("0\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\0000920")[1, 17].any(true, fn (char) items[0] === char))
+     test(("0\000093\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092" ++ "\000092\0000920")[1, 17].any(true, fn (char) items[0] === char))
+     test(("0\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092" ++ "\000092\0000930")[1, 17].any(true, fn (char) items[0] === char))
+     test(not ("0\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092" ++ "\000092\0000920")[1, 17].any(true, fn (char) items[0] === char))
+     test(("0\000090\000091\000092\000093\000094\000095\000096\000097\000098\000099\00009a\00009b\00009c\00009d" ++ "\00009e\00009f0")[1, 17].any(true, fn (char) items[0] === char))
+
+     test("01".any(true, fn (char) if char === '0'; true else expected_error(:5, "", "")))
+     test(heap_string().any(true, fn (char) if char === '0'; true else expected_error(:5, "", "")))
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = not string_1.all(true, _ =/= '3')
+     let have     = string_1.any(true, _ === '3')
+     test(expected === have)
+     string_2.ignore()
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = not string_1.all(true, _ =/= '3')
+     let have     = string_1.any(true, fn (char) string_1 === 17 || char === '3')
+     test(expected === have)
+     string_2.ignore()
+
+     let items = u"3".to_array()
+     test(u"".any(true, fn (_) items))
+     test(not u"".any(false, fn (_) items))
+     test(not u"1".any(true, fn (byte) items[0] === byte))
+     test(u"3".any(true, fn (byte) items[0] === byte))
+     test(u"33333333333333".any(true, fn (byte) items[0] === byte))
+     test(u"23333333333333".any(true, fn (byte) items[0] === byte))
+     test(u"33333333333332".any(true, fn (byte) items[0] === byte))
+     test(u"32222222222222".any(true, fn (byte) items[0] === byte))
+     test(u"22222222222223".any(true, fn (byte) items[0] === byte))
+     test(not u"22222222222222".any(true, fn (byte) items[0] === byte))
+     test(u"0123456789abcd".any(true, fn (byte) items[0] === byte))
+
+     let items = u"3".to_array()
+     test(u"3333333333333333".any(true, fn (byte) items[0] === byte))
+     test(u"2333333333333333".any(true, fn (byte) items[0] === byte))
+     test(u"3333333333333332".any(true, fn (byte) items[0] === byte))
+     test(u"3222222222222222".any(true, fn (byte) items[0] === byte))
+     test(u"2222222222222223".any(true, fn (byte) items[0] === byte))
+     test(not u"2222222222222222".any(true, fn (byte) items[0] === byte))
+     test(u"0123456789abcdef".any(true, fn (byte) items[0] === byte))
+
+     let array = (u"033333333333333" ++ u"330")[1, 17]
+     test(array.any(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     let array = (u"023333333333333" ++ u"330")[1, 17]
+     test(array.any(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     let array = (u"033333333333333" ++ u"320")[1, 17]
+     test(array.any(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     let array = (u"022222222222222" ++ u"220")[1, 17]
+     test(not array.any(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     let array = (u"032222222222222" ++ u"220")[1, 17]
+     test(array.any(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     let array = (u"022222222222222" ++ u"230")[1, 17]
+     test(array.any(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     let array = (u"00123456789abcd" ++ u"ef0")[1, 17]
+     test(array.any(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     test((u"033333333333333" ++ u"330")[1, 17].any(true, fn (byte) items[0] === byte))
+     test((u"023333333333333" ++ u"330")[1, 17].any(true, fn (byte) items[0] === byte))
+     test((u"033333333333333" ++ u"320")[1, 17].any(true, fn (byte) items[0] === byte))
+     test((u"032222222222222" ++ u"220")[1, 17].any(true, fn (byte) items[0] === byte))
+     test((u"022222222222222" ++ u"230")[1, 17].any(true, fn (byte) items[0] === byte))
+     test(not (u"022222222222222" ++ u"220")[1, 17].any(true, fn (byte) items[0] === byte))
+     test((u"00123456789abcd" ++ u"ef0")[1, 17].any(true, fn (byte) items[0] === byte))
+
+     test(u"01".any(true, fn (byte) if byte === u"0"[0]; true else expected_error(:5, "", u"")))
+     test(heap_byte_array().any(true, fn (byte) if byte === u"0"[0]; true else expected_error(:5, "", u"")))
+
+     let array_1 = rnd_byte_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     let expected = not array_1.all(true, _ =/= 0x03)
+     let have     = array_1.any(true, _ === 0x03)
+     test(expected === have)
+     array_2.ignore()
+
+     let array_1 = rnd_byte_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     let expected = not array_1.all(true, _ =/= 0x03)
+     let have     = array_1.any(true, fn (byte) array_1 === 17 || byte === 0x03)
+     test(expected === have)
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([array].any(true, fn (_) string_1))
+     test(not [array].any(false, fn (_) string_1))
+     test(not [array "1"].any(true, fn (item) string_1 === item))
+     test([array "0123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test([array "0123456789abcdef1", "0123456789abcdef1", "0123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test([array "1123456789abcdef1", "0123456789abcdef1", "0123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test([array "0123456789abcdef1", "0123456789abcdef1", "1123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test([array "0123456789abcdef1", "1123456789abcdef1", "1123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test([array "1123456789abcdef1", "1123456789abcdef1", "0123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test(not [array "1123456789abcdef1", "1123456789abcdef1", "1123456789abcdef1"].any(true, fn (item) string_1 === item))
+
+     let array = [array].init(10)
+     test(array.any(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_1, string_0][1, 2]
+     test(array.any(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_1, string_1, string_1, string_0][1, 4]
+     test(array.any(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_2, string_1, string_1, string_0][1, 4]
+     test(array.any(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_1, string_1, string_2, string_0][1, 4]
+     test(array.any(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_1, string_2, string_2, string_0][1, 4]
+     test(array.any(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_2, string_2, string_1, string_0][1, 4]
+     test(array.any(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_2, string_2, string_2, string_0][1, 4]
+     test(not array.any(true, fn (item) string_1 === item))
+     array.ignore()
+
+     test([array].init(10).any(true, fn (item) string_1 === item))
+     test(not [array].init(10).any(false, fn (item) string_1 === item))
+     test([array string_0, string_1, string_0][1, 2].any(true, fn (item) string_1 === item))
+     test([array string_0, string_1, string_1, string_1, string_0][1, 4].any(true, fn (item) string_1 === item))
+     test([array string_0, string_2, string_1, string_1, string_0][1, 4].any(true, fn (item) string_1 === item))
+     test([array string_0, string_1, string_1, string_2, string_0][1, 4].any(true, fn (item) string_1 === item))
+     test([array string_0, string_1, string_2, string_2, string_0][1, 4].any(true, fn (item) string_1 === item))
+     test([array string_0, string_2, string_2, string_1, string_0][1, 4].any(true, fn (item) string_1 === item))
+     test(not [array string_0, string_2, string_2, string_2, string_0][1, 4].any(true, fn (item) string_1 === item))
+
+     test([array heap_string(), heap_table()].any(true, fn (item) if item.type() === "core.string"; true else expected_error(:5, "", "")))
+
+     let array_1  = rnd_string_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = not array_1.all(true, fn (string) string[0] =/= '3')
+     let have     = array_1.any(true, fn (string) string[0] === '3')
+     test(expected === have)
+     array_2.ignore()
+
+     let array_1  = rnd_string_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = not array_1.all(true, fn (string) string[0] =/= '3')
+     let have     = array_1.any(true, fn (string) array_1 === 17 || string[0] === '3')
+     test(expected === have)
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([set].any(true, fn (_) string_1))
+     test(not [set].any(false, fn (_) string_1))
+     test(not [set "1"].any(true, fn (item) string_1 === item))
+     test([set "0123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test([set "0123456789abcdef1", "123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test([set "0123456789abcdef1", "1123456789abcdef1", "0"].any(true, fn (item) string_1 === item))
+     test(not [set "0123456789abcdef2", "1123456789abcdef1", "0123456789abcdef0"].any(true, fn (item) string_1 === item))
+
+     let set = [set].init(10)
+     test(set.any(true, fn (item) string_1 === item))
+     set.ignore()
+
+     let set = [set string_1]
+     test(set.any(true, fn (item) string_1 === item))
+     set.ignore()
+
+     let set = [set string_0]
+     test(not set.any(true, fn (item) string_1 === item))
+     set.ignore()
+
+     let set = [set string_0, string_1]
+     test(set.any(true, fn (item) string_1 === item))
+     set.ignore()
+
+     let set = [set string_0, string_1, string_2]
+     test(set.any(true, fn (item) string_1 === item))
+     set.ignore()
+
+     let set = [set string_0, string_2]
+     test(not set.any(true, fn (item) string_1 === item))
+     set.ignore()
+
+     test([set].init(10).any(true, fn (item) string_1 === item))
+     test(not [set].init(10).any(false, fn (item) string_1 === item))
+     test([set string_1].any(true, fn (item) string_1 === item))
+     test([set string_1, string_0].any(true, fn (item) string_1 === item))
+     test(not [set string_0].any(true, fn (item) string_1 === item))
+     test([set string_0, string_1, string_2].any(true, fn (item) string_1 === item))
+     test(not [set string_0, string_2].any(true, fn (item) string_1 === item))
+
+     let set_1    = rnd_string_set()
+     let set_2    = if rnd_bool(); set_1 else null
+     let expected = not set_1.all(true, fn (string) string[0] =/= '3')
+     let have     = set_1.any(true, fn (string) string[0] === '3')
+     test(expected === have)
+     set_2.ignore()
+
+     let set_1    = rnd_string_set()
+     let set_2    = if rnd_bool(); set_1 else null
+     let expected = not set_1.all(true, fn (string) string[0] =/= '3')
+     let have     = set_1.any(true, fn (string) set_1 === 17 || string[0] === '3')
+     test(expected === have)
+     set_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([table].any(true, fn (_) string_1))
+     test(not [table].any(false, fn (_) string_1))
+     test(not [table "0123456789abcdef1" = "1"].any(true, fn (item) string_1 === item))
+     test([table "0" = "0123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test([table "2" = "0123456789abcdef", "0" = "1123456789abcdef1", "1" = "0123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test(not [table "0123456789abcdef1" = "0123456789abcdef", "0" = "1123456789abcdef1", "1" = "0"].any(true, fn (item) string_1 === item))
+
+     let table = [table].init(10)
+     test(table.any(true, fn (item) string_1 === item))
+     table.ignore()
+
+     let table = [table string_0 = string_1]
+     test(table.any(true, fn (item) string_1 === item))
+     table.ignore()
+
+     let table = [table string_1 = string_0]
+     test(not table.any(true, fn (item) string_1 === item))
+     table.ignore()
+
+     let table = [table string_0 = string_1, string_2 = string_0]
+     test(table.any(true, fn (item) string_1 === item))
+     table.ignore()
+
+     let table = [table string_1 = string_0, string_0 = string_2]
+     test(not table.any(true, fn (item) string_1 === item))
+     table.ignore()
+
+     test([table].init(10).any(true, fn (item) string_1 === item))
+     test(not [table].init(10).any(false, fn (item) string_1 === item))
+     test([table string_0 = string_1].any(true, fn (item) string_1 === item))
+     test(not [table string_1 = string_0].any(true, fn (item) string_1 === item))
+     test([table string_0 = string_1, string_2 = string_0].any(true, fn (item) string_1 === item))
+     test(not [table string_1 = string_0, string_0 = string_2].any(true, fn (item) string_1 === item))
+
+     let table_1  = rnd_string_table()
+     let table_2  = if rnd_bool(); table_1 else null
+     let expected = not table_1.all(true, fn (string) string[0] =/= '3')
+     let have     = table_1.any(true, fn (string) string[0] === '3')
+     test(expected === have)
+     table_2.ignore()
+
+     let table_1  = rnd_string_table()
+     let table_2  = if rnd_bool(); table_1 else null
+     let expected = not table_1.all(true, fn (string) string[0] =/= '3')
+     let have     = table_1.any(true, fn (string) table_1 === 17 || string[0] === '3')
+     test(expected === have)
+     table_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([obj].any(true, fn (_) string_1))
+     test(not [obj].any(false, fn (_) string_1))
+     test(not [obj :0 = "1"].any(true, fn (item) string_1 === item))
+     test([obj :0 = "0123456789abcdef1"].any(true, fn (item) string_1 === item))
+     test([obj :0 = "0123456789abcdef1", :1 = "1123456789abcdef1", :2 = "0"].any(true, fn (item) string_1 === item))
+     test(not [obj :_ = [obj :0 = "0123456789abcdef1"], :0 = "0123456789abcdef", :1 = "1123456789abcdef1", :2 = "0"].any(true, fn (item) string_1 === item))
+     test(not [obj :0 = "0123456789abcdef", :1 = "1123456789abcdef1", :2 = "0123456789abcdef0"].any(true, fn (item) string_1 === item))
+
+     let obj = [obj].init(10)
+     test(obj.any(true, fn (item) string_1 === item))
+     obj.ignore()
+
+     let obj = [obj :0 = string_1]
+     test(obj.any(true, fn (item) string_1 === item))
+     obj.ignore()
+
+     let obj = [obj :1 = string_0]
+     test(not obj.any(true, fn (item) string_1 === item))
+     obj.ignore()
+
+     let obj = [obj :0 = string_1, :2 = string_0]
+     test(obj.any(true, fn (item) string_1 === item))
+     obj.ignore()
+
+     let obj = [obj :1 = string_0, :0 = string_2]
+     test(not obj.any(true, fn (item) string_1 === item))
+     obj.ignore()
+
+     let obj = [obj :_ = [obj :0 = string_1],  :1 = string_0, :0 = string_2]
+     test(not obj.any(true, fn (item) string_1 === item))
+     obj.ignore()
+
+     test([obj].init(10).any(true, fn (item) string_1 === item))
+     test(not [obj].init(10).any(false, fn (item) string_1 === item))
+     test([obj :0 = string_1].any(true, fn (item) string_1 === item))
+     test(not [obj :1 = string_0].any(true, fn (item) string_1 === item))
+     test([obj :0 = string_1, :2 = string_0].any(true, fn (item) string_1 === item))
+     test(not [obj :1 = string_0, :0 = string_2].any(true, fn (item) string_1 === item))
+     test(not [obj :_ = [obj :0 = string_1],  :1 = string_0, :0 = string_2].any(true, fn (item) string_1 === item))
+
+     let obj_1    = rnd_string_obj()
+     let obj_2    = if rnd_bool(); obj_1 else null
+     let expected = not obj_1.all(true, fn (string) string[0] =/= '3')
+     let have     = obj_1.any(true, fn (string) string[0] === '3')
+     test(expected === have)
+     obj_2.ignore()
+
+     let obj_1    = rnd_string_obj()
+     let obj_2    = if rnd_bool(); obj_1 else null
+     let expected = not obj_1.all(true, fn (string) string[0] =/= '3')
+     let have     = obj_1.any(true, fn (string) obj_1 === 17 || string[0] === '3')
+     test(expected === have)
+     obj_2.ignore()
+
+     test(to_container__any("abc").any(true, _.ascii_lower?()))
+     test(to_container__any("aBc").any(true, _.ascii_lower?()))
+     test(not to_container__any("ABC").any(true, _.ascii_lower?()))
+     test(to_custom_container__any("abc").any(true, _.ascii_lower?()))
+     test(to_custom_container__any("aBc").any(true, _.ascii_lower?()))
+     test(not to_custom_container__any("ABC").any(true, _.ascii_lower?()))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let error_3 = expected_error(:3, heap_string(), heap_string())
+     test(error_1.any(true, _ === heap_string()).get_error_id() === :1)
+     test(heap_string().any(error_1, _ === heap_string()).get_error_id() === :1)
+     test(heap_string().any(true, error_1).get_error_id() === :1)
+     test(error_1.any(error_2, error_3).get_error_id() === :1)
+     test(error_3.any(error_2, error_1).get_error_id() === :3)
+
+     test((_ === heap_string()).scarlet__erase_info().any(true, _ === heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().any(heap_string(), _ === heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().any(true, heap_table()).get_error_id() === :invalid_type)
+     test((_ === heap_string()).scarlet__erase_info().any(heap_string(), heap_table()).get_error_id() === :invalid_type)
+
+     test(to_broken_container__any("").any(true, _ === heap_string()).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__any("").any(true, _ === heap_string()).get_error_id() === :invalid_type)
+     test(to_error_container__any("").any(true, _ === heap_string()).get_error_id() === :3)
+     test(to_error_custom_container__any("").any(true, _ === heap_string()).get_error_id() === :4)
+
+     test([array heap_string()].any(true, fn (_) expected_error(:5, heap_string(), heap_string())).get_error_id() === :5)
+}

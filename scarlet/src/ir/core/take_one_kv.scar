@@ -1,0 +1,60 @@
+fn ir__core_fn_take_one_kv(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     arg.maybe_has_type!([set "table", "obj", "custom"])
+
+     if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_][:core_take_one_kv].null?()
+          ir__fn_call(
+               "McoreFNtake_one_kv", [array arg], code
+               if arg.has_type?("table")
+                    [set "box", "null"]
+               else [set "box", "null", "error"]
+
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     else {
+          let comptime_value = if arg:comptime_val:type == "obj"
+               arg:comptime_val:value.foldl_kv(@main.comptime_null_val, fn (null_val, key, value)
+                    if key == :_
+                         null_val
+                    else [breaker
+                         new (@main.t_comptime_val) {
+                              :type  <= "box"
+                              :value <= [array
+                                   new (@main.t_comptime_val) {
+                                        :type  <= "token"
+                                        :value <= key
+                                   }
+
+                                   value
+                              ]
+                         }
+                    ]
+               )
+          else {
+               let [box key, value] = arg:comptime_val:value.take_one_kv()
+               if key.null?()
+                    @main.comptime_null_val
+               else new (@main.t_comptime_val) {
+                    :type  <= "box"
+                    :value <= [array key, value]
+               }
+          }
+
+          let operand = new (arg) {
+               :ir             <= null
+               :code           <= code
+               :comptime_val   <= comptime_value
+               :possible_types <= if comptime_value:type == "box"; [set "box"] else [set "null"]
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

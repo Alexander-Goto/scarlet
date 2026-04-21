@@ -1,0 +1,90 @@
+let char__space = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_space? = fn (char) char:value.space?()
+     ]
+]
+
+fn to_char__space?(arg) new (@main.char__space):value <= arg
+
+fn to_custom_char__space?(arg) custom__create(
+     arg
+     [obj
+          :core_space? = fn (char) char.custom__get_data().space?()
+     ]
+)
+
+let broken_char__space = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_space? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_char__space?(arg) new (@main.broken_char__space):value <= arg
+
+fn to_broken_custom_char__space?(arg) custom__create(
+     arg
+     [obj
+          :core_space? = fn (_) heap_string()
+     ]
+)
+
+let error_char__space = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_space? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__space?(arg) new (@main.error_char__space):value <= arg
+
+fn to_error_custom_char__space?(arg) custom__create(
+     arg
+     [obj
+          :core_space? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__space?() {
+     test(not '\000001'.space?())
+     test(not '\000008'.space?())
+     test(not '\00000a'.space?())
+     test(not '\00001f'.space?())
+     test(not '\00007f'.space?())
+     test('\000009'.space?())
+     test('\t'.space?())
+     test('\000020'.space?())
+     test(' '.space?())
+     test(not '\00007e'.space?())
+     test(not 'a'.space?())
+     test(not 'z'.space?())
+     test(not 'A'.space?())
+     test(not 'Z'.space?())
+     test(not '\00008b'.space?())
+     test(not '\0000ac'.space?())
+     test(not '0'.space?())
+     test(not '9'.space?())
+
+     let string = rnd_string()
+     test(string.filter(fn (char) char === '\t' || char === ' ') === string.filter(space?(_)))
+
+     test(to_char__space?(' ').space?())
+     test(not to_char__space?('a').space?())
+
+     test(to_custom_char__space?(' ').space?())
+     test(not to_custom_char__space?('a').space?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.space?().get_error_id() === :1)
+     test(heap_table().space?().get_error_id() === :invalid_type)
+
+     test(to_broken_char__space?('a').space?().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__space?('a').space?().get_error_id() === :invalid_type)
+     test(to_error_char__space?('a').space?().get_error_id() === :3)
+     test(to_error_custom_char__space?('a').space?().get_error_id() === :4)
+}

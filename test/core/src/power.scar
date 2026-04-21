@@ -1,0 +1,172 @@
+let num__power = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_power     = fn (num, power) to_num__power(num:value.power(power:value))
+          :core___equal__ = fn (num, power) num:value === power:value
+     ]
+]
+
+fn to_num__power(arg) new (@main.num__power):value <= arg
+
+fn to_custom_num__power(arg) custom__create(
+     arg
+     [obj
+          :core_power     = fn (num, power) to_custom_num__power(num.custom__get_data().power(power.custom__get_data()))
+          :core___equal__ = fn (num, power) num.custom__get_data() === power.custom__get_data()
+     ]
+)
+
+let broken_num__power = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_power = fn (_, _) heap_string()
+     ]
+]
+
+fn to_broken_num__power(arg) new (@main.broken_num__power):value <= arg
+
+fn to_broken_custom_num__power(arg) custom__create(
+     arg
+     [obj
+          :core_power = fn (_, _) heap_string()
+     ]
+)
+
+let error_num__power = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_power = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__power(arg) new (@main.error_num__power):value <= arg
+
+fn to_error_custom_num__power(arg) custom__create(
+     arg
+     [obj
+          :core_power = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__power() {
+     test(power(0b00, 0b00) === 0b01)
+     test(power(0b00, 0b01) === 0b00)
+     test(power(0b01, 0b00) === 0b01)
+     test(power(0b01, 0b01) === 0b01)
+     test(power(0bf0, 0b01) === 0bf0)
+     test(power(0b01, 0bf0) === 0b01)
+     test(power(0b0f, 0b0f) === 0bef)
+     test(power(0bff, 0b00) === 0b01)
+     test(power(0b00, 0bff) === 0b00)
+     test(power(0bff, 0b01) === 0bff)
+     test(power(0b01, 0bff) === 0b01)
+     test(power(0b07, 0b02) === 0b31)
+     test(power(0b03, 0b03) === 0b1b)
+
+     let byte     = rnd_byte()
+     let power    = rnd_byte()
+     let expected = loop([box 0b01, power], fn (state) {
+          let [box result, power] = state
+
+          if power === 0b00
+               [breaker result]
+          else [box result * byte, power - 0b01]
+     })
+     test(power(byte, power) === expected)
+
+     test(power(0, 0) === 1)
+     test(power(0, 1) === 0)
+     test(power(1, 0) === 1)
+     test(power(1, 1) === 1)
+     test(power(0, -1) === 0)
+     test(power(-1, 0) === 1)
+     test(power(-1, -1) === 0)
+     test(power(-1, 1) === -1)
+     test(power(-708044971986000615, 2) === -8131985765321163663)
+     test(power(-708044971986000615, 3) === -5052985983121785847)
+     test(power(-708044971986000615, 5) === 1001376434072280057)
+     test(power(-1964724193136850828, -3) === 0)
+     test(power(-9223372036854775808, 0) === 1)
+     test(power(1, -9223372036854775808) === 0)
+     test(power(-1, -9223372036854775808) === 0)
+     test(power(-9223372036854775808, -9223372036854775808) === 0)
+     test(power(9223372036854775807, 0) === 1)
+     test(power(0, 9223372036854775807) === 0)
+     test(power(1, 9223372036854775807) === 1)
+     test(power(-1, 9223372036854775807) === -1)
+     test(power(-1, 9223372036854775806) === 1)
+     test(power(9223372036854775807, 1) === 9223372036854775807)
+     test(power(-9223372036854775808, 1) === -9223372036854775808)
+     test(power(-9223372036854775808, 2) === 0)
+     test(power(-9223372036854775808, 10) === 0)
+     test(power(-9223372036854775807, 5) === -9223372036854775807)
+     test(power(-9223372036854775807, 6) === 1)
+     let int      = rnd()
+     let power    = rnd() & 0xff
+     let expected = loop([box 1, power], fn (state) {
+          let [box result, power] = state
+
+          if power === 0
+               [breaker result]
+          else [box result * int, power - 1]
+     })
+     test(power(int, power) === expected)
+
+     test(power(1.0, 0.0).in_range?(0.99, 1.01))
+     test(power(-1.0, 0.0).in_range?(0.99, 1.01))
+     test(power(17.223, 0.0).in_range?(0.99, 1.01))
+     test(power(-1.223, 0.0).in_range?(0.99, 1.01))
+     test(power(inf(), 0.0).in_range?(0.99, 1.01))
+     test(power(neg_inf(), 0.0).in_range?(0.99, 1.01))
+     test(power(nan(), 0.0).in_range?(0.99, 1.01))
+     test(power(1.0, -0.0).in_range?(0.99, 1.01))
+     test(power(-1.0, -0.0).in_range?(0.99, 1.01))
+     test(power(17.223, -0.0).in_range?(0.99, 1.01))
+     test(power(-1.223, -0.0).in_range?(0.99, 1.01))
+     test(power(inf(), -0.0).in_range?(0.99, 1.01))
+     test(power(neg_inf(), -0.0).in_range?(0.99, 1.01))
+     test(power(nan(), -0.0).in_range?(0.99, 1.01))
+     test(power(1.0, 0.0).in_range?(0.99, 1.01))
+     test(power(1.0, -0.0).in_range?(0.99, 1.01))
+     test(power(1.0, 12.33).in_range?(0.99, 1.01))
+     test(power(1.0, -102.33).in_range?(0.99, 1.01))
+     test(power(1.0, inf()).in_range?(0.99, 1.01))
+     test(power(1.0, neg_inf()).in_range?(0.99, 1.01))
+     test(power(1.0, nan()).in_range?(0.99, 1.01))
+     test(power(1.0, 1.0).in_range?(0.99, 1.01))
+     test(power(0.0, 1.0).in_range?(-0.01, 0.01))
+     test(power(-0.0, 1.0).in_range?(-0.01, 0.01))
+     test(power(12.3, 3.2).in_range?(3073.9, 3074.0))
+     test(power(nan(), 3.2).nan?())
+     test(power(3.2, nan()).nan?())
+
+     test(power(to_num__power(-708044971986000615), to_num__power(2)) === to_num__power(-8131985765321163663))
+     test(power(to_num__power(-708044971986000615), to_num__power(3)) === to_num__power(-5052985983121785847))
+
+     test(power(to_custom_num__power(-708044971986000615), to_custom_num__power(2)) === to_custom_num__power(-8131985765321163663))
+     test(power(to_custom_num__power(-708044971986000615), to_custom_num__power(3)) === to_custom_num__power(-5052985983121785847))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(power(error_1, 1).get_error_id() === :1)
+     test(power(1, error_1).get_error_id() === :1)
+     test(power(error_1, error_2).get_error_id() === :1)
+     test(power(error_2, error_1).get_error_id() === :2)
+     test(power(error_1, heap_string()).get_error_id() === :1)
+     test(power(heap_string(), error_1).get_error_id() === :1)
+
+     test(power(heap_string(), heap_string()).get_error_id() === :invalid_type)
+     test(power(heap_string(), 1).get_error_id() === :invalid_type)
+     test(power(1, heap_string()).get_error_id() === :invalid_type)
+     test(power(1, 1.0.scarlet__erase_info()).get_error_id() === :invalid_type)
+     test(power(1.0.scarlet__erase_info(), 1).get_error_id() === :invalid_type)
+
+     test(power(to_broken_num__power(1), to_broken_num__power(0)).get_error_id() === :invalid_type)
+     test(power(to_broken_custom_num__power(1), to_broken_custom_num__power(0)).get_error_id() === :invalid_type)
+     test(power(to_error_num__power(1), to_error_num__power(0)).get_error_id() === :3)
+     test(power(to_error_custom_num__power(1), to_error_custom_num__power(0)).get_error_id() === :4)
+}

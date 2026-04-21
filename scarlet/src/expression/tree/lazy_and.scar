@@ -1,0 +1,30 @@
+let t_lazy_and = [obj
+     :scar_type = "t_lazy_and"
+
+     :operator = @main.t_token
+     :left     = :i_expression
+     :right    = :i_expression
+]
+
+fn lazy_and_independent?(and, independent_consts)
+     and:left.independent?(independent_consts) &&
+     and:right.independent?(independent_consts)
+
+fn analyze_lazy_and(and, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let [box last_use_info, lambdas_data, def_ids] = and:left.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+     let right_contexts = contexts.append("land:" ++ format_int(and:operator.get_token_id(), 32, false))
+     and:right.analyze(last_use_info, lambdas_data, right_contexts, name_ids, def_ids)
+}
+
+fn lazy_and_to_operand(and, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box left_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          and:left.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box right_operand, exp_data, right_ir, final_data, dependencies, src_gconsts] =
+          and:right.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (left_operand:code):text => _ ++ (" && " ++ right_operand:code:text)
+
+     let right_context_consts = contexts["land:" ++ format_int(and:operator.get_token_id(), 32, false)] <? [set]
+     ir__lazy_and(left_operand, right_operand, right_ir, code, right_context_consts, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

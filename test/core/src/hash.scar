@@ -1,0 +1,214 @@
+let const__hash = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_hash = fn (const, seed) const:value.hash(seed)
+     ]
+]
+
+fn to_const__hash(arg) new (@main.const__hash):value <= arg
+
+fn to_custom_const__hash(arg) custom__create(
+     arg
+     [obj
+          :core_hash = fn (const, seed) const.custom__get_data().hash(seed)
+     ]
+)
+
+let broken_const__hash = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_hash = fn (_, _) heap_string()
+     ]
+]
+
+fn to_broken_const__hash(arg) new (@main.broken_const__hash):value <= arg
+
+fn to_broken_custom_const__hash(arg) custom__create(
+     arg
+     [obj
+          :core_hash = fn (_, _) heap_string()
+     ]
+)
+
+let error_const__hash = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_hash = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__hash(arg) new (@main.error_const__hash):value <= arg
+
+fn to_error_custom_const__hash(arg) custom__create(
+     arg
+     [obj
+          :core_hash = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__hash() {
+     let seed = rnd()
+     test("".hash(seed) === "".hash(seed))
+     test("".hash(seed).type()  === "core.int")
+     test("0123456789abcde".hash(seed) === "0123456789abcde".hash(seed))
+     test("0123456789abcde".hash(seed).type()  === "core.int")
+
+     test("0123456789abcdef".hash(seed) === "0123456789abcdef".hash(seed))
+     test("0123456789abcdef".hash(seed).type()  === "core.int")
+
+     test(("0123456789abcde" ++ "f").hash(seed) === "0123456789abcdef".hash(seed))
+     test(("0123456789abcde" ++ "f").hash(seed).type()  === "core.int")
+     test(rnd_string().hash(seed).type()  === "core.int")
+
+     test(:_.hash(seed) === :_.hash(seed))
+     test(:_.hash(seed).type()  === "core.int")
+     test(:0123456789abcde.hash(seed) === :0123456789abcde.hash(seed))
+     test(:0123456789abcde.hash(seed).type()  === "core.int")
+
+     test(u"".hash(seed) === u"".hash(seed))
+     test(u"".hash(seed).type()  === "core.int")
+     test(u"0123456789abcd".hash(seed) === u"0123456789abcd".hash(seed))
+     test(u"0123456789abcd".hash(seed).type()  === "core.int")
+
+     test(u"0123456789abcdef".hash(seed) === u"0123456789abcdef".hash(seed))
+     test(u"0123456789abcdef".hash(seed).type()  === "core.int")
+
+     test((u"0123456789abcde" ++ u"f").hash(seed) === u"0123456789abcdef".hash(seed))
+     test((u"0123456789abcde" ++ u"f").hash(seed).type()  === "core.int")
+     test(rnd_byte_array().hash(seed).type()  === "core.int")
+
+     test(true.hash(seed) === true.hash(seed))
+     test(true.hash(seed).type()  === "core.int")
+     test(false.hash(seed) === false.hash(seed))
+     test(false.hash(seed).type()  === "core.int")
+     test(true.hash(seed) =/= false.hash(seed))
+
+     test(0b00.hash(seed) === 0b00.hash(seed))
+     test(0b00.hash(seed).type()  === "core.int")
+
+     test('g'.hash(seed) === 'g'.hash(seed))
+     test('g'.hash(seed).type()  === "core.int")
+
+     test(123.hash(seed) === 123.hash(seed))
+     test(123.hash(seed).type()  === "core.int")
+
+     test(123.int_to_time().hash(seed) === 123.int_to_time().hash(seed))
+     test(123.int_to_time().hash(seed).type()  === "core.int")
+
+     test([array].hash(seed) === [array].init(10).hash(seed))
+     test([array].hash(seed).type() === "core.int")
+     test([array
+          ""
+          heap_string()
+          :123
+          heap_byte_array()
+          true, false
+          0bff
+          ' '
+          -23
+          0.int_to_time()
+          [array heap_string()]
+          [set heap_string()]
+          [table heap_string() = heap_string()]
+          to_const__hash(12)
+          to_custom_const__hash(12)
+          [obj]
+          [obj :_ = [obj :1 = 1]]
+     ].hash(seed) === [array
+          ""
+          heap_string()
+          :123
+          heap_byte_array()
+          true, false
+          0bff
+          ' '
+          -23
+          0.int_to_time()
+          [array heap_string()]
+          [set heap_string()]
+          [table heap_string() = heap_string()]
+          to_const__hash(12)
+          to_custom_const__hash(12)
+          [obj :_ = [obj :1 = 2]]
+          [obj]
+     ].hash(seed))
+     test([array
+          ""
+          heap_string()
+          :123
+          heap_byte_array()
+          true, false
+          0bff
+          ' '
+          -23
+          0.int_to_time()
+          [array heap_string()]
+          [set heap_string()]
+          [table heap_string() = heap_string()]
+          to_const__hash(12)
+          to_custom_const__hash(12)
+          [obj]
+          [obj :_ = [obj :1 = 1]]
+     ].hash(seed).type() === "core.int")
+     test(rnd_string_array().hash(seed).type() === "core.int")
+     test([array
+          rnd_string()
+          rnd_token()
+          rnd_byte_array()
+          rnd_char()
+          rnd()
+          rnd_string_array()
+          rnd_string_set()
+          rnd_string_table()
+          rnd_string_obj()
+     ].hash(seed).type() === "core.int")
+
+     test([set].hash(seed) === [set].init(10).hash(seed))
+     test([set].hash(seed).type() === "core.int")
+     test([set heap_string()].hash(seed) === [set heap_string()].hash(seed))
+     test([set heap_string()].hash(seed).type() === "core.int")
+     test([set heap_string(), 1, 2, 3].hash(seed) === [set heap_string(), 1, 2, 3].hash(seed))
+     test([set heap_string(), 1, 2, 3].hash(seed).type() === "core.int")
+
+     test([table].hash(seed) === [table].init(10).hash(seed))
+     test([table].hash(seed).type() === "core.int")
+     test([table heap_string() = heap_string()].hash(seed) === [table heap_string() = heap_string()].hash(seed))
+     test([table heap_string() = heap_string()].hash(seed).type() === "core.int")
+     test([table heap_string() = heap_string(), 1 = 2, 2 = 3, 3 = 4].hash(seed) === [table heap_string() = heap_string(), 1 = 2, 2 = 3, 3 = 4].hash(seed))
+     test([table heap_string() = heap_string(), 1 = 2, 2 = 3, 3 = 4].hash(seed).type() === "core.int")
+
+     test([obj].hash(seed) === [obj].init(10).hash(seed))
+     test([obj].hash(seed).type() === "core.int")
+     test([obj :t = heap_string()].hash(seed) === [obj :t = heap_string()].hash(seed))
+     test([obj :t = heap_string()].hash(seed).type() === "core.int")
+     test([obj :t = heap_string(), :1 = 2, :2 = 3, :3 = 4].hash(seed) === [obj :t = heap_string(), :1 = 2, :2 = 3, :3 = 4].hash(seed))
+     test([obj :t = heap_string(), :1 = 2, :2 = 3, :3 = 4].hash(seed).type() === "core.int")
+     test([obj].hash(seed) === [obj :_ = [obj]].hash(seed))
+     test([obj].hash(seed) === [obj :_ = [obj :1 = 1]].hash(seed))
+
+     test(to_const__hash('a').hash(seed) === 'a'.hash(seed))
+     test(to_const__hash(123).hash(seed) === 123.hash(seed))
+
+     test(to_custom_const__hash('a').hash(seed) === 'a'.hash(seed))
+     test(to_custom_const__hash(123).hash(seed) === 123.hash(seed))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.hash(seed).get_error_id() === :1)
+     test(heap_string().hash(error_1).get_error_id() === :1)
+     test(error_1.hash(error_2).get_error_id() === :1)
+     test(error_2.hash(error_1).get_error_id() === :2)
+
+     test((_ ++ heap_table()).scarlet__erase_info().hash(seed).get_error_id() === :invalid_type)
+     test(heap_string().hash(heap_string()).get_error_id() === :invalid_type)
+     test((_ ++ heap_table()).scarlet__erase_info().hash(heap_string()).get_error_id() === :invalid_type)
+
+     test(to_broken_const__hash('a').hash(seed).get_error_id() === :invalid_type)
+     test(to_broken_custom_const__hash('a').hash(seed).get_error_id() === :invalid_type)
+     test(to_error_const__hash('a').hash(seed).get_error_id() === :3)
+     test(to_error_custom_const__hash('a').hash(seed).get_error_id() === :4)
+}

@@ -1,0 +1,27 @@
+fn ir__core_fn_is_key_of(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box item, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box container, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ item:code:text ++ ", " ++ container:code:text ++ ")")
+
+     item.maybe_has_type!(@main.all_hash_map_key_types)
+     container.maybe_has_type!([set "table", "set", "obj", "custom"])
+
+     if item:comptime_val.null?() || container:comptime_val.null?() || not item:comptime_val:type.in?(@main.always_hash_map_key_types) ||
+               container:comptime_val:type == "obj" && not container:comptime_val:value[:_][:core___get_item__].null?()
+          ir__fn_call(
+               "McoreFNkey_ofB", [array item, container], code
+               if item.has_type?(@main.always_hash_map_key_types) && container.has_type?([set "table", "set"]); [set "bool"]  else [set "bool", "error"]
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     else {
+          let operand = if container:comptime_val:type == "obj" {
+               item.maybe_has_type!("token")
+               comptime_bool(item:comptime_val:value.key_of?(container:comptime_val:value), code)
+          } else comptime_bool(item:comptime_val.key_of?(container:comptime_val:value), code)
+
+          [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+     }
+}

@@ -1,0 +1,731 @@
+let array__zip_n = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_zip_n = fn (arrays, func) {
+               let [box array_1, array_2] = arrays
+               zip_n([box array_1:value, array_2:value], func)
+          }
+     ]
+]
+
+fn to_array__zip_n(arg) new (@main.array__zip_n):value <= arg
+
+fn to_custom_array__zip_n(arg) custom__create(
+     arg
+     [obj
+          :core_zip_n = fn (arrays, func) {
+               let [box array_1, array_2] = arrays
+               zip_n([box custom__get_data(array_1), array_2.custom__get_data()], func)
+          }
+     ]
+)
+
+let error_array__zip_n = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_zip_n = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__zip_n(arg) new (@main.error_array__zip_n):value <= arg
+
+fn to_error_custom_array__zip_n(arg) custom__create(
+     arg
+     [obj
+          :core_zip_n = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__zip_n() {
+     let items        = [array heap_string()]
+     let string_array = rnd_string_array()
+     let len          = (rnd() & 1023) + 1
+     let token_array  = loop([array].init(len), fn (array) {
+          let array = array.append(loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token()))
+          break(len(array) === len, array)
+     })
+
+     test(zip_n([box "", ""], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box "0", ""], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box "", "1"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box heap_string(), ""], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box "", heap_string()], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box "0", "1"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array '0', '1', heap_string()]])
+     test(zip_n([box "1", "0"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array '1', '0', heap_string()]])
+     test(zip_n([box "1", "02"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array '1', '0', heap_string()]])
+     test(zip_n([box "13", "0"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array '1', '0', heap_string()]])
+     test(zip_n([box "13", "02"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array '1', '0', heap_string()], [array '3', '2', heap_string()]])
+     test(zip_n([box "0123456789abcde", "edcba9876543210"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array
+          [array '0', 'e', heap_string()]
+          [array '1', 'd', heap_string()]
+          [array '2', 'c', heap_string()]
+          [array '3', 'b', heap_string()]
+          [array '4', 'a', heap_string()]
+          [array '5', '9', heap_string()]
+          [array '6', '8', heap_string()]
+          [array '7', '7', heap_string()]
+          [array '8', '6', heap_string()]
+          [array '9', '5', heap_string()]
+          [array 'a', '4', heap_string()]
+          [array 'b', '3', heap_string()]
+          [array 'c', '2', heap_string()]
+          [array 'd', '1', heap_string()]
+          [array 'e', '0', heap_string()]
+     ])
+     test(zip_n([box "0123456789abcdef", "edcba9876543210"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array
+          [array '0', 'e', heap_string()]
+          [array '1', 'd', heap_string()]
+          [array '2', 'c', heap_string()]
+          [array '3', 'b', heap_string()]
+          [array '4', 'a', heap_string()]
+          [array '5', '9', heap_string()]
+          [array '6', '8', heap_string()]
+          [array '7', '7', heap_string()]
+          [array '8', '6', heap_string()]
+          [array '9', '5', heap_string()]
+          [array 'a', '4', heap_string()]
+          [array 'b', '3', heap_string()]
+          [array 'c', '2', heap_string()]
+          [array 'd', '1', heap_string()]
+          [array 'e', '0', heap_string()]
+     ])
+     test(zip_n([box "0123456789abcde", "edcba9876543210g"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array
+          [array '0', 'e', heap_string()]
+          [array '1', 'd', heap_string()]
+          [array '2', 'c', heap_string()]
+          [array '3', 'b', heap_string()]
+          [array '4', 'a', heap_string()]
+          [array '5', '9', heap_string()]
+          [array '6', '8', heap_string()]
+          [array '7', '7', heap_string()]
+          [array '8', '6', heap_string()]
+          [array '9', '5', heap_string()]
+          [array 'a', '4', heap_string()]
+          [array 'b', '3', heap_string()]
+          [array 'c', '2', heap_string()]
+          [array 'd', '1', heap_string()]
+          [array 'e', '0', heap_string()]
+     ])
+     test(zip_n([box "0123456789abcdef", "edcba9876543210g"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array
+          [array '0', 'e', heap_string()]
+          [array '1', 'd', heap_string()]
+          [array '2', 'c', heap_string()]
+          [array '3', 'b', heap_string()]
+          [array '4', 'a', heap_string()]
+          [array '5', '9', heap_string()]
+          [array '6', '8', heap_string()]
+          [array '7', '7', heap_string()]
+          [array '8', '6', heap_string()]
+          [array '9', '5', heap_string()]
+          [array 'a', '4', heap_string()]
+          [array 'b', '3', heap_string()]
+          [array 'c', '2', heap_string()]
+          [array 'd', '1', heap_string()]
+          [array 'e', '0', heap_string()]
+          [array 'f', 'g', heap_string()]
+     ])
+
+     let string_1  = rnd_string()
+     let string_2  = if rnd_bool(); string_1 else null
+     let string_3  = rnd_string()
+     let string_4  = if rnd_bool(); string_3 else null
+     let small_len = if len(string_1) < len(string_3); len(string_1) else len(string_3)
+     let expected  = string_1.take(small_len).foldl_kv([array].init(small_len), fn (result, idx, char) result.append([array char, string_3[idx], items[0]]))
+     test(expected === zip_n([box string_1, string_3], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     string_2.ignore()
+     string_4.ignore()
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = string_1.foldl([array].init(len(string_1)), fn (result, char) result.append([array char, char, items[0]]))
+     test(expected === zip_n([box string_1, string_1], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     string_2.ignore()
+
+     test(zip_n([box u"", u""], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box u"0", u""], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box u"", u"1"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box heap_byte_array(), u""], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box u"", heap_byte_array()], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box u"0", u"1"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array u"0"[0], u"1"[0], heap_string()]])
+     test(zip_n([box u"1", u"0"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array u"1"[0], u"0"[0], heap_string()]])
+     test(zip_n([box u"1", u"02"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array u"1"[0], u"0"[0], heap_string()]])
+     test(zip_n([box u"13", u"0"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array u"1"[0], u"0"[0], heap_string()]])
+     test(zip_n([box u"13", u"02"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array u"1"[0], u"0"[0], heap_string()], [array u"3"[0], u"2"[0], heap_string()]])
+     test(zip_n([box u"0123456789abcd", u"dcba9876543210"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array
+          [array u"0"[0], u"d"[0], heap_string()]
+          [array u"1"[0], u"c"[0], heap_string()]
+          [array u"2"[0], u"b"[0], heap_string()]
+          [array u"3"[0], u"a"[0], heap_string()]
+          [array u"4"[0], u"9"[0], heap_string()]
+          [array u"5"[0], u"8"[0], heap_string()]
+          [array u"6"[0], u"7"[0], heap_string()]
+          [array u"7"[0], u"6"[0], heap_string()]
+          [array u"8"[0], u"5"[0], heap_string()]
+          [array u"9"[0], u"4"[0], heap_string()]
+          [array u"a"[0], u"3"[0], heap_string()]
+          [array u"b"[0], u"2"[0], heap_string()]
+          [array u"c"[0], u"1"[0], heap_string()]
+          [array u"d"[0], u"0"[0], heap_string()]
+     ])
+     test(zip_n([box u"0123456789abcdef", u"edcba9876543210"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array
+          [array u"0"[0], u"e"[0], heap_string()]
+          [array u"1"[0], u"d"[0], heap_string()]
+          [array u"2"[0], u"c"[0], heap_string()]
+          [array u"3"[0], u"b"[0], heap_string()]
+          [array u"4"[0], u"a"[0], heap_string()]
+          [array u"5"[0], u"9"[0], heap_string()]
+          [array u"6"[0], u"8"[0], heap_string()]
+          [array u"7"[0], u"7"[0], heap_string()]
+          [array u"8"[0], u"6"[0], heap_string()]
+          [array u"9"[0], u"5"[0], heap_string()]
+          [array u"a"[0], u"4"[0], heap_string()]
+          [array u"b"[0], u"3"[0], heap_string()]
+          [array u"c"[0], u"2"[0], heap_string()]
+          [array u"d"[0], u"1"[0], heap_string()]
+          [array u"e"[0], u"0"[0], heap_string()]
+     ])
+     test(zip_n([box u"0123456789abcde", u"edcba9876543210g"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array
+          [array u"0"[0], u"e"[0], heap_string()]
+          [array u"1"[0], u"d"[0], heap_string()]
+          [array u"2"[0], u"c"[0], heap_string()]
+          [array u"3"[0], u"b"[0], heap_string()]
+          [array u"4"[0], u"a"[0], heap_string()]
+          [array u"5"[0], u"9"[0], heap_string()]
+          [array u"6"[0], u"8"[0], heap_string()]
+          [array u"7"[0], u"7"[0], heap_string()]
+          [array u"8"[0], u"6"[0], heap_string()]
+          [array u"9"[0], u"5"[0], heap_string()]
+          [array u"a"[0], u"4"[0], heap_string()]
+          [array u"b"[0], u"3"[0], heap_string()]
+          [array u"c"[0], u"2"[0], heap_string()]
+          [array u"d"[0], u"1"[0], heap_string()]
+          [array u"e"[0], u"0"[0], heap_string()]
+     ])
+     test(zip_n([box u"0123456789abcdef", u"edcba9876543210g"], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array
+          [array u"0"[0], u"e"[0], heap_string()]
+          [array u"1"[0], u"d"[0], heap_string()]
+          [array u"2"[0], u"c"[0], heap_string()]
+          [array u"3"[0], u"b"[0], heap_string()]
+          [array u"4"[0], u"a"[0], heap_string()]
+          [array u"5"[0], u"9"[0], heap_string()]
+          [array u"6"[0], u"8"[0], heap_string()]
+          [array u"7"[0], u"7"[0], heap_string()]
+          [array u"8"[0], u"6"[0], heap_string()]
+          [array u"9"[0], u"5"[0], heap_string()]
+          [array u"a"[0], u"4"[0], heap_string()]
+          [array u"b"[0], u"3"[0], heap_string()]
+          [array u"c"[0], u"2"[0], heap_string()]
+          [array u"d"[0], u"1"[0], heap_string()]
+          [array u"e"[0], u"0"[0], heap_string()]
+          [array u"f"[0], u"g"[0], heap_string()]
+     ])
+
+     let array_1   = rnd_byte_array()
+     let array_2   = if rnd_bool(); array_1 else null
+     let array_3   = rnd_byte_array()
+     let array_4   = if rnd_bool(); array_3 else null
+     let small_len = if len(array_1) < len(array_3); len(array_1) else len(array_3)
+     let expected  = array_1.take(small_len).foldl_kv([array].init(small_len), fn (result, idx, byte) result.append([array byte, array_3[idx], items[0]]))
+     test(expected === zip_n([box array_1, array_3], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     array_2.ignore()
+     array_4.ignore()
+
+     let array_1  = rnd_byte_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.foldl([array].init(len(array_1)), fn (result, byte) result.append([array byte, byte, items[0]]))
+     test(expected === zip_n([box array_1, array_1], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     array_2.ignore()
+
+     test(zip_n([box [array], [array]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box [array 0], [array]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box [array], [array 1]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box [array].init(10), [array].init(10)], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box [array 0], [array].init(10)], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box [array].init(10), [array 1]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array])
+     test(zip_n([box [array 0], [array 1]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array 0, 1, heap_string()]])
+     test(zip_n([box [array 1], [array 0]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array 1, 0, heap_string()]])
+     test(zip_n([box [array 1], [array 0, 2]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array 1, 0, heap_string()]])
+     test(zip_n([box [array 1, 3], [array 0]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array 1, 0, heap_string()]])
+     test(zip_n([box [array 1, 3], [array 0, 2]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [array [array 1, 0, heap_string()], [array 3, 2, heap_string()]])
+
+     let array_1   = rnd_string_array()
+     let array_2   = if rnd_bool(); array_1 else null
+     let array_3   = rnd_string_array()
+     let array_4   = if rnd_bool(); array_3 else null
+     let small_len = if len(array_1) < len(array_3); len(array_1) else len(array_3)
+     let expected  = array_1.take(small_len).foldl_kv([array].init(small_len), fn (result, idx, string) result.append([array string, array_3[idx], items[0]]))
+     test(expected === zip_n([box array_1, array_3], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     array_2.ignore()
+     array_4.ignore()
+
+     let array_1  = rnd_string_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.foldl([array].init(len(array_1)), fn (result, string) result.append([array string, string, items[0]]))
+     test(expected === zip_n([box array_1, array_1], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     array_2.ignore()
+
+     let array_1   = (switch (rnd() >> 1) % 3
+          case 0: rnd_string()
+          case 1: rnd_byte_array()
+          case 2: rnd_string_array()
+          default: unreachable()).drop(1)
+     let array_2   = if rnd_bool(); array_1 else null
+     let array_3   = (switch (rnd() >> 1) % 3
+          case 0: rnd_string()
+          case 1: rnd_byte_array()
+          case 2: rnd_string_array()
+          default: unreachable()).drop(1)
+     let array_4   = if rnd_bool(); array_3 else null
+     let small_len = if len(array_1) < len(array_3); len(array_1) else len(array_3)
+     let expected  = array_1.take(small_len).foldl_kv([array].init(small_len), fn (result, idx, item) result.append([array item, array_3[idx], items[0]]))
+     test(expected === zip_n([box array_1, array_3], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     array_2.ignore()
+     array_4.ignore()
+
+     test(zip_n([box [set], [set]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [set 0], [set]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [set], [set 1]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [set].init(10), [set].init(10)], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [set 0], [set].init(10)], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [set].init(10), [set 1]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [set 0], [set 1]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [set 1], [set 0]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [set 1], [set 1, 2]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table 1 = [array 1, 1, heap_string()]])
+     test(zip_n([box [set 1, 2], [set 1]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table 1 = [array 1, 1, heap_string()]])
+     test(zip_n([box [set 1, 3], [set 3, 2]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table 3 = [array 3, 3, heap_string()]])
+
+     let set_1    = loop([set], fn (set) {
+          if (rnd() & 511) === 511
+               [breaker set]
+          else if (rnd() & 7) === 7
+               set.append(rnd_string())
+          else set.append(string_array[(rnd() >> 1) % len(string_array)])
+     })
+     let set_2    = if rnd_bool(); set_1 else null
+     let set_3    = loop([set], fn (set) {
+          if (rnd() & 511) === 511
+               [breaker set]
+          else if (rnd() & 7) === 7
+               set.append(rnd_string())
+          else set.append(string_array[(rnd() >> 1) % len(string_array)])
+     })
+     let set_4    = if rnd_bool(); set_3 else null
+     let expected = set_1.foldl([table], fn (table, item) if set_3[item].null?(); table else new (table)[item] <= [array item, item, items[0]])
+     test(expected === zip_n([box set_1, set_3], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     set_2.ignore()
+     set_4.ignore()
+
+     let set_1    = loop([set], fn (set) {
+          if (rnd() & 511) === 511
+               [breaker set]
+          else if (rnd() & 7) === 7
+               set.append(rnd_string())
+          else set.append(string_array[(rnd() >> 1) % len(string_array)])
+     })
+     let set_2    = if rnd_bool(); set_1 else null
+     let expected = set_1.foldl([table], fn (table, item) new (table)[item] <= [array item, item, items[0]])
+     test(expected === zip_n([box set_1, set_1], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     set_2.ignore()
+
+     test(zip_n([box [table], [table]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [table 0 = 10], [table]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [table], [table 1 = 11]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [table].init(10), [table].init(10)], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [table 0 = 10], [table].init(10)], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [table].init(10), [table 1 = 11]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [table 0 = 10], [table 1 = 11]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [table 1 = 11], [table 0 = 10]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table])
+     test(zip_n([box [table 1 = 11], [table 1 = 111, 2 = 12]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table 1 = [array 11, 111, heap_string()]])
+     test(zip_n([box [table 1 = 11, 2 = 12], [table 1 = 111]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table 1 = [array 11, 111, heap_string()]])
+     test(zip_n([box [table 1 = 11, 2 = 12], [table 1 = 111, 2 = 112]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [table 1 = [array 11, 111, heap_string()], 2 = [array 12, 112, heap_string()]])
+
+     let table_1  = loop([table], fn (table) {
+          if (rnd() & 511) === 511
+               [breaker table]
+          else if (rnd() & 7) === 7
+               new (table)[rnd_string()] <= rnd_string()
+          else new (table)[string_array[(rnd() >> 1) % len(string_array)]] <= rnd_string()
+     })
+     let table_2  = if rnd_bool(); table_1 else null
+     let table_3  = loop([table], fn (table) {
+          if (rnd() & 511) === 511
+               [breaker table]
+          else if (rnd() & 7) === 7
+               new (table)[rnd_string()] <= rnd_string()
+          else new (table)[string_array[(rnd() >> 1) % len(string_array)]] <= rnd_string()
+     })
+     let table_4  = if rnd_bool(); table_3 else null
+     let expected = table_1.foldl_kv([table], fn (table, key, item_1) {
+          let item_2 = table_3[key]
+          if item_2.null?()
+               table
+          else new (table)[key] <= [array item_1, item_2, items[0]]
+     })
+     test(expected === zip_n([box table_1, table_3], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     table_2.ignore()
+     table_4.ignore()
+
+     let table_1  = loop([table], fn (table) {
+          if (rnd() & 511) === 511
+               [breaker table]
+          else if (rnd() & 7) === 7
+               new (table)[rnd_string()] <= rnd_string()
+          else new (table)[string_array[(rnd() >> 1) % len(string_array)]] <= rnd_string()
+     })
+     let table_2  = if rnd_bool(); table_1 else null
+     let expected = table_1.foldl_kv([table], fn (table, key, value) new (table)[key] <= [array value, value, items[0]])
+     test(expected === zip_n([box table_1, table_1], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     table_2.ignore()
+
+     test(zip_n([box [obj], [obj]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj])
+     test(zip_n([box [obj :_ = [obj]], [obj :_ = [obj]]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj])
+     test(zip_n([box [obj :_ = [obj]], [obj :_ = [obj]]], fn (item_1, item_2) [array item_1, item_2, items[0]]):_.null?())
+     test(zip_n([box [obj :0 = 10], [obj]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj])
+     test(zip_n([box [obj :0 = 10, :_ = [obj]], [obj :_ = [obj]]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj])
+     test(zip_n([box [obj :0 = 10, :_ = [obj]], [obj :_ = [obj]]], fn (item_1, item_2) [array item_1, item_2, items[0]]):_.null?())
+     test(zip_n([box [obj], [obj :1 = 11]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj])
+     test(zip_n([box [obj].init(10), [obj].init(10)], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj])
+     test(zip_n([box [obj :0 = 10], [obj].init(10)], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj])
+     test(zip_n([box [obj].init(10), [obj :1 = 11]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj])
+     test(zip_n([box [obj :0 = 10], [obj :1 = 11]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj])
+     test(zip_n([box [obj :1 = 11], [obj :0 = 10]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj])
+     test(zip_n([box [obj :1 = 11], [obj :1 = 111, :2 = 12]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj :1 = [array 11, 111, heap_string()]])
+     test(zip_n([box [obj :1 = 11, :2 = 12], [obj :1 = 111]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj :1 = [array 11, 111, heap_string()]])
+     test(zip_n([box [obj :1 = 11, :2 = 12], [obj :1 = 111, :2 = 112]], fn (item_1, item_2) [array item_1, item_2, items[0]]) === [obj :1 = [array 11, 111, heap_string()], :2 = [array 12, 112, heap_string()]])
+
+     let obj_1       = loop([obj], fn (obj) {
+          if (rnd() & 511) === 511
+               [breaker obj]
+          else if (rnd() & 7) === 7
+               new (obj)[loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())] <= rnd_string()
+          else new (obj)[token_array[(rnd() >> 1) % len(token_array)]] <= rnd_string()
+     })
+     let obj_2       = if rnd_bool(); obj_1 else null
+     let obj_3       = loop([obj], fn (obj) {
+          if (rnd() & 511) === 511
+               [breaker obj]
+          else if (rnd() & 7) === 7
+               new (obj)[loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())] <= rnd_string()
+          else new (obj)[token_array[(rnd() >> 1) % len(token_array)]] <= rnd_string()
+     })
+     let obj_4       = if rnd_bool(); obj_3 else null
+     let expected    = obj_1.foldl_kv([obj], fn (obj, key, item_1) {
+          let item_2 = obj_3[key]
+          if item_2.null?()
+               obj
+          else new (obj)[key] <= [array item_1, item_2, items[0]]
+     })
+     test(expected === zip_n([box obj_1, obj_3], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     obj_2.ignore()
+     obj_4.ignore()
+
+     let obj_1    = loop([obj], fn (obj) {
+          if (rnd() & 511) === 511
+               [breaker obj]
+          else if (rnd() & 7) === 7
+               new (obj)[loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())] <= rnd_string()
+          else new (obj)[token_array[(rnd() >> 1) % len(token_array)]] <= rnd_string()
+     })
+     let obj_2    = if rnd_bool(); obj_1 else null
+     let expected = obj_1.foldl_kv([obj], fn (obj, key, value) new (obj)[key] <= [array value, value, items[0]])
+     test(expected === zip_n([box obj_1, obj_1], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     obj_2.ignore()
+
+     let container_1 = switch (rnd() >> 1) % 3
+          case 0: loop([set], fn (set) {
+               if (rnd() & 511) === 511
+                    [breaker set]
+               else set.append(
+                    switch rnd() & 3
+                    case 0: rnd_string()
+                    case 1: loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+                    case 2: string_array[(rnd() >> 1) % len(string_array)]
+                    case 3: token_array[(rnd() >> 1) % len(token_array)]
+                    default: unreachable()
+               )
+          })
+          case 1: loop([table], fn (table) {
+               if (rnd() & 511) === 511
+                    [breaker table]
+               else new (table) [
+                    switch rnd() & 3
+                    case 0: rnd_string()
+                    case 1: loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+                    case 2: string_array[(rnd() >> 1) % len(string_array)]
+                    case 3: token_array[(rnd() >> 1) % len(token_array)]
+                    default: unreachable()
+               ] <= rnd_string()
+          })
+          case 2: loop([obj], fn (obj) {
+               if (rnd() & 511) === 511
+                    [breaker obj]
+               else if (rnd() & 7) === 7
+                    new (obj)[loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())] <= rnd_string()
+               else new (obj)[token_array[(rnd() >> 1) % len(token_array)]] <= rnd_string()
+          })
+          default: unreachable()
+     let container_2 = if rnd_bool(); container_1 else null
+     let container_3 = switch (rnd() >> 1) % 3
+          case 0: loop([set], fn (set) {
+               if (rnd() & 511) === 511
+                    [breaker set]
+               else set.append(
+                    switch rnd() & 3
+                    case 0: rnd_string()
+                    case 1: loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+                    case 2: string_array[(rnd() >> 1) % len(string_array)]
+                    case 3: token_array[(rnd() >> 1) % len(token_array)]
+                    default: unreachable()
+               )
+          })
+          case 1: loop([table], fn (table) {
+               if (rnd() & 511) === 511
+                    [breaker table]
+               else new (table)[
+                    switch rnd() & 3
+                    case 0: rnd_string()
+                    case 1: loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+                    case 2: string_array[(rnd() >> 1) % len(string_array)]
+                    case 3: token_array[(rnd() >> 1) % len(token_array)]
+                    default: unreachable()
+               ] <= rnd_string()
+          })
+          case 2: loop([obj], fn (obj) {
+               if (rnd() & 511) === 511
+                    [breaker obj]
+               else if (rnd() & 7) === 7
+                    new (obj)[loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())] <= rnd_string()
+               else new (obj)[token_array[(rnd() >> 1) % len(token_array)]] <= rnd_string()
+          })
+          default: unreachable()
+     let container_4 = if rnd_bool(); container_3 else null
+     let expected    = if container_1.type() === "core.set"
+          container_1.foldl([table], fn (result, item_1) {
+               let item_2 = if container_3.type() === "core.obj" && item_1.type() =/= "core.token"
+                    null
+               else container_3[item_1]
+
+               if item_2.null?()
+                    result
+               else new (result)[item_1] <= [array item_1, item_2, items[0]]
+          })
+     else container_1.foldl_kv(if container_1.type() === container_3.type() && container_1.type() === "core.obj"; [obj] else [table], fn (result, key, item_1) {
+          let item_2 = if container_3.type() === "core.obj" && key.type() =/= "core.token"
+               null
+          else container_3[key]
+
+          if item_2.null?()
+               result
+          else new (result)[key] <= [array item_1, item_2, items[0]]
+     })
+     test(expected === zip_n([box container_1, container_3], fn (item_1, item_2) [array item_1, item_2, items[0]]))
+     container_2.ignore()
+     container_4.ignore()
+
+     test(zip_n([box to_array__zip_n("0123"), to_array__zip_n("4567")], fn (char_1, char_2) char_1.to_string().append(char_2)) === [array "04", "15", "26", "37"])
+     test(zip_n([box to_custom_array__zip_n("0123"), to_custom_array__zip_n("4567")], fn (char_1, char_2) char_1.to_string().append(char_2)) === [array "04", "15", "26", "37"])
+
+     let arrays = loop([array].init(16), fn (arrays) {
+          let arrays = arrays.append(
+               (switch (rnd() >> 1) % 3
+               case 0: rnd_string()
+               case 1: rnd_byte_array()
+               case 2: rnd_string_array()
+               default: unreachable()).drop(1)
+          )
+          break(len(arrays) === 16, arrays)
+     })
+     let borrowed_arrays = arrays.foldl([array].init(16), fn (borrowed_arrays, array) if rnd_bool(); borrowed_arrays.append(array) else borrowed_arrays)
+     let small_len       = arrays.foldl(0.max_val(), fn (small_len, array) min(small_len, len(array)))
+     let expected        = arrays[0].take(small_len).foldl_kv([array].init(small_len), fn (result, idx, item_1) result.append([array
+          item_1
+          arrays[1][idx]
+          arrays[2][idx]
+          arrays[3][idx]
+          arrays[4][idx]
+          arrays[5][idx]
+          arrays[6][idx]
+          arrays[7][idx]
+          arrays[8][idx]
+          arrays[9][idx]
+          arrays[10][idx]
+          arrays[11][idx]
+          arrays[12][idx]
+          arrays[13][idx]
+          arrays[14][idx]
+          arrays[15][idx]
+     ]))
+     test(expected === zip_n(arrays.to_box(), fn (
+          item_1
+          item_2
+          item_3
+          item_4
+          item_5
+          item_6
+          item_7
+          item_8
+          item_9
+          item_10
+          item_11
+          item_12
+          item_13
+          item_14
+          item_15
+          item_16
+     ) [array
+          item_1
+          item_2
+          item_3
+          item_4
+          item_5
+          item_6
+          item_7
+          item_8
+          item_9
+          item_10
+          item_11
+          item_12
+          item_13
+          item_14
+          item_15
+          item_16
+     ]))
+     borrowed_arrays.ignore()
+
+     let containers = loop([array].init(16), fn (containers) {
+          let containers = containers.append(
+               switch (rnd() >> 1) % 3
+               case 0: loop([set], fn (set) {
+                    if (rnd() & 511) === 511
+                         [breaker set]
+                    else set.append(
+                         switch rnd() & 3
+                         case 0: rnd_string()
+                         case 1: loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+                         case 2: string_array[(rnd() >> 1) % len(string_array)]
+                         case 3: token_array[(rnd() >> 1) % len(token_array)]
+                         default: unreachable()
+                    )
+               })
+               case 1: loop([table], fn (table) {
+                    if (rnd() & 511) === 511
+                         [breaker table]
+                    else new (table) [
+                         switch rnd() & 3
+                         case 0: rnd_string()
+                         case 1: loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+                         case 2: string_array[(rnd() >> 1) % len(string_array)]
+                         case 3: token_array[(rnd() >> 1) % len(token_array)]
+                         default: unreachable()
+                    ] <= rnd_string()
+               })
+               case 2: loop([obj], fn (obj) {
+                    if (rnd() & 511) === 511
+                         [breaker obj]
+                    else if (rnd() & 7) === 7
+                         new (obj)[loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())] <= rnd_string()
+                    else new (obj)[token_array[(rnd() >> 1) % len(token_array)]] <= rnd_string()
+               })
+               default: unreachable()
+          )
+          break(len(containers) === 16, containers)
+     })
+     let borrowed_containers = containers.foldl([array].init(16), fn (borrowed_containers, container) if rnd_bool(); borrowed_containers.append(container) else borrowed_containers)
+     let expected_type       = containers.foldl([obj], fn (result, container) if container.type() === "core.obj"; result else [table])
+     let expected            = if containers[0].type() === "core.set"
+          containers[0].foldl([table], fn (result, item_1) {
+               let items = loop([array].init(16).append(item_1), fn (items) {
+                    let current_container = containers[len(items)]
+
+                    let item = if current_container.type() === "core.obj" && item_1.type() =/= "core.token"
+                         null
+                    else current_container[item_1]
+
+                    if item.null?()
+                         [breaker null]
+                    else break(len(items) === 15, items.append(item))
+               })
+
+               if items.null?()
+                    result
+               else new (result)[item_1] <= items
+          })
+     else containers[0].foldl_kv(expected_type, fn (result, key, item_1) {
+          let items = loop([array].init(16).append(item_1), fn (items) {
+               let current_container = containers[len(items)]
+
+               let item = if current_container.type() === "core.obj" && key.type() =/= "core.token"
+                    null
+               else current_container[key]
+
+               if item.null?()
+                    [breaker null]
+               else break(len(items) === 15, items.append(item))
+          })
+
+          if items.null?()
+               result
+          else new (result)[key] <= items
+     })
+     test(expected === zip_n(containers.to_box(), fn (
+          item_1
+          item_2
+          item_3
+          item_4
+          item_5
+          item_6
+          item_7
+          item_8
+          item_9
+          item_10
+          item_11
+          item_12
+          item_13
+          item_14
+          item_15
+          item_16
+     ) [array
+          item_1
+          item_2
+          item_3
+          item_4
+          item_5
+          item_6
+          item_7
+          item_8
+          item_9
+          item_10
+          item_11
+          item_12
+          item_13
+          item_14
+          item_15
+          item_16
+     ]))
+     borrowed_containers.ignore()
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(zip_n(error_1, _ ++ heap_string()).get_error_id() === :1)
+     test(zip_n([box heap_string(), heap_string()], error_1).get_error_id() === :1)
+     test(zip_n(error_1, error_2).get_error_id() === :1)
+     test(zip_n(error_2, error_1).get_error_id() === :2)
+     test(zip_n(error_1, heap_string()).get_error_id() === :1)
+     test(zip_n(heap_string(), error_1).get_error_id() === :1)
+
+     test(zip_n(heap_string(), _ ++ heap_string()).get_error_id() === :invalid_type)
+     test(zip_n([box heap_string(), heap_string()], heap_string()).get_error_id() === :invalid_type)
+     test(zip_n(heap_string(), heap_string()).get_error_id() === :invalid_type)
+
+     test(zip_n([box heap_string()], _ ++ heap_string()).get_error_id() === :out_of_bounds)
+     test(zip_n([box], _ ++ heap_string()).get_error_id() === :out_of_bounds)
+
+     test(zip_n([box heap_string(), heap_byte_array()], fn (_, _) expected_error(:11, heap_string(), heap_string())).get_error_id() === :11)
+     test(zip_n([box heap_string(), heap_byte_array()], fn (item_1, item_2, item_3) [array item_1, item_2, item_3]).get_error_id() === :wrong_num_fn_args)
+
+     test([box to_error_array__zip_n([array].init(10)), to_error_array__zip_n([array].init(10))].zip_n(fn (_, _) string_1).get_error_id() == :3)
+     test([box to_error_custom_array__zip_n([array].init(10)), to_error_custom_array__zip_n([array].init(10))].zip_n(fn (_, _) string_1).get_error_id() == :4)
+}

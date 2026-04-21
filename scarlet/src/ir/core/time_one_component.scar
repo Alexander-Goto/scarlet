@@ -1,0 +1,39 @@
+fn ir__core_fn_time_one_component(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box time, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+     let [box timezone, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ (time:code:text ++ ", " ++ timezone:code:text ++ ")")
+
+     time.maybe_has_type!("time")
+     timezone.maybe_has_type!("int")
+
+     if not (timezone:comptime_val.null?() || timezone:comptime_val:value.in_range?(-86400, 86401))
+          error__out_of_bounds(timezone:code)
+     else null
+
+     if time:comptime_val.null?() || timezone:comptime_val.null?()
+          ir__fn_call(fn_ir_name, [array time, timezone], code, if time.has_type?("time") && not timezone:comptime_val.null?(); [set "int"] else [set "int", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else {
+          let time    = time:comptime_val:value
+          let operand = new (timezone) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:value => switch fn_ir_name
+                    case "McoreFNday":    day(time, _)
+                    case "McoreFNhour":   hour(time, _)
+                    case "McoreFNminute": minute(time, _)
+                    case "McoreFNmonth":  month(time, _)
+                    case "McoreFNsecond": second(time, _)
+                    case "McoreFNyear":   year(time, _)
+                    default:              unreachable()
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

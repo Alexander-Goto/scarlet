@@ -1,0 +1,68 @@
+fn ir__core_fn_is_part_of_is_prefix_of_is_suffix_of(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box part, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box array, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code          = new (exp:name):text => _ ++ ("(" ++ part:code:text ++ ", " ++ array:code:text ++ ")")
+     let short_fn_name = fn_ir_name.drop(7)
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+
+     if part.has_type?("string") && array.has_type?("short_string") ||
+          part.has_type?("byte_array") && array.has_type?("short_byte_array")
+     {
+          let ir = dec_ref_cnt(array, dec_ref_cnt(part, ir))
+          [box comptime_bool(false, code), exp_data, if is_last; ir__raw_return(ir, "bool__false") else ir, final_data, dependencies, src_gconsts]
+     } else if part:comptime_val.null?() || array:comptime_val.null?() || array:comptime_val:type.in?([array "array", "obj"]) {
+          if array:comptime_val:type === "obj" {
+               let [box token, mtd_type] = switch short_fn_name
+               case "part_ofB":   [box :core_look_part_in, ".core_look_part_in"]
+               case "prefix_ofB": [box :core_prefix_of?, ".core_prefix_of?"]
+               case "suffix_ofB": [box :core_suffix_of?, ".core_suffix_of?"]
+               default:                  unreachable()
+
+               if array:comptime_val:value[:_][token].null?()
+                    error__invalid_type(array:code, mtd_type, "obj")
+               else null
+          } else null
+
+          let array_expected_types = if part:possible_types.null?()
+               valid_types
+          else {
+               let array_expected_types = part:possible_types.filter(_.in?(valid_types)).prepare_types_for_cmp()
+               if array_expected_types.empty?()
+                    error__invalid_type(part:code, valid_types, array_expected_types)
+               else array_expected_types
+          }
+          array.maybe_has_type!(array_expected_types)
+
+          let result_possible_types = if
+                    part.has_type?(@main.string_types)     && array.has_type?(@main.string_types)     ||
+                    part.has_type?(@main.byte_array_types) && array.has_type?(@main.byte_array_types) ||
+                    part.has_type?("array")                && array.has_type?("array")
+               [set "bool"]
+          else [set "bool", "error"]
+
+          ir__fn_call(fn_ir_name, [array part, array], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          part.maybe_has_type!(valid_types)
+          array.maybe_has_type!(part:possible_types.prepare_types_for_cmp())
+
+          let operand = comptime_bool(
+               switch short_fn_name
+               case "part_ofB":   part:comptime_val:value.part_of?(array:comptime_val:value)
+               case "prefix_ofB": part:comptime_val:value.prefix_of?(array:comptime_val:value)
+               case "suffix_ofB": part:comptime_val:value.suffix_of?(array:comptime_val:value)
+               default:           unreachable()
+
+               code
+          )
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

@@ -1,0 +1,10 @@
+`noinline`
+fn test__common() {
+     test(true)
+     test(not false)
+     test(not not true)
+
+     test(true.scarlet__erase_info())
+     test(not false.scarlet__erase_info())
+     test(not not true.scarlet__erase_info())
+}

@@ -1,0 +1,26 @@
+fn ir__make_array_fields(ref_cnt, len, cap)
+     "0x" ++ format_int(ref_cnt | len << 40, 16, false) ++ "uwb,0x" ++ format_int(len >> 24 | cap << 20, 16, false) ++ "uwb"
+
+fn ir__make_array_fields_u8_version(ref_cnt, len, cap) {
+     let part_1 = format_int((ref_cnt | len << 40) & 0xff'ffff'ffff'ffff, 16, false)
+     let part_1 = "0".repeat(14 - part_1.len()) ++ part_1
+     let part_2 = format_int((len >> 16 | cap << 28) & 0xff'ffff'ffff'ffff, 16, false)
+     let part_2 = "0".repeat(14 - part_2.len()) ++ part_2
+     let part_3 = format_int(cap >> 28, 16, false)
+     let part_3 = "0".repeat(4 - part_3.len()) ++ part_3
+
+     "0x" ++ part_1[12, 14] ++ ",0x" ++ part_1[10, 12] ++ ",0x" ++ part_1[8, 10] ++ ",0x" ++ part_1[6, 8] ++
+     ",0x" ++ part_1[4, 6] ++ ",0x" ++ part_1[2, 4] ++ ",0x" ++ part_1[0, 2] ++ ",0x" ++
+     part_2[12, 14] ++ ",0x" ++ part_2[10, 12] ++ ",0x" ++ part_2[8, 10] ++ ",0x" ++ part_2[6, 8] ++
+     ",0x" ++ part_2[4, 6] ++ ",0x" ++ part_2[2, 4] ++ ",0x" ++ part_2[0, 2] ++ ",0x" ++
+     part_3[2, 4] ++ ",0x" ++ part_3[0, 2]
+}
+
+fn ir__make_slice_metadata(offset, len) {
+     let len      = if len > 0xfff'fffe; 0xfff'ffff else len
+     let metadata = format_int(offset | len << 28, 16, false)
+     let metadata = "0".repeat(14 - metadata.len()) ++ metadata
+
+     "0x" ++ metadata[12, 14] ++ ",0x" ++ metadata[10, 12] ++ ",0x" ++ metadata[8, 10] ++ ",0x" ++ metadata[6, 8] ++
+     ",0x" ++ metadata[4, 6] ++ ",0x" ++ metadata[2, 4] ++ ",0x" ++ metadata[0, 2]
+}

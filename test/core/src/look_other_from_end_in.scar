@@ -1,0 +1,183 @@
+let container__look_other_from_end_in = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_lofei = fn (item, container) item.look_other_from_end_in(container:value)
+     ]
+]
+
+fn to_container__look_other_from_end_in(arg) new (@main.container__look_other_from_end_in):value <= arg
+
+fn to_custom_container__look_other_from_end_in(arg) custom__create(
+     arg
+     [obj
+          :core_lofei = fn (item, container) item.look_other_from_end_in(container.custom__get_data())
+     ]
+)
+
+let error_container__look_other_from_end_in = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_lofei = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__look_other_from_end_in(arg) new (@main.error_container__look_other_from_end_in):value <= arg
+
+fn to_error_custom_container__look_other_from_end_in(arg) custom__create(
+     arg
+     [obj
+          :core_lofei = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__look_other_from_end_in() {
+     test('2'.look_other_from_end_in("").null?())
+     test('1'.look_other_from_end_in("").null?())
+     test('1'.look_other_from_end_in("1").null?())
+     test('2'.look_other_from_end_in("1") === 0)
+     test('0'.look_other_from_end_in("000000000000000").null?())
+     test('0'.look_other_from_end_in("100000000000000") === 0)
+     test('0'.look_other_from_end_in("010000000000000") === 1)
+     test('0'.look_other_from_end_in("011000000000000") === 2)
+     test('0'.look_other_from_end_in("000000000000010") === 13)
+     test('0'.look_other_from_end_in("000000000000001") === 14)
+
+     test('\000090'.look_other_from_end_in("\000090\000090\000090\000090\000090\000090\000090").null?())
+     test('\000090'.look_other_from_end_in("\000091\000090\000090\000090\000090\000090\000090") === 0)
+     test('\000090'.look_other_from_end_in("\000090\000091\000090\000090\000090\000090\000090") === 1)
+     test('\000090'.look_other_from_end_in("\000090\000091\000091\000090\000090\000090\000090") === 2)
+     test('\000090'.look_other_from_end_in("\000090\000090\000090\000090\000090\000091\000090") === 5)
+     test('\000090'.look_other_from_end_in("\000090\000090\000090\000090\000090\000090\000091") === 6)
+
+     test('0'.look_other_from_end_in("0000000000000000").null?())
+     test('0'.look_other_from_end_in("1000000000000000") === 0)
+     test('0'.look_other_from_end_in("0100000000000000") === 1)
+     test('0'.look_other_from_end_in("0110000000000000") === 2)
+     test('0'.look_other_from_end_in("0000000000000010") === 14)
+     test('0'.look_other_from_end_in("0000000000000001") === 15)
+
+     test('0'.look_other_from_end_in(("20000000000000000" ++ "2")[1, 17]).null?())
+     test('0'.look_other_from_end_in(("21000000000000000" ++ "2")[1, 17]) === 0)
+     test('0'.look_other_from_end_in(("20100000000000000" ++ "2")[1, 17]) === 1)
+     test('0'.look_other_from_end_in(("20110000000000000" ++ "2")[1, 17]) === 2)
+     test('0'.look_other_from_end_in(("20000000000000010" ++ "2")[1, 17]) === 14)
+     test('0'.look_other_from_end_in(("20000000000000001" ++ "2")[1, 17]) === 15)
+
+     test('\000090'.look_other_from_end_in("\000090\000090\000090\000090\000090\000090\000090\000090").null?())
+     test('\000090'.look_other_from_end_in("\000091\000090\000090\000090\000090\000090\000090\000090") === 0)
+     test('\000090'.look_other_from_end_in("\000090\000091\000090\000090\000090\000090\000090\000090") === 1)
+     test('\000090'.look_other_from_end_in("\000090\000091\000091\000090\000090\000090\000090\000090") === 2)
+     test('\000090'.look_other_from_end_in("\000090\000090\000090\000090\000090\000090\000091\000090") === 6)
+     test('\000090'.look_other_from_end_in("\000090\000090\000090\000090\000090\000090\000090\000091") === 7)
+
+     test('\000090'.look_other_from_end_in(("2\000090\000090\000090\000090\000090\000090\000090\000090" ++ "2")[1, 9]).null?())
+     test('\000090'.look_other_from_end_in(("2\000091\000090\000090\000090\000090\000090\000090\000090" ++ "2")[1, 9]) === 0)
+     test('\000090'.look_other_from_end_in(("2\000090\000091\000090\000090\000090\000090\000090\000090" ++ "2")[1, 9]) === 1)
+     test('\000090'.look_other_from_end_in(("2\000090\000091\000091\000090\000090\000090\000090\000090" ++ "2")[1, 9]) === 2)
+     test('\000090'.look_other_from_end_in(("2\000090\000090\000090\000090\000090\000090\000091\000090" ++ "2")[1, 9]) === 6)
+     test('\000090'.look_other_from_end_in(("2\000090\000090\000090\000090\000090\000090\000090\000091" ++ "2")[1, 9]) === 7)
+
+     let string          = "0".repeat((rnd() & 1023) + 1).map(fn (_) ((rnd() & 15) + 97).to_char())
+     let not_looked_char = ((rnd() & 15) + 97).to_char()
+     test((not_looked_char.look_other_from_end_in(string) <? -1) === string.foldr_kv(-1, fn (result, idx, char) if result === -1; (if char === not_looked_char; -1 else idx) else result))
+
+     test(u"2"[0].look_other_from_end_in(u"").null?())
+     test(u"1"[0].look_other_from_end_in(u"").null?())
+     test(u"1"[0].look_other_from_end_in(u"1").null?())
+     test(u"2"[0].look_other_from_end_in(u"1") === 0)
+     test(u"0"[0].look_other_from_end_in(u"00000000000000").null?())
+     test(u"0"[0].look_other_from_end_in(u"10000000000000") === 0)
+     test(u"0"[0].look_other_from_end_in(u"01000000000000") === 1)
+     test(u"0"[0].look_other_from_end_in(u"01100000000000") === 2)
+     test(u"0"[0].look_other_from_end_in(u"00000000000010") === 12)
+     test(u"0"[0].look_other_from_end_in(u"00000000000001") === 13)
+
+     test(u"0"[0].look_other_from_end_in(u"0000000000000000").null?())
+     test(u"0"[0].look_other_from_end_in(u"1000000000000000") === 0)
+     test(u"0"[0].look_other_from_end_in(u"0100000000000000") === 1)
+     test(u"0"[0].look_other_from_end_in(u"0110000000000000") === 2)
+     test(u"0"[0].look_other_from_end_in(u"0000000000000010") === 14)
+     test(u"0"[0].look_other_from_end_in(u"0000000000000001") === 15)
+
+     test(u"0"[0].look_other_from_end_in((u"20000000000000000" ++ u"2")[1, 17]).null?())
+     test(u"0"[0].look_other_from_end_in((u"21000000000000000" ++ u"2")[1, 17]) === 0)
+     test(u"0"[0].look_other_from_end_in((u"20100000000000000" ++ u"2")[1, 17]) === 1)
+     test(u"0"[0].look_other_from_end_in((u"20110000000000000" ++ u"2")[1, 17]) === 2)
+     test(u"0"[0].look_other_from_end_in((u"20000000000000010" ++ u"2")[1, 17]) === 14)
+     test(u"0"[0].look_other_from_end_in((u"20000000000000001" ++ u"2")[1, 17]) === 15)
+
+     let array           = u"0".repeat((rnd() & 1023) + 1).map(fn (_) (rnd() & 15).to_byte())
+     let not_looked_byte = (rnd() & 15).to_byte()
+     test((not_looked_byte.look_other_from_end_in(array) <? -1) === array.foldr_kv(-1, fn (result, idx, byte) if result === -1; (if byte === not_looked_byte; -1 else idx) else result))
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test(2.look_other_from_end_in([array]).null?())
+     test(1.look_other_from_end_in([array]).null?())
+     test(1.look_other_from_end_in([array 1]).null?())
+     test(2.look_other_from_end_in([array 1]) === 0)
+     test(0.look_other_from_end_in([array 0, 0, 0, 0]).null?())
+     test(0.look_other_from_end_in([array 1, 0, 0, 0]) === 0)
+     test(0.look_other_from_end_in([array 0, 1, 0, 0]) === 1)
+     test(0.look_other_from_end_in([array 0, 1, 1, 0]) === 2)
+     test(0.look_other_from_end_in([array 0, 0, 1, 0]) === 2)
+     test(0.look_other_from_end_in([array 0, 0, 0, 1]) === 3)
+
+     test(string_2.look_other_from_end_in([array].init(10)).null?())
+     test(string_1.look_other_from_end_in([array].init(10)).null?())
+     test(string_1.look_other_from_end_in([array string_1]).null?())
+     test(string_2.look_other_from_end_in([array string_1]) === 0)
+     test(string_0.look_other_from_end_in([array string_0, string_0, string_0, string_0]).null?())
+     test(string_0.look_other_from_end_in([array string_1, string_0, string_0, string_0]) === 0)
+     test(string_0.look_other_from_end_in([array string_0, string_1, string_0, string_0]) === 1)
+     test(string_0.look_other_from_end_in([array string_0, string_1, string_1, string_0]) === 2)
+     test(string_0.look_other_from_end_in([array string_0, string_0, string_1, string_0]) === 2)
+     test(string_0.look_other_from_end_in([array string_0, string_0, string_0, string_1]) === 3)
+
+     test(string_1.look_other_from_end_in([array string_0, string_1, string_0][1, 2]).null?())
+     test(string_2.look_other_from_end_in([array string_0, string_1, string_0][1, 2]) === 0)
+     test(string_0.look_other_from_end_in([array string_1, string_0, string_0, string_0, string_0, string_1][1, 5]).null?())
+     test(string_0.look_other_from_end_in([array string_1, string_1, string_0, string_0, string_0, string_1][1, 5]) === 0)
+     test(string_0.look_other_from_end_in([array string_1, string_0, string_1, string_0, string_0, string_1][1, 5]) === 1)
+     test(string_0.look_other_from_end_in([array string_1, string_0, string_1, string_1, string_0, string_1][1, 5]) === 2)
+     test(string_0.look_other_from_end_in([array string_1, string_0, string_0, string_1, string_0, string_1][1, 5]) === 2)
+     test(string_0.look_other_from_end_in([array string_1, string_0, string_0, string_0, string_1, string_1][1, 5]) === 3)
+
+     let array             = [array 1].repeat((rnd() & 1023) + 1).map(fn (_) "0".repeat(rnd() & 31))
+     let not_looked_string = "0".repeat(rnd() & 31)
+     test((not_looked_string.look_other_from_end_in(array) <? -1) === array.foldr_kv(-1, fn (result, idx, string) if result === -1; (if string === not_looked_string; -1 else idx) else result))
+
+     test('1'.look_other_from_end_in("321321".to_container__look_other_from_end_in()) === 4)
+     test('0'.look_other_from_end_in("321321".to_container__look_other_from_end_in()) === 5)
+     test('0'.look_other_from_end_in("000000".to_container__look_other_from_end_in()).null?())
+     test('1'.look_other_from_end_in("321321".to_custom_container__look_other_from_end_in()) === 4)
+     test('0'.look_other_from_end_in("321321".to_custom_container__look_other_from_end_in()) === 5)
+     test('0'.look_other_from_end_in("000000".to_custom_container__look_other_from_end_in()).null?())
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.look_other_from_end_in(heap_string()).get_error_id() === :1)
+     test(heap_string().look_other_from_end_in(error_1).get_error_id() === :1)
+     test(error_1.look_other_from_end_in(error_2).get_error_id() === :1)
+     test(error_2.look_other_from_end_in(error_1).get_error_id() === :2)
+
+     test([box heap_string()].scarlet__erase_info().look_other_from_end_in(heap_string()).get_error_id() === :invalid_type)
+     test([box heap_string()].scarlet__erase_info().look_other_from_end_in([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test(null.scarlet__erase_info().look_other_from_end_in([array].init(10)).get_error_id() === :invalid_type)
+     test((_ ++ _).scarlet__erase_info().look_other_from_end_in([array].init(10)).get_error_id() === :invalid_type)
+     test((_ ++ heap_string()).scarlet__erase_info().look_other_from_end_in([array].init(10)).get_error_id() === :invalid_type)
+     test([breaker heap_string()].scarlet__erase_info().look_other_from_end_in([array].init(10)).get_error_id() === :invalid_type)
+     test(thread(fn() null).scarlet__erase_info().look_other_from_end_in([array].init(10)).get_error_id() === :invalid_type)
+     test(make_channel()[0].scarlet__erase_info().look_other_from_end_in([array].init(10)).get_error_id() === :invalid_type)
+     test(heap_string().look_other_from_end_in("").get_error_id() === :invalid_type)
+     test(heap_string().look_other_from_end_in(heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().look_other_from_end_in(u"").get_error_id() === :invalid_type)
+     test(heap_string().look_other_from_end_in(heap_byte_array()).get_error_id() === :invalid_type)
+
+     test(heap_string().look_other_from_end_in(to_error_container__look_other_from_end_in([array])).get_error_id() === :3)
+     test(heap_string().look_other_from_end_in(to_error_custom_container__look_other_from_end_in([array])).get_error_id() === :4)
+}

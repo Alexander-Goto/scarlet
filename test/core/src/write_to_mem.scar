@@ -1,0 +1,45 @@
+`noinline`
+fn test__write_to_mem!!!() {
+     let string = u"Hello World!!!".scarlet__erase_info() ++ u" Hello World!!!"
+     write_to_mem!!!(string, 16, u"")
+     test(string == u"Hello World!!! Hello World!!!")
+
+     let string = u"Hello World!!!".scarlet__erase_info() ++ u" Hello World!!!"
+     write_to_mem!!!(string, 16, u"llo")
+     test(string == u"llolo World!!! Hello World!!!")
+
+     let string = u"Hello World!!!".scarlet__erase_info() ++ u" Hello World!!!"
+     write_to_mem!!!(string, 17, u"llo")
+     test(string == u"Hlloo World!!! Hello World!!!")
+
+     let string = u"Hello World!!!".scarlet__erase_info() ++ u" Hello World!!!"
+     write_to_mem!!!(string, 16, u"0123456789abcdef" ++ u"g")
+     test(string == u"0123456789abcdefgllo World!!!")
+
+     let string   = u"Hello World!!!".scarlet__erase_info() ++ u" Hello World!!!"
+     let string_1 = u"0123456789abcdef" ++ u"g"
+     write_to_mem!!!(string, 16, string_1)
+     test(string == u"0123456789abcdefgllo World!!!")
+     string_1.ignore()
+
+     let string   = u"Hello World!!!".scarlet__erase_info() ++ u" Hello World!!!"
+     write_to_mem!!!(string, 16, string.drop(2))
+     test(string == u"llo World!!! Hello World!!!!!")
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let error_3 = expected_error(:3, heap_string(), heap_string())
+     test(write_to_mem!!!(error_1, 0, u"").null?())
+     test(write_to_mem!!!(error_1, error_2, u"").get_error_id() == :2)
+     test(write_to_mem!!!(error_1, 16, error_2).get_error_id() == :2)
+     test(write_to_mem!!!(error_1, error_2, heap_string()).get_error_id() == :2)
+     test(write_to_mem!!!(error_1, heap_string(), error_2).get_error_id() == :2)
+     test(write_to_mem!!!(error_1, error_2, error_3).get_error_id() == :2)
+     test(write_to_mem!!!(error_1, error_3, error_2).get_error_id() == :3)
+
+     test(write_to_mem!!!(error_1, 0, heap_string()).get_error_id() == :invalid_type)
+     test(write_to_mem!!!(error_1, heap_string(), 0.scarlet__erase_info()).get_error_id() == :invalid_type)
+     test(write_to_mem!!!(error_1, heap_string(), heap_string()).get_error_id() == :invalid_type)
+
+     test(write_to_mem!!!(heap_string(), heap_string(), -1.scarlet__erase_info()).error?())
+}

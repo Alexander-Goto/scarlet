@@ -1,0 +1,91 @@
+let num__neg_bits = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_neg_bits  = fn (num) to_num__neg_bits(num:value.neg_bits())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__neg_bits(arg) new (@main.num__neg_bits):value <= arg
+
+fn to_custom_num__neg_bits(arg) custom__create(
+     arg
+     [obj
+          :core_neg_bits  = fn (num) to_custom_num__neg_bits(num.custom__get_data().neg_bits())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__neg_bits = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_neg_bits = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__neg_bits(arg) new (@main.broken_num__neg_bits):value <= arg
+
+fn to_broken_custom_num__neg_bits(arg) custom__create(
+     arg
+     [obj
+          :core_neg_bits = fn (_) heap_string()
+     ]
+)
+
+let error_num__neg_bits = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_neg_bits = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__neg_bits(arg) new (@main.error_num__neg_bits):value <= arg
+
+fn to_error_custom_num__neg_bits(arg) custom__create(
+     arg
+     [obj
+          :core_neg_bits = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__neg_bits() {
+     test(0.neg_bits() === -1)
+     test(1.neg_bits() === -2)
+     test(-1.neg_bits() === 0)
+     test(708044971986000615.neg_bits() === -708044971986000616)
+     test(-1964724193136850828.neg_bits() === 1964724193136850827)
+     test(-9223372036854775808.neg_bits() === 9223372036854775807)
+     test(-9223372036854775807.neg_bits() === 9223372036854775806)
+     test(9223372036854775807.neg_bits() === -9223372036854775808)
+     let int = rnd()
+     test((int ^ -1) === int.neg_bits())
+
+     test(0b00.neg_bits() === 0bff)
+     test(0bff.neg_bits() === 0b00)
+     test(0baa.neg_bits() === 0b55)
+     test(0b55.neg_bits() === 0baa)
+     let byte = rnd_byte()
+     test((byte ^ 0bff) === byte.neg_bits())
+
+     test(to_num__neg_bits(0).neg_bits() === to_num__neg_bits(-1))
+     test(to_num__neg_bits(708044971986000615).neg_bits() === to_num__neg_bits(-708044971986000616))
+     test(to_num__neg_bits(9223372036854775807).neg_bits() === to_num__neg_bits(-9223372036854775808))
+
+     test(to_custom_num__neg_bits(0).neg_bits() === to_custom_num__neg_bits(-1))
+     test(to_custom_num__neg_bits(708044971986000615).neg_bits() === to_custom_num__neg_bits(-708044971986000616))
+     test(to_custom_num__neg_bits(9223372036854775807).neg_bits() === to_custom_num__neg_bits(-9223372036854775808))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     let string  = heap_string()
+     test(error.neg_bits().get_error_id() === :1)
+     test(string.neg_bits().get_error_id() === :invalid_type)
+
+     test(to_broken_num__neg_bits(1).neg_bits().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__neg_bits(1).neg_bits().get_error_id() === :invalid_type)
+     test(to_error_num__neg_bits(1).neg_bits().get_error_id() === :3)
+     test(to_error_custom_num__neg_bits(1).neg_bits().get_error_id() === :4)
+}

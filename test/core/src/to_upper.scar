@@ -1,0 +1,112 @@
+let const__to_upper = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_upper = fn (arg) arg:value.to_upper()
+     ]
+]
+
+fn to_const__to_upper(arg) new (@main.const__to_upper):value <= arg
+
+fn to_custom_const__to_upper(arg) custom__create(
+     arg
+     [obj
+          :core_to_upper = fn (arg) arg.custom__get_data().to_upper()
+     ]
+)
+
+let broken_const__to_upper = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_upper = fn (_) [box heap_string()]
+     ]
+]
+
+fn to_broken_const__to_upper(arg) new (@main.broken_const__to_upper):value <= arg
+
+fn to_broken_custom_const__to_upper(arg) custom__create(
+     arg
+     [obj
+          :core_to_upper = fn (_) [box heap_string()]
+     ]
+)
+
+let error_const__to_upper = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_upper = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__to_upper(arg) new (@main.error_const__to_upper):value <= arg
+
+fn to_error_custom_const__to_upper(arg) custom__create(
+     arg
+     [obj
+          :core_to_upper = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__to_upper() {
+     test('\000001'.to_upper() === "\000001")
+     test('\000008'.to_upper() === "\000008")
+     test('\000009'.to_upper() === "\000009")
+     test('\000020'.to_upper() === "\000020")
+     test('!'.to_upper() === "!")
+     test('~'.to_upper() === "~")
+     test('0'.to_upper() === "0")
+     test('9'.to_upper() === "9")
+     test('a'.to_upper() === "A")
+     test('z'.to_upper() === "Z")
+     test('A'.to_upper() === "A")
+     test('Z'.to_upper() === "Z")
+
+     test("\000001".to_upper() === "\000001")
+     test("\000008".to_upper() === "\000008")
+     test("\000009".to_upper() === "\000009")
+     test("\000020".to_upper() === "\000020")
+     test("!".to_upper() === "!")
+     test("~".to_upper() === "~")
+     test("0".to_upper() === "0")
+     test("9".to_upper() === "9")
+     test("a".to_upper() === "A")
+     test("z".to_upper() === "Z")
+     test("A".to_upper() === "A")
+     test("Z".to_upper() === "Z")
+     test("az".to_upper() === "AZ")
+     test("AZ".to_upper() === "AZ")
+     test("azAZ".to_upper() === "AZAZ")
+     test("AZaz".to_upper() === "AZAZ")
+     test("aZAz".to_upper() === "AZAZ")
+     test("Hello World".to_upper() === "HELLO WORLD")
+     test("0123456789abcde".to_upper() === "0123456789ABCDE")
+     test("0123456789ABCDE".to_upper() === "0123456789ABCDE")
+     test("abcdefffffffffz".to_upper() === "ABCDEFFFFFFFFFZ")
+     test("ABCDEFFFFFFFFFZ".to_upper() === "ABCDEFFFFFFFFFZ")
+     test("Hello WorldHello World".to_upper() === "HELLO WORLDHELLO WORLD")
+     test("0123456789abcdef".to_upper() === "0123456789ABCDEF")
+     test("0123456789ABCDEF".to_upper() === "0123456789ABCDEF")
+     test("abcdeffffffffffz".to_upper() === "ABCDEFFFFFFFFFFZ")
+     test("ABCDEFFFFFFFFFFZ".to_upper() === "ABCDEFFFFFFFFFFZ")
+
+     let string = rnd_string()
+     test(string.to_upper().foldl(true, fn (result, char) result && (not char.letter?() || char.upper?())))
+     test(string.foldl("", fn (result, char) result ++ char.to_upper()) === string.to_upper())
+
+     test(to_const__to_upper('a').to_upper() === "A")
+     test(to_const__to_upper('Z').to_upper() === "Z")
+
+     test(to_custom_const__to_upper('a').to_upper() === "A")
+     test(to_custom_const__to_upper('Z').to_upper() === "Z")
+
+     test(expected_error(:1, heap_string(), heap_string()).to_upper().get_error_id() === :1)
+     test(heap_table().to_upper().get_error_id() === :invalid_type)
+
+     test(to_broken_const__to_upper("").to_upper().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__to_upper("").to_upper().get_error_id() === :invalid_type)
+     test(to_error_const__to_upper("").to_upper().get_error_id() === :3)
+     test(to_error_custom_const__to_upper("").to_upper().get_error_id() === :4)
+}

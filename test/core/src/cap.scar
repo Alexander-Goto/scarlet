@@ -1,0 +1,129 @@
+let array__cap = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_cap = fn (array) array:value.cap()
+     ]
+]
+
+fn to_array__cap(arg) new (@main.array__cap):value <= arg
+
+fn to_custom_array__cap(arg) custom__create(
+     arg
+     [obj
+          :core_cap = fn (array) array.custom__get_data().cap()
+     ]
+)
+
+let broken_array__cap = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_cap = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_array__cap(arg) new (@main.broken_array__cap):value <= arg
+
+fn to_broken_custom_array__cap(arg) custom__create(
+     arg
+     [obj
+          :core_cap = fn (_) heap_string()
+     ]
+)
+
+let error_array__cap = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_cap = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__cap(arg) new (@main.error_array__cap):value <= arg
+
+fn to_error_custom_array__cap(arg) custom__create(
+     arg
+     [obj
+          :core_cap = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__cap() {
+     let rnd_string = rnd_string()
+     test("".cap() === 0)
+     test("0".cap() === 1)
+     test("01".cap() === 2)
+     test("012".cap() === 3)
+     test("0123".cap() === 4)
+     test("01234".cap() === 5)
+     test("012345".cap() === 6)
+     test("0123456".cap() === 7)
+     test("01234567".cap() === 8)
+     test("012345678".cap() === 9)
+     test("0123456789".cap() === 10)
+     test("0123456789a".cap() === 11)
+     test("0123456789ab".cap() === 12)
+     test("0123456789abc".cap() === 13)
+     test("0123456789abcd".cap() === 14)
+     test("0123456789abcde".cap() === 15)
+     test("0123456789abcdef".cap() === 16)
+     test("0123456789abcdefg".cap() === 17)
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5".cap() === 6)
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".cap() === 10)
+     test(("0123456789abcde" ++ "f").cap() >= 16)
+     test(("0123456789abcde" ++ "f" ++ "g").cap() >= 17)
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 " ++ "\0000af\0000ab\0000b3").cap() >= 10)
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3" ++ "!" ++ "!!").cap() >= 13)
+     test(rnd_string.cap() >= rnd_string.len())
+
+     let rnd_byte_array = rnd_byte_array()
+     test(u"".cap() === 0)
+     test(u"0".cap() === 1)
+     test(u"01".cap() === 2)
+     test(u"012".cap() === 3)
+     test(u"0123".cap() === 4)
+     test(u"01234".cap() === 5)
+     test(u"012345".cap() === 6)
+     test(u"0123456".cap() === 7)
+     test(u"01234567".cap() === 8)
+     test(u"012345678".cap() === 9)
+     test(u"0123456789".cap() === 10)
+     test(u"0123456789a".cap() === 11)
+     test(u"0123456789ab".cap() === 12)
+     test(u"0123456789abc".cap() === 13)
+     test(u"0123456789abcd".cap() === 14)
+     test(u"0123456789abcde".cap() === 15)
+     test(u"0123456789abcdef".cap() === 16)
+     test((u"0123456789abcd" ++ u"f").cap() >= 15)
+     test((u"0123456789abcd" ++ u"e" ++ u"f").cap() >= 16)
+     test(rnd_byte_array.cap() >= rnd_byte_array.len())
+
+     let rnd_array = rnd_string_array()
+     test([array].cap() === 0)
+     test([array 1].cap() === 1)
+     test([array 1, 2].cap() === 2)
+     test([array 1, 2, 3].cap() === 3)
+     test([array heap_string()].cap() === 1)
+     test([array heap_string(), heap_string()].cap() === 2)
+     test([array heap_string(), heap_string(), heap_string()].cap() === 3)
+     test(([array 1, 2, 3] ++ [array 1, 2, 3, 4]).cap() >= 7)
+     test(([array 1] ++ [array 1, 2, 3, 4]).cap() >= 5)
+     test(rnd_array.cap() >= rnd_array.len())
+
+     test(to_array__cap("").cap() === 0)
+     test(to_array__cap("123").cap() === 3)
+
+     test(to_custom_array__cap("").cap() === 0)
+     test(to_custom_array__cap("123").cap() === 3)
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.cap().get_error_id() === :1)
+     test(heap_table().cap().get_error_id() === :invalid_type)
+
+     test(to_broken_array__cap("").cap().get_error_id() === :invalid_type)
+     test(to_broken_custom_array__cap("").cap().get_error_id() === :invalid_type)
+     test(to_error_array__cap("").cap().get_error_id() === :3)
+     test(to_error_custom_array__cap("").cap().get_error_id() === :4)
+}

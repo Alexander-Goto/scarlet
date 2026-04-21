@@ -1,0 +1,287 @@
+let container__reserve = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_reserve   = fn (container, cap) to_container__reserve(container:value.reserve(cap))
+          :core___equal__ = fn (container_1, container_2) container_1:value === container_2:value
+          :core_cap       = fn (container) container:value.cap()
+     ]
+]
+
+fn to_container__reserve(arg) new (@main.container__reserve):value <= arg
+
+fn to_custom_container__reserve(arg) custom__create(
+     arg
+     [obj
+          :core_reserve   = fn (container, cap) to_custom_container__reserve(container.custom__get_data().reserve(cap))
+          :core___equal__ = fn (container_1, container_2) container_1.custom__get_data() === container_2.custom__get_data()
+          :core_cap       = fn (container) container.custom__get_data().cap()
+     ]
+)
+
+let broken_container__reserve = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_reserve = fn (_, _) _ ++ heap_string()
+     ]
+]
+
+fn to_broken_container__reserve(arg) new (@main.broken_container__reserve):value <= arg
+
+fn to_broken_custom_container__reserve(arg) custom__create(
+     arg
+     [obj
+          :core_reserve = fn (_, _) _ ++ heap_string()
+     ]
+)
+
+let error_container__reserve = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_reserve = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__reserve(arg) new (@main.error_container__reserve):value <= arg
+
+fn to_error_custom_container__reserve(arg) custom__create(
+     arg
+     [obj
+          :core_reserve = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__reserve() {
+     test("".reserve(0) == "")
+     test("".reserve(1) == "")
+     test("".reserve(100) == "")
+     test("abc".reserve(3) == "abc")
+     test("abc".reserve(100) == "abc")
+     test("0123456789abcde".reserve(15) == "0123456789abcde")
+     test("0123456789abcde".reserve(100) == "0123456789abcde")
+
+     test("0123456789abcdef".reserve(0) == "0123456789abcdef")
+     test("0123456789abcdef".reserve(0).cap() >= 16)
+
+     test("0123456789abcdef".reserve(16) == "0123456789abcdef")
+     test("0123456789abcdef".reserve(16).cap() >= 32)
+     test("0123456789abcdef".reserve(1000).cap() >= 1016)
+
+     test(("0123456789abcde" ++ "f").reserve(0) == "0123456789abcdef")
+     test(("0123456789abcde" ++ "f").reserve(0).cap() >= 16)
+     test(("0123456789abcde" ++ "f").reserve(16) == "0123456789abcdef")
+     test(("0123456789abcde" ++ "f").reserve(16).cap() >= 32)
+     test(("0123456789abcde" ++ "f").reserve(1000).cap() >= 1016)
+
+     let string = "0123456789abcde" ++ "f"
+     test(string.reserve(0) == "0123456789abcdef")
+     test(string.reserve(0).cap() >= 16)
+     test(string.reserve(16) == "0123456789abcdef")
+     test(string.reserve(16).cap() >= 32)
+     test(string.reserve(1000).cap() >= 1016)
+     string.ignore()
+
+     test(u"".reserve(0) == u"")
+     test(u"".reserve(1) == u"")
+     test(u"".reserve(100) == u"")
+     test(u"abc".reserve(3) == u"abc")
+     test(u"abc".reserve(100) == u"abc")
+     test(u"0123456789abcd".reserve(15) == u"0123456789abcd")
+     test(u"0123456789abcd".reserve(100) == u"0123456789abcd")
+
+     test(u"0123456789abcdef".reserve(0) == u"0123456789abcdef")
+     test(u"0123456789abcdef".reserve(0).cap() >= 16)
+
+     test(u"0123456789abcdef".reserve(16) == u"0123456789abcdef")
+     test(u"0123456789abcdef".reserve(16).cap() >= 32)
+     test(u"0123456789abcdef".reserve(1000).cap() >= 1016)
+
+     test((u"0123456789abcde" ++ u"f").reserve(0) == u"0123456789abcdef")
+     test((u"0123456789abcde" ++ u"f").reserve(0).cap() >= 16)
+     test((u"0123456789abcde" ++ u"f").reserve(16) == u"0123456789abcdef")
+     test((u"0123456789abcde" ++ u"f").reserve(16).cap() >= 32)
+     test((u"0123456789abcde" ++ u"f").reserve(1000).cap() >= 1016)
+
+     let array = u"0123456789abcde" ++ u"f"
+     test(array.reserve(0) == u"0123456789abcdef")
+     test(array.reserve(0).cap() >= 16)
+     test(array.reserve(16) == u"0123456789abcdef")
+     test(array.reserve(16).cap() >= 32)
+     test(array.reserve(1000).cap() >= 1016)
+     array.ignore()
+
+     test([array].reserve(0) == [array])
+     test([array].reserve(1) == [array])
+     test([array].reserve(100) == [array])
+
+     test([array 1].reserve(0) == [array 1])
+     test([array 1].reserve(0).cap() >= 1)
+     test([array 1].reserve(1) == [array 1])
+     test([array 1].reserve(1).cap() >= 2)
+     test([array 1].reserve(1000).cap() >= 1001)
+
+     test([array heap_string()].reserve(0) == [array heap_string()])
+     test([array heap_string()].reserve(0).cap() >= 1)
+     test([array heap_string()].reserve(1) == [array heap_string()])
+     test([array heap_string()].reserve(1).cap() >= 2)
+     test([array heap_string()].reserve(1000).cap() >= 1001)
+
+     let array = [array heap_string()]
+     test(array.reserve(0) == [array heap_string()])
+     test(array.reserve(0).cap() >= 1)
+     test(array.reserve(1) == [array heap_string()])
+     test(array.reserve(1).cap() >= 2)
+     test(array.reserve(1000).cap() >= 1001)
+     array.ignore()
+
+     test([set].reserve(0) == [set])
+     test([set].reserve(1) == [set])
+     test([set].reserve(100) == [set])
+
+     test([set 1].reserve(0) == [set 1])
+     test([set 1].reserve(1) == [set 1])
+     test([set 1].reserve(1000) == [set 1])
+
+     test([set heap_string()].reserve(0) == [set heap_string()])
+     test([set heap_string()].reserve(1) == [set heap_string()])
+     test([set heap_string()].reserve(1000) == [set heap_string()])
+
+     let set = [set heap_string()]
+     test(set.reserve(0) == [set heap_string()])
+     test(set.reserve(1) == [set heap_string()])
+     test(set.reserve(1000) == [set heap_string()])
+     set.ignore()
+
+     test([table].reserve(0) == [table])
+     test([table].reserve(1) == [table])
+     test([table].reserve(100) == [table])
+
+     test([table 1 = 2].reserve(0) == [table 1 = 2])
+     test([table 1 = 2].reserve(1) == [table 1 = 2])
+     test([table 1 = 2].reserve(1000) == [table 1 = 2])
+
+     test([table heap_string() = 2].reserve(0) == [table heap_string() = 2])
+     test([table heap_string() = 2].reserve(1) == [table heap_string() = 2])
+     test([table heap_string() = 2].reserve(1000) == [table heap_string() = 2])
+
+     let table = [table heap_string() = 2]
+     test(table.reserve(0) == [table heap_string() = 2])
+     test(table.reserve(1) == [table heap_string() = 2])
+     test(table.reserve(1000) == [table heap_string() = 2])
+     table.ignore()
+
+     test([obj].reserve(0) === [obj])
+     test([obj].reserve(1) === [obj])
+     test([obj].reserve(100) === [obj])
+
+     test([obj :1 = 2].reserve(0) === [obj :1 = 2])
+     test([obj :1 = 2].reserve(1) === [obj :1 = 2])
+     test([obj :1 = 2].reserve(1000) === [obj :1 = 2])
+     test([obj :1 = 2, :_ = [obj :1 = 1]].reserve(0) === [obj :1 = 2])
+     test([obj :1 = 2, :_ = [obj :1 = 1]].reserve(1) === [obj :1 = 2])
+     test([obj :1 = 2, :_ = [obj :1 = 1]].reserve(1000) === [obj :1 = 2])
+     test([obj :1 = 2, :_ = [obj :1 = 1]].reserve(0):_ === [obj :1 = 1])
+     test([obj :1 = 2, :_ = [obj :1 = 1]].reserve(1):_ === [obj :1 = 1])
+     test([obj :1 = 2, :_ = [obj :1 = 1]].reserve(1000):_ === [obj :1 = 1])
+
+     test([obj :1 = heap_string()].reserve(0) === [obj :1 = heap_string()])
+     test([obj :1 = heap_string()].reserve(1) === [obj :1 = heap_string()])
+     test([obj :1 = heap_string()].reserve(1000) === [obj :1 = heap_string()])
+     test([obj :1 = heap_string(), :_ = [obj :1 = heap_string()]].reserve(0) === [obj :1 = heap_string()])
+     test([obj :1 = heap_string(), :_ = [obj :1 = heap_string()]].reserve(1) === [obj :1 = heap_string()])
+     test([obj :1 = heap_string(), :_ = [obj :1 = heap_string()]].reserve(1000) === [obj :1 = heap_string()])
+     test([obj :1 = heap_string(), :_ = [obj :1 = heap_string()]].reserve(0) === [obj :1 = heap_string()])
+     test([obj :1 = heap_string(), :_ = [obj :1 = heap_string()]].reserve(1) === [obj :1 = heap_string()])
+     test([obj :1 = heap_string(), :_ = [obj :1 = heap_string()]].reserve(1000) === [obj :1 = heap_string()])
+
+     let obj = [obj :1 = heap_string()]
+     test(obj.reserve(0) === [obj :1 = heap_string()])
+     test(obj.reserve(1) === [obj :1 = heap_string()])
+     test(obj.reserve(1000) === [obj :1 = heap_string()])
+     obj.ignore()
+
+     let obj = [obj :1 = heap_string(), :_ = [obj :1 = 1]]
+     test(obj.reserve(0) === [obj :1 = heap_string()])
+     test(obj.reserve(1) === [obj :1 = heap_string()])
+     test(obj.reserve(1000) === [obj :1 = heap_string()])
+     test(obj.reserve(0):_ === [obj :1 = 1])
+     test(obj.reserve(1):_ === [obj :1 = 1])
+     test(obj.reserve(1000):_ === [obj :1 = 1])
+     obj.ignore()
+
+     test(to_container__reserve([array 1]).reserve(0) === to_container__reserve([array 1]))
+     test(to_container__reserve([array 1]).reserve(0).cap() >= 1)
+     test(to_container__reserve([array 1]).reserve(1) === to_container__reserve([array 1]))
+     test(to_container__reserve([array 1]).reserve(1).cap() >= 2)
+     test(to_container__reserve([array 1]).reserve(10) === to_container__reserve([array 1]))
+     test(to_container__reserve([array 1]).reserve(10).cap() >= 11)
+
+     test(to_custom_container__reserve([array 1]).reserve(0) === to_custom_container__reserve([array 1]))
+     test(to_custom_container__reserve([array 1]).reserve(0).cap() >= 1)
+     test(to_custom_container__reserve([array 1]).reserve(1) === to_custom_container__reserve([array 1]))
+     test(to_custom_container__reserve([array 1]).reserve(1).cap() >= 2)
+     test(to_custom_container__reserve([array 1]).reserve(10) === to_custom_container__reserve([array 1]))
+     test(to_custom_container__reserve([array 1]).reserve(10).cap() >= 11)
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.reserve(0).get_error_id() === :1)
+     test(error_1.reserve(10).get_error_id() === :1)
+     test(heap_table().reserve(error_1).get_error_id() === :1)
+     test(error_1.reserve(error_2).get_error_id() === :1)
+     test(error_2.reserve(error_1).get_error_id() === :2)
+     test((_ ++ heap_string()).scarlet__erase_info().reserve(0).get_error_id() === :invalid_type)
+     test((_ ++ heap_string()).scarlet__erase_info().reserve(10).get_error_id() === :invalid_type)
+     test(heap_string().reserve(heap_string()).get_error_id() === :invalid_type)
+     test((_ ++ heap_string()).scarlet__erase_info().reserve(heap_string()).get_error_id() === :invalid_type)
+
+     test(heap_string().reserve(0xfff'ffff'ffff.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(heap_string().reserve(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(heap_string().reserve(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(heap_string().reserve(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test(heap_byte_array().reserve(0xfff'ffff'ffff.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(heap_byte_array().reserve(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(heap_byte_array().reserve(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(heap_byte_array().reserve(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test("a".reserve(0xfff'ffff'ffff.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("a".reserve(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("a".reserve(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("a".reserve(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test(u"a".reserve(0xfff'ffff'ffff.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"a".reserve(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"a".reserve(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"a".reserve(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test([array heap_string()].reserve(0xfff'ffff'ffff.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string()].reserve(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string()].reserve(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string()].reserve(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test([set heap_string()].reserve(0x80'0000'0000.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([set heap_string()].reserve(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([set heap_string()].reserve(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([set heap_string()].reserve(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test([table :1 = heap_string()].reserve(0x80'0000'0000.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([table :1 = heap_string()].reserve(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([table :1 = heap_string()].reserve(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([table :1 = heap_string()].reserve(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test([obj :1 = heap_string()].reserve(0x80'0000'0000.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([obj :1 = heap_string()].reserve(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([obj :1 = heap_string()].reserve(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([obj :1 = heap_string()].reserve(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test(to_broken_container__reserve(heap_table()).reserve(0).get_error_id() === :invalid_type)
+     test(to_broken_container__reserve(heap_table()).reserve(10).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__reserve(heap_table()).reserve(10).get_error_id() === :invalid_type)
+     test(to_error_container__reserve(heap_table()).reserve(0).get_error_id() === :3)
+     test(to_error_container__reserve(heap_table()).reserve(10).get_error_id() === :3)
+     test(to_error_custom_container__reserve(heap_table()).reserve(10).get_error_id() === :4)
+}

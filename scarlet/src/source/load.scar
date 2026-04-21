@@ -1,0 +1,57 @@
+fn load_sources(file_names, final_data) {
+     let [box structs, final_data] = file_names.foldl([box [array], final_data], fn (state, file_name) {
+          let [box structs, final_data] = state
+
+          let tokens       = load_tokens_from_file(file_name)
+          let reader       = new (@main.t_reader):tokens <= tokens
+          let file_structs = reader.read_structs()
+
+          [box structs ++ file_structs, final_data]
+     })
+
+     let [box gconsts, fns] = structs.foldl([box [table], [table]], fn (state, struct) {
+          let [box gconsts, fns] = state
+
+          switch struct:scar_type
+          case "t_src_gconst": {
+               let [box gconsts, existed_const] = new (gconsts)[struct:name:text] <<= struct
+               if not existed_const.null?()
+                    error__already_exists(struct:name, "global constant")
+               else null
+
+               [box gconsts, fns]
+          }
+          case "t_src_fn": {
+               let [box fns, existed_fn] = new (fns)[struct:name:text] <<= struct
+               if not existed_fn.null?()
+                    error__already_exists(struct:name, "function")
+               else null
+
+               [box gconsts, fns]
+          }
+          default: unreachable()
+     })
+
+     let final_data = new (final_data) {
+          :gconsts => _.reserve(gconsts.len())
+          :fns     => _.reserve((fns.len() + gconsts.len()) * 2)
+     }
+
+     let final_data = gconsts.foldl(final_data, fn (final_data, gconst) prepare_gconst_to_final(gconst, final_data))
+     let final_data = fns.foldl(final_data, fn (final_data, func) prepare_fn_to_final(func, final_data))
+
+     let final_data = if gconsts.empty?()
+          final_data
+     else loop([box final_data, gconsts], fn (state) {
+          let [box final_data, gconsts] = state
+
+          let [box name, gconst]        = gconsts.take_one_kv()
+          let gconsts                   = new (gconsts)[name] <= null
+          let [box final_data, gconsts] = gconst_to_final(gconst, final_data, gconsts)
+
+          if gconsts.empty?()
+               [breaker final_data]
+          else [box final_data, gconsts]
+     })
+     fns.foldl(final_data, fn (final_data, func) fn_to_final(func, final_data))
+}

@@ -1,0 +1,200 @@
+let array__reverse = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_reverse = fn (array) to_array__reverse(array:value.reverse())
+          :core___equal__ = fn (array_1, array_2) array_1:value === array_2:value
+     ]
+]
+
+fn to_array__reverse(array) new (@main.array__reverse):value <= array
+
+fn to_custom_array__reverse(array) custom__create(
+     array
+     [obj
+          :core_reverse = fn (array) to_custom_array__reverse(array.custom__get_data().reverse())
+          :core___equal__ = fn (array_1, array_2) array_1.custom__get_data() === array_2.custom__get_data()
+     ]
+)
+
+let broken_array__reverse = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_reverse = fn (_) heap_table()
+     ]
+]
+
+fn to_broken_array__reverse(array) new (@main.broken_array__reverse):value <= array
+
+fn to_broken_custom_array__reverse(array) custom__create(
+     array
+     [obj
+          :core_reverse = fn (_) heap_table()
+     ]
+)
+
+let error_array__reverse = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_reverse = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__reverse(array) new (@main.error_array__reverse):value <= array
+
+fn to_error_custom_array__reverse(array) custom__create(
+     array
+     [obj
+          :core_reverse = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__reverse() {
+     test("".reverse() === "")
+     test("0".reverse() === "0")
+     test("01".reverse() === "10")
+     test("012".reverse() === "210")
+     test("0123".reverse() === "3210")
+     test("01234".reverse() === "43210")
+     test("012345".reverse() === "543210")
+     test("0123456".reverse() === "6543210")
+     test("01234567".reverse() === "76543210")
+     test("012345678".reverse() === "876543210")
+     test("0123456789".reverse() === "9876543210")
+     test("0123456789a".reverse() === "a9876543210")
+     test("0123456789ab".reverse() === "ba9876543210")
+     test("0123456789abc".reverse() === "cba9876543210")
+     test("0123456789abcd".reverse() === "dcba9876543210")
+     test("0123456789abcde".reverse() === "edcba9876543210")
+
+     test("\000090".reverse() === "\000090")
+     test("\0000901".reverse() === "1\000090")
+     test("\0000901\000092".reverse() === "\0000921\000090")
+     test("\0000901\0000923".reverse() === "3\0000921\000090")
+     test("\0000901\0000923\000094".reverse() === "\0000943\0000921\000090")
+     test("\0000901\0000923\000094\000095".reverse() === "\000095\0000943\0000921\000090")
+     test("\0000901\0000923\000094\0000956".reverse() === "6\000095\0000943\0000921\000090")
+     test("\0000901\0000923\000094\00009567".reverse() === "76\000095\0000943\0000921\000090")
+     test("\0000901\0000923\000094\00009567\000098".reverse() === "\00009876\000095\0000943\0000921\000090")
+     test("\0000901\0000923\000094\00009567\0000989".reverse() === "9\00009876\000095\0000943\0000921\000090")
+
+     test("0123456789abcdef".reverse() === "fedcba9876543210")
+     test(("00123456789abcdef" ++ "0")[1, 17].reverse() === "fedcba9876543210")
+     let string = ("00123456789abcdef" ++ "0")[1, 17]
+     test(string.reverse() === "fedcba9876543210")
+     string.ignore()
+
+     test("\0000901\0000923\000094\00009567\0000989\00009a".reverse() === "\00009a9\00009876\000095\0000943\0000921\000090")
+     test(("0\0000901\0000923\000094\00009567\0000989\00009a" ++ "0")[1, 12].reverse() === "\00009a9\00009876\000095\0000943\0000921\000090")
+     let string = ("0\0000901\0000923\000094\00009567\0000989\00009a" ++ "0")[1, 12]
+     test(string.reverse() === "\00009a9\00009876\000095\0000943\0000921\000090")
+     string.ignore()
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = string_1.foldr("", _.append(_))
+     test(expected === string_1.reverse())
+     string_2.ignore()
+
+     test(u"".reverse() === u"")
+     test(u"0".reverse() === u"0")
+     test(u"01".reverse() === u"10")
+     test(u"012".reverse() === u"210")
+     test(u"0123".reverse() === u"3210")
+     test(u"01234".reverse() === u"43210")
+     test(u"012345".reverse() === u"543210")
+     test(u"0123456".reverse() === u"6543210")
+     test(u"01234567".reverse() === u"76543210")
+     test(u"012345678".reverse() === u"876543210")
+     test(u"0123456789".reverse() === u"9876543210")
+     test(u"0123456789a".reverse() === u"a9876543210")
+     test(u"0123456789ab".reverse() === u"ba9876543210")
+     test(u"0123456789abc".reverse() === u"cba9876543210")
+     test(u"0123456789abcd".reverse() === u"dcba9876543210")
+
+     test(u"0123456789abcdef".reverse() === u"fedcba9876543210")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].reverse() === u"fedcba9876543210")
+     let array = (u"00123456789abcdef" ++ u"0")[1, 17]
+     test(array.reverse() === u"fedcba9876543210")
+     array.ignore()
+
+     let array_1  = rnd_byte_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.foldr(u"", _.append(_))
+     test(expected === array_1.reverse())
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test([array].reverse() === [array])
+     test([array 0].reverse() === [array 0])
+     test([array 0, 1].reverse() === [array 1, 0])
+     test([array 0, 1, 2].reverse() === [array 2, 1, 0])
+     test([array 0, 1, 2, 3].reverse() === [array 3, 2, 1, 0])
+     test([array 0, 1, 2, 3, 4].reverse() === [array 4, 3, 2, 1, 0])
+     test([array 0, 1, 2, 3, 4, 5].reverse() === [array 5, 4, 3, 2, 1, 0])
+
+     test([array].init(10).reverse() === [array])
+     test([array string_0, string_0, string_0][1, 2].reverse() === [array string_0])
+     test([array string_0, string_0, string_1, string_0][1, 3].reverse() === [array string_1, string_0])
+     test([array string_0, string_0, string_1, string_2, string_0][1, 4].reverse() === [array string_2, string_1, string_0])
+     test([array string_0, string_0, string_1, string_2, string_3, string_0][1, 5].reverse() === [array string_3, string_2, string_1, string_0])
+     test([array string_0, string_0, string_1, string_2, string_3, string_4, string_0][1, 6].reverse() === [array string_4, string_3, string_2, string_1, string_0])
+     test([array string_0, string_0, string_1, string_2, string_3, string_4, string_5, string_0][1, 7].reverse() === [array string_5, string_4, string_3, string_2, string_1, string_0])
+
+     let array = [array].init(10)
+     test(array.reverse() === [array])
+     array.ignore()
+
+     let array = [array string_0, string_0, string_0][1, 2]
+     test(array.reverse() === [array string_0])
+     array.ignore()
+
+     let array = [array string_0, string_0, string_1, string_0][1, 3]
+     test(array.reverse() === [array string_1, string_0])
+     array.ignore()
+
+     let array = [array string_0, string_0, string_1, string_2, string_0][1, 4]
+     test(array.reverse() === [array string_2, string_1, string_0])
+     array.ignore()
+
+     let array = [array string_0, string_0, string_1, string_2, string_3, string_0][1, 5]
+     test(array.reverse() === [array string_3, string_2, string_1, string_0])
+     array.ignore()
+
+     let array = [array string_0, string_0, string_1, string_2, string_3, string_4, string_0][1, 6]
+     test(array.reverse() === [array string_4, string_3, string_2, string_1, string_0])
+     array.ignore()
+
+     let array = [array string_0, string_0, string_1, string_2, string_3, string_4, string_5, string_0][1, 7]
+     test(array.reverse() === [array string_5, string_4, string_3, string_2, string_1, string_0])
+     array.ignore()
+
+     let array_1  = rnd_string_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.foldr([array].init(len(array_1)), _.append(_))
+     test(expected === array_1.reverse())
+     array_2.ignore()
+
+     test(to_array__reverse("0123456").reverse() === to_array__reverse("6543210"))
+     test(to_array__reverse("01").reverse() === to_array__reverse("10"))
+
+     test(to_custom_array__reverse("0123456").reverse() === to_custom_array__reverse("6543210"))
+     test(to_custom_array__reverse("01").reverse() === to_custom_array__reverse("10"))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.reverse().get_error_id() === :1)
+     test(heap_table().reverse().get_error_id() === :invalid_type)
+
+     test(to_broken_array__reverse("").reverse().get_error_id() === :invalid_type)
+     test(to_broken_custom_array__reverse("").reverse().get_error_id() === :invalid_type)
+     test(to_error_array__reverse("").reverse().get_error_id() === :3)
+     test(to_error_custom_array__reverse("").reverse().get_error_id() === :4)
+}

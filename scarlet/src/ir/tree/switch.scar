@@ -1,0 +1,263 @@
+fn ir__table_switch(
+     switch_operand
+     variants_operands, cases_operands, cases_irs
+     table_ir_name, table_is_comptime
+     code
+     branches_consts, consts_from_any_branch
+     exp_data, ir, final_data, dependencies, src_gconsts, is_last
+) {
+     let named_consts = exp_data:named_consts
+     if table_is_comptime && not switch_operand:comptime_val.null?() && switch_operand:comptime_val:type.in?(@main.always_hash_map_key_types) {
+          let case_idx = variants_operands.foldl_kv(variants_operands.len(), fn (default_idx, case_idx, case_variants_operands)
+               case_variants_operands.foldl(default_idx, fn (default_idx, variant_operand)
+                    if variant_operand:comptime_val === switch_operand:comptime_val
+                         [breaker [breaker case_idx]]
+                    else default_idx
+               )
+          )
+
+          let branch_consts              = branches_consts[case_idx]
+          let consts_from_other_branches = consts_from_any_branch.foldl([set].init(consts_from_any_branch.len()), fn (consts_from_other_branches, const_from_any_branch)
+               if const_from_any_branch.in?(branch_consts)
+                    consts_from_other_branches
+               else consts_from_other_branches.append(const_from_any_branch)
+          )
+
+          [box
+               new (cases_operands[case_idx]):code <= code, exp_data
+
+               consts_from_other_branches.foldl(
+                    ir ++ "get_gc_" ++ table_ir_name ++ "(thrd_data);\n"
+                    fn (ir, name) named_consts[name]:operand.dec_ref_cnt(ir)
+               ) ++ cases_irs[case_idx]
+
+               final_data, dependencies, src_gconsts
+          ]
+     } else {
+          let cases_operands_len = cases_operands.len()
+
+          let [box switch_operand, final_data, dependencies] = switch_operand.has_ir!(final_data, dependencies)
+          let [box cases_operands, final_data, dependencies] = if is_last
+               [box cases_operands, final_data, dependencies]
+          else operands_have_ir!(cases_operands, final_data, dependencies)
+
+          let [box table_reg, exp_data] = exp_data.new_reg()
+          let ir                        = ir ++ "t_any const " ++ table_reg ++ "=get_gc_" ++ table_ir_name ++ "(thrd_data);\n"
+
+          let [box case_idx_operand_reg, exp_data] = exp_data.new_reg()
+          let ir                                   = ir ++ "t_any const " ++ case_idx_operand_reg ++ "=table__get_item__own(thrd_data," ++
+               table_reg ++ "," ++ switch_operand:ir ++ "," ++ exp_data:owner_name_ir_const ++ ");\n"
+
+          let [box ir, result_reg, exp_data] = if is_last
+               [box ir, "NO REG", exp_data]
+          else {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+
+               [box ir ++ "t_any " ++ result_reg ++ ";\n", result_reg, exp_data]
+          }
+
+          let case_idx_type = if cases_operands_len < 0x100
+               "u8"
+          else if cases_operands_len < 0x1'0000
+               "u16"
+          else if cases_operands_len < 0x100'0000
+               "u32"
+          else "u64"
+
+          let [box case_idx_reg, exp_data] = exp_data.new_reg()
+          let c_switch_ir                  = case_idx_type ++ " const " ++ case_idx_reg ++ "=" ++
+               case_idx_operand_reg ++ ".bytes[15]==tid__null?" ++ cases_operands_len.to_ir_num() ++ ":" ++
+               case_idx_operand_reg ++ ".qwords[0];\n" ++
+               "switch(" ++ case_idx_reg ++ "){\n"
+          let c_switch_ir = cases_operands.foldl_kv(c_switch_ir, fn (c_switch_ir, case_idx, case_operand) {
+               let c_switch_ir = c_switch_ir ++ "case " ++ case_idx.to_ir_num() ++ ":{\n"
+
+               let branch_consts              = branches_consts[case_idx]
+               let consts_from_other_branches = consts_from_any_branch.foldl([set].init(consts_from_any_branch.len()), fn (consts_from_other_branches, const_from_any_branch)
+                    if const_from_any_branch.in?(branch_consts)
+                         consts_from_other_branches
+                    else consts_from_other_branches.append(const_from_any_branch)
+               )
+
+               consts_from_other_branches.foldl(c_switch_ir, fn (c_switch_ir, name) named_consts[name]:operand.dec_ref_cnt(c_switch_ir)) ++
+                    cases_irs[case_idx] ++
+                    if is_last; "}\n" else result_reg ++ "=" ++ case_operand:ir ++ ";\nbreak;\n}\n"
+          })
+
+          let branch_consts              = branches_consts.last()
+          let consts_from_other_branches = consts_from_any_branch.foldl([set].init(consts_from_any_branch.len()), fn (consts_from_other_branches, const_from_any_branch)
+               if const_from_any_branch.in?(branch_consts)
+                    consts_from_other_branches
+               else consts_from_other_branches.append(const_from_any_branch)
+          )
+
+          let c_switch_ir = consts_from_other_branches.foldl(c_switch_ir ++ "default:{\n", fn (c_switch_ir, name) named_consts[name]:operand.dec_ref_cnt(c_switch_ir)) ++ cases_irs.last() ++
+               if is_last; "}\n}\n" else result_reg ++ "=" ++ cases_operands.last():ir ++ ";\n}\n}\n"
+
+          let case_idx_always_int = switch_operand.has_type?(@main.always_hash_map_key_types)
+
+          let ir = if case_idx_always_int
+               ir ++ c_switch_ir
+          else ir__raw_if(
+               ir
+
+               case_idx_operand_reg ++ ".bytes[15]==tid__error"
+               :unlikely
+
+               if is_last; ir__raw_return("", case_idx_operand_reg) else result_reg ++ "=" ++ case_idx_operand_reg ++ ";\n"
+               c_switch_ir
+          )
+
+          let is_gconst = case_idx_always_int && cases_operands.all(true, _:is_gconst)
+
+          let possible_types = if cases_operands.any(true, fn (case_operand) case_operand:possible_types.null?())
+               null
+          else {
+               let possible_types = cases_operands.drop(1).foldl(cases_operands.first():possible_types, fn (possible_types, case_operand) case_operand:possible_types.foldl(possible_types, _.append(_)))
+               if case_idx_always_int; possible_types else possible_types.append("error")
+          }
+
+          let ir = if is_last; ir else ir__assume_type(result_reg, possible_types, ir)
+
+          [box
+               new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= possible_types
+                    :is_gconst      <= is_gconst
+               }
+
+               exp_data, ir, final_data, dependencies, src_gconsts
+          ]
+     }
+}
+
+fn ir__simple_switch(
+     switch_operand
+     variants_operands, cases_operands, cases_irs
+     code
+     branches_consts, consts_from_any_branch
+     exp_data, ir, final_data, dependencies, src_gconsts, is_last
+) {
+     let named_consts = exp_data:named_consts
+     if not switch_operand:comptime_val.null?() {
+          let case_idx = variants_operands.foldl_kv(variants_operands.len(), fn (default_idx, case_idx, case_variants_operands)
+               case_variants_operands.foldl(default_idx, fn (default_idx, variant_operand)
+                    if variant_operand:comptime_val === switch_operand:comptime_val
+                         [breaker [breaker case_idx]]
+                    else default_idx
+               )
+          )
+
+          let branch_consts              = branches_consts[case_idx]
+          let consts_from_other_branches = consts_from_any_branch.foldl([set].init(consts_from_any_branch.len()), fn (consts_from_other_branches, const_from_any_branch)
+               if const_from_any_branch.in?(branch_consts)
+                    consts_from_other_branches
+               else consts_from_other_branches.append(const_from_any_branch)
+          )
+
+          [box
+               new (cases_operands[case_idx]):code <= code, exp_data
+               consts_from_other_branches.foldl(ir, fn (ir, name) named_consts[name]:operand.dec_ref_cnt(ir)) ++ cases_irs[case_idx]
+               final_data, dependencies, src_gconsts
+          ]
+     } else {
+          let [box switch_operand, final_data, dependencies] = switch_operand.has_ir!(final_data, dependencies)
+          let [box cases_operands, final_data, dependencies] = if is_last
+               [box cases_operands, final_data, dependencies]
+          else operands_have_ir!(cases_operands, final_data, dependencies)
+
+          let [box ir, result_reg, exp_data] = if is_last
+               [box ir, "NO REG", exp_data]
+          else {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+
+               [box ir ++ "t_any " ++ result_reg ++ ";\n", result_reg, exp_data]
+          }
+
+          let ir = ir ++ "switch(" ++ switch_operand:ir ++ ".raw_bits){\n"
+          let ir = variants_operands.foldl_kv(ir, fn (ir, case_idx, case_variants_operands) {
+               let ir = case_variants_operands.foldl(ir, fn (ir, case_variant_operand) ir ++ "case " ++ case_variant_operand:comptime_val:value.to_ir_u128() ++ ":") ++ "{\n"
+
+               let branch_consts              = branches_consts[case_idx]
+               let consts_from_other_branches = consts_from_any_branch.foldl([set].init(consts_from_any_branch.len()), fn (consts_from_other_branches, const_from_any_branch)
+                    if const_from_any_branch.in?(branch_consts)
+                         consts_from_other_branches
+                    else consts_from_other_branches.append(const_from_any_branch)
+               )
+
+               consts_from_other_branches.foldl(ir, fn (ir, name) named_consts[name]:operand.dec_ref_cnt(ir)) ++
+                    cases_irs[case_idx] ++
+                    if is_last; "}\n" else result_reg ++ "=" ++ cases_operands[case_idx]:ir ++ ";\nbreak;\n}\n"
+          })
+
+          let branch_consts              = branches_consts.last()
+          let consts_from_other_branches = consts_from_any_branch.foldl([set].init(consts_from_any_branch.len()), fn (consts_from_other_branches, const_from_any_branch)
+               if const_from_any_branch.in?(branch_consts)
+                    consts_from_other_branches
+               else consts_from_other_branches.append(const_from_any_branch)
+          )
+
+          let switch_operand_always_correct = switch_operand.has_type?(@main.always_hash_map_key_types)
+
+          let ir                 = consts_from_other_branches.foldl(ir ++ "default:{\n", fn (ir, name) named_consts[name]:operand.dec_ref_cnt(ir))
+          let [box ir, exp_data] = if switch_operand_always_correct
+               [box
+                    switch_operand.dec_ref_cnt(ir) ++
+                    cases_irs.last() ++
+                    if is_last; "}\n}\n" else result_reg ++ "=" ++ cases_operands.last():ir ++ ";\n}\n}\n"
+
+                    exp_data
+               ]
+          else {
+               let [box check_result_reg, exp_data] = exp_data.new_reg()
+
+               let ir = ir ++ "t_any const " ++ check_result_reg ++ "=check_switch_operand__own(thrd_data," ++ switch_operand:ir ++ "," ++ exp_data:owner_name_ir_const ++ ");\n"
+               let ir = if is_last
+                    ir__raw_if(
+                         ir
+
+                         check_result_reg ++ ".bytes[15]==tid__error"
+                         :unlikely
+
+                         ir__raw_return("", check_result_reg)
+
+                         null
+                    ) ++ cases_irs.last() ++ "}\n}\n"
+               else ir__raw_if(
+                    ir
+
+                    check_result_reg ++ ".bytes[15]==tid__error"
+                    :unlikely
+
+                    result_reg ++ "=" ++ check_result_reg ++ ";\n"
+
+                    cases_irs.last() ++ result_reg ++ "=" ++ cases_operands.last():ir ++ ";\n}\n}\n"
+               )
+
+               [box ir, exp_data]
+          }
+
+          let is_gconst = switch_operand_always_correct && cases_operands.all(true, _:is_gconst)
+
+          let possible_types = if cases_operands.any(true, fn (case_operand) case_operand:possible_types.null?())
+               null
+          else {
+               let possible_types = cases_operands.drop(1).foldl(cases_operands.first():possible_types, fn (possible_types, case_operand) case_operand:possible_types.foldl(possible_types, _.append(_)))
+               if switch_operand_always_correct; possible_types else possible_types.append("error")
+          }
+
+          let ir = if is_last; ir else ir__assume_type(result_reg, possible_types, ir)
+
+          [box
+               new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= possible_types
+                    :is_gconst      <= is_gconst
+               }
+
+               exp_data, ir, final_data, dependencies, src_gconsts
+          ]
+     }
+}

@@ -1,0 +1,8 @@
+let t_unpack_kv = [obj
+     :scar_type = "t_unpack_kv"
+
+     :keyword        = @main.t_token
+     :type           = ""
+     :names_and_keys = [array] # [array [obj :name = @t_token, :key = @i_expression]*]
+     :operand        = :i_expression
+]

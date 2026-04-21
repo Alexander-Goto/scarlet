@@ -1,0 +1,268 @@
+let t_grouped_exps = [obj
+     :scar_type = "t_grouped_exps"
+
+     :open_char = @main.t_token
+     :exps      = [array] # [array @i_expression*]
+]
+
+fn grouped_exps_independent?(exps, independent_consts)
+     exps:exps.foldl(independent_consts, fn (independent_consts, exp)
+          switch exp:scar_type
+          case "t_const_def":
+               if exp:value.independent?(independent_consts)
+                    independent_consts.append(exp:name:text)
+               else [breaker null]
+          case "t_unpack_kv":
+               if exp:operand.independent?(independent_consts) && exp:names_and_keys.all(true, fn (name_and_key) name_and_key:key.independent?(independent_consts))
+                    exp:names_and_keys.foldl(independent_consts, fn (independent_consts, name_and_key) independent_consts.append(name_and_key:name:text))
+               else [breaker null]
+          case "t_unpack":
+               if exp:operand.independent?(independent_consts)
+                    exp:names.foldl(independent_consts, fn (independent_consts, name) if name:text == "_"; independent_consts else independent_consts.append(name:text))
+               else [breaker null]
+          default:
+               if exp.independent?(independent_consts)
+                    independent_consts
+               else [breaker null]
+     ).type() /= "core.null"
+
+fn analyze_grouped_exps(exps, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let last_idx = exps:exps.len() - 1
+
+     exps:exps.foldl_kv([box last_use_info, lambdas_data, def_ids, name_ids], fn (state, idx, exp) {
+          let [box last_use_info, lambdas_data, def_ids, name_ids] = state
+
+          switch exp:scar_type
+          case "t_const_def": {
+               if idx == last_idx
+                    error__not_expected_token(exp:keyword, null)
+               else null
+
+               let [box last_use_info, lambdas_data, def_ids] = exp:value.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+               let name_id  = exp:name.get_token_id()
+               let name_ids = new (name_ids)[exp:name:text] <= name_id
+               let def_ids  = def_ids.append(name_id)
+
+               [box last_use_info, lambdas_data, def_ids, name_ids]
+          }
+          case "t_unpack_kv": {
+               if idx == last_idx
+                    error__not_expected_token(exp:keyword, null)
+               else null
+
+               let [box last_use_info, lambdas_data, def_ids] =
+                    exp:names_and_keys.foldl(exp:operand.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids), fn (state, name_and_key) {
+                         let [box last_use_info, lambdas_data, def_ids] = state
+
+                         name_and_key:key.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+                    })
+
+               let [box def_ids, name_ids] = exp:names_and_keys.foldl([box def_ids, name_ids], fn (state, name_and_key) {
+                    let [box def_ids, name_ids] = state
+
+                    let name_id  = name_and_key:name.get_token_id()
+                    let name_ids = new (name_ids)[name_and_key:name:text] <= name_id
+                    let def_ids  = def_ids.append(name_id)
+
+                    [box def_ids, name_ids]
+               })
+
+               [box last_use_info, lambdas_data, def_ids, name_ids]
+          }
+          case "t_unpack": {
+               if idx == last_idx
+                    error__not_expected_token(exp:keyword, null)
+               else null
+
+               let [box last_use_info, lambdas_data, def_ids] = exp:operand.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+               let [box def_ids, name_ids] = exp:names.foldl([box def_ids, name_ids], fn (state, name)
+                    if name:text == "_"
+                         state
+                    else {
+                         let [box def_ids, name_ids] = state
+
+                         let name_id  = name.get_token_id()
+                         let name_ids = new (name_ids)[name:text] <= name_id
+                         let def_ids  = def_ids.append(name_id)
+
+                         [box def_ids, name_ids]
+                    }
+               )
+
+               [box last_use_info, lambdas_data, def_ids, name_ids]
+          }
+          default: {
+               let [box last_use_info, lambdas_data, def_ids] = exp.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+               [box last_use_info, lambdas_data, def_ids, name_ids]
+          }
+     })
+}
+
+fn grouped_exps_to_operand(exps, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let [box code, local_exp_data, exps_ir, final_data, dependencies, src_gconsts] =
+          exps:exps.take(exps:exps.len() - 1).foldl([box exps:open_char, exp_data, "", final_data, dependencies, src_gconsts], fn (state, exp) {
+               let [box code, exp_data, exps_ir, final_data, dependencies, src_gconsts] = state
+
+               switch exp:scar_type
+               case "t_const_def": {
+                    let [box operand, exp_data, exps_ir, final_data, dependencies, src_gconsts] =
+                         exp:value.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, exps_ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+                    let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+                    let code = new (code):text => _ ++ ("let " ++ exp:name:text ++ " = " ++ operand:code:text ++ "; ")
+
+                    let name_id                 = exp:name.get_token_id()
+                    let [box exps_ir, exp_data] = if name_id.in?(unused_def_ids) {
+                         warning__constant_not_used(exp:name)
+                         [box operand.dec_ref_cnt(exps_ir), exp_data]
+                    } else [box
+                         exps_ir
+                         new (exp_data) {
+                              :named_consts[exp:name:text] <= new (@main.t_named_const) {
+                                   :name_id <= name_id
+                                   :operand <= operand
+                              }
+                              :name_ids[name_id] <= exp:name:text
+                         }
+                    ]
+
+                    [box code, exp_data, exps_ir, final_data, dependencies, src_gconsts]
+               }
+               case "t_unpack_kv": {
+                    let [box unpacking_operand, exp_data, exps_ir, final_data, dependencies, src_gconsts] =
+                         exp:operand.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, exps_ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+                    let [box keys, exp_data, exps_ir, final_data, dependencies, src_gconsts] =
+                         exp:names_and_keys.foldl([box [array].init(exp:names_and_keys.len()), exp_data, exps_ir, final_data, dependencies, src_gconsts], fn (state, name_and_key) {
+                              let [box keys, exp_data, exps_ir, final_data, dependencies, src_gconsts] = state
+
+                              let [box key, exp_data, exps_ir, final_data, dependencies, src_gconsts] =
+                                   name_and_key:key.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, exps_ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+                              [box keys.append(key), exp_data, exps_ir, final_data, dependencies, src_gconsts]
+                         })
+
+                    let [box unpacked_consts, exp_data, exps_ir, final_data, dependencies] =
+                         ir__unpack_kv(exp:type, exp:names_and_keys.map(_:name), keys, unpacking_operand, exp_data, exps_ir, final_data, dependencies)
+
+                    let code = new (code):text => _ ++ ("let [" ++ exp:type ++ " " ++ exp:names_and_keys.first():name:text ++ " = " ++ keys.first():code:text)
+                    let code = new (code):text => fn (code) exp:names_and_keys.drop(1).foldl_kv(code, fn (code, idx, name_and_key)
+                         code ++ (", " ++ name_and_key:name:text ++ " = " ++ keys[idx + 1]:code:text)
+                    )
+                    let code = new (code):text => _ ++ ("] = " ++ unpacking_operand:code:text ++ "; ")
+
+                    let [box exps_ir, exp_data, final_data, dependencies] = exp:names_and_keys.foldl_kv([box exps_ir, exp_data, final_data, dependencies], fn (state, idx, name_and_key) {
+                         let [box exps_ir, exp_data, final_data, dependencies] = state
+
+                         let operand = unpacked_consts[idx]
+                         let name    = name_and_key:name
+                         let name_id = name.get_token_id()
+
+                         let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+                         if name_id.in?(unused_def_ids) {
+                              warning__constant_not_used(name)
+                              [box operand.dec_ref_cnt(exps_ir), exp_data, final_data, dependencies]
+                         } else [box
+                              exps_ir
+
+                              new (exp_data) {
+                                   :named_consts[name:text] <= new (@main.t_named_const) {
+                                        :name_id <= name_id
+                                        :operand <= operand
+                                   }
+                                   :name_ids[name_id] <= name:text
+                              }
+
+                              final_data, dependencies
+                         ]
+                    })
+
+                    [box code, exp_data, exps_ir, final_data, dependencies, src_gconsts]
+               }
+               case "t_unpack": {
+                    let [box unpacking_operand, exp_data, exps_ir, final_data, dependencies, src_gconsts] =
+                         exp:operand.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, exps_ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+                    let [box unpacked_consts, exp_data, exps_ir, final_data, dependencies] =
+                         ir__unpack(exp:type, exp:names, unpacking_operand, exp_data, exps_ir, final_data, dependencies)
+
+                    let code = new (code):text => _ ++ ("let [" ++ exp:type ++ " " ++ exp:names.first():text)
+                    let code = exp:names.drop(1).foldl(code, fn (code, name) new (code):text => _ ++ (", " ++ name:text))
+                    let code = new (code):text => _ ++ ("] = " ++ unpacking_operand:code:text ++ "; ")
+
+                    let [box exps_ir, exp_data, final_data, dependencies] = exp:names.foldl_kv([box exps_ir, exp_data, final_data, dependencies], fn (state, idx, name)
+                         if name:text == "_"
+                              state
+                         else {
+                              let [box exps_ir, exp_data, final_data, dependencies] = state
+
+                              let operand = unpacked_consts[idx]
+                              let name_id = name.get_token_id()
+
+                              let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+                              if name_id.in?(unused_def_ids) {
+                                   warning__constant_not_used(name)
+                                   [box operand.dec_ref_cnt(exps_ir), exp_data, final_data, dependencies]
+                              } else [box
+                                   exps_ir
+
+                                   new (exp_data) {
+                                        :named_consts[name:text] <= new (@main.t_named_const) {
+                                             :name_id <= name_id
+                                             :operand <= operand
+                                        }
+                                        :name_ids[name_id] <= name:text
+                                   }
+
+                                   final_data, dependencies
+                              ]
+                         }
+                    )
+
+                    [box code, exp_data, exps_ir, final_data, dependencies, src_gconsts]
+               }
+               default: {
+                    let [box operand, exp_data, exps_ir, final_data, dependencies, src_gconsts] =
+                         exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, exps_ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+                    let code = new (code):text => _ ++ (operand:code:text ++ "; ")
+
+                    let maybe_error = operand.maybe_has_type?("error")
+                    let exps_ir     = if maybe_error {
+                         if operand.has_type?("error")
+                              error__ignored_error(operand:code)
+                         else null
+
+                         exps_ir ++
+                              ir__raw_if(
+                                   "#ifdef DEBUG\n"
+
+                                   operand:ir ++ ".bytes[15]==tid__error"
+                                   :unlikely
+
+                                   "fprintf(stderr,\"[DEBUG]: " ++ msg__make(operand:code, "Ignored error!") ++ "\\n\");\n" ++
+                                   "error__show_and_exit(thrd_data," ++ operand:ir ++ ");\n"
+
+                                   null
+                              ) ++ "#endif\n"
+                    } else exps_ir
+                    let exps_ir = operand.dec_ref_cnt(exps_ir)
+
+                    [box code, exp_data, exps_ir, final_data, dependencies, src_gconsts]
+               }
+          })
+
+     let [box last_operand, local_exp_data, exps_ir, final_data, dependencies, src_gconsts] =
+          exps:exps.last().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, local_exp_data, exps_ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, false, true)
+
+     let code                                                               = new (code):text => _ ++ (last_operand:code:text ++ "}")
+     let [box result_operand, local_exp_data, ir, final_data, dependencies] = ir__grouped_exps(last_operand, code, local_exp_data, exps_ir, ir, final_data, dependencies, is_last)
+     let exp_data                                                           = new (exp_data):ir_reg_num <= local_exp_data:ir_reg_num
+
+     [box result_operand, exp_data, ir, final_data, dependencies, src_gconsts]
+}

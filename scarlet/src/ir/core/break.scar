@@ -1,0 +1,37 @@
+fn ir__core_fn_break(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box predicate, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+     let [box result_value, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ predicate:code:text ++ ", " ++ result_value:code:text ++ ")")
+
+     predicate.maybe_has_type!("bool")
+     if result_value.has_type?("error")
+          error__invalid_type(result_value:code, "/error", "error")
+     else null
+
+     if predicate:comptime_val.null?() || result_value.maybe_has_type?("error")
+          ir__fn_call(
+               "McoreFNbreak", [array predicate, result_value], code
+
+               if predicate.has_type?("bool") && not result_value.maybe_has_type?("error")
+                    result_value:possible_types.append("breaker")
+               else if result_value:possible_types.null?()
+                    null
+               else result_value:possible_types.append("breaker").append("error")
+
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     else if predicate:comptime_val:value
+          ir__breaker(result_value, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else {
+          let operand = new (result_value):code <= code
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

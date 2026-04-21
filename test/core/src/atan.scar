@@ -1,0 +1,83 @@
+let num__atan = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_atan      = fn (num) to_num__atan(num:value.atan())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__atan(arg) new (@main.num__atan):value <= arg
+
+fn to_custom_num__atan(arg) custom__create(
+     arg
+     [obj
+          :core_atan      = fn (num) to_custom_num__atan(num.custom__get_data().atan())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__atan = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_atan = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__atan(arg) new (@main.broken_num__atan):value <= arg
+
+fn to_broken_custom_num__atan(arg) custom__create(
+     arg
+     [obj
+          :core_atan = fn (_) heap_string()
+     ]
+)
+
+let error_num__atan = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_atan = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__atan(arg) new (@main.error_num__atan):value <= arg
+
+fn to_error_custom_num__atan(arg) custom__create(
+     arg
+     [obj
+          :core_atan = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__atan() {
+     test(0.0.atan().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(-0.0.atan().scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test(0.1.atan().in_range?(0.09, 0.10))
+     test(-0.1.atan().in_range?(-0.10, -0.09))
+     test(1.0.atan().in_range?(0.78, 0.79))
+     test(-1.0.atan().in_range?(-0.79, -0.78))
+     test(1.01.atan().in_range?(0.79, 0.80))
+     test(-1.01.atan().in_range?(-0.80, -0.79))
+     test(inf().atan().in_range?(1.57, 1.58))
+     test(neg_inf().atan().in_range?(-1.58, -1.57))
+     test(nan().atan().nan?())
+
+     test(to_num__atan(1.0).atan():value.in_range?(0.78, 0.79))
+     test(to_num__atan(-1.01).atan():value.in_range?(-0.80, -0.79))
+
+     test(to_custom_num__atan(1.0).atan().custom__get_data().in_range?(0.78, 0.79))
+     test(to_custom_num__atan(-1.01).atan().custom__get_data().in_range?(-0.80, -0.79))
+
+     let error  = expected_error(:1, heap_string(), heap_string())
+     let string = heap_string()
+     test(error.atan().get_error_id() === :1)
+     test(string.atan().get_error_id() === :invalid_type)
+
+     test(to_broken_num__atan(1.0).atan().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__atan(1.0).atan().get_error_id() === :invalid_type)
+     test(to_error_num__atan(1.0).atan().get_error_id() === :3)
+     test(to_error_custom_num__atan(1.0).atan().get_error_id() === :4)
+}

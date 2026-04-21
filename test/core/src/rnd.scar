@@ -1,0 +1,2 @@
+`noinline`
+fn test__rnd() test(rnd().type() === "core.int")

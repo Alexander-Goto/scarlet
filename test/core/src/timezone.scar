@@ -1,0 +1,2 @@
+`noinline`
+fn test__timezone() test(timezone().type() === "core.int")

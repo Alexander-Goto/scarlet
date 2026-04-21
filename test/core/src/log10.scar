@@ -1,0 +1,81 @@
+let num__log10 = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_log10       = fn (num) to_num__log10(num:value.log10())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__log10(arg) new (@main.num__log10):value <= arg
+
+fn to_custom_num__log10(arg) custom__create(
+     arg
+     [obj
+          :core_log10       = fn (num) to_custom_num__log10(num.custom__get_data().log10())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__log10 = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_log10 = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__log10(arg) new (@main.broken_num__log10):value <= arg
+
+fn to_broken_custom_num__log10(arg) custom__create(
+     arg
+     [obj
+          :core_log10 = fn (_) heap_string()
+     ]
+)
+
+let error_num__log10 = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_log10 = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__log10(arg) new (@main.error_num__log10):value <= arg
+
+fn to_error_custom_num__log10(arg) custom__create(
+     arg
+     [obj
+          :core_log10 = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__log10() {
+     test(0.0.log10().neg_inf?())
+     test(-0.0.log10().neg_inf?())
+     test(1.0.log10().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(inf().log10().inf?())
+     test(-0.1.log10().nan?())
+     test(-1.0.log10().nan?())
+     test(-1.3.log10().nan?())
+     test(neg_inf().log10().nan?())
+     test(0.1.log10().in_range?(-1.01, -0.99))
+     test(1.3.log10().in_range?(0.10, 0.12))
+
+     test(to_num__log10(0.1).log10():value.in_range?(-1.01, -0.99))
+     test(to_num__log10(1.3).log10():value.in_range?(0.10, 0.12))
+
+     test(to_custom_num__log10(0.1).log10().custom__get_data().in_range?(-1.01, -0.99))
+     test(to_custom_num__log10(1.3).log10().custom__get_data().in_range?(0.10, 0.12))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.log10().get_error_id() === :1)
+     test(heap_string().log10().get_error_id() === :invalid_type)
+
+     test(to_broken_num__log10(1.0).log10().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__log10(1.0).log10().get_error_id() === :invalid_type)
+     test(to_error_num__log10(1.0).log10().get_error_id() === :3)
+     test(to_error_custom_num__log10(1.0).log10().get_error_id() === :4)
+}

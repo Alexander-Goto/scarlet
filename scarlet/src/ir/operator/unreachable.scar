@@ -1,0 +1,7 @@
+fn ir__unreachable(code, exp_data, ir, final_data, dependencies, src_gconsts) {
+     let [box file_name_ir_const, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ code:file ++ "\";\n", final_data, dependencies)
+
+     let ir = ir ++ "Ounreachable(thrd_data," ++ file_name_ir_const ++ "," ++ code:line.to_ir_num() ++ "," ++ code:row.to_ir_num() ++ ");\n"
+
+     [box comptime_null(code), exp_data, ir, final_data, dependencies, src_gconsts]
+}

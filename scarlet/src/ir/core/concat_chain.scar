@@ -1,0 +1,312 @@
+fn concat_chain_items_to_operands(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     switch exp:scar_type
+     case "t_concat": {
+          let [box left, exp_data, ir, final_data, dependencies, src_gconsts] =
+               concat_chain_items_to_operands(exp:left, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+          let [box right, exp_data, ir, final_data, dependencies, src_gconsts] =
+               concat_chain_items_to_operands(exp:right, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+
+          let exp = new (exp) {
+               :left  <= left
+               :right <= right
+          }
+
+          if right:comptime_val.null?()
+               [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+          else if not left:comptime_val.null?()
+               exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, false)
+          else if left:scar_type == "t_concat" && left:right:scar_type == "t_operand" && not left:right:comptime_val.null?() {
+               let exp = new (exp):left <= left:right
+
+               let [box new_right, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+               [box
+                    new (exp) {
+                         :left  <= left:left
+                         :right <= new_right
+                    }
+
+                    exp_data, ir, final_data, dependencies, src_gconsts
+               ]
+          } else [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+     case "t_nested_exp": {
+          let [box nested_exp, exp_data, ir, final_data, dependencies, src_gconsts] =
+               concat_chain_items_to_operands(exp:exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+
+          let exp = new (exp):exp <= nested_exp
+
+          if nested_exp:comptime_val.null?()
+               [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+          else exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, false)
+     }
+     default:
+          exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, true)
+
+fn concat_chain_tree_to_array(exp, array)
+     switch exp:scar_type
+     case "t_concat":
+          concat_chain_tree_to_array(exp:right, concat_chain_tree_to_array(exp:left, array))
+     case "t_nested_exp":
+          concat_chain_tree_to_array(exp:exp, array)
+     case "t_operand":
+          array.append(exp)
+     default:
+          unreachable()
+
+fn concat_chain_creation_prepare(arrays, maybe_string, maybe_byte_array, maybe_array) {
+     let uniq = arrays.foldl([table].init(arrays.len()), fn (uniq, array) new (uniq)[array:ir] <= array)
+     let uniq = new (uniq)[arrays.first():ir] <= null
+
+     uniq.foldl_kv(null, fn (state, array_ir, array) {
+          let [box string_predicate_ir, byte_array_predicate_ir, array_predicate_ir] = state
+
+          let array_possible_types = array:possible_types
+          if array_possible_types.null?()
+               [box
+                    if maybe_string
+                         (if string_predicate_ir.null?(); "(" else string_predicate_ir ++ "&&(") ++
+                              array_ir ++ ".bytes[15]==tid__string||" ++ array_ir ++ ".bytes[15]==tid__short_string)"
+                    else null
+
+                    if maybe_byte_array
+                         (if byte_array_predicate_ir.null?(); "(" else byte_array_predicate_ir ++ "&&(") ++
+                              array_ir ++ ".bytes[15]==tid__byte_array||" ++ array_ir ++ ".bytes[15]==tid__short_byte_array)"
+                    else null
+
+                    if maybe_array
+                         (if array_predicate_ir.null?(); "" else array_predicate_ir ++ "&&") ++ array_ir ++ ".bytes[15]==tid__array"
+                    else null
+               ]
+          else {
+               let string_predicate_ir = if not maybe_string || array_possible_types.all(true, _.in?(@main.string_types))
+                    string_predicate_ir
+               else (if string_predicate_ir.null?(); "" else string_predicate_ir ++ "&&") ++
+                    switch
+                         (if "short_string".in?(array_possible_types); 1 else 0) |
+                         (if "string".in?(array_possible_types); 2 else 0)
+                    case 1:
+                         array_ir ++ ".bytes[15]==tid__short_string"
+                    case 2:
+                         array_ir ++ ".bytes[15]==tid__string"
+                    case 3:
+                         "(" ++ array_ir ++ ".bytes[15]==tid__string||" ++ array_ir ++ ".bytes[15]==tid__short_string)"
+                    default:
+                         unreachable()
+
+               let byte_array_predicate_ir = if not maybe_byte_array || array_possible_types.all(true, _.in?(@main.byte_array_types))
+                    byte_array_predicate_ir
+               else (if byte_array_predicate_ir.null?(); "" else byte_array_predicate_ir ++ "&&") ++
+                    switch
+                         (if "short_byte_array".in?(array_possible_types); 1 else 0) |
+                         (if "byte_array".in?(array_possible_types); 2 else 0)
+                    case 1:
+                         array_ir ++ ".bytes[15]==tid__short_byte_array"
+                    case 2:
+                         array_ir ++ ".bytes[15]==tid__byte_array"
+                    case 3:
+                         "(" ++ array_ir ++ ".bytes[15]==tid__byte_array||" ++ array_ir ++ ".bytes[15]==tid__short_byte_array)"
+                    default:
+                         unreachable()
+
+               let array_predicate_ir = if not maybe_array || array_possible_types == [set "array"]
+                    array_predicate_ir
+               else if array_predicate_ir.null?(); array_ir ++ ".bytes[15]==tid__array" else array_predicate_ir ++ "&&" ++ array_ir ++ ".bytes[15]==tid__array"
+
+               [box string_predicate_ir, byte_array_predicate_ir, array_predicate_ir]
+          }
+     })
+}
+
+fn concat_chain_create(
+     string_predicate_ir, byte_array_predicate_ir, array_predicate_ir
+     arrays, maybe_string_byte_array_array
+     result_possible_types, code, default_ir, default_result_ir
+     exp_data, ir, final_data, dependencies, src_gconsts, is_last
+) {
+     let [box maybe_string, maybe_byte_array, maybe_array] = maybe_string_byte_array_array
+
+     let maybe_other   = not result_possible_types.all(true, _.in?(@main.concat_types__error))
+     let maybe_error   = "error".in?(result_possible_types)
+     let only_one_type = (if maybe_string; 1 else 0) + (if maybe_byte_array; 1 else 0) + (if maybe_array; 1 else 0) == 1
+
+     let [box arrays_ir, exp_data, ir, final_data, dependencies] = ir__create_ir_array(arrays, exp_data, ir, final_data, dependencies)
+
+     let [box result_reg, exp_data] = exp_data.new_reg()
+     let assume_ir                  = ir__assume_type(result_reg, result_possible_types, "")
+
+     let arrays_qty_ir    = arrays.len().to_ir_num()
+     let string_value     = if maybe_string; "string_chain_concat(thrd_data," ++ arrays_qty_ir ++ "," ++ arrays_ir ++ ")" else ""
+     let byte_array_value = if maybe_byte_array; "byte_array_chain_concat(thrd_data," ++ arrays_qty_ir ++ "," ++ arrays_ir ++ ")" else ""
+     let array_value      = if maybe_array; "array_chain_concat(thrd_data," ++ arrays_qty_ir ++ "," ++ arrays_ir ++ ")" else ""
+
+     let first_array                = arrays.first()
+     let first_array_ir             = first_array:ir
+     let first_array_possible_types = first_array:possible_types
+
+     let ir = if only_one_type {
+          let value = if maybe_string
+               string_value
+          else if maybe_array
+               array_value
+          else byte_array_value
+
+          if maybe_other || maybe_error {
+               let predicate = if maybe_string
+                    if first_array_possible_types.null?()
+                         (if string_predicate_ir.null?(); "(" else string_predicate_ir ++ "&&(") ++
+                              first_array_ir ++ ".bytes[15]==tid__string||" ++ first_array_ir ++ ".bytes[15]==tid__short_string)"
+                    else {
+                         if first_array_possible_types.all(true, _.in?(@main.string_types))
+                              string_predicate_ir
+                         else (if string_predicate_ir.null?(); "" else string_predicate_ir ++ "&&") ++
+                              switch
+                                   (if "short_string".in?(first_array_possible_types); 1 else 0) |
+                                   (if "string".in?(first_array_possible_types); 2 else 0)
+                              case 1:
+                                   first_array_ir ++ ".bytes[15]==tid__short_string"
+                              case 2:
+                                   first_array_ir ++ ".bytes[15]==tid__string"
+                              case 3:
+                                   "(" ++ first_array_ir ++ ".bytes[15]==tid__string||" ++ first_array_ir ++ ".bytes[15]==tid__short_string)"
+                              default:
+                                   unreachable()
+                    }
+               else if maybe_array
+                    if first_array_possible_types === [set "array"]
+                         array_predicate_ir
+                    else if array_predicate_ir.null?(); first_array_ir ++ ".bytes[15]==tid__array" else array_predicate_ir ++ "&&" ++ first_array_ir ++ ".bytes[15]==tid__array"
+               else if first_array_possible_types.null?()
+                    (if byte_array_predicate_ir.null?(); "(" else byte_array_predicate_ir ++ "&&(") ++
+                         first_array_ir ++ ".bytes[15]==tid__byte_array||" ++ first_array_ir ++ ".bytes[15]==tid__short_byte_array)"
+               else {
+                    if first_array_possible_types.all(true, _.in?(@main.byte_array_types))
+                         byte_array_predicate_ir
+                    else (if byte_array_predicate_ir.null?(); "" else byte_array_predicate_ir ++ "&&") ++
+                         switch
+                              (if "short_byte_array".in?(first_array_possible_types); 1 else 0) |
+                              (if "byte_array".in?(first_array_possible_types); 2 else 0)
+                         case 1:
+                              first_array_ir ++ ".bytes[15]==tid__short_byte_array"
+                         case 2:
+                              first_array_ir ++ ".bytes[15]==tid__byte_array"
+                         case 3:
+                              "(" ++ first_array_ir ++ ".bytes[15]==tid__byte_array||" ++ first_array_ir ++ ".bytes[15]==tid__short_byte_array)"
+                         default:
+                              unreachable()
+               }
+
+               if is_last
+                    ir__raw_if(
+                         ir
+
+                         predicate
+                         if maybe_error && not maybe_other; :likely else :unknown
+
+                         ir__raw_return(
+                              "call_stack__push(thrd_data,core_concat_fn_name);\n" ++
+                              "t_any const " ++ result_reg ++ "=" ++ value ++ ";\n" ++
+                              "call_stack__pop(thrd_data);\n" ++
+                              assume_ir
+
+                              result_reg
+                         )
+
+                         null
+                    ) ++ default_ir
+               else ir__raw_if(
+                    ir ++ "t_any " ++ result_reg ++ ";\n"
+
+                    predicate
+                    if maybe_error && not maybe_other; :likely else :unknown
+
+                    "call_stack__push(thrd_data,core_concat_fn_name);\n" ++
+                    result_reg ++ "=" ++ value ++ ";\n" ++
+                    "call_stack__pop(thrd_data);\n"
+
+                    default_ir ++ result_reg ++ "=" ++ default_result_ir ++ ";\n"
+               )
+          } else ir ++ "call_stack__push(thrd_data,core_concat_fn_name);\n" ++
+               "t_any const " ++ result_reg ++ "=" ++ value ++ ";\n" ++
+               "call_stack__pop(thrd_data);\n" ++
+               if is_last; ir__raw_return(assume_ir, result_reg); else ""
+     } else {
+          let default_label = result_reg ++ "l"
+
+          let ir = ir ++ "t_any " ++ result_reg ++ ";\n" ++
+               "switch(" ++ first_array_ir ++ ".bytes[15]){\n"
+
+          let ir = if maybe_string
+               ir ++ (if first_array_possible_types.null?()
+                    "case tid__short_string:case tid__string:{\n"
+               else {
+                    switch
+                         (if "short_string".in?(first_array_possible_types); 1 else 0) |
+                         (if "string".in?(first_array_possible_types); 2 else 0)
+                    case 1:
+                         "case tid__short_string:{\n"
+                    case 2:
+                         "case tid__string:{\n"
+                    case 3:
+                         "case tid__short_string:case tid__string:{\n"
+                    default:
+                         unreachable()
+               }) ++
+               (if string_predicate_ir.null?(); "" else ir__raw_if("", "!(" ++ string_predicate_ir ++ ")", :unlikely, "goto " ++ default_label ++ ";\n", null)) ++
+               "call_stack__push(thrd_data,core_concat_fn_name);\n" ++
+               result_reg ++ "=" ++ string_value ++ ";\n" ++
+               "call_stack__pop(thrd_data);\n" ++
+               "break;\n}\n"
+          else ir
+
+          let ir = if maybe_byte_array
+               ir ++ (if first_array_possible_types.null?()
+                    "case tid__short_byte_array:case tid__byte_array:{\n"
+               else {
+                    switch
+                         (if "short_byte_array".in?(first_array_possible_types); 1 else 0) |
+                         (if "byte_array".in?(first_array_possible_types); 2 else 0)
+                    case 1:
+                         "case tid__short_byte_array:{\n"
+                    case 2:
+                         "case tid__byte_array:{\n"
+                    case 3:
+                         "case tid__short_byte_array:case tid__byte_array:{\n"
+                    default:
+                         unreachable()
+               }) ++
+               (if byte_array_predicate_ir.null?(); "" else ir__raw_if("", "!(" ++ byte_array_predicate_ir ++ ")", :unlikely, "goto " ++ default_label ++ ";\n", null)) ++
+               "call_stack__push(thrd_data,core_concat_fn_name);\n" ++
+               result_reg ++ "=" ++ byte_array_value ++ ";\n" ++
+               "call_stack__pop(thrd_data);\n" ++
+               "break;\n}\n"
+          else ir
+
+          let ir = if maybe_array
+               ir ++ "case tid__array:{\n" ++
+               (if array_predicate_ir.null?(); "" else ir__raw_if("", "!(" ++ array_predicate_ir ++ ")", :unlikely, "goto " ++ default_label ++ ";\n", null)) ++
+               "call_stack__push(thrd_data,core_concat_fn_name);\n" ++
+               result_reg ++ "=" ++ array_value ++ ";\n" ++
+               "call_stack__pop(thrd_data);\n" ++
+               "break;\n}\n"
+          else ir
+
+          ir ++ (if maybe_error && not maybe_other; "[[clang::unlikely]]\ndefault:{\n" else "default:{\n") ++
+               default_label ++ ":\n" ++
+               default_ir ++
+               (if is_last; ir__raw_return("}\n}\n" ++ assume_ir, result_reg) else result_reg ++ "=" ++ default_result_ir ++ ";\n}\n}\n")
+     }
+
+     let ir = if is_last; ir else ir ++ assume_ir
+
+     [box
+          new (@main.t_operand) {
+               :code           <= code
+               :ir             <= result_reg
+               :possible_types <= result_possible_types
+          }
+
+          exp_data, ir, final_data, dependencies, src_gconsts
+     ]
+}

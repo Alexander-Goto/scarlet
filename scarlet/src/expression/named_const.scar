@@ -1,0 +1,4 @@
+let t_named_const = [obj
+     :name_id = 0
+     :operand = @main.t_operand
+]

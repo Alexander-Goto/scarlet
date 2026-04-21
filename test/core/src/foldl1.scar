@@ -1,0 +1,237 @@
+let container__foldl1 = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_foldl1 = fn (container, func) container:value.foldl1(func)
+     ]
+]
+
+fn to_container__foldl1(arg) new (@main.container__foldl1):value <= arg
+
+fn to_custom_container__foldl1(arg) custom__create(
+     arg
+     [obj
+          :core_foldl1 = fn (container, func) custom__get_data(container).foldl1(func)
+     ]
+)
+
+let error_container__foldl1 = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_foldl1 = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__foldl1(arg) new (@main.error_container__foldl1):value <= arg
+
+fn to_error_custom_container__foldl1(arg) custom__create(
+     arg
+     [obj
+          :core_foldl1 = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__foldl1() {
+     let items = ",".to_array()
+     test("1".foldl1(fn (state, char) state.to_string().append(char).append(items[0])) === '1')
+     test("0123456789abcde".foldl1(fn (state, char) state.to_string().append(items[0]).append(char)) === "0,1,2,3,4,5,6,7,8,9,a,b,c,d,e")
+     test("\000091".foldl1(fn (state, char) state.to_string().append(items[0]).append(char)) === '\000091')
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".foldl1(fn (state, char) state.to_string().append(items[0]).append(char)) === "\000091,\0000b3,\0000ab,!,!,!,\0000a4,\0000a7,\0000b5")
+
+     let string = ("0011012375611135f" ++ "g0")[1, 18]
+     test(string.foldl1(fn (state, char) state.to_string().append(items[0]).append(char)) === "0,1,1,0,1,2,3,7,5,6,1,1,1,3,5,f,g")
+     string.ignore()
+
+     test(("0011012375611135f" ++ "g0")[1, 18].foldl1(fn (state, char) state.to_string().append(items[0]).append(char)) === "0,1,1,0,1,2,3,7,5,6,1,1,1,3,5,f,g")
+     test(("011012375611135f" ++ "g").foldl1(fn (state, char) state.to_string().append(items[0]).append(char)) === "0,1,1,0,1,2,3,7,5,6,1,1,1,3,5,f,g")
+
+     let string = ("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11]
+     test(string.foldl1(fn (state, char) state.to_string().append(items[0]).append(char)) === "\000091,\0000b3,\0000ab,\0000a4,\0000a7,\0000b5, ,\0000af,\0000ae,\0000b7")
+     string.ignore()
+
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].foldl1(fn (state, char) state.to_string().append(items[0]).append(char)) === "\000091,\0000b3,\0000ab,\0000a4,\0000a7,\0000b5, ,\0000af,\0000ae,\0000b7")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").foldl1(fn (state, char) state.to_string().append(items[0]).append(char)) === "\000091,\0000b3,\0000ab,\0000a4,\0000a7,\0000b5, ,\0000af,\0000ae,\0000b7")
+
+     test("0123456789abcde".foldl1(fn (_, char) if char < 'a'; [breaker char] else null) === '1')
+     test("0123456789abcdef".foldl1(fn (_, char) if char < 'a'; [breaker char] else null) === '1')
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = if len(string_1) === 1
+          string_1[0]
+     else loop(string_1[0, 1], fn (expected)
+          if len(expected) === len(string_1)
+               [breaker expected]
+          else expected.append(string_1[len(expected)].ascii_to_lower())
+     )
+     test(string_1.foldl1(fn (state, char) state.to_string().append(char.ascii_to_lower())) === expected)
+     string_2.ignore()
+
+     let items = u",".to_array()
+     test(u"1".foldl1(fn (state, byte) if state.type() === "core.byte"; [byte_array state, items[0], byte] else state.append(items[0]).append(byte)) === u"1"[0])
+     test(u"0123456789abcde".foldl1(fn (state, byte) if state.type() === "core.byte"; [byte_array state, items[0], byte] else state.append(items[0]).append(byte)) === u"0,1,2,3,4,5,6,7,8,9,a,b,c,d,e")
+
+     let string = (u"0011012375611135f" ++ u"g0")[1, 18]
+     test(string.foldl1(fn (state, byte) if state.type() === "core.byte"; [byte_array state, items[0], byte] else state.append(items[0]).append(byte)) === u"0,1,1,0,1,2,3,7,5,6,1,1,1,3,5,f,g")
+     string.ignore()
+
+     test((u"0011012375611135f" ++ u"g0")[1, 18].foldl1(fn (state, byte) if state.type() === "core.byte"; [byte_array state, items[0], byte] else state.append(items[0]).append(byte)) === u"0,1,1,0,1,2,3,7,5,6,1,1,1,3,5,f,g")
+     test((u"011012375611135f" ++ u"g").foldl1(fn (state, byte) if state.type() === "core.byte"; [byte_array state, items[0], byte] else state.append(items[0]).append(byte)) === u"0,1,1,0,1,2,3,7,5,6,1,1,1,3,5,f,g")
+
+     test(u"0123456789abcd".foldl1(fn (_, byte) if byte < u"a"[0]; [breaker byte] else null) === u"1"[0])
+     test(u"0123456789abcde".foldl1(fn (_, byte) if byte < u"a"[0]; [breaker byte] else null) === u"1"[0])
+
+     let array_1  = rnd_byte_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = if len(array_1) === 1
+          array_1[0]
+     else loop(u"", fn (expected)
+          if len(expected) === len(array_1)
+               [breaker expected]
+          else expected.append(array_1[len(expected)] - 0b01)
+     )
+     test(array_1.foldl1(fn (state, byte) if state.type() === "core.byte"; [byte_array state - 0b01, byte - 0b01] else state.append(byte - 0b01)) === expected)
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     let array    = [array string_0, string_1, string_0][1, 2]
+     test(array.foldl1(fn (state, item) if state.type() =/= "core.array"; [array state, string_0, item] else state.append(string_0).append(item)) === string_1)
+     test(array.foldl1(fn (state, item) if state.type() =/= "core.array"; [array state, string_0, item] else state.append(string_0).append(item)) === string_1)
+
+     let array = [array string_1]
+     test(array.foldl1(fn (state, item) if state.type() =/= "core.array"; [array state, string_0, item] else state.append(string_0).append(item)) === string_1)
+     test(array.foldl1(fn (state, item) if state.type() =/= "core.array"; [array state, string_0, item] else state.append(string_0).append(item)) === string_1)
+
+     let array = [array string_0, string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_0][1, 11]
+     test(array.foldl1(fn (state, item) if state.type() =/= "core.array"; [array state, string_0, item] else state.append(string_0).append(item)) === [array string_0, string_0, string_1, string_0, string_2, string_0, string_2, string_0, string_3, string_0, string_3, string_0, string_3, string_0, string_4, string_0, string_5, string_0, string_5])
+     test(array.foldl1(fn (state, item) if state.type() =/= "core.array"; [array state, string_0, item] else state.append(string_0).append(item)) === [array string_0, string_0, string_1, string_0, string_2, string_0, string_2, string_0, string_3, string_0, string_3, string_0, string_3, string_0, string_4, string_0, string_5, string_0, string_5])
+
+     let array = [array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5]
+     test(array.foldl1(fn (state, item) if state.type() =/= "core.array"; [array state, string_0, item] else state.append(string_0).append(item)) === [array string_0, string_0, string_1, string_0, string_2, string_0, string_2, string_0, string_3, string_0, string_3, string_0, string_3, string_0, string_4, string_0, string_5, string_0, string_5])
+     test(array.foldl1(fn (state, item) if state.type() =/= "core.array"; [array state, string_0, item] else state.append(string_0).append(item)) === [array string_0, string_0, string_1, string_0, string_2, string_0, string_2, string_0, string_3, string_0, string_3, string_0, string_3, string_0, string_4, string_0, string_5, string_0, string_5])
+
+     test([array 0, 1, 2, 3, 4].foldl1(fn (_, item) if item =/= 2; [breaker item] else null) === 1)
+
+     let array_1  = rnd_string_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = if len(array_1) === 1
+          array_1[0]
+     else loop([array], fn (expected)
+          if len(expected) === len(array_1)
+               [breaker expected]
+          else expected.append(array_1[len(expected)].to_lower())
+     )
+     test(array_1.foldl1(fn (state, item) if state.type() === "core.string"; [array state.to_lower(), item.to_lower()] else state.append(item.to_lower())) === expected)
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     let set      = [set string_1]
+     test(set.foldl1(fn (state, item) if state.type() =/= "core.set"; [set state.to_upper() ++ string_0, item.to_upper() ++ string_0] else state.append(item.to_upper() ++ string_0)) === string_1)
+     test(set.foldl1(fn (state, item) if state.type() =/= "core.set"; [set state.to_upper() ++ string_0, item.to_upper() ++ string_0] else state.append(item.to_upper() ++ string_0)) === string_1)
+
+     let set = [set string_0, string_1, string_2, string_3, string_4, string_5]
+     test(set.foldl1(fn (state, item) if state.type() =/= "core.set"; [set state.to_upper() ++ string_0, item.to_upper() ++ string_0] else state.append(item.to_upper() ++ string_0)) === [set string_0.to_upper() ++ string_0, string_1.to_upper() ++ string_0, string_2.to_upper() ++ string_0, string_3.to_upper() ++ string_0, string_4.to_upper() ++ string_0, string_5.to_upper() ++ string_0])
+     test(set.foldl1(fn (state, item) if state.type() =/= "core.set"; [set state.to_upper() ++ string_0, item.to_upper() ++ string_0] else state.append(item.to_upper() ++ string_0)) === [set string_0.to_upper() ++ string_0, string_1.to_upper() ++ string_0, string_2.to_upper() ++ string_0, string_3.to_upper() ++ string_0, string_4.to_upper() ++ string_0, string_5.to_upper() ++ string_0])
+
+     test([set 0, 1, 2, 3, 4].foldl1(fn (_, item) if item =/= 2; [breaker item] else null).in?([set 0, 1, 3, 4]))
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     let table    = [table string_1 = string_2]
+     test(table.foldl1(fn (state, item) if state.type() =/= "core.table"; [table state = state.to_upper() ++ string_0, item = item.to_upper() ++ string_0] else new (state)[item] <= item.to_upper() ++ string_0) === string_2)
+     test(table.foldl1(fn (state, item) if state.type() =/= "core.table"; [table state = state.to_upper() ++ string_0, item = item.to_upper() ++ string_0] else new (state)[item] <= item.to_upper() ++ string_0) === string_2)
+
+     let table = [table string_0 = string_1, string_2 = string_3, string_4 = string_5]
+     test(table.foldl1(fn (state, item) if state.type() =/= "core.table"; [table state = state.to_upper() ++ string_0, item = item.to_upper() ++ string_0] else new (state)[item] <= item.to_upper() ++ string_0) === [table string_1 = string_1.to_upper() ++ string_0, string_3 = string_3.to_upper() ++ string_0, string_5 = string_5.to_upper() ++ string_0])
+     test(table.foldl1(fn (state, item) if state.type() =/= "core.table"; [table state = state.to_upper() ++ string_0, item = item.to_upper() ++ string_0] else new (state)[item] <= item.to_upper() ++ string_0) === [table string_1 = string_1.to_upper() ++ string_0, string_3 = string_3.to_upper() ++ string_0, string_5 = string_5.to_upper() ++ string_0])
+
+     test([table 0 = 1, 1 = 1, 2 = 0, 3 = 0].foldl1(fn (_, item) if item =/= 1; [breaker item] else null) === 0)
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_5 = string_0 ++ "5"
+     let obj = [obj :1 = string_2, :_ = [obj :1 = string_0]]
+     test(obj.foldl1(fn (state, item) if state.type() =/= "core.obj"; [obj state.str_to_tkn() = state.to_upper() ++ string_0, item.str_to_tkn() = item.to_upper() ++ string_0] else new (state)[item] <= item.to_upper() ++ string_0) === string_2)
+     test(obj.foldl1(fn (state, item) if state.type() =/= "core.obj"; [obj state.str_to_tkn() = state.to_upper() ++ string_0, item.str_to_tkn() = item.to_upper() ++ string_0] else new (state)[item] <= item.to_upper() ++ string_0) === string_2)
+
+     let obj = [obj :0 = string_1, :2 = string_3, :4 = string_5, :_ = [obj :1 = string_0]]
+     test(obj.foldl1(fn (state, item) if state.type() =/= "core.obj"; [obj state.str_to_tkn() = state.to_upper() ++ string_0, item.str_to_tkn() = item.to_upper() ++ string_0] else new (state)[item.str_to_tkn()] <= item.to_upper() ++ string_0) === [obj string_1.str_to_tkn() = string_1.to_upper() ++ string_0, string_3.str_to_tkn() = string_3.to_upper() ++ string_0, string_5.str_to_tkn() = string_5.to_upper() ++ string_0])
+     test(obj.foldl1(fn (state, item) if state.type() =/= "core.obj"; [obj state.str_to_tkn() = state.to_upper() ++ string_0, item.str_to_tkn() = item.to_upper() ++ string_0] else new (state)[item.str_to_tkn()] <= item.to_upper() ++ string_0) === [obj string_1.str_to_tkn() = string_1.to_upper() ++ string_0, string_3.str_to_tkn() = string_3.to_upper() ++ string_0, string_5.str_to_tkn() = string_5.to_upper() ++ string_0])
+
+     test([obj :0 = 1, :1 = 1, :2 = 0, :3 = 0].foldl1(fn (_, item) if item =/= 1; [breaker item] else null) === 0)
+
+     test(to_container__foldl1("AbCd").foldl1(fn (state, char) state.to_string().append(char.ascii_to_lower())) === "Abcd")
+     test(to_container__foldl1("abCd").foldl1(fn (state, char) state.to_string().append(char.ascii_to_upper())) === "aBCD")
+     test(to_custom_container__foldl1("AbCd").foldl1(fn (state, char) state.to_string().append(char.ascii_to_lower())) === "Abcd")
+     test(to_custom_container__foldl1("abCd").foldl1(fn (state, char) state.to_string().append(char.ascii_to_upper())) === "aBCD")
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.foldl1(_ === heap_string()).get_error_id() === :1)
+     test(heap_string().foldl1(error_1).get_error_id() === :1)
+     test(error_1.foldl1(error_2).get_error_id() === :1)
+     test(error_2.foldl1(error_1).get_error_id() === :2)
+
+     test((_ === heap_string()).scarlet__erase_info().foldl1(_ === heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().foldl1(heap_string()).get_error_id() === :invalid_type)
+
+     test("".foldl1(fn (_, _) string_1).get_error_id() === :out_of_bounds)
+     test(u"".foldl1(fn (_, _) string_1).get_error_id() === :out_of_bounds)
+     test([array].foldl1(fn (_, _) string_1).get_error_id() === :out_of_bounds)
+     test([table].foldl1(fn (_, _) string_1).get_error_id() === :out_of_bounds)
+     test([obj].foldl1(fn (_, _) string_1).get_error_id() === :out_of_bounds)
+     test([set].foldl1(fn (_, _) string_1).get_error_id() === :out_of_bounds)
+
+     test("1".foldl1(fn (_, _, _) string_1) === '1')
+     test(u"1".foldl1(fn (_, _, _) string_1) === u"1"[0])
+     test([array heap_string()].foldl1(fn (_, _, _) string_1) === heap_string())
+     test([table heap_string() = heap_string()].foldl1(fn (_, _, _) string_1) === heap_string())
+     test([set heap_string()].foldl1(fn (_, _, _) string_1) === heap_string())
+     test([obj :1 = heap_string()].foldl1(fn (_, _, _) string_1) === heap_string())
+
+     test("1".foldl1(fn (_) string_1) === '1')
+     test(u"1".foldl1(fn (_) string_1) === u"1"[0])
+     test([array heap_string()].foldl1(fn (_) string_1) === heap_string())
+     test([table heap_string() = heap_string()].foldl1(fn (_) string_1) === heap_string())
+     test([set heap_string()].foldl1(fn (_) string_1) === heap_string())
+     test([obj :1 = heap_string()].foldl1(fn (_) string_1) === heap_string())
+
+     test("11".foldl1(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().foldl1(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"11".foldl1(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().foldl1(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array heap_string(), heap_string()].foldl1(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table heap_string() = heap_string(), heap_byte_array() = heap_string()].foldl1(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :1 = heap_string(), :2 = heap_string()].foldl1(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([set heap_string(), heap_byte_array()].foldl1(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test("11".foldl1(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().foldl1(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"11".foldl1(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().foldl1(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array heap_string(), heap_string()].foldl1(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table heap_string() = heap_string(), heap_byte_array() = heap_string()].foldl1(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :1 = heap_string(), :2 = heap_string()].foldl1(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test([set heap_string(), heap_byte_array()].foldl1(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test(to_error_container__foldl1([array].init(10)).foldl1(fn (_, _) string_1).get_error_id() == :3)
+     test(to_error_custom_container__foldl1([array].init(10)).foldl1(fn (_, _) string_1).get_error_id() == :4)
+}

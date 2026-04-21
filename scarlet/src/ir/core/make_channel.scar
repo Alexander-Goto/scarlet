@@ -1,0 +1,5 @@
+fn ir__core_fn_make_channel(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let code = new (exp:name):text => _ ++ "()"
+
+     ir__fn_call("McoreFNmake_channel", [array], code, [set "box"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

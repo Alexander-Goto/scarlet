@@ -1,0 +1,29 @@
+fn ir__set(items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_set, is_last) {
+     let [box items, final_data, dependencies] = operands_have_ir!(items, final_data, dependencies)
+     let [box set_reg, exp_data]               = exp_data.new_reg()
+
+     let add_ir_part    = set_reg ++ (if is_set; "=set__builtin_unsafe_add_item__own(thrd_data," else "=set__builtin_add_item__own(thrd_data,") ++ set_reg ++ ","
+     let owner_name_arg = "," ++ exp_data:owner_name_ir_const ++ ");\n"
+     let ir             = items.foldl(
+          ir ++ "t_any " ++ set_reg ++ "=set__init(thrd_data," ++ items.len().to_ir_num() ++ owner_name_arg
+
+          fn (ir, item) ir ++ add_ir_part ++ item:ir ++ owner_name_arg
+     )
+
+     let type = if is_set; [set "set"] else [set "set", "error"]
+     let ir   = ir__assume_type(set_reg, type, ir)
+
+     let ir = if is_last
+          ir__raw_return(ir, set_reg)
+     else ir
+
+     [box
+          new (@main.t_operand) {
+               :code           <= code
+               :ir             <= set_reg
+               :possible_types <= type
+          }
+
+          exp_data, ir, final_data, dependencies, src_gconsts
+     ]
+}

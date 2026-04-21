@@ -1,0 +1,349 @@
+let array__look_part_in = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_look_part_in = fn (part, array) part:value.look_part_in(array:value)
+     ]
+]
+
+fn to_array__look_part_in(arg) new (@main.array__look_part_in):value <= arg
+
+fn to_custom_array__look_part_in(arg) custom__create(
+     arg
+     [obj
+          :core_look_part_in = fn (part, array) part.custom__get_data().look_part_in(array.custom__get_data())
+     ]
+)
+
+let broken_array__look_part_in = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_look_part_in = fn (_, _) heap_string()
+     ]
+]
+
+fn to_broken_array__look_part_in(arg) new (@main.broken_array__look_part_in):value <= arg
+
+fn to_broken_custom_array__look_part_in(arg) custom__create(
+     arg
+     [obj
+          :core_look_part_in = fn (_, _) heap_string()
+     ]
+)
+
+let error_array__look_part_in = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_look_part_in = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__look_part_in(arg) new (@main.error_array__look_part_in):value <= arg
+
+fn to_error_custom_array__look_part_in(arg) custom__create(
+     arg
+     [obj
+          :core_look_part_in = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__look_part_in() {
+     test("".look_part_in("") === 0)
+     test("1".look_part_in("").null?())
+     test("".look_part_in("a") === 0)
+     test("1".look_part_in("1") === 0)
+     test("1".look_part_in("2").null?())
+     test("2".look_part_in("1").null?())
+     test("".look_part_in("122333444455555") === 0)
+     test("1".look_part_in("122333444455555") === 0)
+     test("2".look_part_in("122333444455555") === 1)
+     test("3".look_part_in("122333444455555") === 3)
+     test("4".look_part_in("122333444455555") === 6)
+     test("5".look_part_in("122333444455555") === 10)
+     test("6".look_part_in("122333444455555").null?())
+     test("54".look_part_in("122333444455555").null?())
+     test("35".look_part_in("122333444455555").null?())
+     test("01".look_part_in("122333444455555").null?())
+     test("11".look_part_in("122333444455555").null?())
+     test("122333444455556".look_part_in("122333444455555").null?())
+     test("222333444455555".look_part_in("122333444455555").null?())
+     test("12".look_part_in("122333444455555") === 0)
+     test("23".look_part_in("122333444455555") === 2)
+     test("33".look_part_in("122333444455555") === 3)
+     test("555".look_part_in("122333444455555") === 10)
+     test("4455".look_part_in("122333444455555") === 8)
+     test("122333444455555".look_part_in("122333444455555") === 0)
+
+     test("1223334444555555".look_part_in("122333444455555").null?())
+     test(heap_string().look_part_in("122333444455555").null?())
+
+     test("\000091".look_part_in("").null?())
+     test("".look_part_in("\00009a") === 0)
+     test("\000091".look_part_in("\000091") === 0)
+     test("1".look_part_in("\000091").null?())
+     test("\000091".look_part_in("1").null?())
+     test("\000091".look_part_in("\000092").null?())
+     test("\000092".look_part_in("\000091").null?())
+     test("".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 0)
+     test("\000091".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 0)
+     test("\000092".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 2)
+     test("2".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 1)
+     test("\000093".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 3)
+     test("\000094".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 6)
+
+     test("\000095".look_part_in("\0000912\000092\000093\000093\000093\000094\000094").null?())
+     test("\000094\000093".look_part_in("\0000912\000092\000093\000093\000093\000094\000094").null?())
+     test("\000092\000094".look_part_in("\0000912\000092\000093\000093\000093\000094\000094").null?())
+     test("\000092\000092".look_part_in("\0000912\000092\000093\000093\000093\000094\000094").null?())
+     test("\000090\000091".look_part_in("\0000912\000092\000093\000093\000093\000094\000094").null?())
+     test("\000091\000091".look_part_in("\0000912\000092\000093\000093\000093\000094\000094").null?())
+     test("\0000912\000092\000093\000093\000093\000094\000095".look_part_in("\0000912\000092\000093\000093\000093\000094\000094").null?())
+     test("\0000902\000092\000093\000093\000093\000094\000094".look_part_in("\0000912\000092\000093\000093\000093\000094\000094").null?())
+     test("\0000912".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 0)
+     test("2\000092".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 1)
+     test("\000092\000093".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 2)
+     test("\000093\000093".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 3)
+     test("\000093\000094\000094".look_part_in("\0000912\000092\000093\000093\000093\000094\000094") === 5)
+
+     let string = ("0122333444455555666666" ++ "0")[1, 22]
+     test("".look_part_in(string) === 0)
+     test("1".look_part_in(string) === 0)
+     test("2".look_part_in(string) === 1)
+     test("3".look_part_in(string) === 3)
+     test("4".look_part_in(string) === 6)
+     test("5".look_part_in(string) === 10)
+     test("6".look_part_in(string) === 15)
+     test("7".look_part_in(string).null?())
+     test("65".look_part_in(string).null?())
+     test("54".look_part_in(string).null?())
+     test("35".look_part_in(string).null?())
+     test("01".look_part_in(string).null?())
+     test("60".look_part_in(string).null?())
+     test("11".look_part_in(string).null?())
+     test("122333444455556".look_part_in(string).null?())
+     test("222333444455555".look_part_in(string).null?())
+     test("12".look_part_in(string) === 0)
+     test("23".look_part_in(string) === 2)
+     test("33".look_part_in(string) === 3)
+     test("555".look_part_in(string) === 10)
+     test("4455".look_part_in(string) === 8)
+     test("56666".look_part_in(string) === 14)
+     test("666".look_part_in(string) === 15)
+
+     let string = ("0\000091\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096\000096\000096\000096\000096\000096" ++ "0")[1, 22]
+     test("".look_part_in(string) === 0)
+     test("\000091".look_part_in(string) === 0)
+     test("\000092".look_part_in(string) === 1)
+     test("\000093".look_part_in(string) === 3)
+     test("\000094".look_part_in(string) === 6)
+     test("\000095".look_part_in(string) === 10)
+     test("\000096".look_part_in(string) === 15)
+     test("\000097".look_part_in(string).null?())
+     test("\000096\000095".look_part_in(string).null?())
+     test("\000095\000094".look_part_in(string).null?())
+     test("\000093\000095".look_part_in(string).null?())
+     test("\000090\000091".look_part_in(string).null?())
+     test("\000096\000090".look_part_in(string).null?())
+     test("\000091\000091".look_part_in(string).null?())
+     test("\000091\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000096".look_part_in(string).null?())
+     test("\000092\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095".look_part_in(string).null?())
+     test("\000091\000092".look_part_in(string) === 0)
+     test("\000092\000093".look_part_in(string) === 2)
+     test("\000093\000093".look_part_in(string) === 3)
+     test("\000095\000095\000095".look_part_in(string) === 10)
+     test("\000094\000094\000095\000095".look_part_in(string) === 8)
+     test("\000095\000096\000096\000096\000096".look_part_in(string) === 14)
+     test("\000096\000096\000096".look_part_in(string) === 15)
+
+     let string = ("0122333444455555666666" ++ "0")[1, 22]
+     test(("01223334444555556" ++ "0")[1, 17].look_part_in(string) === 0)
+     test(("01223334444555555" ++ "0")[1, 17].look_part_in(string).null?())
+     test(("00223334444555556" ++ "0")[1, 17].look_part_in(string).null?())
+     test(("03444455555666666" ++ "0")[1, 17].look_part_in(string) === 5)
+     test(("03444455555666660" ++ "0")[1, 17].look_part_in(string).null?())
+     test(("00444455555666666" ++ "0")[1, 17].look_part_in(string).null?())
+     test(string.look_part_in(string) === 0)
+
+     let string = ("0\000091\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096\000096\000096\000096\000096\000096" ++ "0")[1, 22]
+     test(("0\000091\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096" ++ "0")[1, 17].look_part_in(string) === 0)
+     test(("0\000091\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000095" ++ "0")[1, 17].look_part_in(string).null?())
+     test(("0\000090\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096" ++ "0")[1, 17].look_part_in(string).null?())
+     test(("0\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096\000096\000096\000096\000096\000096" ++ "0")[1, 17].look_part_in(string) === 5)
+     test(("0\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096\000096\000096\000096\000096\000090" ++ "0")[1, 17].look_part_in(string).null?())
+     test(("0\000090\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096\000096\000096\000096\000096\000096" ++ "0")[1, 17].look_part_in(string).null?())
+     test(string.look_part_in(string) === 0)
+
+     let string = rnd_string()
+     let part   = if rnd_bool()
+          rnd_string()
+     else {
+          let from = (rnd() & 0xffff'ffff) % len(string)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(string) - from)
+          string[from, to]
+     }
+
+     let expected_idx = loop(0, fn (idx) {
+          if idx + len(part) > len(string)
+               [breaker -1]
+          else if string[idx, idx + len(part)] === part
+               [breaker idx]
+          else idx + 1
+     })
+     test((part.look_part_in(string) <? -1) === expected_idx)
+
+     test(u"".look_part_in(u"") === 0)
+     test(u"1".look_part_in(u"").null?())
+     test(u"".look_part_in(u"a") === 0)
+     test(u"1".look_part_in(u"1") === 0)
+     test(u"1".look_part_in(u"2").null?())
+     test(u"2".look_part_in(u"1").null?())
+     test(u"".look_part_in(u"12233344445555") === 0)
+     test(u"1".look_part_in(u"12233344445555") === 0)
+     test(u"2".look_part_in(u"12233344445555") === 1)
+     test(u"3".look_part_in(u"12233344445555") === 3)
+     test(u"4".look_part_in(u"12233344445555") === 6)
+     test(u"5".look_part_in(u"12233344445555") === 10)
+     test(u"6".look_part_in(u"12233344445555").null?())
+     test(u"54".look_part_in(u"12233344445555").null?())
+     test(u"35".look_part_in(u"12233344445555").null?())
+     test(u"01".look_part_in(u"12233344445555").null?())
+     test(u"11".look_part_in(u"12233344445555").null?())
+     test(u"12233344445556".look_part_in(u"12233344445555").null?())
+     test(u"22233344445555".look_part_in(u"12233344445555").null?())
+     test(u"12".look_part_in(u"12233344445555") === 0)
+     test(u"23".look_part_in(u"12233344445555") === 2)
+     test(u"33".look_part_in(u"12233344445555") === 3)
+     test(u"555".look_part_in(u"12233344445555") === 10)
+     test(u"4455".look_part_in(u"12233344445555") === 8)
+     test(u"12233344445555".look_part_in(u"12233344445555") === 0)
+
+     test(u"122333444455555".look_part_in(u"12233344445555").null?())
+     test(heap_byte_array().look_part_in(u"12233344445555").null?())
+
+     let array = (u"0122333444455555666666" ++ u"0")[1, 22]
+     test(u"".look_part_in(array) === 0)
+     test(u"1".look_part_in(array) === 0)
+     test(u"2".look_part_in(array) === 1)
+     test(u"3".look_part_in(array) === 3)
+     test(u"4".look_part_in(array) === 6)
+     test(u"5".look_part_in(array) === 10)
+     test(u"6".look_part_in(array) === 15)
+     test(u"7".look_part_in(array).null?())
+     test(u"65".look_part_in(array).null?())
+     test(u"54".look_part_in(array).null?())
+     test(u"35".look_part_in(array).null?())
+     test(u"01".look_part_in(array).null?())
+     test(u"60".look_part_in(array).null?())
+     test(u"11".look_part_in(array).null?())
+     test(u"122333444455556".look_part_in(array).null?())
+     test(u"222333444455555".look_part_in(array).null?())
+     test(u"12".look_part_in(array) === 0)
+     test(u"23".look_part_in(array) === 2)
+     test(u"33".look_part_in(array) === 3)
+     test(u"555".look_part_in(array) === 10)
+     test(u"4455".look_part_in(array) === 8)
+     test(u"56666".look_part_in(array) === 14)
+     test(u"666".look_part_in(array) === 15)
+
+     let array = (u"0122333444455555666666" ++ u"0")[1, 22]
+     test((u"01223334444555556" ++ u"0")[1, 17].look_part_in(array) === 0)
+     test((u"01223334444555555" ++ u"0")[1, 17].look_part_in(array).null?())
+     test((u"00223334444555556" ++ u"0")[1, 17].look_part_in(array).null?())
+     test((u"03444455555666666" ++ u"0")[1, 17].look_part_in(array) === 5)
+     test((u"03444455555666660" ++ u"0")[1, 17].look_part_in(array).null?())
+     test((u"00444455555666666" ++ u"0")[1, 17].look_part_in(array).null?())
+     test(array.look_part_in(array) === 0)
+
+     let array = rnd_byte_array()
+     let part  = if rnd_bool()
+          rnd_byte_array()
+     else {
+          let from = (rnd() & 0xffff'ffff) % len(array)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(array) - from)
+          array[from, to]
+     }
+     let expected_idx = loop(0, fn (idx) {
+          if idx + len(part) > len(array)
+               [breaker -1]
+          else if array[idx, idx + len(part)] === part
+               [breaker idx]
+          else idx + 1
+     })
+     test((part.look_part_in(array) <? -1) === expected_idx)
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test([array].look_part_in([array]) === 0)
+     test([array].init(10).look_part_in([array].init(10)) === 0)
+     test([array string_1].look_part_in([array].init(10)).null?())
+     test([array].init(10).look_part_in([array string_5]) === 0)
+     test([array string_1].look_part_in([array string_1]) === 0)
+     test([array string_1].look_part_in([array string_2]).null?())
+     test([array string_2].look_part_in([array string_1]).null?())
+     test([array].init(10).look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 0)
+     test([array string_1].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 0)
+     test([array string_2].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 1)
+     test([array string_3].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 3)
+     test([array string_4].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 6)
+     test([array string_5].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 10)
+     test([array string_0].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]).null?())
+     test([array string_5, string_4].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]).null?())
+     test([array string_3, string_5].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]).null?())
+     test([array string_0, string_1].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]).null?())
+     test([array string_1, string_1].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]).null?())
+     test([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_0].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]).null?())
+     test([array string_2, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]).null?())
+     test([array string_1, string_2].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 0)
+     test([array string_2, string_3].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 2)
+     test([array string_3, string_3].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 3)
+     test([array string_5, string_5, string_5].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 10)
+     test([array string_4, string_4, string_5, string_5].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 8)
+     test([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 0)
+     test([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5, string_5].look_part_in([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]).null?())
+
+     let array = rnd_string_array()
+     let part  = if rnd_bool()
+          rnd_string_array()
+     else {
+          let from = (rnd() & 0xffff'ffff) % len(array)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(array) - from)
+          array[from, to]
+     }
+     let expected_idx = loop(0, fn (idx) {
+          if idx + len(part) > len(array)
+               [breaker -1]
+          else if array[idx, idx + len(part)] === part
+               [breaker idx]
+          else idx + 1
+     })
+     test((part.look_part_in(array) <? -1) === expected_idx)
+
+     test("23".to_array__look_part_in().look_part_in("123123".to_array__look_part_in()) === 1)
+     test("".to_array__look_part_in().look_part_in("123123".to_array__look_part_in()) === 0)
+     test("33".to_array__look_part_in().look_part_in("123123".to_array__look_part_in()).null?())
+     test("23".to_custom_array__look_part_in().look_part_in("123123".to_custom_array__look_part_in()) === 1)
+     test("".to_custom_array__look_part_in().look_part_in("123123".to_custom_array__look_part_in()) === 0)
+     test("33".to_custom_array__look_part_in().look_part_in("123123".to_custom_array__look_part_in()).null?())
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.look_part_in(heap_string()).get_error_id() === :1)
+     test(heap_string().look_part_in(error_1).get_error_id() === :1)
+     test(error_1.look_part_in(error_2).get_error_id() === :1)
+     test(error_2.look_part_in(error_1).get_error_id() === :2)
+
+     test([box heap_string()].scarlet__erase_info().look_part_in(heap_string()).get_error_id() === :invalid_type)
+     test([box heap_string()].scarlet__erase_info().look_part_in([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+
+     test([array].to_broken_array__look_part_in().look_part_in(to_broken_array__look_part_in([array])).get_error_id() === :invalid_type)
+     test([array].to_broken_custom_array__look_part_in().look_part_in(to_broken_custom_array__look_part_in([array])).get_error_id() === :invalid_type)
+     test([array].to_error_array__look_part_in().look_part_in(to_error_array__look_part_in([array])).get_error_id() === :3)
+     test([array].to_error_custom_array__look_part_in().look_part_in(to_error_custom_array__look_part_in([array])).get_error_id() === :4)
+}

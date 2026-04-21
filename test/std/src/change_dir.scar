@@ -1,0 +1,18 @@
+`noinline`
+fn test__change_dir() {
+     let cwd = current_dir()
+     test(change_dir(@std.user_home_dir).null?())
+     test(current_dir() == @std.user_home_dir)
+     test(change_dir(cwd).null?())
+     test(current_dir() == cwd)
+
+     test(change_dir(fs_path("/root")) == :access)
+     let long_name = fs_path("/" ++ "a".repeat(16777214))
+     test(long_name.type() == "std.fs_path")
+     test(change_dir(long_name) == :long)
+     test(change_dir(fs_path("__not_existed_dir__")) == :not_exist)
+     test(change_dir(fs_path("test")) == :not_dir)
+
+     test(change_dir(expected_error(:1, heap_string(), heap_string())).get_error_id() == :1)
+     test(change_dir(heap_string()).get_error_id() == :invalid_type)
+}

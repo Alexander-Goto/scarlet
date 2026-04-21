@@ -1,0 +1,460 @@
+fn corsar_code_correct?(code) code.in_range?(1, 258)
+
+fn load_tokens_from_file(file_name) {
+     let file = open_file(fs_path(file_name), @std.fom__read | @std.fom__begin)
+     if file.error?() || file.type() /= "std.file"
+          error__cant_load_file(file_name)
+     else null
+
+     let [box file, file_code] = file->read_string(:ctf8)
+     if file.type() /= "std.file"
+          switch file
+          case :encoding: error__invalid_file_enc(file_name)
+          case :read:     error__cant_load_file(file_name)
+          default:        unreachable()
+     else null
+
+     loop([box [array], file_code, new (@main.t_token):file <= file_name], fn (state) {
+          let [box tokens, file_code, co_ords] = state
+
+          let [box token, file_code, co_ords] = file__get_token(file_code, co_ords)
+          if token.null?()
+               [breaker if tokens.empty?() || tokens.last():text /= "\n"; tokens.append(new (co_ords):text <= "\n") else tokens]
+          else [box tokens.append(token), file_code, co_ords]
+     })
+}
+
+fn file__get_token(file, co_ords)
+     loop([box null, file, co_ords, :none], fn (state) {
+          let [box token, file, co_ords, prev_char_type] = state
+          if file.empty?()
+               [breaker [box token, "", co_ords]]
+          else {
+               let file_head = file.take(1)
+               let file_tail = file.drop(1)
+
+               switch file_head.first()
+               case ' ':
+                    if prev_char_type == :none
+                         [box null, file_tail, new (co_ords):row => _ + 1, :none]
+                    else [breaker [box token, file, co_ords]]
+               case '\n':
+                    if prev_char_type == :none
+                         [breaker [box
+                              new (co_ords):text <= "\n"
+                              file_tail
+                              new (co_ords) {
+                                   :line => _ + 1
+                                   :row  <= 1
+                              }
+                         ]]
+                    else [breaker [box token, file, co_ords]]
+               case '(', ')', ',', ';', '[', ']', '{', '}', '`':
+                    if prev_char_type == :none
+                         [breaker [box
+                              new (co_ords):text <= file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                         ]]
+                    else [breaker [box token, file, co_ords]]
+               case '_', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'y', 'z':
+                    switch prev_char_type
+                    case :none:
+                         [box
+                              new (co_ords):text <= file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    case :regular:
+                         [box
+                              new (token):text => _ ++ file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    case :special, :digit:
+                         [breaker [box token, file, co_ords]]
+                    default: unreachable()
+               case '%', '&', '<', '=', '>', '^', '|', '*', '/':
+                    switch prev_char_type
+                    case :none:
+                         [box
+                              new (co_ords):text <= file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :special
+                         ]
+                    case :special:
+                         [box
+                              new (token):text => _ ++ file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :special
+                         ]
+                    case :regular, :digit:
+                         [breaker [box token, file, co_ords]]
+                    default: unreachable()
+               case '!', '?':
+                    switch prev_char_type
+                    case :none:
+                         [box
+                              new (co_ords):text <= file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :special
+                         ]
+                    case :regular, :special:
+                         [box
+                              new (token):text => _ ++ file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              prev_char_type
+                         ]
+                    case :digit:
+                         [breaker [box token, file, co_ords]]
+                    default: unreachable()
+               case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+                    switch prev_char_type
+                    case :none:
+                         [box
+                              new (co_ords):text <= file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :digit
+                         ]
+                    case :regular, :digit:
+                         [box
+                              new (token):text => _ ++ file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              prev_char_type
+                         ]
+                    case :special:
+                         if token:text.in?([set "-", "+"])
+                              [box
+                                   new (token):text => _ ++ file_head
+                                   file_tail
+                                   new (co_ords):row => _ + 1
+                                   :digit
+                              ]
+                         else [breaker [box token, file, co_ords]]
+                    default: unreachable()
+               case 'a', 'c', 'd', 'f':
+                    switch prev_char_type
+                    case :none:
+                         [box
+                              new (co_ords):text <= file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    case :regular:
+                         [box
+                              new (token):text => _ ++ file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    case :digit:
+                         if 'x'.in?(token:text) || 'b'.in?(token:text)
+                              [box
+                                   new (token):text => _ ++ file_head
+                                   file_tail
+                                   new (co_ords):row => _ + 1
+                                   :digit
+                              ]
+                         else [breaker [box token, file, co_ords]]
+                    case :special:
+                         [breaker [box token, file, co_ords]]
+                    default: unreachable()
+               case 'b':
+                    switch prev_char_type
+                    case :none:
+                         [box
+                              new (co_ords):text <= "b"
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    case :regular:
+                         [box
+                              new (token):text => _ ++ "b"
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    case :digit:
+                         if token:text == "0" || 'x'.in?(token:text) || 'b'.in?(token:text)
+                              [box
+                                   new (token):text => _ ++ "b"
+                                   file_tail
+                                   new (co_ords):row => _ + 1
+                                   :digit
+                              ]
+                         else [breaker [box token, file, co_ords]]
+                    case :special:
+                         [breaker [box token, file, co_ords]]
+                    default: unreachable()
+               case 'x':
+                    switch prev_char_type
+                    case :none:
+                         [box
+                              new (co_ords):text <= "x"
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    case :regular:
+                         [box
+                              new (token):text => _ ++ "x"
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    case :digit:
+                         if token:text.in?([array "0", "-0", "+0"])
+                              [box
+                                   new (token):text => _ ++ "x"
+                                   file_tail
+                                   new (co_ords):row => _ + 1
+                                   :digit
+                              ]
+                         else [breaker [box token, file, co_ords]]
+                    case :special:
+                         [breaker [box token, file, co_ords]]
+                    default: unreachable()
+               case 'e':
+                    switch prev_char_type
+                    case :none:
+                         [box
+                              new (co_ords):text <= "e"
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    case :regular:
+                         [box
+                              new (token):text => _ ++ "e"
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    case :digit:
+                         if ('.'.in?(token:text) && not 'e'.in?(token:text)) || 'x'.in?(token:text) || 'b'.in?(token:text)
+                              [box
+                                   new (token):text => _ ++ "e"
+                                   file_tail
+                                   new (co_ords):row => _ + 1
+                                   :digit
+                              ]
+                         else [breaker [box token, file, co_ords]]
+                    case :special:
+                         [breaker [box token, file, co_ords]]
+                    default: unreachable()
+               case '-', '+':
+                    switch prev_char_type
+                    case :none:
+                         [box
+                              new (co_ords):text <= file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :special
+                         ]
+                    case :special:
+                         if token:text == "+" && file_head == "+"
+                              [breaker [box
+                                   new (token):text <= "++"
+                                   file_tail
+                                   new (co_ords):row => _ + 1
+                              ]]
+                         else [box
+                              new (token):text => _ ++ file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :special
+                         ]
+                    case :digit:
+                         if '.'.in?(token:text) && token:text.last() == 'e'
+                              [box
+                                   new (token):text => _ ++ file_head
+                                   file_tail
+                                   new (co_ords):row => _ + 1
+                                   :digit
+                              ]
+                         else [breaker [box token, file, co_ords]]
+                    case :regular:
+                         [breaker [box token, file, co_ords]]
+                    default: unreachable()
+               case '.':
+                    switch prev_char_type
+                    case :none:
+                         [box
+                              new (co_ords):text <= "."
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :special
+                         ]
+                    case :digit:
+                         if '.'.in?(token:text) || 'b'.in?(token:text) || 'x'.in?(token:text) || file_tail.empty?() || not file_tail.first().in_range?('0', ':' #*('9'.to_int() + 1).to_char()*#)
+                              [breaker [box token, file, co_ords]]
+                         else [box
+                              new (token):text => _ ++ "."
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :digit
+                         ]
+                    case :regular, :special:
+                         [breaker [box token, file, co_ords]]
+                    default: unreachable()
+               case ':', '@':
+                    if prev_char_type == :none
+                         [box
+                              new (co_ords):text <= file_head
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :regular
+                         ]
+                    else [breaker [box token, file, co_ords]]
+               case '\'', '"':
+                    if prev_char_type == :digit && file_head == "'"
+                         [box
+                              new (token):text => _ ++ "'"
+                              file_tail
+                              new (co_ords):row => _ + 1
+                              :digit
+                         ]
+                    else if prev_char_type == :none || token:text.in?([set "r", "u", "ru", "uz", "ruz"]) {
+                         let token = if prev_char_type == :none
+                                   new (co_ords):text <= file_head
+                              else new (token):text => _ ++ file_head
+                         let co_ords = new (co_ords):row => _ + 1
+
+                         [breaker file__get_str_or_chr_token(file_tail, token, co_ords, file_head.first())]
+                    } else [breaker [box token, file, co_ords]]
+               case '\\':
+                    if prev_char_type /= :none
+                         [breaker [box token, file, co_ords]]
+                    else if "\n".prefix_of?(file_tail)
+                         [box
+                              null
+                              file_tail.drop(1)
+                              new (co_ords) {
+                                   :line => _ + 1
+                                   :row  <= 1
+                              }
+                              :none
+                         ]
+                    else [breaker [box
+                         new (co_ords):text <= "\\"
+                         file_tail
+                         new (co_ords):row => _ + 1
+                    ]]
+               case '#':
+                    if prev_char_type /= :none
+                         [breaker [box token, file, co_ords]]
+                    else if "@".prefix_of?(file_tail) || "*".prefix_of?(file_tail) {
+                         let start_id = file.take(2)
+                         let end_id   = start_id.reverse()
+
+                         let end_id_offset = end_id.look_part_in(file)
+                         if end_id_offset.null?()
+                              error__no_end_id(new (co_ords):text <= start_id, end_id)
+                         else null
+
+                         let comment      = file.take(end_id_offset + 2)
+                         let new_line_qty = '\n'.qty(comment)
+                         let row          = if new_line_qty == 0; co_ords:row + comment.len() else end_id_offset - '\n'.look_from_end_in(comment) - 1
+                         let new_co_ords  = new (co_ords) {
+                              :line => _ + new_line_qty
+                              :row  <= row
+                         }
+
+                         let file = file.drop(comment.len())
+                         if start_id == "#@"
+                              [breaker [box
+                                   new (co_ords):text <= comment
+                                   file
+                                   new_co_ords
+                              ]]
+                         else [box null, file, new_co_ords, :none]
+                    } else {
+                         let end_line_offset = '\n'.look_in(file)
+                         if end_line_offset.null?()
+                              [breaker [box null, "", new (co_ords):row => _ + file.len()]]
+                         else [breaker [box
+                              new (co_ords) {
+                                   :text <= "\n"
+                                   :row  => _ + end_line_offset
+                              }
+                              file.drop(end_line_offset + 1)
+                              new (co_ords) {
+                                   :line => _ + 1
+                                   :row  <= 1
+                              }
+                         ]]
+                    }
+               default: error__invalid_char_in_src(new (co_ords):text <= file_head)
+          }
+     })
+
+fn file__get_str_or_chr_token(file, token, open_char_co_ords, open_char) {
+     let is_raw        = token:text.first() == 'r'
+     let is_utf8       = 'u'.in?(token:text)
+     let is_zero_ended = 'z'.in?(token:text)
+
+     let [box token, text]         = new (token):text <<= ""
+     let [box file, text, co_ords] = loop([box file, text, new (open_char_co_ords):row => _ + 1], fn (state) {
+          let [box file, text, co_ords] = state
+
+          if file.empty?()
+               error__no_end_id(new (open_char_co_ords):text <= open_char, open_char)
+          else null
+
+          let current_char = file.first()
+          let file_tail    = file.drop(1)
+
+          switch current_char
+          case '\'', '"': {
+               let text    = text.append(current_char)
+               let co_ords = new (co_ords):row => _ + 1
+
+               if current_char == open_char {
+                    if current_char == '\'' {
+                         if is_zero_ended
+                              error__not_ustring_ze(new (token):text <= text)
+                         else null
+
+                         let text_without_type = text.drop('\''.look_in(text))
+                         let expected_len      = if text_without_type[1] == '\\'
+                              if text_without_type[2].digit?() || text_without_type[2].in_range?('a', 'g'); 9 else 4
+                         else 3
+
+                         if text_without_type.len() /= expected_len
+                              error__too_many_chars(new (token):text <= text)
+                         else null
+                    } else null
+
+                    [breaker [box file_tail, text, co_ords]]
+               } else [box file_tail, text, co_ords]
+          }
+          case '\n':
+               [box file_tail, text.append(current_char), new (co_ords) {:line => _ + 1; :row <= 1}]
+          case '\\':
+               if is_raw
+                    [box file_tail, text.append(current_char), new (co_ords):row => _ + 1]
+               else if not file_tail.empty?() && file_tail.first().in?("nt'\"\\")
+                    [box file.drop(2), text ++ file.take(2), new (co_ords):row => _ + 2]
+               else if len(file_tail) < 6
+                    error__invalid_escape_sequence(new (co_ords):text <= file)
+               else {
+                    let code = parse_int(file_tail.take(6), 16)
+                    if code.type() == "core.int" && if is_utf8; code.in_range?(1, 0x10ffff) else corsar_code_correct?(code)
+                         [box file.drop(7), text ++ file.take(7), new (co_ords):row => _ + 7]
+                    else error__invalid_escape_sequence(new (co_ords):text <= file.take(7))
+               }
+          default: [box file_tail, text.append(current_char), new (co_ords):row => _ + 1]
+     })
+
+     [box new (token):text <= text, file, co_ords]
+}

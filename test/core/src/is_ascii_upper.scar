@@ -1,0 +1,90 @@
+let char__ascii_upper = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_upper? = fn (char) char:value.ascii_upper?()
+     ]
+]
+
+fn to_char__ascii_upper?(arg) new (@main.char__ascii_upper):value <= arg
+
+fn to_custom_char__ascii_upper?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_upper? = fn (char) char.custom__get_data().ascii_upper?()
+     ]
+)
+
+let broken_char__ascii_upper = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_upper? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_char__ascii_upper?(arg) new (@main.broken_char__ascii_upper):value <= arg
+
+fn to_broken_custom_char__ascii_upper?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_upper? = fn (_) heap_string()
+     ]
+)
+
+let error_char__ascii_upper = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_upper? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__ascii_upper?(arg) new (@main.error_char__ascii_upper):value <= arg
+
+fn to_error_custom_char__ascii_upper?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_upper? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__ascii_upper?() {
+     test(not '\000001'.ascii_upper?())
+     test(not '\000008'.ascii_upper?())
+     test(not '\00000a'.ascii_upper?())
+     test(not '\00001f'.ascii_upper?())
+     test(not '\00007f'.ascii_upper?())
+     test(not '\000009'.ascii_upper?())
+     test(not '\t'.ascii_upper?())
+     test(not '\000020'.ascii_upper?())
+     test(not '\00007e'.ascii_upper?())
+     test(not ' '.ascii_upper?())
+     test('A'.ascii_upper?())
+     test('Z'.ascii_upper?())
+     test(not 'a'.ascii_upper?())
+     test(not 'z'.ascii_upper?())
+     test(not '\00008b'.ascii_upper?())
+     test(not '\0000ac'.ascii_upper?())
+     test(not '0'.ascii_upper?())
+     test(not '9'.ascii_upper?())
+
+     let string = rnd_string()
+     test(string.filter(_.in_range?('A', '[')) === string.filter(ascii_upper?(_)))
+
+     test(to_char__ascii_upper?('A').ascii_upper?())
+     test(not to_char__ascii_upper?('a').ascii_upper?())
+
+     test(to_custom_char__ascii_upper?('A').ascii_upper?())
+     test(not to_custom_char__ascii_upper?('a').ascii_upper?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.ascii_upper?().get_error_id() === :1)
+     test(heap_table().ascii_upper?().get_error_id() === :invalid_type)
+
+     test(to_broken_char__ascii_upper?('a').ascii_upper?().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__ascii_upper?('a').ascii_upper?().get_error_id() === :invalid_type)
+     test(to_error_char__ascii_upper?('a').ascii_upper?().get_error_id() === :3)
+     test(to_error_custom_char__ascii_upper?('a').ascii_upper?().get_error_id() === :4)
+}

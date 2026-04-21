@@ -1,0 +1,20 @@
+let t_not = [obj
+     :scar_type = "t_not"
+
+     :operator = @main.t_token
+     :exp      = :i_expression
+]
+
+fn not_independent?(exp, independent_consts) exp:exp.independent?(independent_consts)
+fn analyze_not(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids) exp:exp.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+fn not_to_operand(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let fn_ir_name = "McoreFNnot"
+     if exp:exp:scar_type == "t_holder" {
+          let arg  = comptime_holder(exp:exp:keyword)
+          let args = [array arg]
+          let code = new (exp:operator):text => _ ++ (" " ++ arg:code:text)
+          core_fn_partial_app_args_has_correct_types!(fn_ir_name, args, null)
+          ir__partial_application(fn_ir_name, args, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     } else ir__core_fn_call(fn_ir_name, exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false)
+}

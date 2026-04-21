@@ -1,0 +1,35 @@
+let t_error = [obj
+     :scar_type = "t_error"
+
+     :open_char = @main.t_token
+     :id        = :i_expression
+     :msg       = :i_expression
+     :data      = :i_expression
+]
+
+fn analyze_error(error, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let [box last_use_info, lambdas_data, def_ids] = error:id.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     let [box last_use_info, lambdas_data, def_ids] = error:msg.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     error:data.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+}
+
+fn error_to_operand(error, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box id, exp_data, ir, final_data, dependencies, src_gconsts] =
+          error:id.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     id.maybe_has_type!("token")
+
+     let [box msg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          error:msg.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     msg.maybe_has_type!(@main.string_types)
+
+     let [box data, exp_data, ir, final_data, dependencies, src_gconsts] =
+          error:data.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     data.maybe_has_type!(@main.common_types__null)
+
+     let code = new (error:open_char):text <= "[error " ++ id:code:text ++ ", " ++ msg:code:text ++ ", " ++ data:code:text ++ "]"
+
+     ir__error(id, msg, data, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

@@ -1,0 +1,20 @@
+let t_test = [obj
+     :scar_type = "t_test"
+
+     :keyword = @main.t_token
+     :exp     = :i_expression
+]
+
+fn test_independent?(test, independent_consts)
+     test:exp.independent?(independent_consts)
+
+fn analyze_test(test, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     test:exp.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+fn test_to_operand(test, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box tested_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          test:exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (test:keyword):text <= "test(" ++ tested_operand:code:text ++ ")"
+     ir__test(tested_operand, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

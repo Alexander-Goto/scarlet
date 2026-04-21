@@ -1,0 +1,79 @@
+fn ir__default_val(left_operand, right_operand, right_ir, code, right_context_consts, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let name_ids                = exp_data:name_ids
+     let named_consts            = exp_data:named_consts
+     let free_right_for_left__ir = right_context_consts.foldl("", fn (free_right_for_left__ir, constant_id) {
+          let name = name_ids[constant_id]
+          if name.null?()
+               free_right_for_left__ir
+          else named_consts[name]:operand.dec_ref_cnt(free_right_for_left__ir)
+     })
+
+     if not left_operand:possible_types.null?() && left_operand:possible_types.len() == 1
+          if left_operand:possible_types =/= [set "null"] {
+               let ir           = ir ++ free_right_for_left__ir
+               let left_operand = new (left_operand):code <= code
+               if is_last {
+                    let [box left_operand, final_data, dependencies] = left_operand.has_ir!(final_data, dependencies)
+
+                    [box left_operand, exp_data, ir__raw_return(ir, left_operand:ir), final_data, dependencies, src_gconsts]
+               } else [box left_operand, exp_data, ir, final_data, dependencies, src_gconsts]
+          } else {
+               let ir            = ir ++ right_ir
+               let right_operand = new (right_operand):code <= code
+
+               [box right_operand, exp_data, ir, final_data, dependencies, src_gconsts]
+          }
+     else {
+          let [box left_operand, final_data, dependencies]  = left_operand.has_ir!(final_data, dependencies)
+          let [box right_operand, final_data, dependencies] = right_operand.has_ir!(final_data, dependencies)
+
+          let [box ir, result_reg, exp_data] = if is_last {
+               let ir = ir__raw_if(
+                    ir
+
+                    left_operand:ir ++ ".bytes[15]==tid__null"
+                    :unknown
+
+                    right_ir
+
+                    null
+               ) ++ free_right_for_left__ir
+               let ir = ir__raw_return(ir, left_operand:ir)
+
+               [box ir, "NO REG", exp_data]
+          } else {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+
+               let ir = ir__raw_if(
+                    ir ++ "t_any " ++ result_reg ++ ";\n"
+
+                    left_operand:ir ++ ".bytes[15]==tid__null"
+                    :unknown
+
+                    right_ir ++ result_reg ++ "=" ++ right_operand:ir ++ ";\n"
+
+                    free_right_for_left__ir ++ result_reg ++ "=" ++ left_operand:ir ++ ";\n"
+               )
+
+               [box ir, result_reg, exp_data]
+          }
+
+          let is_gconst = left_operand:is_gconst && right_operand:is_gconst
+
+          let left_possible_types  = left_operand:possible_types
+          let right_possible_types = right_operand:possible_types
+          let possible_types       = if left_possible_types.null?() || right_possible_types.null?()
+               null
+          else right_possible_types.foldl(left_possible_types.remove("null"), _.append(_))
+
+          let result_operand = new (@main.t_operand) {
+               :code           <= code
+               :ir             <= result_reg
+               :possible_types <= possible_types
+               :is_gconst      <= is_gconst
+          }
+          let ir = if is_last; ir else ir__assume_type(result_reg, possible_types, ir)
+
+          [box result_operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

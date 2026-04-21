@@ -1,0 +1,15 @@
+`noinline`
+fn test__wait() {
+     let string = heap_string()
+
+     let thread = thread(fn () string)
+     sleep(250'000'000)
+     test(thread.wait() === string)
+     test(thread(fn () {
+          sleep(1'000'000'000)
+          string
+     }).wait() === string)
+
+     test(wait(expected_error(:1, string, string)).get_error_id() === :1)
+     test(wait(heap_string()).get_error_id() === :invalid_type)
+}

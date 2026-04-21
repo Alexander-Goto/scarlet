@@ -1,0 +1,264 @@
+let num__lshr = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___lshr__  = fn (num, shifts) to_num__lshr(num:value >> shifts)
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__lshr(arg) new (@main.num__lshr):value <= arg
+
+fn to_custom_num__lshr(arg) custom__create(
+     arg
+     [obj
+          :core___lshr__  = fn (num, shifts) to_custom_num__lshr(num.custom__get_data() >> shifts)
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__lshr = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___lshr__ = fn (_, _) heap_string()
+     ]
+]
+
+fn to_broken_num__lshr(arg) new (@main.broken_num__lshr):value <= arg
+
+fn to_broken_custom_num__lshr(arg) custom__create(
+     arg
+     [obj
+          :core___lshr__ = fn (_, _) heap_string()
+     ]
+)
+
+let error_num__lshr = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___lshr__ = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__lshr(arg) new (@main.error_num__lshr):value <= arg
+
+fn to_error_custom_num__lshr(arg) custom__create(
+     arg
+     [obj
+          :core___lshr__ = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test____lshr__() {
+     test((0 >> 0) === 0)
+     test((0 >> 1) === 0)
+     test((1 >> 0) === 1)
+     test((1 >> 1) === 0)
+     test((-1 >> 0) === -1)
+     test((-1 >> 1) === 9223372036854775807)
+     test((-708044971986000615 >> 3) === 2217337387715443875)
+     test((-708044971986000615 >> 58) === 61)
+     test((-708044971986000615 >> 59) === 30)
+     test((-708044971986000615 >> 60) === 15)
+     test((-708044971986000615 >> 61) === 7)
+     test((-708044971986000615 >> 62) === 3)
+     test((-708044971986000615 >> 63) === 1)
+     test((-708044971986000615 >> 64) === 0)
+     test((-9223372036854775808 >> 0) === -9223372036854775808)
+     test((-9223372036854775808 >> 1) === 4611686018427387904)
+     test((-9223372036854775808 >> 62) === 2)
+     test((-9223372036854775808 >> 63) === 1)
+     test((-9223372036854775808 >> 64) === 0)
+     test((9223372036854775807 >> 0) === 9223372036854775807)
+     test((9223372036854775807 >> 1) === 4611686018427387903)
+     test((9223372036854775807 >> 17) === 70368744177663)
+     test((9223372036854775807 >> 62) === 1)
+     test((9223372036854775807 >> 63) === 0)
+     test((9223372036854775807 >> 64) === 0)
+
+     test((0 >> 0b00) === 0)
+     test((0 >> 0b01) === 0)
+     test((1 >> 0b00) === 1)
+     test((1 >> 0b01) === 0)
+     test((-1 >> 0b00) === -1)
+     test((-1 >> 0b01) === 9223372036854775807)
+     test((-708044971986000615 >> 0b03) === 2217337387715443875)
+     test((-708044971986000615 >> 0b3a) === 61)
+     test((-708044971986000615 >> 0b3b) === 30)
+     test((-708044971986000615 >> 0b3c) === 15)
+     test((-708044971986000615 >> 0b3d) === 7)
+     test((-708044971986000615 >> 0b3e) === 3)
+     test((-708044971986000615 >> 0b3f) === 1)
+     test((-708044971986000615 >> 0b40) === 0)
+     test((-9223372036854775808 >> 0b00) === -9223372036854775808)
+     test((-9223372036854775808 >> 0b01) === 4611686018427387904)
+     test((-9223372036854775808 >> 0b3e) === 2)
+     test((-9223372036854775808 >> 0b3f) === 1)
+     test((-9223372036854775808 >> 0b40) === 0)
+     test((9223372036854775807 >> 0b00) === 9223372036854775807)
+     test((9223372036854775807 >> 0b01) === 4611686018427387903)
+     test((9223372036854775807 >> 0b11) === 70368744177663)
+     test((9223372036854775807 >> 0b3e) === 1)
+     test((9223372036854775807 >> 0b3f) === 0)
+     test((9223372036854775807 >> 0b40) === 0)
+
+     test((0b00 >> 0) === 0b00)
+     test((0b00 >> 1) === 0b00)
+     test((0b01 >> 0) === 0b01)
+     test((0b01 >> 1) === 0b00)
+     test((0bff >> 0) === 0bff)
+     test((0bff >> 1) === 0b7f)
+     test((0bff >> 2) === 0b3f)
+     test((0bff >> 3) === 0b1f)
+     test((0bff >> 4) === 0b0f)
+     test((0bff >> 5) === 0b07)
+     test((0bff >> 6) === 0b03)
+     test((0bff >> 7) === 0b01)
+     test((0bff >> 8) === 0b00)
+     test((0b78 >> 0) === 0b78)
+     test((0b78 >> 1) === 0b3c)
+     test((0b78 >> 2) === 0b1e)
+     test((0b78 >> 3) === 0b0f)
+     test((0b78 >> 4) === 0b07)
+     test((0b78 >> 5) === 0b03)
+     test((0b78 >> 6) === 0b01)
+     test((0b78 >> 7) === 0b00)
+     test((0b78 >> 8) === 0b00)
+
+     test((0b00 >> 0b00) === 0b00)
+     test((0b00 >> 0b01) === 0b00)
+     test((0b01 >> 0b00) === 0b01)
+     test((0b01 >> 0b01) === 0b00)
+     test((0bff >> 0b00) === 0bff)
+     test((0bff >> 0b01) === 0b7f)
+     test((0bff >> 0b02) === 0b3f)
+     test((0bff >> 0b03) === 0b1f)
+     test((0bff >> 0b04) === 0b0f)
+     test((0bff >> 0b05) === 0b07)
+     test((0bff >> 0b06) === 0b03)
+     test((0bff >> 0b07) === 0b01)
+     test((0bff >> 0b08) === 0b00)
+     test((0b78 >> 0b00) === 0b78)
+     test((0b78 >> 0b01) === 0b3c)
+     test((0b78 >> 0b02) === 0b1e)
+     test((0b78 >> 0b03) === 0b0f)
+     test((0b78 >> 0b04) === 0b07)
+     test((0b78 >> 0b05) === 0b03)
+     test((0b78 >> 0b06) === 0b01)
+     test((0b78 >> 0b07) === 0b00)
+     test((0b78 >> 0b08) === 0b00)
+
+     test((to_num__lshr(0) >> 0) === to_num__lshr(0))
+     test((to_num__lshr(-708044971986000615) >> 3) === to_num__lshr(2217337387715443875))
+
+     test((to_custom_num__lshr(0) >> 0) === to_custom_num__lshr(0))
+     test((to_custom_num__lshr(-708044971986000615) >> 3) === to_custom_num__lshr(2217337387715443875))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let string  = heap_string()
+     test((error_1 >> 1).get_error_id() === :1)
+     test((1 >> error_1).get_error_id() === :1)
+     test((error_1 >> error_2).get_error_id() === :1)
+     test((error_2 >> error_1).get_error_id() === :2)
+     test((error_1 >> string).get_error_id() === :1)
+     test((string >> error_1).get_error_id() === :1)
+
+     test((string >> string).get_error_id() === :invalid_type)
+     test((string >> 1).get_error_id() === :invalid_type)
+     test((1 >> string).get_error_id() === :invalid_type)
+
+     test((to_num__lshr(1) >> error_1).get_error_id() === :1)
+     test((to_num__lshr(1) >> string).get_error_id() === :invalid_type)
+
+     test((to_custom_num__lshr(1) >> error_1).get_error_id() === :1)
+     test((to_custom_num__lshr(1) >> string).get_error_id() === :invalid_type)
+
+     test((to_broken_num__lshr(1) >> 0).get_error_id() === :invalid_type)
+     test((to_broken_custom_num__lshr(1) >> 0).get_error_id() === :invalid_type)
+     test((to_error_num__lshr(1) >> 0).get_error_id() === :3)
+     test((to_error_custom_num__lshr(1) >> 0).get_error_id() === :4)
+
+     test((0 >> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >> 65.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >> 66.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >> 65.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >> 66.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >> 65.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >> 66.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >> 65.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >> 66.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >> 65.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >> 66.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+
+     test((0 >> 0x41.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >> 0xff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >> 0x41.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >> 0xff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >> 0x41.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >> 0xff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >> 0x41.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >> 0xff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >> 0x41.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >> 0xff.scarlet__erase_info()).get_error_id() === :bits_shift)
+
+     test((0b00 >> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b00 >> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b00 >> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b00 >> 9.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b00 >> 10.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b00 >> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b01 >> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b01 >> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b01 >> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b01 >> 9.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b01 >> 10.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b01 >> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bf0 >> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bf0 >> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bf0 >> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bf0 >> 9.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bf0 >> 10.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bf0 >> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bff >> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bff >> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bff >> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bff >> 9.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bff >> 10.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bff >> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+
+     test((0b00 >> 0b09.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b00 >> 0ba0.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b00 >> 0bff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b09 >> 0b09.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b09 >> 0ba0.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0b09 >> 0bff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0ba0 >> 0b09.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0ba0 >> 0ba0.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0ba0 >> 0bff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bff >> 0b09.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bff >> 0ba0.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0bff >> 0bff.scarlet__erase_info()).get_error_id() === :bits_shift)
+}

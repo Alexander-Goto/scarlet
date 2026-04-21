@@ -1,0 +1,59 @@
+fn ir__core_fn_look_part(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box part, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box array, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ part:code:text ++ ", " ++ array:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+
+     if part.has_type?("string") && array.has_type?("short_string") ||
+          part.has_type?("byte_array") && array.has_type?("short_byte_array")
+     {
+          let ir = dec_ref_cnt(array, dec_ref_cnt(part, ir))
+          [box comptime_null(code), exp_data, if is_last; ir__raw_return(ir, "null") else ir, final_data, dependencies, src_gconsts]
+     } else if part:comptime_val.null?() || array:comptime_val.null?() || array:comptime_val:type.in?([array "array", "obj"]) {
+          if array:comptime_val:type === "obj" && array:comptime_val:value[:_][if fn_ir_name[17] == 'f'; :core_lpfei else :core_look_part_in].null?()
+               error__invalid_type(array:code, if fn_ir_name[17] == 'f'; ".core_lpfei" else ".core_look_part_in", "obj")
+          else null
+
+          let array_expected_types = if part:possible_types.null?()
+               valid_types
+          else {
+               let array_expected_types = part:possible_types.filter(_.in?(valid_types)).prepare_types_for_cmp()
+               if array_expected_types.empty?()
+                    error__invalid_type(part:code, valid_types, array_expected_types)
+               else array_expected_types
+          }
+          array.maybe_has_type!(array_expected_types)
+
+          let result_possible_types = if
+                    part.has_type?(@main.string_types)     && array.has_type?(@main.string_types)     ||
+                    part.has_type?(@main.byte_array_types) && array.has_type?(@main.byte_array_types) ||
+                    part.has_type?("array")                && array.has_type?("array")
+               [set "int", "null"]
+          else [set "int", "null", "error"]
+
+          ir__fn_call(fn_ir_name, [array part, array], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          part.maybe_has_type!(valid_types)
+          array.maybe_has_type!(part:possible_types.prepare_types_for_cmp())
+
+          let result_value = if fn_ir_name[17] == 'f'
+               part:comptime_val:value.look_part_from_end_in(array:comptime_val:value)
+          else part:comptime_val:value.look_part_in(array:comptime_val:value)
+
+          if result_value.null?()
+               [box comptime_null(code), exp_data, if is_last; ir__raw_return(ir, "null") else ir, final_data, dependencies, src_gconsts]
+          else {
+               let result = comptime_int(result_value, code)
+
+               if is_last {
+                    let [box result, final_data, dependencies] = result.has_ir!(final_data, dependencies)
+
+                    [box result, exp_data, ir__raw_return(ir, result:ir), final_data, dependencies, src_gconsts]
+               } else [box result, exp_data, ir, final_data, dependencies, src_gconsts]
+          }
+     }
+}

@@ -1,0 +1,22 @@
+`noinline`
+fn test__break() {
+     test(break(false, true))
+     test(not break(false, false))
+     test(break(false, 12) === 12)
+     test(break(false, heap_string()) === heap_string())
+
+     test(loop(null, fn (_) break(true, true)))
+     test(not loop(null, fn (_) break(true, false)))
+     test(loop(null, fn (_) break(true, 12)) === 12)
+     test(loop(null, fn (_) break(true, heap_string())) === heap_string())
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(break(error_1, heap_string()).get_error_id() === :1)
+     test(break(true, error_1).get_error_id() === :1)
+     test(break(false, error_1).get_error_id() === :1)
+     test(break(error_1, error_2).get_error_id() === :1)
+     test(break(error_2, error_1).get_error_id() === :2)
+     test(break(heap_string(), error_1).get_error_id() === :1)
+     test(break(heap_string(), heap_string()).get_error_id() === :invalid_type)
+}

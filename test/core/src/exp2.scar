@@ -1,0 +1,114 @@
+let num__exp2 = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_exp2      = fn (num) to_num__exp2(num:value.exp2())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__exp2(arg) new (@main.num__exp2):value <= arg
+
+fn to_custom_num__exp2(arg) custom__create(
+     arg
+     [obj
+          :core_exp2      = fn (num) to_custom_num__exp2(num.custom__get_data().exp2())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__exp2 = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_exp2 = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__exp2(arg) new (@main.broken_num__exp2):value <= arg
+
+fn to_broken_custom_num__exp2(arg) custom__create(
+     arg
+     [obj
+          :core_exp2 = fn (_) heap_string()
+     ]
+)
+
+let error_num__exp2 = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_exp2 = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__exp2(arg) new (@main.error_num__exp2):value <= arg
+
+fn to_error_custom_num__exp2(arg) custom__create(
+     arg
+     [obj
+          :core_exp2 = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__exp2() {
+     test(0b00.exp2() === 0b01)
+     test(0b01.exp2() === 0b02)
+     test(0b02.exp2() === 0b04)
+     test(0b03.exp2() === 0b08)
+     test(0b04.exp2() === 0b10)
+     test(0b05.exp2() === 0b20)
+     test(0b06.exp2() === 0b40)
+     test(0b07.exp2() === 0b80)
+     test(0b08.exp2() === 0b00)
+     test(0bff.exp2() === 0b00)
+
+     test(0.exp2() === 1)
+     test(1.exp2() === 2)
+     test(2.exp2() === 4)
+     test(3.exp2() === 8)
+     test(4.exp2() === 16)
+     test(5.exp2() === 32)
+     test(6.exp2() === 64)
+     test(7.exp2() === 128)
+     test(8.exp2() === 256)
+     test(16.exp2() === 65536)
+     test(32.exp2() === 0x1'0000'0000)
+     test(61.exp2() === 0x2000'0000'0000'0000)
+     test(62.exp2() === 0x4000'0000'0000'0000)
+     test(63.exp2() === -9223372036854775808)
+     test(64.exp2() === 0)
+     test(65.exp2() === 0)
+     test(9223372036854775807.exp2() === 0)
+     test(-1.exp2() === 0)
+     test(-9223372036854775808.exp2() === 0)
+
+     test(0.0.exp2().in_range?(0.99, 1.01))
+     test(-0.0.exp2().in_range?(0.99, 1.01))
+     test(0.1.exp2().in_range?(1.07, 1.08))
+     test(-0.1.exp2().in_range?(0.93, 0.94))
+     test(1.0.exp2().in_range?(1.99, 2.01))
+     test(-1.0.exp2().in_range?(0.49, 0.51))
+     test(1.3.exp2().in_range?(2.46, 2.47))
+     test(-1.3.exp2().in_range?(0.4, 0.41))
+     test(inf().exp2().inf?())
+     test(neg_inf().exp2().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(nan().exp2().nan?())
+
+     test(to_num__exp2(0.0).exp2():value.in_range?(0.99, 1.01))
+     test(to_num__exp2(-1.0).exp2():value.in_range?(0.49, 0.51))
+
+     test(to_custom_num__exp2(0.0).exp2().custom__get_data().in_range?(0.99, 1.01))
+     test(to_custom_num__exp2(-1.0).exp2().custom__get_data().in_range?(0.49, 0.51))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     let string  = heap_string()
+     test(error.exp2().get_error_id() === :1)
+     test(string.exp2().get_error_id() === :invalid_type)
+
+     test(to_broken_num__exp2(1.0).exp2().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__exp2(1.0).exp2().get_error_id() === :invalid_type)
+     test(to_error_num__exp2(1.0).exp2().get_error_id() === :3)
+     test(to_error_custom_num__exp2(1.0).exp2().get_error_id() === :4)
+}

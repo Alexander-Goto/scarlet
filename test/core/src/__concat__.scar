@@ -1,0 +1,370 @@
+let array__concat = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core___concat__ = fn (array_1, array_2) to_array__concat(array_1:value ++ array_2:value)
+          :core___equal__  = fn (array_1, array_2) array_1:value === array_2:value
+     ]
+]
+
+fn to_array__concat(arg) new (@main.array__concat):value <= arg
+
+fn to_custom_array__concat(arg) custom__create(
+     arg
+     [obj
+          :core___concat__ = fn (array_1, array_2) to_custom_array__concat(array_1.custom__get_data() ++ array_2.custom__get_data())
+          :core___equal__  = fn (array_1, array_2) array_1.custom__get_data() === array_2.custom__get_data()
+     ]
+)
+
+let broken_array__concat = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core___concat__ = fn (_, _) heap_table()
+     ]
+]
+
+fn to_broken_array__concat(arg) new (@main.broken_array__concat):value <= arg
+
+fn to_broken_custom_array__concat(arg) custom__create(
+     arg
+     [obj
+          :core___concat__ = fn (_, _) heap_table()
+     ]
+)
+
+let error_array__concat = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core___concat__ = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__concat(arg) new (@main.error_array__concat):value <= arg
+
+fn to_error_custom_array__concat(arg) custom__create(
+     arg
+     [obj
+          :core___concat__ = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test____concat__() {
+     test(("" ++ "") === "")
+     test(("1" ++ "") === "1")
+     test(("" ++ "2") === "2")
+     test(("1" ++ "2") === "12")
+     test(("01234567" ++ "89abcde") === "0123456789abcde")
+     test(("" ++ "0123456789abcde") === "0123456789abcde")
+     test(("0123456789abcde" ++ "") === "0123456789abcde")
+     test(("0" ++ "123456789abcde") === "0123456789abcde")
+     test(("0123456789abcd" ++ "e") === "0123456789abcde")
+     test(("0123456789abcde" ++ "f") === "0123456789abcdef")
+     test(("0" ++ "123456789abcdef") === "0123456789abcdef")
+     test(("01234567" ++ "89abcdef") === "0123456789abcdef")
+     test(("\000091" ++ "") === "\000091")
+     test(("" ++ "\000091") === "\000091")
+     test(("\000091" ++ "\0000b5") === "\000091\0000b5")
+     test(("\000091" ++ "z") === "\000091z")
+     test(("z" ++ "\000091") === "z\000091")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ "") === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5")
+     test(("" ++ "\000091\0000b3\0000ab\0000a4\0000a7\0000b5") === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ "!!!") === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!!")
+     test(("!!!" ++ "\000091\0000b3\0000ab\0000a4\0000a7\0000b5") === "!!!\000091\0000b3\0000ab\0000a4\0000a7\0000b5")
+     test(("!!!" ++ " \000091\0000b3\0000ab\0000a4\0000a7\0000b5") === "!!! \000091\0000b3\0000ab\0000a4\0000a7\0000b5")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " !!!") === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 !!!")
+     test(("\00009aV" ++ "po\000085") === "\00009aVpo\000085")
+
+     test(("" ++ "0123456789abcdef") === "0123456789abcdef")
+     test(("0123456789abcdef" ++ "") === "0123456789abcdef")
+     test(("0123456789abcdef" ++ "!") === "0123456789abcdef!")
+     test(("0" ++ "123456789abcdef!") === "0123456789abcdef!")
+     test(("0123456789abcdef" ++ "!!") === "0123456789abcdef!!")
+     test(("01" ++ "23456789abcdef!!") === "0123456789abcdef!!")
+     test(("0123456789abcdef" ++ "!!") === "0123456789abcdef!!")
+     test(("01" ++ "23456789abcdef!!") === "0123456789abcdef!!")
+     test(("0123456789abcdef" ++ "!!  !!s") === "0123456789abcdef!!  !!s")
+     test(("0123456" ++ "789abcdef!!  !!s") === "0123456789abcdef!!  !!s")
+     test(("0123456789abcde" ++ "0123456789abcdef") === "0123456789abcde0123456789abcdef")
+     test(("0123456789abcdef" ++ "0123456789abcde") === "0123456789abcdef0123456789abcde")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3" ++ "!!!") === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3!!!")
+     test(("!!!" ++ "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3") === "!!!\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab" ++ "\0000b3!!!") === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3!!!")
+     test(("\0000b3!!!" ++ "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab") === "\0000b3!!!\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab")
+     test((("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21] ++ "") === "f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s")
+     test(("" ++ ("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21]) === "f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s")
+     test((("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21] ++ "1") === "f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s1")
+     test(("1" ++ ("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21]) === "1f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s")
+     test((("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21] ++ "12") === "f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s12")
+     test(("12" ++ ("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21]) === "12f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s")
+     test((("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21] ++ "0123456789abcde") === "f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s0123456789abcde")
+     test(("0123456789abcde" ++ ("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21]) === "0123456789abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s")
+     test((("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21] ++ "\000091\0000b3\0000ab\0000a4\0000a7\0000b5") === "f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s\000091\0000b3\0000ab\0000a4\0000a7\0000b5")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ ("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21]) === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s")
+     test((("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21] ++ "\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!!") === "f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!!")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!!" ++ ("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21]) === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!!f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!s")
+
+     test(("0123456789abcdef" ++ "1023456789abcdef") === "0123456789abcdef1023456789abcdef")
+     test(("\000081\0000b2\0000a2\0000b2\0000a2\0000b3\0000b3\0000b3\0000a2\0000b3\0000a2\0000b3" ++ "\0000be\0000a4\0000be\0000a4\0000a2\0000ab\0000be\0000be\0000a4\0000a2\0000be\0000a4\0000a2\0000be\0000a4\0000a2") === "\000081\0000b2\0000a2\0000b2\0000a2\0000b3\0000b3\0000b3\0000a2\0000b3\0000a2\0000b3\0000be\0000a4\0000be\0000a4\0000a2\0000ab\0000be\0000be\0000a4\0000a2\0000be\0000a4\0000a2\0000be\0000a4\0000a2")
+     test(("\000081\0000b2\0000a2\0000b2\0000a2\0000b3\0000b3\0000b3\0000a2\0000b3\0000a2\0000b3" ++ "0123456789abcdef") === "\000081\0000b2\0000a2\0000b2\0000a2\0000b3\0000b3\0000b3\0000a2\0000b3\0000a2\0000b30123456789abcdef")
+     test(("0123456789abcdef" ++ "\000081\0000b2\0000a2\0000b2\0000a2\0000b3\0000b3\0000b3\0000a2\0000b3\0000a2\0000b3") === "0123456789abcdef\000081\0000b2\0000a2\0000b2\0000a2\0000b3\0000b3\0000b3\0000a2\0000b3\0000a2\0000b3")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3!!!" ++ "\00008a \0000b5\0000a7\0000a3\0000a7 \0000b2\0000b3\0000ab\0000a4\0000a7\0000b5!!!") === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3!!!\00008a \0000b5\0000a7\0000a3\0000a7 \0000b2\0000b3\0000ab\0000a4\0000a7\0000b5!!!")
+     test((("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!" ++ "ssd")[5, 21] ++ ("abcdef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3" ++ "ssd")[4, 20]) === "f\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3!!sef\0000c2\0000ae\0000a4\0000a2\0000ae\000090\0000a4\0000b3\0000a2\0000ae\0000b1\0000b3ss")
+
+     test((("0123456789abcde" ++ "f").unslice() ++ "g") === "0123456789abcdefg")
+     test(("0" ++ ("123456789abcdef" ++ "g").unslice()) === "0123456789abcdefg")
+     test((("0123456789abcde" ++ "f").unslice() ++ "1023456789abcde") === "0123456789abcdef1023456789abcde")
+     test(("1023456789abcde" ++ ("123456789abcdef" ++ "g").unslice()) === "1023456789abcde123456789abcdefg")
+     test((("0123456789abcdef" ++ "1").take(16) ++ "g") === "0123456789abcdefg")
+     test(("g" ++ ("0123456789abcdef" ++ "1").take(16)) === "g0123456789abcdef")
+     test((("0123456789abcdef" ++ "1113456789abcde").take(16) ++ "1023456789abcde") === "0123456789abcdef1023456789abcde")
+     test(("1023456789abcde" ++ ("0123456789abcdef" ++ "1113456789abcde").take(16)) === "1023456789abcde0123456789abcdef")
+     test((("0123456789abcdef" ++ "1").drop(1) ++ "g") === "123456789abcdef1g")
+     test(("g" ++ ("0123456789abcdef" ++ "1").drop(1)) === "g123456789abcdef1")
+     test((("0123456789abcdef" ++ "1113456789abcde").drop(15) ++ "1023456789abcde") === "f1113456789abcde1023456789abcde")
+     test(("1023456789abcde" ++ ("0123456789abcdef" ++ "1113456789abcde").drop(15)) === "1023456789abcdef1113456789abcde")
+
+     test((("0123456789abcde" ++ "f").unslice() ++ "1023456789abcdef") === "0123456789abcdef1023456789abcdef")
+     test(("1023456789abcdef" ++ ("0123456789abcde" ++ "f").unslice()) === "1023456789abcdef0123456789abcdef")
+     test((("0123456789abcdef" ++ "0123456789abcdef").take(16) ++ "1023456789abcdef") === "0123456789abcdef1023456789abcdef")
+     test(("1023456789abcdef" ++ ("0123456789abcdef" ++ "0123456789abcdef").take(16)) === "1023456789abcdef0123456789abcdef")
+     test((("0123456789abcdef" ++ "0123456789abcdef").drop(16) ++ "1023456789abcdef") === "0123456789abcdef1023456789abcdef")
+     test(("1023456789abcdef" ++ ("0123456789abcdef" ++ "0123456789abcdef").drop(16)) === "1023456789abcdef0123456789abcdef")
+
+     let string = ("00123456789abcdef" ++ "g")[1, 17]
+     test(string ++ string === "0123456789abcdef0123456789abcdef")
+     test("0aa0aa0aa0aa0zz0" ++ string === "0aa0aa0aa0aa0zz00123456789abcdef")
+     test(string ++ "0aa0aa0aa0aa0zz0" === "0123456789abcdef0aa0aa0aa0aa0zz0")
+     string.ignore()
+
+     let string = ("00123456789abcdef" ++ "g")[1, 17]
+     test(string ++ string === "0123456789abcdef0123456789abcdef")
+     let string = ("00123456789abcdef" ++ "g")[1, 17]
+     test("0aa0aa0aa0aa0zz0" ++ string === "0aa0aa0aa0aa0zz00123456789abcdef")
+     let string = ("00123456789abcdef" ++ "g")[1, 17]
+     test(string ++ "0aa0aa0aa0aa0zz0" === "0123456789abcdef0aa0aa0aa0aa0zz0")
+
+     let string = ("00123456789abcdefg" ++ "g")[1, 18]
+     test(string[1, 17] ++ string === "123456789abcdefg0123456789abcdefg")
+     test(string[1, 17] ++ string === "123456789abcdefg0123456789abcdefg")
+
+     let string   = rnd_string()
+     let string_1 = if rnd_bool(); rnd_string() else {
+          let from = (rnd() & 0xffff'ffff) % len(string)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(string) - from)
+          string[from, to]
+     }
+     let string_2 = if rnd_bool(); rnd_string() else {
+          let from = (rnd() & 0xffff'ffff) % len(string)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(string) - from)
+          string[from, to]
+     }
+     let string_3 = if rnd_bool(); string_1 else null
+     let string_4 = if rnd_bool(); string_2 else null
+     let expected = string_2.foldl(string_1.foldl("", _.append(_)), _.append(_))
+     test(string_1 ++ string_2 == expected)
+     string_3.ignore()
+     string_4.ignore()
+
+     test((u"" ++ u"") === u"")
+     test((u"1" ++ u"") === u"1")
+     test((u"" ++ u"2") === u"2")
+     test((u"1" ++ u"2") === u"12")
+     test((u"01234567" ++ u"89abcd") === u"0123456789abcd")
+     test((u"" ++ u"0123456789abcd") === u"0123456789abcd")
+     test((u"0123456789abcd" ++ u"") === u"0123456789abcd")
+     test((u"0" ++ u"123456789abcd") === u"0123456789abcd")
+     test((u"0123456789abc" ++ u"d") === u"0123456789abcd")
+     test((u"0123456789abcd" ++ u"e") === u"0123456789abcde")
+     test((u"0" ++ u"123456789abcde") === u"0123456789abcde")
+     test((u"01234567" ++ u"89abcde") === u"0123456789abcde")
+
+     test((u"" ++ u"0123456789abcdef") === u"0123456789abcdef")
+     test((u"0123456789abcdef" ++ u"") === u"0123456789abcdef")
+     test((u"0123456789abcdef" ++ u"!") === u"0123456789abcdef!")
+     test((u"0" ++ u"123456789abcdef!") === u"0123456789abcdef!")
+     test((u"0123456789abcdef" ++ u"!!") === u"0123456789abcdef!!")
+     test((u"01" ++ u"23456789abcdef!!") === u"0123456789abcdef!!")
+     test((u"0123456789abcdef" ++ u"!!") === u"0123456789abcdef!!")
+     test((u"01" ++ u"23456789abcdef!!") === u"0123456789abcdef!!")
+     test((u"0123456789abcdef" ++ u"!!  !!s") === u"0123456789abcdef!!  !!s")
+     test((u"0123456" ++ u"789abcdef!!  !!s") === u"0123456789abcdef!!  !!s")
+     test((u"0123456789abcd" ++ u"0123456789abcdef") === u"0123456789abcd0123456789abcdef")
+     test((u"0123456789abcdef" ++ u"0123456789abcd") === u"0123456789abcdef0123456789abcd")
+     test(((u"000000123456789" ++ u"abcdefg")[5, 21] ++ u"") === u"0123456789abcdef")
+     test((u"" ++ (u"000000123456789" ++ u"abcdefg")[5, 21]) === u"0123456789abcdef")
+
+     test(((u"000000123456789" ++ u"abcdefg")[5, 21] ++ u"1") === u"0123456789abcdef1")
+     test((u"1" ++ (u"000000123456789" ++ u"abcdefg")[5, 21]) === u"10123456789abcdef")
+     test(((u"000000123456789" ++ u"abcdefg")[5, 21] ++ u"12") === u"0123456789abcdef12")
+     test((u"12" ++ (u"000000123456789" ++ u"abcdefg")[5, 21]) === u"120123456789abcdef")
+     test(((u"000000123456789" ++ u"abcdefg")[5, 21] ++ u"0123456789abcd") === u"0123456789abcdef0123456789abcd")
+     test((u"0123456789abcd" ++ (u"000000123456789" ++ u"abcdefg")[5, 21]) === u"0123456789abcd0123456789abcdef")
+
+     test((u"0123456789abcdef" ++ u"1023456789abcdef") === u"0123456789abcdef1023456789abcdef")
+     test(((u"000000123456789" ++ u"abcdefg")[5, 21] ++ (u"000000123456789" ++ u"abcdefg")[4, 20]) === u"0123456789abcdef00123456789abcde")
+
+     test(((u"0123456789abcd" ++ u"f").unslice() ++ u"g") === u"0123456789abcdfg")
+     test((u"0" ++ (u"123456789abcde" ++ u"g").unslice()) === u"0123456789abcdeg")
+     test(((u"0123456789abcd" ++ u"f").unslice() ++ u"1023456789abcd") === u"0123456789abcdf1023456789abcd")
+     test((u"1023456789abcd" ++ (u"123456789abcde" ++ u"g").unslice()) === u"1023456789abcd123456789abcdeg")
+     test(((u"0123456789abcdef" ++ u"1").take(16) ++ u"g") === u"0123456789abcdefg")
+     test((u"g" ++ (u"0123456789abcdef" ++ u"1").take(16)) === u"g0123456789abcdef")
+     test(((u"0123456789abcdef" ++ u"1113456789abcde").take(16) ++ u"1023456789abcd") === u"0123456789abcdef1023456789abcd")
+     test((u"1023456789abcd" ++ (u"0123456789abcdef" ++ u"1113456789abcde").take(16)) === u"1023456789abcd0123456789abcdef")
+     test(((u"0123456789abcdef" ++ u"1").drop(1) ++ u"g") === u"123456789abcdef1g")
+     test((u"g" ++ (u"0123456789abcdef" ++ u"1").drop(1)) === u"g123456789abcdef1")
+     test(((u"0123456789abcdef" ++ u"1113456789abcde").drop(15) ++ u"1023456789abcd") === u"f1113456789abcde1023456789abcd")
+     test((u"1023456789abcd" ++ (u"0123456789abcdef" ++ u"1113456789abcde").drop(15)) === u"1023456789abcdf1113456789abcde")
+
+     test(((u"0123456789abcde" ++ u"f").unslice() ++ u"1023456789abcdef") === u"0123456789abcdef1023456789abcdef")
+     test((u"1023456789abcdef" ++ (u"0123456789abcde" ++ u"f").unslice()) === u"1023456789abcdef0123456789abcdef")
+     test(((u"0123456789abcdef" ++ u"0123456789abcdef").take(16) ++ u"1023456789abcdef") === u"0123456789abcdef1023456789abcdef")
+     test((u"1023456789abcdef" ++ (u"0123456789abcdef" ++ u"0123456789abcdef").take(16)) === u"1023456789abcdef0123456789abcdef")
+     test(((u"0123456789abcdef" ++ u"0123456789abcdef").drop(16) ++ u"1023456789abcdef") === u"0123456789abcdef1023456789abcdef")
+     test((u"1023456789abcdef" ++ (u"0123456789abcdef" ++ u"0123456789abcdef").drop(16)) === u"1023456789abcdef0123456789abcdef")
+
+     let array = (u"00123456789abcdef" ++ u"g")[1, 17]
+     test(array ++ array === u"0123456789abcdef0123456789abcdef")
+     test(u"0aa0aa0aa0aa0zz0" ++ array === u"0aa0aa0aa0aa0zz00123456789abcdef")
+     test(array ++ u"0aa0aa0aa0aa0zz0" === u"0123456789abcdef0aa0aa0aa0aa0zz0")
+     array.ignore()
+
+     let array = (u"00123456789abcdef" ++ u"g")[1, 17]
+     test(array ++ array === u"0123456789abcdef0123456789abcdef")
+     let array = (u"00123456789abcdef" ++ u"g")[1, 17]
+     test(u"0aa0aa0aa0aa0zz0" ++ array === u"0aa0aa0aa0aa0zz00123456789abcdef")
+     let array = (u"00123456789abcdef" ++ u"g")[1, 17]
+     test(array ++ u"0aa0aa0aa0aa0zz0" === u"0123456789abcdef0aa0aa0aa0aa0zz0")
+
+     let array = (u"00123456789abcdefg" ++ u"g")[1, 18]
+     test(array[1, 17] ++ array === u"123456789abcdefg0123456789abcdefg")
+     test(array[1, 17] ++ array === u"123456789abcdefg0123456789abcdefg")
+
+     let array   = rnd_byte_array()
+     let array_1 = if rnd_bool(); rnd_byte_array() else {
+          let from = (rnd() & 0xffff'ffff) % len(array)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(array) - from)
+          array[from, to]
+     }
+     let array_2 = if rnd_bool(); rnd_byte_array() else {
+          let from = (rnd() & 0xffff'ffff) % len(array)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(array) - from)
+          array[from, to]
+     }
+     let array_3 = if rnd_bool(); array_1 else null
+     let array_4 = if rnd_bool(); array_2 else null
+     let expected = array_2.foldl(array_1.foldl(u"", _.append(_)), _.append(_))
+     test(array_1 ++ array_2 == expected)
+     array_3.ignore()
+     array_4.ignore()
+
+     test(([array 1] ++ [array]) === [array 1])
+     test(([array] ++ [array 1]) === [array 1])
+     test(([array 1] ++ [array].init(10)) === [array 1])
+     test(([array].init(10) ++ [array 1]) === [array 1])
+     test(([array 1] ++ [array 2]) === [array 1, 2])
+     test(([array 1, 2] ++ [array]) === [array 1, 2])
+     test(([array] ++ [array 1, 2]) === [array 1, 2])
+     test(([array 1, 2, 3, 4, 5] ++ [array 7, 8, 9]) === [array 1, 2, 3, 4, 5, 7, 8, 9])
+
+     test(([array] ++ [array "0123456789abcde" ++ "f"]) === [array "0123456789abcdef"])
+     test(([array "0123456789abcde" ++ "f"] ++ [array]) === [array "0123456789abcdef"])
+     test(([array "0123456789abcde" ++ "f"] ++ [array "1023456789abcde" ++ "f"]) === [array "0123456789abcdef", "1023456789abcdef"])
+
+     test(([array "0123456789abcde" ++ "f"].unslice() ++ [array 1, 2]) === [array "0123456789abcdef", 1, 2])
+     test(([array 1, 2] ++ [array "0123456789abcde" ++ "f"].unslice()) === [array 1, 2, "0123456789abcdef"])
+     test(([array "0123456789abcde" ++ "f", "1123456789abcde" ++ "f"].take(1) ++ [array 1]) === [array "0123456789abcdef", 1])
+     test(([array 1] ++ [array "0123456789abcde" ++ "f", "1123456789abcde" ++ "f"].take(1)) === [array 1, "0123456789abcdef"])
+     test(([array "0123456789abcde" ++ "f", "1123456789abcde" ++ "f"].drop(1) ++ [array 1]) === [array "1123456789abcdef", 1])
+     test(([array 1] ++ [array "0123456789abcde" ++ "f", "1123456789abcde" ++ "f"].drop(1)) === [array 1, "1123456789abcdef"])
+
+     let array = [array heap_string(), "0123456789abcde" ++ "f", "1123456789abcde" ++ "f", heap_string()][1, 3]
+     test(array ++ array === [array "0123456789abcdef", "1123456789abcdef", "0123456789abcdef", "1123456789abcdef"])
+     test([array "2123456789abcde" ++ "f"] ++ array === [array "2123456789abcdef", "0123456789abcdef", "1123456789abcdef"])
+     test(array ++ [array "2123456789abcde" ++ "f"] === [array "0123456789abcdef", "1123456789abcdef", "2123456789abcdef"])
+     array.ignore()
+
+     let array = [array heap_string(), "0123456789abcde" ++ "f", "1123456789abcde" ++ "f", heap_string()][1, 3]
+     test(array ++ array === [array "0123456789abcdef", "1123456789abcdef", "0123456789abcdef", "1123456789abcdef"])
+     let array = [array heap_string(), "0123456789abcde" ++ "f", "1123456789abcde" ++ "f", heap_string()][1, 3]
+     test([array "2123456789abcde" ++ "f"] ++ array === [array "2123456789abcdef", "0123456789abcdef", "1123456789abcdef"])
+     let array = [array heap_string(), "0123456789abcde" ++ "f", "1123456789abcde" ++ "f", heap_string()][1, 3]
+     test(array ++ [array "2123456789abcde" ++ "f"] === [array "0123456789abcdef", "1123456789abcdef", "2123456789abcdef"])
+
+     let array = [array heap_string(), "0123456789abcde" ++ "f", "1123456789abcde" ++ "f", heap_string()][1, 3]
+     test(array.take(1) ++ array === [array "0123456789abcdef", "0123456789abcdef", "1123456789abcdef"])
+     test(array.take(1) ++ array === [array "0123456789abcdef", "0123456789abcdef", "1123456789abcdef"])
+
+     test(([array 1].to_array__concat() ++ [array].to_array__concat()) === [array 1].to_array__concat())
+     test(([array].to_array__concat() ++ [array 1].to_array__concat()) === [array 1].to_array__concat())
+     test(([array 1].to_array__concat() ++ [array 2].to_array__concat()) === [array 1, 2].to_array__concat())
+     test(([array 1, 2].to_array__concat() ++ [array].to_array__concat()) === [array 1, 2].to_array__concat())
+     test(([array].to_array__concat() ++ [array 1, 2].to_array__concat()) === [array 1, 2].to_array__concat())
+     test(([array 1, 2, 3, 4, 5].to_array__concat() ++ [array 7, 8, 9].to_array__concat()) === [array 1, 2, 3, 4, 5, 7, 8, 9].to_array__concat())
+
+     test(([array 1].to_custom_array__concat() ++ [array].to_custom_array__concat()) === [array 1].to_custom_array__concat())
+     test(([array].to_custom_array__concat() ++ [array 1].to_custom_array__concat()) === [array 1].to_custom_array__concat())
+     test(([array 1].to_custom_array__concat() ++ [array 2].to_custom_array__concat()) === [array 1, 2].to_custom_array__concat())
+     test(([array 1, 2].to_custom_array__concat() ++ [array].to_custom_array__concat()) === [array 1, 2].to_custom_array__concat())
+     test(([array].to_custom_array__concat() ++ [array 1, 2].to_custom_array__concat()) === [array 1, 2].to_custom_array__concat())
+     test(([array 1, 2, 3, 4, 5].to_custom_array__concat() ++ [array 7, 8, 9].to_custom_array__concat()) === [array 1, 2, 3, 4, 5, 7, 8, 9].to_custom_array__concat())
+
+     let array   = rnd_string_array()
+     let array_1 = if rnd_bool(); rnd_string_array() else {
+          let from = (rnd() & 0xffff'ffff) % len(array)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(array) - from)
+          array[from, to]
+     }
+     let array_2 = if rnd_bool(); rnd_string_array() else {
+          let from = (rnd() & 0xffff'ffff) % len(array)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(array) - from)
+          array[from, to]
+     }
+     let array_3 = if rnd_bool(); array_1 else null
+     let array_4 = if rnd_bool(); array_2 else null
+     let expected = array_2.foldl(array_1.foldl([array], _.append(_)), _.append(_))
+     test(array_1 ++ array_2 == expected)
+     array_3.ignore()
+     array_4.ignore()
+
+     let error_1    = expected_error(:1, heap_string(), heap_string())
+     let error_2    = expected_error(:2, heap_string(), heap_string())
+     let heap_table = heap_table()
+     test((error_1 ++ "").get_error_id() === :1)
+     test(("" ++ error_1).get_error_id() === :1)
+     test((error_1 ++ error_2).get_error_id() === :1)
+     test((error_2 ++ error_1).get_error_id() === :2)
+     test((error_1 ++ heap_table).get_error_id() === :1)
+     test((heap_table ++ error_1).get_error_id() === :1)
+
+     test((heap_table ++ heap_table).get_error_id() === :invalid_type)
+     test((heap_table ++ "").get_error_id() === :invalid_type)
+     test(("" ++ heap_table).get_error_id() === :invalid_type)
+     test(("" ++ u"".scarlet__erase_info()).get_error_id() === :invalid_type)
+     test((u"".scarlet__erase_info() ++ "").get_error_id() === :invalid_type)
+
+     test((to_array__concat([array]) ++ error_1).get_error_id() === :1)
+     test((error_1 ++ to_array__concat([array])).get_error_id() === :1)
+     test((to_array__concat([array]) ++ heap_table).get_error_id() === :invalid_type)
+     test((heap_table ++ to_array__concat([array])).get_error_id() === :invalid_type)
+     test((to_array__concat([array]) ++ "").get_error_id() === :invalid_type)
+     test(("" ++ to_array__concat([array])).get_error_id() === :invalid_type)
+     test((to_array__concat([array]) ++ to_array__concat(u"")).get_error_id() === :invalid_type)
+
+     test((to_custom_array__concat([array]) ++ error_1).get_error_id() === :1)
+     test((error_1 ++ to_custom_array__concat([array])).get_error_id() === :1)
+     test((to_custom_array__concat([array]) ++ heap_table).get_error_id() === :invalid_type)
+     test((heap_table ++ to_custom_array__concat([array])).get_error_id() === :invalid_type)
+     test((to_custom_array__concat([array]) ++ "").get_error_id() === :invalid_type)
+     test(("" ++ to_custom_array__concat([array])).get_error_id() === :invalid_type)
+     test((to_custom_array__concat([array]) ++ to_custom_array__concat(u"")).get_error_id() === :invalid_type)
+
+     test((to_broken_array__concat("") ++ to_broken_array__concat("1")).get_error_id() === :invalid_type)
+     test((to_broken_custom_array__concat("") ++ to_broken_custom_array__concat("1")).get_error_id() === :invalid_type)
+     test((to_error_array__concat("") ++ to_error_array__concat("0")).get_error_id() === :3)
+     test((to_error_custom_array__concat("") ++ to_error_custom_array__concat("0")).get_error_id() === :4)
+}

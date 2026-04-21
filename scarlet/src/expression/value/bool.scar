@@ -1,0 +1,10 @@
+let t_bool = [obj
+     :scar_type = "t_bool"
+     :value     = @main.t_token
+]
+
+fn bool_to_operand(bool, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let operand = comptime_bool(bool:value:text == "true", bool:value)
+
+     [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+}

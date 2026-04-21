@@ -1,0 +1,65 @@
+fn ir__core_fn_append(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box container, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box new_item, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ container:code:text ++ ", " ++ new_item:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "set", "array", "obj", "custom"]
+     container.maybe_has_type!(valid_types)
+     new_item.maybe_has_type!(
+          if container.has_type?(@main.string_types)
+               "char"
+          else if container.has_type?(@main.byte_array_types)
+               "byte"
+          else if container.has_type?("set")
+               @main.all_hash_map_key_types
+          else @main.common_types
+     )
+
+     if container:comptime_val.null?() || new_item:comptime_val.null?() ||
+          container:comptime_val:type == "obj" || not (container:comptime_val:type == "set" && new_item:comptime_val:type.in?(@main.always_hash_map_key_types))
+     {
+          if container:comptime_val:type === "obj" && container:comptime_val:value[:_][:core_append].null?()
+               error__invalid_type(container:code, ".core_append", "obj")
+          else null
+
+          let container_possible_types = container:possible_types
+          let result_possible_types    = if container_possible_types.null?()
+               valid_types.append("error")
+          else {
+               let result_possible_types = if container_possible_types.all(true, _.in?(@main.string_types)) && new_item.has_type?("char") ||
+                         container_possible_types.all(true, _.in?(@main.byte_array_types)) && new_item.has_type?("byte") ||
+                         container_possible_types == [set "array"] && new_item.has_type?(@main.common_types) ||
+                         container_possible_types == [set "set"] && new_item.has_type?(@main.always_hash_map_key_types)
+                    container_possible_types
+               else container_possible_types.filter(_.in?(valid_types)).append("error")
+
+               let result_possible_types = if "short_string".in?(result_possible_types) && not "string".in?(result_possible_types)
+                    result_possible_types.append("string")
+               else result_possible_types
+
+               if "short_byte_array".in?(result_possible_types) && not "byte_array".in?(result_possible_types)
+                    result_possible_types.append("byte_array")
+               else result_possible_types
+          }
+
+          ir__fn_call("McoreFNappend", [array container, new_item], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let comptime_val = new (container:comptime_val):value => _.append(if container:comptime_val:type.in?([array "set", "array"]); new_item:comptime_val else new_item:comptime_val:value)
+
+          let result = new (container) {
+               :ir             <= null
+               :code           <= code
+               :comptime_val   <= comptime_val
+               :possible_types <= comptime_val.get_type_for_operand()
+          }
+
+          if is_last {
+               let [box result, final_data, dependencies] = result.has_ir!(final_data, dependencies)
+
+               [box result, exp_data, ir__raw_return(ir, result:ir), final_data, dependencies, src_gconsts]
+          } else [box result, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

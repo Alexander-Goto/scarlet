@@ -1,0 +1,244 @@
+fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let base_operand_correct_types = [set "short_string", "string", "null", "short_byte_array", "byte_array", "obj", "table", "array"]
+     base_operand.maybe_has_type!(base_operand_correct_types)
+
+     let [box result_operand, exp_data, ir, final_data, dependencies] =
+          all_mods.foldl([box base_operand, exp_data, ir, final_data, dependencies], fn (state, mod) {
+               let [box base_operand, exp_data, ir, final_data, dependencies] = state
+
+               let [obj mod_keys = :keys, mod_operand = :operand, mod_type = :type] = mod
+               let mod_keys_last_idx                                                = mod_keys.len() - 1
+
+               mod_operand.maybe_has_type!(if mod_type.first() == '<'; @main.common_types__null else @main.fn_types)
+
+               if not (
+                    base_operand:comptime_val.null?() ||
+                    mod_operand:comptime_val.null?()  ||
+                    mod_keys.any(true, fn (key) key:comptime_val.null?() || not key:comptime_val:type.in?(@main.always_hash_map_key_types))
+               ) && mod_type.first() == '<' {
+                    let [box path, old_value] = mod_keys.foldl_kv([box [array].init(mod_keys.len()), base_operand:comptime_val], fn (state, key_idx, key) {
+                         let [box path, value] = state
+
+                         switch value:type
+                         case "string", "byte_array": {
+                              key.maybe_has_type!("int")
+
+                              if not key:comptime_val:value.in_range?(0, value:value.len())
+                                   error__out_of_bounds(key:code)
+                              else null
+
+                              if key_idx /= mod_keys_last_idx
+                                   error__not_expected_token(mod_keys[key_idx + 1]:code, @main.new_mod_types)
+                              else null
+
+                              let expected_type = if value:type == "string"; "char" else "byte"
+                              mod_operand.maybe_has_type!(expected_type)
+
+                              [box
+                                   path.append(value)
+
+                                   new (@main.t_comptime_val) {
+                                        :type  <= expected_type
+                                        :value <= value:value[key:comptime_val:value]
+                                   }
+                              ]
+                         }
+                         case "null": {
+                              if key:comptime_val:value == :_
+                                   if key_idx == mod_keys_last_idx
+                                        mod_operand.maybe_has_type!([set "obj", "null"])
+                                   else mod_keys[key_idx + 1].maybe_has_type!("token")
+                              else null
+
+                              [box
+                                   path.append(new (@main.t_comptime_val) {
+                                        :type  <= if key:comptime_val:type == "token"; "obj" else "table"
+                                        :value <= [table].init(1)
+                                   })
+
+                                   value
+                              ]
+                         }
+                         case "obj": {
+                              if key:comptime_val:value == :_
+                                   if key_idx == mod_keys_last_idx
+                                        mod_operand.maybe_has_type!([set "obj", "null"])
+                                   else mod_keys[key_idx + 1].maybe_has_type!("token")
+                              else key.maybe_has_type!("token")
+
+                              [box path.append(value), value:value[key:comptime_val:value] <? @main.comptime_null_val]
+                         }
+                         case "table":
+                              [box path.append(value), value:value[key:comptime_val] <? @main.comptime_null_val]
+                         case "array": {
+                              key.maybe_has_type!("int")
+
+                              if not key:comptime_val:value.in_range?(0, value:value.len())
+                                   error__out_of_bounds(key:code)
+                              else null
+
+                              [box path.append(value), value:value[key:comptime_val:value]]
+                         }
+                         default:
+                              error__not_expected_token(key:code, @main.new_mod_types)
+                    })
+
+                    let new_base_operand_value = path.foldr_kv(mod_operand:comptime_val, fn (new_value, idx, container) {
+                         let key = mod_keys[idx]:comptime_val
+
+                         switch container:type
+                         case "string", "byte_array":
+                              new (container):value[key:value] <= new_value:value
+                         case "obj":
+                              new (container):value[key:value] <= if new_value:type == "null"; null else new_value
+                         case "table":
+                              new (container):value[key] <= if new_value:type == "null"; null else new_value
+                         case "array":
+                              new (container):value[key:value] <= new_value
+                         default:
+                              unreachable()
+                    })
+
+                    let new_base_operand_value = if mod_type.len() == 2
+                         new_base_operand_value
+                    else new (@main.t_comptime_val) {
+                         :type  <= "box"
+                         :value <= [array new_base_operand_value, old_value]
+                    }
+
+                    [box
+                         new (@main.t_operand) {
+                              :comptime_val   <= new_base_operand_value
+                              :possible_types <= new_base_operand_value.get_type_for_operand()
+                         }
+
+                         exp_data, ir, final_data, dependencies
+                    ]
+               } else {
+                    let [box base_operand, final_data, dependencies] = base_operand.has_ir!(final_data, dependencies)
+                    let [box mod_operand, final_data, dependencies]  = mod_operand.has_ir!(final_data, dependencies)
+                    let [box mod_keys, final_data, dependencies]     = operands_have_ir!(mod_keys, final_data, dependencies)
+
+                    mod_keys.foldl(null, fn (_, key) key.maybe_has_type!(@main.all_hash_map_key_types))
+
+                    if base_operand:possible_types.null?()
+                         null
+                    else if base_operand.has_type?([set "short_string", "string", "short_byte_array", "byte_array", "error"]) {
+                         mod_keys.first().maybe_has_type!("int")
+
+                         if mod_keys.len() /= 1
+                              error__not_expected_token(mod_keys[1]:code, @main.new_mod_types)
+                         else null
+
+                         if mod_type.first() == '<'
+                              mod_operand.maybe_has_type!(if base_operand.has_type?([set "short_string", "string", "error"]); "char" else "byte")
+                         else null
+                    } else if not base_operand:comptime_val.null?()
+                         mod_keys.foldl_kv(base_operand:comptime_val, fn (current_base_operand, key_idx, key)
+                              switch current_base_operand:type
+                              case "string", "byte_array": {
+                                   key.maybe_has_type!("int")
+
+                                   if not (key:comptime_val.null?() || key:comptime_val:value.in_range?(0, current_base_operand:value.len()))
+                                        error__out_of_bounds(key:code)
+                                   else null
+
+                                   if key_idx /= mod_keys_last_idx
+                                        error__not_expected_token(mod_keys[key_idx + 1]:code, @main.new_mod_types)
+                                   else null
+
+                                   if mod_type.first() == '<' {
+                                        let expected_type = if current_base_operand:type == "string"; "char" else "byte"
+                                        mod_operand.maybe_has_type!(expected_type)
+                                   } else null
+                              }
+                              case "null": {
+                                   if key:comptime_val:value === :_
+                                        if key_idx == mod_keys_last_idx
+                                             if mod_type.first() == '<'
+                                                  mod_operand.maybe_has_type!([set "obj", "null"])
+                                             else null
+                                        else mod_keys[key_idx + 1].maybe_has_type!("token")
+                                   else null
+
+                                   [breaker null]
+                              }
+                              case "obj": {
+                                   if key:comptime_val:value === :_
+                                        if key_idx == mod_keys_last_idx
+                                             if mod_type.first() == '<'
+                                                  mod_operand.maybe_has_type!([set "obj", "null"])
+                                             else null
+                                        else mod_keys[key_idx + 1].maybe_has_type!("token")
+                                   else key.maybe_has_type!("token")
+
+                                   if key:comptime_val.null?()
+                                        [breaker null]
+                                   else {
+                                        let value = current_base_operand:value[key:comptime_val:value]
+                                        break(value.null?(), value)
+                                   }
+                              }
+                              case "table":
+                                   if key:comptime_val.null?() || not key:comptime_val:type.in?(@main.always_hash_map_key_types)
+                                        [breaker null]
+                                   else {
+                                        let value = current_base_operand:value[key:comptime_val]
+                                        break(value.null?(), value)
+                                   }
+                              case "array": {
+                                   key.maybe_has_type!("int")
+
+                                   if key:comptime_val.null?()
+                                        [breaker null]
+                                   else if key:comptime_val:value.in_range?(0, current_base_operand:value.len())
+                                        current_base_operand:value[key:comptime_val:value]
+                                   else error__out_of_bounds(key:code)
+                              }
+                              default:
+                                   error__not_expected_token(key:code, @main.new_mod_types)
+                         )
+                    else if base_operand.has_type?([set "array", "error"]) || base_operand.has_type?("array")
+                         mod_keys.first().maybe_has_type!("int")
+                    else if base_operand.has_type?([set "obj", "error"]) || base_operand.has_type?("obj")
+                         mod_keys.first().maybe_has_type!("token")
+                    else null
+
+                    let new_base_operand_possible_types = if mod_type.len() == 2
+                         if base_operand:possible_types.null?()
+                              null
+                         else base_operand:possible_types.append("error").prepare_types_for_cmp()
+                    else [set "box", "error"]
+
+                    let [box new_base_operand_reg, exp_data] = exp_data.new_reg()
+                    let ir_keys_len                          = mod_keys.len().to_string()
+                    let ir                                   = ir ++ "t_any " ++ new_base_operand_reg ++ ";\n{\n"
+
+                    let [box prepared_keys, exp_data, ir, final_data, dependencies] = ir__create_ir_array(mod_keys, exp_data, ir, final_data, dependencies)
+
+                    let ir = ir ++ new_base_operand_reg ++ (if mod_type.first() == '<'; "=Onew__set(thrd_data," else "=Onew__apply(thrd_data,") ++
+                         base_operand:ir ++ "," ++ ir_keys_len ++ "," ++ prepared_keys ++ "," ++ mod_operand:ir ++
+                         (if mod_type.len() == 2; ",false," else ",true,") ++
+                         exp_data:owner_name_ir_const ++ ");\n}\n"
+
+                    let ir = ir__assume_type(new_base_operand_reg, new_base_operand_possible_types, ir)
+
+                    [box
+                         new (@main.t_operand) {
+                              :ir             <= new_base_operand_reg
+                              :possible_types <= new_base_operand_possible_types
+                         }
+
+                         exp_data, ir, final_data, dependencies
+                    ]
+               }
+          })
+
+     let result_operand = new (result_operand):code <= code
+
+     if is_last {
+          let [box result_operand, final_data, dependencies] = result_operand.has_ir!(final_data, dependencies)
+
+          [box result_operand, exp_data, ir__raw_return(ir, result_operand:ir), final_data, dependencies, src_gconsts]
+     } else [box result_operand, exp_data, ir, final_data, dependencies, src_gconsts]
+}

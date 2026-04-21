@@ -1,0 +1,315 @@
+let container__each_to_each_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_each_to_each_kv = fn (container, func) to_container__each_to_each_kv(container:value.each_to_each_kv(func))
+          :core___equal__       = fn (container_1, container_2) container_1:value === container_2:value
+     ]
+]
+
+fn to_container__each_to_each_kv(arg) new (@main.container__each_to_each_kv):value <= arg
+
+fn to_custom_container__each_to_each_kv(arg) custom__create(
+     arg
+     [obj
+          :core_each_to_each_kv = fn (container, func) to_custom_container__each_to_each_kv(custom__get_data(container).each_to_each_kv(func))
+          :core___equal__       = fn (container_1, container_2) container_1.custom__get_data() === container_2.custom__get_data()
+     ]
+)
+
+let broken_container__each_to_each_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_each_to_each_kv = fn (_, _) _ ++ heap_table()
+     ]
+]
+
+fn to_broken_container__each_to_each_kv(arg) new (@main.broken_container__each_to_each_kv):value <= arg
+
+fn to_broken_custom_container__each_to_each_kv(arg) custom__create(
+     arg
+     [obj
+          :core_each_to_each_kv = fn (_, _) _ ++ heap_table()
+     ]
+)
+
+let error_container__each_to_each_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_each_to_each_kv = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__each_to_each_kv(arg) new (@main.error_container__each_to_each_kv):value <= arg
+
+fn to_error_custom_container__each_to_each_kv(arg) custom__create(
+     arg
+     [obj
+          :core_each_to_each_kv = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__each_to_each_kv() {
+     let items = "3".to_array()
+     test("".each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 >= idx_2 || items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "")
+     test("0".each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 >= idx_2 || items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "0")
+     test("01".each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 >= idx_2 || items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "10")
+     test("10".each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 >= idx_2 || items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "10")
+     test("110".each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 >= idx_2 || items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "110")
+     test("101".each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 >= idx_2 || items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "110")
+     test("9a03712e8dcb546".each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 >= idx_2 || items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "9a13702e8dcb546")
+     test("9a03712fe8dcb546".each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 >= idx_2 || items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "9a13702fe8dcb546")
+
+     test("".each_to_each_kv(fn (idx_1, _, idx_2, _) [box (97 + idx_1).to_char(), (97 + idx_2).to_char()]) === "")
+     test("0".each_to_each_kv(fn (idx_1, _, idx_2, _) [box (97 + idx_1).to_char(), (97 + idx_2).to_char()]) === "0")
+     test("01".each_to_each_kv(fn (idx_1, _, idx_2, _) [box (97 + idx_1).to_char(), (97 + idx_2).to_char()]) === "ab")
+     test("0123456789abcde".each_to_each_kv(fn (idx_1, _, idx_2, _) [box (97 + idx_1).to_char(), (97 + idx_2).to_char()]) === "abcdefghijklmno")
+     test("0123456789abcdef".each_to_each_kv(fn (idx_1, _, idx_2, _) [box (97 + idx_1).to_char(), (97 + idx_2).to_char()]) === "abcdefghijklmnop")
+
+     let string_1        = rnd_string()
+     let string_2        = if rnd_bool(); string_1 else null
+     let right_idx       = (rnd() >> 1) % string_1.len()
+     let left_idx        = (rnd() >> 1) % (right_idx + 1)
+     let left_char       = string_1[left_idx]
+     let right_char      = string_1[right_idx]
+     let expected_string = new (string_1) {
+          [left_idx]  <= right_char
+          [right_idx] <= left_char
+     }
+     let have_string = string_1.each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 >= idx_2; null else if idx_1 == left_idx && idx_2 == right_idx; [box char_2, char_1] else [box char_1, char_2])
+     test(expected_string === have_string)
+     string_2.ignore()
+
+     let items = u"3".to_array()
+     test(u"".each_to_each_kv(fn (idx_1, byte_1, idx_2, byte_2) if idx_1 >= idx_2 || items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"")
+     test(u"0".each_to_each_kv(fn (idx_1, byte_1, idx_2, byte_2) if idx_1 >= idx_2 || items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"0")
+     test(u"01".each_to_each_kv(fn (idx_1, byte_1, idx_2, byte_2) if idx_1 >= idx_2 || items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"10")
+     test(u"10".each_to_each_kv(fn (idx_1, byte_1, idx_2, byte_2) if idx_1 >= idx_2 || items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"10")
+     test(u"110".each_to_each_kv(fn (idx_1, byte_1, idx_2, byte_2) if idx_1 >= idx_2 || items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"110")
+     test(u"101".each_to_each_kv(fn (idx_1, byte_1, idx_2, byte_2) if idx_1 >= idx_2 || items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"110")
+     test(u"9a03712e8dcb54".each_to_each_kv(fn (idx_1, byte_1, idx_2, byte_2) if idx_1 >= idx_2 || items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"9a13702e8dcb54")
+     test(u"9a03712fe8dcb54".each_to_each_kv(fn (idx_1, byte_1, idx_2, byte_2) if idx_1 >= idx_2 || items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"9a13702fe8dcb54")
+
+     test(u"".each_to_each_kv(fn (idx_1, _, idx_2, _) [box (97 + idx_1).to_byte(), (97 + idx_2).to_byte()]) === u"")
+     test(u"0".each_to_each_kv(fn (idx_1, _, idx_2, _) [box (97 + idx_1).to_byte(), (97 + idx_2).to_byte()]) === u"0")
+     test(u"01".each_to_each_kv(fn (idx_1, _, idx_2, _) [box (97 + idx_1).to_byte(), (97 + idx_2).to_byte()]) === u"ab")
+     test(u"0123456789abcde".each_to_each_kv(fn (idx_1, _, idx_2, _) [box (97 + idx_1).to_byte(), (97 + idx_2).to_byte()]) === u"abcdefghijklmno")
+     test(u"0123456789abcdef".each_to_each_kv(fn (idx_1, _, idx_2, _) [box (97 + idx_1).to_byte(), (97 + idx_2).to_byte()]) === u"abcdefghijklmnop")
+
+     let array_1        = rnd_byte_array()
+     let array_2        = if rnd_bool(); array_1 else null
+     let right_idx      = (rnd() >> 1) % array_1.len()
+     let left_idx       = (rnd() >> 1) % (right_idx + 1)
+     let left_byte      = array_1[left_idx]
+     let right_byte     = array_1[right_idx]
+     let expected_array = new (array_1) {
+          [left_idx]  <= right_byte
+          [right_idx] <= left_byte
+     }
+     let have_array = array_1.each_to_each_kv(fn (idx_1, byte_1, idx_2, byte_2) if idx_1 >= idx_2; null else if idx_1 == left_idx && idx_2 == right_idx; [box byte_2, byte_1] else [box byte_1, byte_2])
+     test(expected_array === have_array)
+     array_2.ignore()
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([array].each_to_each_kv(fn (idx_1, item_1, idx_2, item_2) if idx_1 >= idx_2; null else if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array])
+     test([array].init(10).each_to_each_kv(fn (idx_1, item_1, idx_2, item_2) if idx_1 >= idx_2; null else if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array])
+     test([array string_1].each_to_each_kv(fn (idx_1, item_1, idx_2, item_2) if idx_1 >= idx_2; null else if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_1])
+     test([array string_1, string_2].each_to_each_kv(fn (idx_1, item_1, idx_2, item_2) if idx_1 >= idx_2; null else if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_1, string_2])
+     test([array string_2, string_1].each_to_each_kv(fn (idx_1, item_1, idx_2, item_2) if idx_1 >= idx_2; null else if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_1, string_2])
+     test([array string_3, string_1, string_2].each_to_each_kv(fn (idx_1, item_1, idx_2, item_2) if idx_1 >= idx_2; null else if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_3, string_1, string_2])
+     test([array string_3, string_2, string_1].each_to_each_kv(fn (idx_1, item_1, idx_2, item_2) if idx_1 >= idx_2; null else if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_3, string_1, string_2])
+     test([array string_1, string_2, string_3].each_to_each_kv(fn (idx_1, item_1, idx_2, item_2) if idx_1 >= idx_2; null else if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_1, string_2, string_3])
+     test([array string_2, string_1, string_3].each_to_each_kv(fn (idx_1, item_1, idx_2, item_2) if idx_1 >= idx_2; null else if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_1, string_2, string_3])
+
+     test([array].each_to_each_kv(fn (idx_1, _, idx_2, _) [box idx_1, idx_2]) === [array])
+     test([array].init(10).each_to_each_kv(fn (idx_1, _, idx_2, _) [box idx_1, idx_2]) === [array])
+     test([array string_1].each_to_each_kv(fn (idx_1, _, idx_2, _) [box idx_1, idx_2]) === [array string_1])
+     test([array string_1, string_2].each_to_each_kv(fn (idx_1, _, idx_2, _) [box idx_1, idx_2]) === [array 0, 1])
+     test([array string_1, string_2, string_3].each_to_each_kv(fn (idx_1, _, idx_2, _) [box idx_1, idx_2]) === [array 0, 1, 2])
+
+     let array_1        = rnd_string_array()
+     let array_2        = if rnd_bool(); array_1 else null
+     let right_idx      = (rnd() >> 1) % array_1.len()
+     let left_idx       = (rnd() >> 1) % (right_idx + 1)
+     let left_item      = array_1[left_idx]
+     let right_item     = array_1[right_idx]
+     let expected_array = new (array_1) {
+          [left_idx]  <= right_item
+          [right_idx] <= left_item
+     }
+     let have_array = array_1.each_to_each_kv(fn (idx_1, item_1, idx_2, item_2) if idx_1 >= idx_2; null else if idx_1 == left_idx && idx_2 == right_idx; [box item_2, item_1] else [box item_1, item_2])
+     test(expected_array === have_array)
+     array_2.ignore()
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([table].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [table])
+     test([table].init(10).each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [table])
+     test([table string_1 = string_1].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_1])
+     test([table string_1 = string_2, string_2 = string_1].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_1, string_2 = string_2])
+     test([table string_1 = string_1, string_2 = string_2].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_1, string_2 = string_2])
+     test([table string_1 = string_3, string_2 = string_1, string_3 = string_2].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_3, string_2 = string_1, string_3 = string_2])
+     test([table string_1 = string_3, string_2 = string_2, string_3 = string_1].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_3, string_2 = string_1, string_3 = string_2])
+     test([table string_1 = string_1, string_2 = string_2, string_3 = string_3].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_1, string_2 = string_2, string_3 = string_3])
+     test([table string_1 = string_2, string_2 = string_1, string_3 = string_3].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_1, string_2 = string_2, string_3 = string_3])
+
+     test([table].each_to_each_kv(fn (key_1, _, key_2, _) [box key_1, key_2]) === [table])
+     test([table].init(10).each_to_each_kv(fn (key_1, _, key_2, _) [box key_1, key_2]) === [table])
+     test([table string_1 = string_2].each_to_each_kv(fn (key_1, _, key_2, _) [box key_1, key_2]) === [table string_1 = string_2])
+     test([table string_1 = string_2, string_2 = string_1].each_to_each_kv(fn (key_1, _, key_2, _) [box key_1, key_2]) === [table string_1 = string_1, string_2 = string_2])
+     test([table string_1 = string_3, string_2 = string_1, string_3 = string_2].each_to_each_kv(fn (key_1, _, key_2, _) [box key_1, key_2]) === [table string_1 = string_1, string_2 = string_2, string_3 = string_3])
+
+     let array          = rnd_string_array()
+     let idx_1          = (rnd() >> 1) % array.len()
+     let idx_2          = (rnd() >> 1) % array.len()
+     let item_1         = array[idx_1]
+     let item_2         = array[idx_2]
+     let table_1        = array.foldl_kv([table].init(array.len()), fn (table, idx, item) new (table)[idx] <= item)
+     let table_2        = if rnd_bool(); table_1 else null
+     let expected_table = new (table_1) {
+          [idx_1] <= item_2
+          [idx_2] <= item_1
+     }
+     let have_table = table_1.each_to_each_kv(fn (key_1, value_1, key_2, value_2)
+          if key_1 == idx_1 && key_2 == idx_2 && value_1 == item_1 && value_2 == item_2 ||
+                    key_1 == idx_2 && key_2 == idx_1 && value_1 == item_2 && value_2 == item_1
+               [box value_2, value_1]
+          else [box value_1, value_2]
+     )
+     test(expected_table === have_table)
+     table_2.ignore()
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([obj].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj])
+     test([obj].init(10).each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj])
+     test([obj :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj])
+     test([obj :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_1].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1])
+     test([obj :1 = string_1, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1])
+     test([obj :1 = string_1, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_2, :2 = string_1].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2])
+     test([obj :1 = string_2, :2 = string_1, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2])
+     test([obj :1 = string_2, :2 = string_1, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_1, :2 = string_2].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2])
+     test([obj :1 = string_1, :2 = string_2, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2])
+     test([obj :1 = string_1, :2 = string_2, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_3, :2 = string_1, :3 = string_2].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_3, :2 = string_1, :3 = string_2])
+     test([obj :1 = string_3, :2 = string_1, :3 = string_2, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_3, :2 = string_1, :3 = string_2])
+     test([obj :1 = string_3, :2 = string_1, :3 = string_2, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_3, :2 = string_2, :3 = string_1].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_3, :2 = string_1, :3 = string_2])
+     test([obj :1 = string_3, :2 = string_2, :3 = string_1, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_3, :2 = string_1, :3 = string_2])
+     test([obj :1 = string_3, :2 = string_2, :3 = string_1, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_1, :2 = string_2, :3 = string_3].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2, :3 = string_3])
+     test([obj :1 = string_1, :2 = string_2, :3 = string_3, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2, :3 = string_3])
+     test([obj :1 = string_1, :2 = string_2, :3 = string_3, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_2, :2 = string_1, :3 = string_3].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2, :3 = string_3])
+     test([obj :1 = string_2, :2 = string_1, :3 = string_3, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2, :3 = string_3])
+     test([obj :1 = string_2, :2 = string_1, :3 = string_3, :_ = [obj :1 = 2]].each_to_each_kv(fn (key_1, value_1, key_2, value_2) if key_1 == key_2; null else if value_1 == string_2 && value_2 == string_1 && key_1 < key_2 || value_2 == string_2 && value_1 == string_1 && key_1 > key_2; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+
+     test([obj].each_to_each_kv(fn (key_1, _, key_2, _) [box key_1, key_2]) === [obj])
+     test([obj].init(10).each_to_each_kv(fn (key_1, _, key_2, _) [box key_1, key_2]) === [obj])
+     test([obj :1 = string_2].each_to_each_kv(fn (key_1, _, key_2, _) [box key_1, key_2]) === [obj :1 = string_2])
+     test([obj :1 = string_2, :2 = string_1].each_to_each_kv(fn (key_1, _, key_2, _) [box key_1, key_2]) === [obj :1 = :1, :2 = :2])
+     test([obj :1 = string_3, :2 = string_1, :3 = string_2].each_to_each_kv(fn (key_1, _, key_2, _) [box key_1, key_2]) === [obj :1 = :1, :2 = :2, :3 = :3])
+
+     let array        = rnd_string_array()
+     let idx_1        = (rnd() >> 1) % array.len()
+     let idx_2        = (rnd() >> 1) % array.len()
+     let idx_tkn_1    = idx_1.to_string().str_to_tkn()
+     let idx_tkn_2    = idx_2.to_string().str_to_tkn()
+     let item_1       = array[idx_1]
+     let item_2       = array[idx_2]
+     let obj_1        = array.foldl_kv([obj].init(array.len()), fn (obj, idx, item) new (obj)[idx.to_string().str_to_tkn()] <= item)
+     let obj_2        = if rnd_bool(); obj_1 else null
+     let expected_obj = new (obj_1) {
+          [idx_tkn_1] <= item_2
+          [idx_tkn_2] <= item_1
+     }
+     let have_obj = obj_1.each_to_each_kv(fn (key_1, value_1, key_2, value_2)
+          if key_1 == idx_tkn_1 && key_2 == idx_tkn_2 && value_1 == item_1 && value_2 == item_2 ||
+                    key_1 == idx_tkn_2 && key_2 == idx_tkn_1 && value_1 == item_2 && value_2 == item_1
+               [box value_2, value_1]
+          else [box value_1, value_2]
+     )
+     test(expected_obj === have_obj)
+     obj_2.ignore()
+
+     test(to_container__each_to_each_kv("abab").each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 == 0 && idx_2 == 3 && char_1 == 'a' && char_2 == 'b'; [box 'c', 'd'] else [box char_1, char_2]) === to_container__each_to_each_kv("cbad"))
+     test(to_container__each_to_each_kv("abab").each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 /= 0 && idx_2 == 3 && char_1 == 'a' && char_2 == 'b'; [box 'c', 'd'] else [box char_1, char_2]) === to_container__each_to_each_kv("abcd"))
+     test(to_custom_container__each_to_each_kv("abab").each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 == 0 && idx_2 == 3 && char_1 == 'a' && char_2 == 'b'; [box 'c', 'd'] else [box char_1, char_2]) === to_custom_container__each_to_each_kv("cbad"))
+     test(to_custom_container__each_to_each_kv("abab").each_to_each_kv(fn (idx_1, char_1, idx_2, char_2) if idx_1 /= 0 && idx_2 == 3 && char_1 == 'a' && char_2 == 'b'; [box 'c', 'd'] else [box char_1, char_2]) === to_custom_container__each_to_each_kv("abcd"))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.each_to_each_kv(heap_string().insert_to(_, _)).get_error_id() === :1)
+     test(heap_string().each_to_each_kv(error_1).get_error_id() === :1)
+     test(error_1.each_to_each_kv(error_2).get_error_id() === :1)
+     test(error_2.each_to_each_kv(error_1).get_error_id() === :2)
+     test(error_1.each_to_each_kv(heap_string()).get_error_id() === :1)
+     test((_ === heap_string()).scarlet__erase_info().each_to_each_kv(error_1).get_error_id() === :1)
+
+     test((_ === heap_string()).scarlet__erase_info().each_to_each_kv(heap_string().insert_to(_, _)).get_error_id() === :invalid_type)
+     test(heap_string().each_to_each_kv(heap_table()).get_error_id() === :invalid_type)
+     test((_ === heap_string()).scarlet__erase_info().each_to_each_kv(heap_table()).get_error_id() === :invalid_type)
+
+     test(to_broken_container__each_to_each_kv("").each_to_each_kv(_ === heap_string()).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__each_to_each_kv("").each_to_each_kv(_ === heap_string()).get_error_id() === :invalid_type)
+     test(to_error_container__each_to_each_kv("").each_to_each_kv(_ === heap_string()).get_error_id() === :3)
+     test(to_error_custom_container__each_to_each_kv("").each_to_each_kv(_ === heap_string()).get_error_id() === :4)
+
+     test("".each_to_each_kv(fn (_) string_1) === "")
+     test(u"".each_to_each_kv(fn (_) string_1) === u"")
+     test([array].each_to_each_kv(fn (_) string_1) === [array])
+     test([table].each_to_each_kv(fn (_) string_1) === [table])
+     test([obj].each_to_each_kv(fn (_) string_1) === [obj])
+     test([obj :_ = [obj]].each_to_each_kv(fn (_) string_1) === [obj])
+     test([obj :_ = [obj]].each_to_each_kv(fn (_) string_1):_ === [obj])
+
+     test("01".each_to_each_kv(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().each_to_each_kv(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"01".each_to_each_kv(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().each_to_each_kv(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array 0, heap_string()].each_to_each_kv(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table 0 = 1, heap_string() = heap_string()].each_to_each_kv(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :0 = 0, :1 = heap_string()].each_to_each_kv(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test("01".each_to_each_kv(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().each_to_each_kv(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"01".each_to_each_kv(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().each_to_each_kv(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array 0, heap_string()].each_to_each_kv(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table 0 = 1, heap_string() = heap_string()].each_to_each_kv(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :0 = 0, :1 = heap_string()].each_to_each_kv(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test("01".each_to_each_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().each_to_each_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"01".each_to_each_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().each_to_each_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array 0, heap_string()].each_to_each_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table 0 = 1, heap_string() = heap_string()].each_to_each_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :0 = 0, :1 = heap_string()].each_to_each_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test("01".each_to_each_kv(fn (_, _, _, _) string_1).get_error_id() === :invalid_type)
+     test(heap_string().each_to_each_kv(fn (_, _, _, _) string_1).get_error_id() === :invalid_type)
+     test(u"01".each_to_each_kv(fn (_, _, _, _) string_1).get_error_id() === :invalid_type)
+     test(heap_byte_array().each_to_each_kv(fn (_, _, _, _) string_1).get_error_id() === :invalid_type)
+     test([array 0, heap_string()].each_to_each_kv(fn (_, _, _, _) string_1).get_error_id() === :invalid_type)
+     test([table 0 = 1, heap_string() = heap_string()].each_to_each_kv(fn (_, _, _, _) string_1).get_error_id() === :invalid_type)
+     test([obj :0 = 0, :1 = heap_string()].each_to_each_kv(fn (_, _, _, _) string_1).get_error_id() === :invalid_type)
+
+     test("01".each_to_each_kv(fn (_, _, _, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test(heap_string().each_to_each_kv(fn (_, _, _, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test(u"01".each_to_each_kv(fn (_, _, _, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test(heap_byte_array().each_to_each_kv(fn (_, _, _, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test([array 0, heap_string()].each_to_each_kv(fn (_, _, _, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test([table 0 = 1, heap_string() = heap_string()].each_to_each_kv(fn (_, _, _, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test([obj :0 = 0, :1 = heap_string()].each_to_each_kv(fn (_, _, _, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+}

@@ -1,0 +1,18 @@
+fn ir__core_fn_set_log_level(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box level, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ level:code:text ++ ")")
+
+     level.maybe_has_type!("int")
+
+     if level:comptime_val:type === "int" && not level:comptime_val:value.in_range?(@core.log_lvl__minimum, @core.log_lvl__maximum + 1)
+          error__out_of_bounds(level:code)
+     else null
+
+     ir__fn_call(
+          "McoreFNset_log_level", [array level], code
+          if level:comptime_val.null?() ; [set "null", "error"] else [set "null"]
+          exp_data, ir, final_data, dependencies, src_gconsts, is_last
+     )
+}

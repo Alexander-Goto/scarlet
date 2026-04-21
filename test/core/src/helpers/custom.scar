@@ -1,0 +1,5 @@
+`external`
+fn custom__create(data, mtds)
+
+`external`
+fn custom__get_data(custom)

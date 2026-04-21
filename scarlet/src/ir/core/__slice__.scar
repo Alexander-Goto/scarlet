@@ -1,0 +1,76 @@
+fn ir__core_fn___slice__(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:operand.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box from, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:from.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box to, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:to.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (operand:code):text => _ ++ ("[" ++ from:code:text ++ ", " ++ to:code:text ++ "]")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "box", "array", "obj", "custom"]
+     operand.maybe_has_type!(valid_types)
+     from.maybe_has_type!("int")
+     to.maybe_has_type!("int")
+
+     let operand_is_comptime = not operand:comptime_val.null?()
+     let from_is_comptime    = not from:comptime_val.null?()
+     let to_is_comptime      = not to:comptime_val.null?()
+
+     if
+               from_is_comptime && from:comptime_val:value < 0 ||
+               to_is_comptime   && to:comptime_val:value   < 0 ||
+               from_is_comptime && to_is_comptime && from:comptime_val:value > to:comptime_val:value
+
+          error__out_of_bounds(
+               if from_is_comptime && from:comptime_val:value < 0
+                    from:code
+               else if to_is_comptime && to:comptime_val:value < 0
+                    to:code
+               else from:code
+          )
+     else null
+
+     if operand_is_comptime && operand:comptime_val:type /= "obj" && (from_is_comptime || to_is_comptime) {
+          let len = operand:comptime_val:value.len()
+          if from_is_comptime && from:comptime_val:value > len || to_is_comptime && to:comptime_val:value > len
+               error__out_of_bounds((if from_is_comptime && from:comptime_val:value > len; from else to):code)
+          else null
+     } else null
+
+     if not (operand_is_comptime && from_is_comptime && to_is_comptime) || operand:comptime_val:type == "obj" {
+          if operand:comptime_val:type === "obj" && operand:comptime_val:value[:_][:core___slice__].null?()
+               error__invalid_type(operand:code, ".core___slice__", "obj")
+          else null
+
+          let result_possible_types = if operand:possible_types.null?()
+               valid_types.append("error")
+          else {
+               let result_possible_types = operand:possible_types.filter(_.in?(valid_types)).append("error")
+
+               let result_possible_types = if "string".in?(result_possible_types) && not "short_string".in?(result_possible_types)
+                    result_possible_types.append("short_string")
+               else result_possible_types
+
+               if "byte_array".in?(result_possible_types) && not "short_byte_array".in?(result_possible_types)
+                    result_possible_types.append("short_byte_array")
+               else result_possible_types
+          }
+
+          ir__fn_call("McoreFN__slice__", [array operand, from, to], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let comptime_val = new (operand:comptime_val):value => _[from:comptime_val:value, to:comptime_val:value]
+          let result       = new (operand) {
+               :ir             <= null
+               :code           <= code
+               :comptime_val   <= comptime_val
+               :possible_types <= comptime_val.get_type_for_operand()
+          }
+
+          if is_last {
+               let [box result, final_data, dependencies] = result.has_ir!(final_data, dependencies)
+
+               [box result, exp_data, ir__raw_return(ir, result:ir), final_data, dependencies, src_gconsts]
+          } else [box result, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

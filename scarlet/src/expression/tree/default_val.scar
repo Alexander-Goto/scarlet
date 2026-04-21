@@ -1,0 +1,30 @@
+let t_default_val = [obj
+     :scar_type = "t_default_val"
+
+     :operator = @main.t_token
+     :left     = :i_expression
+     :right    = :i_expression
+]
+
+fn default_val_independent?(default_val, independent_consts)
+     default_val:left.independent?(independent_consts) &&
+     default_val:right.independent?(independent_consts)
+
+fn analyze_default_val(default_val, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let [box last_use_info, lambdas_data, def_ids] = default_val:left.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+     let right_contexts = contexts.append("dval:" ++ format_int(default_val:operator.get_token_id(), 32, false))
+     default_val:right.analyze(last_use_info, lambdas_data, right_contexts, name_ids, def_ids)
+}
+
+fn default_val_to_operand(default_val, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let [box left_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          default_val:left.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, is_linear_alloc, false, true)
+     let [box right_operand, exp_data, right_ir, final_data, dependencies, src_gconsts] =
+          default_val:right.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, is_last, is_linear_alloc, false, true)
+
+     let code = new (left_operand:code):text => _ ++ (" <? " ++ right_operand:code:text)
+
+     let right_context_consts = contexts["dval:" ++ format_int(default_val:operator.get_token_id(), 32, false)] <? [set]
+     ir__default_val(left_operand, right_operand, right_ir, code, right_context_consts, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

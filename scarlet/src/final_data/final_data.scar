@@ -1,0 +1,1280 @@
+let t_final_data = [obj
+     :modules_names = [set "core"]
+
+     # [table const_name:@string = [table module_name:@string = @t_final_gconst]]
+     :gconsts = [table
+          "cli_args" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGCcli_args"
+               :ir             <= "return gconst__cli_args(thrd_data);"
+               :possible_types <= [set "array"]
+               :attributes     <= [table "export" = :no_final_data]
+               :name_ir_const  <= "core_cli_args_gconst_name"
+          }]
+          "cpu_cores_num" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGCcpu_cores_num"
+               :ir             <= "return (const t_any){.structure={.value=cpu_cores_num,.type=tid__int}};\n"
+               :possible_types <= [set "int"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "env_vars" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGCenv_vars"
+               :ir             <= "return gconst__env_vars(thrd_data);\n"
+               :possible_types <= [set "table"]
+               :attributes     <= [table "export" = :no_final_data]
+               :name_ir_const  <= "core_env_vars_gconst_name"
+          }]
+          "log_lvl__minimum" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGClog_lvl__minimum"
+               :operand_ir     <= "(const t_any){.structure={.value=1,.type=tid__int}}"
+               :ir             <= "return (const t_any){.structure={.value=1,.type=tid__int}};\n"
+               :comptime_val   <= new (@main.t_comptime_val) {
+                    :type  <= "int"
+                    :value <= 1
+               }
+               :possible_types <= [set "int"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "log_lvl__hint" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGClog_lvl__hint"
+               :operand_ir     <= "(const t_any){.structure={.value=2,.type=tid__int}}"
+               :ir             <= "return (const t_any){.structure={.value=2,.type=tid__int}};\n"
+               :comptime_val   <= new (@main.t_comptime_val) {
+                    :type  <= "int"
+                    :value <= 2
+               }
+               :possible_types <= [set "int"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "log_lvl__may_require_attention" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGClog_lvl__may_require_attention"
+               :operand_ir     <= "(const t_any){.structure={.value=3,.type=tid__int}}"
+               :ir             <= "return (const t_any){.structure={.value=3,.type=tid__int}};\n"
+               :comptime_val   <= new (@main.t_comptime_val) {
+                    :type  <= "int"
+                    :value <= 3
+               }
+               :possible_types <= [set "int"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "log_lvl__require_attention" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGClog_lvl__require_attention"
+               :operand_ir     <= "(const t_any){.structure={.value=4,.type=tid__int}}"
+               :ir             <= "return (const t_any){.structure={.value=4,.type=tid__int}};\n"
+               :comptime_val   <= new (@main.t_comptime_val) {
+                    :type  <= "int"
+                    :value <= 4
+               }
+               :possible_types <= [set "int"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "log_lvl__important" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGClog_lvl__important"
+               :operand_ir     <= "(const t_any){.structure={.value=5,.type=tid__int}}"
+               :ir             <= "return (const t_any){.structure={.value=5,.type=tid__int}};\n"
+               :comptime_val   <= new (@main.t_comptime_val) {
+                    :type  <= "int"
+                    :value <= 5
+               }
+               :possible_types <= [set "int"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "log_lvl__very_important" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGClog_lvl__very_important"
+               :operand_ir     <= "(const t_any){.structure={.value=6,.type=tid__int}}"
+               :ir             <= "return (const t_any){.structure={.value=6,.type=tid__int}};\n"
+               :comptime_val   <= new (@main.t_comptime_val) {
+                    :type  <= "int"
+                    :value <= 6
+               }
+               :possible_types <= [set "int"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "log_lvl__maximum" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGClog_lvl__maximum"
+               :operand_ir     <= "(const t_any){.structure={.value=7,.type=tid__int}}"
+               :ir             <= "return (const t_any){.structure={.value=7,.type=tid__int}};\n"
+               :comptime_val   <= new (@main.t_comptime_val) {
+                    :type  <= "int"
+                    :value <= 7
+               }
+               :possible_types <= [set "int"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "pi" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGCpi"
+               :operand_ir     <= "(const t_any){.structure={.value=0x400921fb54442d18ull,.type=tid__float}}"
+               :ir             <= "return (const t_any){.structure={.value=0x400921fb54442d18ull,.type=tid__float}};\n"
+               :comptime_val   <= new (@main.t_comptime_val) {
+                    :type  <= "float"
+                    :value <= @core.pi
+               }
+               :possible_types <= [set "float"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "platform" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGCplatform"
+               :ir             <= "return (const t_any){.bytes=PLATFORM};\n"
+               :possible_types <= [set "short_string"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "static_rnd" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGCstatic_rnd"
+               :ir             <= "return (const t_any){.structure={.value=static_rnd_num,.type=tid__int}};\n"
+               :possible_types <= [set "int"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+          "sys_lang" = [table "core" = new (@main.t_final_gconst) {
+               :ir_name        <= "McoreGCsys_lang"
+               :ir             <= "return (const t_any){.qwords={sys_lang}};\n"
+               :possible_types <= [set "short_string"]
+               :attributes     <= [table "export" = :no_final_data]
+          }]
+     ]
+
+     # [table fn_name:@string = [table module_name:@string = @t_final_fn]]
+     :fns = [table
+          "abs" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNabs"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "acos" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNacos"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "all_kv" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNall_kv"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "all" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNall"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "any_kv" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNany_kv"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "any" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNany"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "append_new" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNappend_new"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "append" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNappend"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii_ctrl?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNascii_ctrlB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii_digit?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNascii_digitB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii_graphic?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNascii_graphicB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii_letter?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNascii_letterB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii_lower?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNascii_lowerB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii_space?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNascii_spaceB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii_symbol?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNascii_symbolB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii_to_lower" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNascii_to_lower"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii_to_upper" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNascii_to_upper"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii_upper?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNascii_upperB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ascii?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNasciiB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "asin" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNasin"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "assemble_time" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNassemble_time"
+               :params     <= [array "", "", "", "", "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "atan" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNatan"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "box_len" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNbox_len"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "break" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNbreak"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "call_stack" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNcall_stack"
+               :params     <= [array]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "call_stack_on?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNcall_stack_onB"
+               :params     <= [array]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "cap" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNcap"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ceil" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNceil"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "char_lang" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNchar_lang"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "char_to_uchar" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNchar_to_uchar"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "clear" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNclear"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "cmp" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNcmp"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "copy" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNcopy"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "cos" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNcos"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ctrl?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNctrlB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "day" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNday"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "debug?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNdebugB"
+               :params     <= [array]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "delete" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNdelete"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "deserialize" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNdeserialize"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "digit?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNdigitB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "disassemble_time" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNdisassemble_time"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "drop_while" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNdrop_while"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "drop" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNdrop"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "dump" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNdump"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "duration" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNduration"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "each_to_each" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNeach_to_each"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "each_to_each_kv" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNeach_to_each_kv"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "empty_val" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNempty_val"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "empty?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNemptyB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "error?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNerrorB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "even?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNevenB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "exit" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNexit"
+               :params     <= [array]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "exp" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNexp"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "exp2" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNexp2"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "expected_error" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNexpected_error"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "fail" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfail"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "filter_kv" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfilter_kv"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "filter" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfilter"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "first" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfirst"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "floor" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfloor"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "foldl_kv" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfoldl_kv"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "foldl" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfoldl"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "foldl1" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfoldl1"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "foldr_kv" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfoldr_kv"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "foldr" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfoldr"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "foldr1" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNfoldr1"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "format_int" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNformat_int"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "get_error_data" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNget_error_data"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "get_error_id" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNget_error_id"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "get_error_msg" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNget_error_msg"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "graphic?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNgraphicB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "hash" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNhash"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "hour" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNhour"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "implement" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNimplement"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "in_range?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNin_rangeB"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "in?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNinB"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "inf?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNinfB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "inherits_from" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNinherits_from"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "init" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNinit"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "insert_part_to" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNinsert_part_to"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "insert_to" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNinsert_to"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "int_to_time" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNint_to_time"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "join" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNjoin"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "key_of?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNkey_ofB"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "last" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlast"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "len" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlen"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "letter?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNletterB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "log__debug_msg" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlog__debug_msg"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "log__msg" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlog__msg"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "log" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlog"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "log2" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlog2"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "log10" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlog10"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "look_from_end_in" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlook_from_end_in"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "look_in" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlook_in"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "look_other_from_end_in" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlook_other_from_end_in"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "look_other_in" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlook_other_in"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "look_part_from_end_in" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlook_part_from_end_in"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "look_part_in" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlook_part_in"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "loop" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNloop"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "lower?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNlowerB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "make_channel" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmake_channel"
+               :params     <= [array]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "map_kv" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmap_kv"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "map_with_state" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmap_with_state"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "map_kv_with_state" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmap_kv_with_state"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "map" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmap"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "max_val" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmax_val"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "max" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmax"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "min_val" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmin_val"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "min" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmin"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "minute" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNminute"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "month" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmonth"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "move" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNmove"
+               :params     <= [array "", "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "nan?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNnanB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "neg_bits" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNneg_bits"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "neg_inf?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNneg_infB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "neg" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNneg"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "null?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNnullB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "obj_to_table" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNobj_to_table"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "odd?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNoddB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ok!" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNokA"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "parse_int" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNparse_int"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "part_of?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNpart_ofB"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "pop" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNpop"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "power" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNpower"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "prefix_of?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNprefix_ofB"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "print" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNprint"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "println" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNprintln"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "push" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNpush"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "qty_0_bits" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNqty_0_bits"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "qty_1_bits" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNqty_1_bits"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "qty_leading_0_bits" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNqty_leading_0_bits"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "qty_leading_1_bits" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNqty_leading_1_bits"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "qty_trailing_0_bits" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNqty_trailing_0_bits"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "qty_trailing_1_bits" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNqty_trailing_1_bits"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "qty" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNqty"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "read_from_mem!!!" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNread_from_memAAA"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "remove" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNremove"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "repeat" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNrepeat"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "replace_part" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNreplace_part"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "replace" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNreplace"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "reserve" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNreserve"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "reverse_bits" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNreverse_bits"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "reverse_bytes" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNreverse_bytes"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "reverse" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNreverse"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "rnd" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNrnd"
+               :params     <= [array]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "rotate_left" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNrotate_left"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "rotate_right" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNrotate_right"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "round" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNround"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "scarlet__erase_info" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNscarlet__erase_info"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "scarlet__erase_value" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNscarlet__erase_value"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "scarlet__join!!!" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNscarlet__joinAAA"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "scarlet__rnd" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNscarlet__rnd"
+               :params     <= [array]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "scarlet__split!!!" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNscarlet__splitAAA"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "second" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsecond"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "self_copy" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNself_copy"
+               :params     <= [array "", "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "serialize" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNserialize"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "set_log_level" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNset_log_level"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "short_type?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNshort_typeB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "shuffle_box" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNshuffle_box"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "sin" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsin"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "sleep" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsleep"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "sort_fn" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsort_fn"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "sort" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsort"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "space?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNspaceB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "split_by_part" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsplit_by_part"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "split" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsplit"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "sqr" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsqr"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "sqrt" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsqrt"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "stable_sort_fn" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNstable_sort_fn"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "stable_sort" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNstable_sort"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "str_to_tkn" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNstr_to_tkn"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "str_to_ustr" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNstr_to_ustr"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "suffix_of?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsuffix_ofB"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "symbol?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNsymbolB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "table_to_obj" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtable_to_obj"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "take_one_kv" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtake_one_kv"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "take_one" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtake_one"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "take_while" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtake_while"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "take" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtake"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "tan" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtan"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "thread" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNthread"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "time_limit_pop" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtime_limit_pop"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "time_limit_wait" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtime_limit_wait"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "time" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtime"
+               :params     <= [array]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "timezone" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtimezone"
+               :params     <= [array]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "to_array" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNto_array"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "to_bool" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNto_bool"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "to_box" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNto_box"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "to_byte" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNto_byte"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "to_char" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNto_char"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "to_float" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNto_float"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "to_int" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNto_int"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "to_lower" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNto_lower"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "to_string" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNto_string"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "to_upper" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNto_upper"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "trim" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtrim"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "trunc" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtrunc"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "type" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNtype"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "uchar_to_ustr" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNuchar_to_ustr"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "uncopyable_error?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNuncopyable_errorB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "unslice" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNunslice"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "upper?" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNupperB"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "uprint" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNuprint"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "uprintln" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNuprintln"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "ustr_to_str" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNustr_to_str"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "wait" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNwait"
+               :params     <= [array ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "write_to_mem!!!" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNwrite_to_memAAA"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "year" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNyear"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "yield" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNyield"
+               :params     <= [array]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "zip_n" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNzip_n"
+               :params     <= [array "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+          "zip" = [table "core" = new (@main.t_final_fn) {
+               :ir_name    <= "McoreFNzip"
+               :params     <= [array "", "", ""]
+               :attributes <= [table "export" = :no_final_data]
+          }]
+     ]
+
+     :ir_splited_consts = [table] # [table suffix:@string = [table prefix:@string = ir_name:@string]]
+     :ir_consts         = [table] # [table ir_name:@string = define:@string]
+
+     :always_use_fns     = [table] # [table ir_name:@string = full_name:@string]
+     :always_use_gconsts = [table] # [table ir_name:@string = full_name:@string]
+]
+
+fn get_gconst(final_data, name) {
+     let [box module, short_name] = if name:text.first() == '@' {
+          let dot_idx = '.'.look_in(name:text)
+          [box name:text[1, dot_idx], name:text.drop(dot_idx + 1)]
+     } else [box "", name:text]
+
+     let gconsts_with_same_name = final_data:gconsts[short_name]
+     if gconsts_with_same_name.null?()
+          error__not_found(name, "global constant")
+     else null
+
+     if module.empty?() {
+          let [box gconst, modules] = gconsts_with_same_name.foldl_kv(null, fn (state, module, variant) {
+               let [box gconst, modules] = state
+
+               if @main.compiled_module_name == module || "export".key_of?(variant:attributes)
+                    if modules.null?()
+                         [box variant, module]
+                    else if modules.type() == "core.string"
+                         [box null, [array modules, module]]
+                    else [box null, modules.append(module)]
+               else [box gconst, modules]
+          })
+
+          switch modules.type()
+          case "core.string":
+               gconst
+          case "core.null":
+               error__not_found(name, "global constant")
+          case "core.array":
+               error__found_few_variants(name, "global constant", modules)
+          default:
+               unreachable()
+     } else {
+          let gconst = gconsts_with_same_name[module]
+          if not gconst.null?() && (@main.compiled_module_name == module || "export".key_of?(gconst:attributes))
+               gconst
+          else error__not_found(name, "global constant")
+     }
+}
+
+fn get_fn(final_data, name) {
+     let [box module, short_name] = if name:text.first() == '@' {
+          let dot_idx = '.'.look_in(name:text)
+          [box name:text[1, dot_idx], name:text.drop(dot_idx + 1)]
+     } else [box "", name:text]
+
+     let fns_with_same_name = final_data:fns[short_name]
+     if fns_with_same_name.null?()
+          error__not_found(name, "function")
+     else null
+
+     if module.empty?() {
+          let [box func, modules] = fns_with_same_name.foldl_kv(null, fn (state, module, variant) {
+               let [box func, modules] = state
+
+               if @main.compiled_module_name == module || "export".key_of?(variant:attributes)
+                    if modules.null?()
+                         [box variant, module]
+                    else if modules.type() == "core.string"
+                         [box null, [array modules, module]]
+                    else [box null, modules.append(module)]
+               else [box func, modules]
+          })
+
+          switch modules.type()
+          case "core.string":
+               func
+          case "core.null":
+               error__not_found(name, "function")
+          case "core.array":
+               error__found_few_variants(name, "function", modules)
+          default:
+               unreachable()
+     } else {
+          let func = fns_with_same_name[module]
+          if not func.null?() && (@main.compiled_module_name == module || "export".key_of?(func:attributes))
+               func
+          else error__not_found(name, "function")
+     }
+}

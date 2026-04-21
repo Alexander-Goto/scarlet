@@ -1,0 +1,113 @@
+fn ir__unpack_kv(unpacking_type, names, keys, unpacking_operand, exp_data, ir, final_data, dependencies) {
+     if not (unpacking_operand.maybe_has_type?(unpacking_type) || unpacking_operand.maybe_has_type?("null"))
+          error__invalid_type(unpacking_operand:code, [set unpacking_type, "null"], unpacking_operand:possible_types)
+     else null
+
+     let unpacking_type_is_obj = unpacking_type == "obj"
+     if unpacking_type_is_obj
+          keys.foldl(null, fn (_, key) key.maybe_has_type!("token"))
+     else keys.foldl(null, fn (_, key) if key.maybe_has_type?(@main.all_hash_map_key_types); null else error__invalid_type(key:code, "param(hash:arg)", key:possible_types))
+     let keys_len = keys.len()
+
+     let unpacking_operand_is_comptime     = not unpacking_operand:comptime_val.null?()
+     let unpacking_operand_is_null         = unpacking_operand.has_type?("null")
+     let unpacking_operand_is_set_or_table = unpacking_operand.has_type?([set "set", "table"])
+     let all_keys_comptime_and_hashed      = not keys.any(true, fn (key) key:comptime_val.null?() || not key:comptime_val:type.in?(@main.always_hash_map_key_types))
+     if (unpacking_operand_is_comptime || unpacking_operand_is_null) && all_keys_comptime_and_hashed
+          [box
+               if unpacking_operand_is_null
+                    keys.foldl_kv([array].init(keys_len), fn (unpacked_consts, idx, _) unpacked_consts.append(comptime_null(names[idx])))
+               else keys.foldl_kv([array].init(keys_len), fn (unpacked_consts, idx, key) {
+                    let name         = names[idx]
+                    let comptime_val = unpacking_operand:comptime_val:value[if unpacking_type_is_obj; key:comptime_val:value else key:comptime_val] <? @main.comptime_null_val
+                    unpacked_consts.append(new (@main.t_operand) {
+                         :code           <= name
+                         :comptime_val   <= comptime_val
+                         :possible_types <= comptime_val.get_type_for_operand()
+                    })
+               })
+
+               exp_data, ir, final_data, dependencies
+          ]
+     else {
+          let [box consts_reg, exp_data]                        = exp_data.new_reg()
+          let [box unpacking_operand, final_data, dependencies] = unpacking_operand.has_ir!(final_data, dependencies)
+
+          let [box unpacking_operand, unpacked_consts, keys_list_ir, true_unpacked_items_qty, final_data, dependencies] = if unpacking_operand_is_comptime || unpacking_operand_is_null {
+               let [box unpacked_consts, keys_list_ir, true_unpacked_items_qty, final_data, dependencies] =
+                    keys.foldl_kv([box [array].init(keys_len), "", 0, final_data, dependencies], fn (state, idx, key) {
+                         let [box unpacked_consts, keys_list_ir, true_unpacked_items_qty, final_data, dependencies] = state
+
+                         let name = names[idx]
+                         if key:comptime_val.null?() || not key:comptime_val:type.in?(@main.always_hash_map_key_types) {
+                              let [box key, final_data, dependencies] = key.has_ir!(final_data, dependencies)
+
+                              [box
+                                   unpacked_consts.append(new (@main.t_operand) {
+                                        :code           <= name
+                                        :ir             <= consts_reg ++ "[" ++ true_unpacked_items_qty.to_ir_num() ++ "]"
+                                        :possible_types <=
+                                             if unpacking_operand_is_null
+                                                  if key.has_type?(@main.always_hash_map_key_types)
+                                                       [set "null"]
+                                                  else [set "null", "error"]
+                                             else if key.has_type?("token") || unpacking_operand_is_set_or_table && key.has_type?(@main.always_hash_map_key_types)
+                                                  @main.common_types__null
+                                             else @main.common_types__null_error
+                                   })
+
+                                   keys_list_ir ++ key:ir ++ ",", true_unpacked_items_qty + 1, final_data, dependencies
+                              ]
+                         } else if unpacking_operand_is_null
+                              [box
+                                   unpacked_consts.append(comptime_null(name))
+                                   keys_list_ir, true_unpacked_items_qty, final_data, dependencies
+                              ]
+                         else {
+                              let comptime_val = unpacking_operand:comptime_val:value[if unpacking_type_is_obj; key:comptime_val:value else key:comptime_val] <? @main.comptime_null_val
+
+                              [box
+                                   unpacked_consts.append(new (@main.t_operand) {
+                                        :code           <= name
+                                        :comptime_val   <= comptime_val
+                                        :possible_types <= comptime_val.get_type_for_operand()
+                                   })
+
+                                   keys_list_ir, true_unpacked_items_qty, final_data, dependencies
+                              ]
+                         }
+                    })
+
+               [box unpacking_operand, unpacked_consts, keys_list_ir, true_unpacked_items_qty, final_data, dependencies]
+          } else {
+               let maybe_null = unpacking_operand.maybe_has_type?("null")
+
+               let [box unpacked_consts, keys_list_ir, final_data, dependencies] =
+                    keys.foldl_kv([box [array].init(keys_len), "", final_data, dependencies], fn (state, idx, key) {
+                         let [box unpacked_consts, keys_list_ir, final_data, dependencies] = state
+
+                         let [box key, final_data, dependencies] = key.has_ir!(final_data, dependencies)
+                         [box
+                              unpacked_consts.append(new (@main.t_operand) {
+                                   :code           <= names[idx]
+                                   :ir             <= consts_reg ++ "[" ++ idx.to_ir_num() ++ "]"
+                                   :possible_types <= if unpacking_type_is_obj && key.has_type?("token") || unpacking_operand_is_set_or_table && key.has_type?(@main.always_hash_map_key_types)
+                                        if maybe_null; @main.common_types__null else @main.common_types
+                                   else if maybe_null; @main.common_types__null_error else @main.common_types__error
+                              })
+
+                              keys_list_ir ++ key:ir ++ ",", final_data, dependencies
+                         ]
+                    })
+
+               [box unpacking_operand, unpacked_consts, keys_list_ir, keys_len, final_data, dependencies]
+          }
+
+          let true_unpacked_items_str_qty = true_unpacked_items_qty.to_ir_num()
+          let ir = ir ++ "t_any " ++ consts_reg ++ "[" ++ true_unpacked_items_str_qty ++ "]={" ++ keys_list_ir.take(keys_list_ir.len() - 1) ++ "};\n" ++
+               unpacking_type ++ "__unpack__own(thrd_data," ++ unpacking_operand:ir ++ "," ++ true_unpacked_items_str_qty ++ "," ++ consts_reg ++ "," ++
+               exp_data:owner_name_ir_const ++ ");\n"
+
+          [box unpacked_consts, exp_data, ir, final_data, dependencies]
+     }
+}

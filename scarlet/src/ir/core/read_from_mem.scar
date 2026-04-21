@@ -1,0 +1,19 @@
+fn ir__core_fn_read_from_mem(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box mem, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box offset, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box count, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ mem:code:text ++ ", " ++ offset:code:text ++ ", " ++ count:code:text ++ ")")
+
+     offset.maybe_has_type!("int")
+     count.maybe_has_type!("int")
+
+     if not count:comptime_val.null?() && count:comptime_val:value < 0
+          error__out_of_bounds(count:code)
+     else null
+
+     ir__fn_call("McoreFNread_from_memAAA", [array mem, offset, count], code, @main.byte_array_types__error, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

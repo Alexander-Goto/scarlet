@@ -1,0 +1,98 @@
+let num__qty_leading_1_bits = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_qty_l1b = fn (num) num:value.qty_leading_1_bits()
+     ]
+]
+
+fn to_num__qty_leading_1_bits(arg) new (@main.num__qty_leading_1_bits):value <= arg
+
+fn to_custom_num__qty_leading_1_bits(arg) custom__create(
+     arg
+     [obj
+          :core_qty_l1b = fn (num) num.custom__get_data().qty_leading_1_bits()
+     ]
+)
+
+let broken_num__qty_leading_1_bits = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_qty_l1b = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__qty_leading_1_bits(arg) new (@main.broken_num__qty_leading_1_bits):value <= arg
+
+fn to_broken_custom_num__qty_leading_1_bits(arg) custom__create(
+     arg
+     [obj
+          :core_qty_l1b = fn (_) heap_string()
+     ]
+)
+
+let error_num__qty_leading_1_bits = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_qty_l1b = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__qty_leading_1_bits(arg) new (@main.error_num__qty_leading_1_bits):value <= arg
+
+fn to_error_custom_num__qty_leading_1_bits(arg) custom__create(
+     arg
+     [obj
+          :core_qty_l1b = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__qty_leading_1_bits() {
+     test(0.qty_leading_1_bits() === 0)
+     test(2.qty_leading_1_bits() === 0)
+     test(9223372036854775806.qty_leading_1_bits() === 0)
+     test(-2.qty_leading_1_bits() === 63)
+     test(-9223372036854775808.qty_leading_1_bits() === 1)
+     test(1.qty_leading_1_bits() === 0)
+     test(3.qty_leading_1_bits() === 0)
+     test(9223372036854775807.qty_leading_1_bits() === 0)
+     test(-1.qty_leading_1_bits() === 64)
+     test(-3.qty_leading_1_bits() === 62)
+     test(-9223372036854775807.qty_leading_1_bits() === 1)
+     test(0x5555'55ff'ffff'aaaa.qty_leading_1_bits() === 0)
+
+     let int      = rnd()
+     let expected = if int === -1; 64 else loop(0, fn (shift) break((int << shift) >= 0, shift + 1)) - 1
+     test(expected === int.qty_leading_1_bits())
+
+     test(0b00.qty_leading_1_bits() === 0)
+     test(0b02.qty_leading_1_bits() === 0)
+     test(0bfe.qty_leading_1_bits() === 7)
+     test(0b01.qty_leading_1_bits() === 0)
+     test(0b03.qty_leading_1_bits() === 0)
+     test(0bff.qty_leading_1_bits() === 8)
+
+     let byte     = rnd_byte()
+     let expected = if byte === 0bff; 8 else loop(0, fn (shift) break((byte << shift) < 0b80, shift + 1)) - 1
+     test(expected === byte.qty_leading_1_bits())
+
+     test(to_num__qty_leading_1_bits(-1).qty_leading_1_bits() === 64)
+     test(to_num__qty_leading_1_bits(-3).qty_leading_1_bits() === 62)
+     test(to_num__qty_leading_1_bits(9223372036854775807).qty_leading_1_bits() === 0)
+
+     test(to_custom_num__qty_leading_1_bits(-1).qty_leading_1_bits() === 64)
+     test(to_custom_num__qty_leading_1_bits(-3).qty_leading_1_bits() === 62)
+     test(to_custom_num__qty_leading_1_bits(9223372036854775807).qty_leading_1_bits() === 0)
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.qty_leading_1_bits().get_error_id() === :1)
+     test(heap_table().qty_leading_1_bits().get_error_id() === :invalid_type)
+
+     test(to_broken_num__qty_leading_1_bits(0).qty_leading_1_bits().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__qty_leading_1_bits(0).qty_leading_1_bits().get_error_id() === :invalid_type)
+     test(to_error_num__qty_leading_1_bits(0).qty_leading_1_bits().get_error_id() === :3)
+     test(to_error_custom_num__qty_leading_1_bits(0).qty_leading_1_bits().get_error_id() === :4)
+}

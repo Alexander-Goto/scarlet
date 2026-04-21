@@ -1,0 +1,5 @@
+fn ir__core_fn_exit(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let code = new (exp:name):text => _ ++ "()"
+
+     ir__fn_call("McoreFNexit", [array], code, null, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

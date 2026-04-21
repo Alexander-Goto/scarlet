@@ -1,0 +1,113 @@
+let array__clear = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_clear     = fn (array) to_array__clear(array:value.clear())
+          :core___equal__ = fn (array_1, array_2) array_1:value === array_2:value
+     ]
+]
+
+fn to_array__clear(arg) new (@main.array__clear):value <= arg
+
+fn to_custom_array__clear(arg) custom__create(
+     arg
+     [obj
+          :core_clear     = fn (array) to_custom_array__clear(array.custom__get_data().clear())
+          :core___equal__ = fn (array_1, array_2) array_1.custom__get_data() === array_2.custom__get_data()
+     ]
+)
+
+let broken_array__clear = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_clear = fn (_) (fn () heap_string())
+     ]
+]
+
+fn to_broken_array__clear(arg) new (@main.broken_array__clear):value <= arg
+
+fn to_broken_custom_array__clear(arg) custom__create(
+     arg
+     [obj
+          :core_clear = fn (_) (fn () heap_string())
+     ]
+)
+
+let error_array__clear = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_clear = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__clear(arg) new (@main.error_array__clear):value <= arg
+
+fn to_error_custom_array__clear(arg) custom__create(
+     arg
+     [obj
+          :core_clear = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__clear() {
+     test([obj].clear() === [obj])
+     test([obj :1 = 1].clear() === [obj])
+     test([obj :1 = 1, :2 = 2].clear() === [obj])
+     test([obj :1 = 1, :2 = 2, :_ = [obj]].clear() === [obj])
+     test([obj :1 = 1, :2 = 2, :_ = [obj]].clear():_ === [obj])
+     test([obj :_ = [obj]].clear() === [obj])
+     test([obj :_ = [obj]].clear():_ === [obj])
+     test([obj :_ = [obj :1 = 1]].clear() === [obj :_ = [obj :1 = 1]])
+     test([obj :_ = [obj :1 = 1]].clear():_ === [obj :1 = 1])
+     test([obj].init(10).clear() === [obj])
+     test([obj :1 = heap_string(), :2 = heap_string()].clear() === [obj])
+     test([obj :1 = heap_string(), :2 = heap_string(), :_ = [obj]].clear() === [obj])
+     test([obj :1 = heap_string(), :2 = heap_string(), :_ = [obj]].clear():_ === [obj])
+     test([obj :1 = heap_string(), :_ = [obj]].clear() === [obj])
+     test([obj :1 = heap_string(), :_ = [obj]].clear():_ === [obj])
+     test([obj :1 = heap_string(), :_ = [obj :1 = 1]].clear() === [obj])
+     test([obj :1 = heap_string(), :_ = [obj :1 = 1]].clear():_ === [obj :1 = 1])
+
+     test([table].clear() === [table])
+     test([table 1 = 2].clear() === [table])
+     test([table 1 = 2, 2 = 3].clear() === [table])
+     test([table].init(10).clear() === [table])
+     test([table heap_string() = heap_string(), heap_string() ++ "2" = heap_string()].clear() === [table])
+
+     test([set].clear() === [set])
+     test([set 1].clear() === [set])
+     test([set 1, 2].clear() === [set])
+     test([set].init(10).clear() === [set])
+     test([set heap_string(), heap_string() ++ "2"].clear() === [set])
+
+     test([array].clear() === [array])
+     test([array].clear().cap() === 0)
+     test([array 1].clear() === [array])
+     test([array 1].clear().cap() === 1)
+     test([array 1, 2].clear() === [array])
+     test([array 1, 2].clear().cap() === 2)
+     test([array].init(10).clear() === [array])
+     test([array].init(10).clear().cap() === 10)
+     test([array heap_string(), heap_string() ++ "2"].clear() === [array])
+     test([array heap_string(), heap_string() ++ "2"].clear().cap() === [array heap_string(), heap_string() ++ "2"].cap())
+     test([array heap_string(), heap_string() ++ "2"].drop(1).clear() === [array])
+     test([array heap_string(), heap_string() ++ "2"].drop(1).clear().cap() === [array heap_string(), heap_string() ++ "2"].cap())
+
+     test(to_array__clear([set 1, 2]).clear() === to_array__clear([set]))
+     test(to_array__clear([array 1, 2]).clear() === to_array__clear([array]))
+
+     test(to_custom_array__clear([set 1, 2]).clear() === to_custom_array__clear([set]))
+     test(to_custom_array__clear([array 1, 2]).clear() === to_custom_array__clear([array]))
+
+     let error  = expected_error(:1, heap_string(), heap_string())
+     test(error.clear().get_error_id() === :1)
+     test((fn () heap_string()).scarlet__erase_info().clear().get_error_id() === :invalid_type)
+
+     test(to_broken_array__clear(heap_string()).clear().get_error_id() === :invalid_type)
+     test(to_broken_custom_array__clear(heap_string()).clear().get_error_id() === :invalid_type)
+     test(to_error_array__clear(heap_string()).clear().get_error_id() === :3)
+     test(to_error_custom_array__clear(heap_string()).clear().get_error_id() === :4)
+}

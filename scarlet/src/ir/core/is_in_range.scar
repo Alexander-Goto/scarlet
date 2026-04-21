@@ -1,0 +1,90 @@
+fn ir__core_fn_is_in_range(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box from, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box to, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ", " ++ from:code:text ++ ", " ++ to:code:text ++ ")")
+
+     let arg_is_nan  = arg:comptime_val:type === "float" && arg:comptime_val:value.nan?()
+     let from_is_nan = from:comptime_val:type === "float" && from:comptime_val:value.nan?()
+     let to_is_nan   = to:comptime_val:type === "float" && to:comptime_val:value.nan?()
+     if arg_is_nan || from_is_nan || to_is_nan
+          error__nan_cmp((if arg_is_nan; arg else if from_is_nan; from else to):code)
+     else null
+
+     if arg:comptime_val.null?() || from:comptime_val.null?() || to:comptime_val.null?() || not arg:comptime_val:type.in?(@main.always_ord_types__float) {
+          if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_][:core_cmp].null?()
+               error__invalid_type(arg:code, ".core_cmp", "obj")
+          else null
+
+          let [box arg, final_data, dependencies]  = arg.has_ir!(final_data, dependencies)
+          let [box from, final_data, dependencies] = from.has_ir!(final_data, dependencies)
+          let [box to, final_data, dependencies]   = to.has_ir!(final_data, dependencies)
+
+          let arg_ir  = arg:ir
+          let from_ir = from:ir
+          let to_ir   = to:ir
+
+          let arg_possible_types  = arg:possible_types
+          let from_possible_types = from:possible_types
+          let to_possible_types   = to:possible_types
+
+          let from_expected_types = if arg_possible_types.null?()
+               @main.ord_types__mtd
+          else {
+               let new_arg_possible_types = arg_possible_types.filter(_.in?(@main.ord_types__mtd)).prepare_types_for_cmp()
+               if new_arg_possible_types.empty?()
+                    error__invalid_type(arg:code, @main.ord_types__mtd, arg_possible_types)
+               else new_arg_possible_types
+          }
+          from.maybe_has_type!(from_expected_types)
+          to.maybe_has_type!(from_expected_types)
+
+          let maybe_error = (arg_possible_types.null?() || from_possible_types.null?() || to_possible_types.null?()) ||
+               not (
+                    arg_possible_types.len() == 1 && arg_possible_types == from_possible_types && arg_possible_types == to_possible_types && arg_possible_types.take_one().in?(@main.always_ord_types) ||
+                    arg_possible_types.all(true, _.in?(@main.string_types)) && from_possible_types.all(true, _.in?(@main.string_types)) && to_possible_types.all(true, _.in?(@main.string_types))      ||
+                    arg_possible_types.all(true, _.in?(@main.byte_array_types)) && from_possible_types.all(true, _.in?(@main.byte_array_types)) && to_possible_types.all(true, _.in?(@main.byte_array_types))
+               )
+
+          let has_known_types = arg_possible_types === from_possible_types && arg_possible_types.len() == 1
+          if not maybe_error && has_known_types && arg_possible_types.take_one().in?(@main.simple_ord_types) {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+
+               let ir = ir ++ "t_any const " ++ result_reg ++ "={.structure={.value=" ++
+                    if arg:possible_types.take_one() == "byte"
+                         arg_ir ++ ".bytes[0]>=" ++ from_ir ++ ".bytes[0]&" ++ arg_ir ++ ".bytes[0]<" ++ to_ir ++ ".bytes[0],.type=tid__bool}};\n"
+                    else "(i64)" ++ arg_ir ++ ".qwords[0]>=(i64)" ++ from_ir ++ ".qwords[0]&(i64)" ++ arg_ir ++ ".qwords[0]<(i64)" ++ to_ir ++ ".qwords[0],.type=tid__bool}};\n"
+
+               let operand = new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= [set "bool"]
+               }
+
+               [box operand, exp_data, if is_last; ir__raw_return(ir, result_reg) else ir, final_data, dependencies, src_gconsts]
+          } else if not maybe_error && has_known_types && arg_possible_types.take_one().in?([array "char", "short_string", "short_byte_array"]) {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+
+               let ir = ir ++ "t_any const " ++ result_reg ++ "={.bytes={scar__memcmp(" ++ arg_ir ++ ".bytes," ++ from_ir ++ ".bytes,16)!=-1&scar__memcmp(" ++ arg_ir ++ ".bytes," ++ to_ir ++ ".bytes,16)==-1,[15]=tid__bool}};\n"
+
+               let operand = new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= [set "bool"]
+               }
+
+               [box operand, exp_data, if is_last; ir__raw_return(ir, result_reg) else ir, final_data, dependencies, src_gconsts]
+          } else ir__fn_call("McoreFNin_rangeB", [array arg, from, to], code, if maybe_error; [set "bool", "error"] else [set "bool"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let expected_types = arg:possible_types.prepare_types_for_cmp()
+          from.maybe_has_type!(expected_types)
+          to.maybe_has_type!(expected_types)
+
+          let operand = comptime_bool(arg:comptime_val:value.in_range?(from:comptime_val:value, to:comptime_val:value), code)
+          [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+     }
+}

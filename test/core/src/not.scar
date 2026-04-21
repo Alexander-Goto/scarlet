@@ -1,0 +1,9 @@
+`noinline`
+fn test__not() {
+     test(not true === false)
+     test(not false === true)
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test((not error).get_error_id() === :1)
+     test((not heap_string()).get_error_id() === :invalid_type)
+}

@@ -1,0 +1,140 @@
+fn ir__core_fn___concat__(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain) {
+     let [box exp, exp_data, ir, final_data, dependencies, src_gconsts] = if is_first_in_chain
+          concat_chain_items_to_operands(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+
+     if is_first_in_chain && exp:scar_type == "t_operand"
+          [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+     else {
+          let [box left, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:left.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, false, false, false, false)
+          let [box right, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:right.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, args_ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+          let code = new (left:code):text => _ ++ (" ++ " ++ right:code:text)
+
+          if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.concat_types) {
+               if left:comptime_val:type === "obj" && left:comptime_val:value[:_][:core___concat__].null?()
+                    error__invalid_type(left:code, ".core___concat__", "obj")
+               else null
+
+               let left_possible_types  = left:possible_types
+               let right_possible_types = right:possible_types
+
+               let [box new_left_possible_types, left_maybe_short_string, left_maybe_string, left_maybe_short_byte_array, left_maybe_byte_array] =
+                    if left_possible_types.null?()
+                         [box @main.concat_types__mtd, true, true, true, true]
+                    else {
+                         let new_left_possible_types     = left_possible_types.filter(_.in?(@main.concat_types__mtd))
+                         let left_maybe_short_string     = "short_string".in?(new_left_possible_types)
+                         let left_maybe_string           = "string".in?(new_left_possible_types)
+                         let left_maybe_short_byte_array = "short_byte_array".in?(new_left_possible_types)
+                         let left_maybe_byte_array       = "byte_array".in?(new_left_possible_types)
+
+                         if new_left_possible_types.empty?()
+                              error__invalid_type(left:code, @main.concat_types__mtd, left_possible_types)
+                         else new_left_possible_types
+
+                         [box new_left_possible_types, left_maybe_short_string, left_maybe_string, left_maybe_short_byte_array, left_maybe_byte_array]
+                    }
+
+               let [box new_right_possible_types, right_maybe_short_string, right_maybe_string, right_maybe_short_byte_array, right_maybe_byte_array] =
+                    if right_possible_types.null?()
+                         [box @main.concat_types__mtd, true, true, true, true]
+                    else {
+                         let new_right_possible_types     = right_possible_types.filter(_.in?(@main.concat_types__mtd))
+                         let right_maybe_short_string     = "short_string".in?(new_right_possible_types)
+                         let right_maybe_string           = "string".in?(new_right_possible_types)
+                         let right_maybe_short_byte_array = "short_byte_array".in?(new_right_possible_types)
+                         let right_maybe_byte_array       = "byte_array".in?(new_right_possible_types)
+
+                         if new_right_possible_types.empty?()
+                              error__invalid_type(left:code, @main.concat_types__mtd, right_possible_types)
+                         else new_right_possible_types
+
+                         [box new_right_possible_types, right_maybe_short_string, right_maybe_string, right_maybe_short_byte_array, right_maybe_byte_array]
+                    }
+
+               let result_possible_types = if new_right_possible_types.len() == @main.concat_types__mtd.len()
+                    new_left_possible_types
+               else {
+                    let result_possible_types = new_left_possible_types.filter(_.in?(new_right_possible_types))
+                    if result_possible_types.empty?() && not (
+                         (left_maybe_string || left_maybe_short_string) && (right_maybe_string || right_maybe_short_string) ||
+                         (left_maybe_byte_array || left_maybe_short_byte_array) && (right_maybe_byte_array || right_maybe_short_byte_array)
+                    )
+                         error__invalid_type(right:code, left_possible_types, right_possible_types)
+                    else null
+
+                    result_possible_types
+               }
+
+               let result_possible_types = if not "string".in?(result_possible_types) && (left_maybe_short_string || left_maybe_string) && (right_maybe_short_string || right_maybe_string)
+                    result_possible_types.append("string")
+               else result_possible_types
+
+               let result_possible_types = if "short_string".in?(result_possible_types) && (left_maybe_string && not right_maybe_short_string || right_maybe_string && not left_maybe_short_string)
+                    result_possible_types.remove("short_string")
+               else result_possible_types
+
+               let result_possible_types = if not "byte_array".in?(result_possible_types) && (left_maybe_short_byte_array || left_maybe_byte_array) && (right_maybe_short_byte_array || right_maybe_byte_array)
+                    result_possible_types.append("byte_array")
+               else result_possible_types
+
+               let result_possible_types = if "short_byte_array".in?(result_possible_types) && (left_maybe_byte_array && not right_maybe_short_byte_array || right_maybe_byte_array && not left_maybe_short_byte_array)
+                    result_possible_types.remove("short_byte_array")
+               else result_possible_types
+
+               let maybe_error = left_possible_types.null?() || right_possible_types.null?() || not (
+                    left_possible_types.all(true, _.in?(@main.string_types))     && right_possible_types.all(true, _.in?(@main.string_types))     ||
+                    left_possible_types.all(true, _.in?(@main.byte_array_types)) && right_possible_types.all(true, _.in?(@main.byte_array_types)) ||
+                    left_possible_types == [set "array"]                         && right_possible_types == left_possible_types
+               )
+               let need_chain = (exp:left:scar_type /= "t_operand" || exp:right:scar_type /= "t_operand") &&
+                    is_first_in_chain && result_possible_types.any(true, _.in?(@main.concat_types))
+
+               let result_possible_types = if maybe_error; result_possible_types.append("error") else result_possible_types
+
+               let [box not_chain_operand, exp_data, not_chain_ir, final_data, dependencies, src_gconsts] = if maybe_error || not need_chain
+                    ir__fn_call("McoreFN__concat__", [array left, right], code, result_possible_types, exp_data, args_ir, final_data, dependencies, src_gconsts, is_last)
+               else [box null, exp_data, args_ir, final_data, dependencies, src_gconsts]
+
+               if not need_chain
+                    [box not_chain_operand, exp_data, ir ++ not_chain_ir, final_data, dependencies, src_gconsts]
+               else {
+                    let [box arrays, final_data, dependencies] = operands_have_ir!(concat_chain_tree_to_array(exp, [array].init(8)), final_data, dependencies)
+
+                    let maybe_string     = (left_maybe_string || left_maybe_short_string) && (right_maybe_string || right_maybe_short_string)
+                    let maybe_byte_array = (left_maybe_byte_array || left_maybe_short_byte_array) && (right_maybe_byte_array || right_maybe_short_byte_array)
+                    let maybe_array      = "array".in?(result_possible_types)
+
+                    let [box string_predicate_ir, byte_array_predicate_ir, array_predicate_ir] =
+                         concat_chain_creation_prepare(arrays, maybe_string, maybe_byte_array, maybe_array)
+
+                    concat_chain_create(
+                         string_predicate_ir, byte_array_predicate_ir, array_predicate_ir
+                         arrays, [box maybe_string, maybe_byte_array, maybe_array]
+                         result_possible_types, code, not_chain_ir, not_chain_operand:ir
+                         exp_data, ir, final_data, dependencies, src_gconsts, is_last
+                    )
+               }
+          } else {
+               right.maybe_has_type!(left:possible_types.prepare_types_for_cmp())
+
+               let value   = left:comptime_val:value ++ right:comptime_val:value
+               let operand = new (left) {
+                    :ir                 <= null
+                    :code               <= code
+                    :comptime_val:value <= value
+               }
+               let operand = new (operand):possible_types <= operand:comptime_val.get_type_for_operand()
+               let ir      = ir ++ args_ir
+
+               if is_last {
+                    let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+                    [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+               } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+          }
+     }
+}

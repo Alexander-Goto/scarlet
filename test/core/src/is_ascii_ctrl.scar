@@ -1,0 +1,107 @@
+let char__ascii_ctrl = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_ctrl? = fn (char) char:value.ascii_ctrl?()
+     ]
+]
+
+fn to_char__ascii_ctrl?(arg) new (@main.char__ascii_ctrl):value <= arg
+
+fn to_custom_char__ascii_ctrl?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_ctrl? = fn (char) char.custom__get_data().ascii_ctrl?()
+     ]
+)
+
+let broken_char__ascii_ctrl = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_ctrl? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_char__ascii_ctrl?(arg) new (@main.broken_char__ascii_ctrl):value <= arg
+
+fn to_broken_custom_char__ascii_ctrl?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_ctrl? = fn (_) heap_string()
+     ]
+)
+
+let error_char__ascii_ctrl = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_ctrl? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__ascii_ctrl?(arg) new (@main.error_char__ascii_ctrl):value <= arg
+
+fn to_error_custom_char__ascii_ctrl?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_ctrl? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__ascii_ctrl?() {
+     test('\000001'.ascii_ctrl?())
+     test('\000002'.ascii_ctrl?())
+     test('\000003'.ascii_ctrl?())
+     test('\000004'.ascii_ctrl?())
+     test('\000005'.ascii_ctrl?())
+     test('\000006'.ascii_ctrl?())
+     test('\000007'.ascii_ctrl?())
+     test('\000008'.ascii_ctrl?())
+     test(not '\000009'.ascii_ctrl?())
+     test('\00000a'.ascii_ctrl?())
+     test('\00000b'.ascii_ctrl?())
+     test('\00000c'.ascii_ctrl?())
+     test('\00000d'.ascii_ctrl?())
+     test('\00000e'.ascii_ctrl?())
+     test('\00000f'.ascii_ctrl?())
+     test('\000010'.ascii_ctrl?())
+     test('\000011'.ascii_ctrl?())
+     test('\000012'.ascii_ctrl?())
+     test('\000013'.ascii_ctrl?())
+     test('\000014'.ascii_ctrl?())
+     test('\000015'.ascii_ctrl?())
+     test('\000016'.ascii_ctrl?())
+     test('\000017'.ascii_ctrl?())
+     test('\000018'.ascii_ctrl?())
+     test('\000019'.ascii_ctrl?())
+     test('\00001a'.ascii_ctrl?())
+     test('\00001b'.ascii_ctrl?())
+     test('\00001c'.ascii_ctrl?())
+     test('\00001d'.ascii_ctrl?())
+     test('\00001e'.ascii_ctrl?())
+     test('\00001f'.ascii_ctrl?())
+     test(not '\000020'.ascii_ctrl?())
+     test(not 'a'.ascii_ctrl?())
+     test(not 'z'.ascii_ctrl?())
+     test(not '\00008b'.ascii_ctrl?())
+
+     let string = rnd_string()
+     test(string.filter(fn (char) char.in_range?('\000001', '\000009') || char.in_range?('\00000a', '\000020') || char === '\00007f') === string.filter(ascii_ctrl?(_)))
+
+     test(to_char__ascii_ctrl?('\000001').ascii_ctrl?())
+     test(not to_char__ascii_ctrl?('\000009').ascii_ctrl?())
+
+     test(to_custom_char__ascii_ctrl?('\000001').ascii_ctrl?())
+     test(not to_custom_char__ascii_ctrl?('\000009').ascii_ctrl?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.ascii_ctrl?().get_error_id() === :1)
+     test(heap_table().ascii_ctrl?().get_error_id() === :invalid_type)
+
+     test(to_broken_char__ascii_ctrl?('a').ascii_ctrl?().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__ascii_ctrl?('a').ascii_ctrl?().get_error_id() === :invalid_type)
+     test(to_error_char__ascii_ctrl?('a').ascii_ctrl?().get_error_id() === :3)
+     test(to_error_custom_char__ascii_ctrl?('a').ascii_ctrl?().get_error_id() === :4)
+}

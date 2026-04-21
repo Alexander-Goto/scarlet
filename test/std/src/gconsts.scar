@@ -1,0 +1,7 @@
+`noinline`
+fn test__gconsts() {
+     test(@std.app_path.type() == "std.fs_path")
+     test("/test".suffix_of?(@std.app_path.to_string()))
+     test(@std.tmp_dir.type() == "std.fs_path")
+     test(@std.user_home_dir.type() == "std.fs_path")
+}

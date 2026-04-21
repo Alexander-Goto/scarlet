@@ -1,0 +1,243 @@
+let container__qty = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_qty = fn (item, container) item.qty(container:value)
+     ]
+]
+
+fn to_container__qty(arg) new (@main.container__qty):value <= arg
+
+fn to_custom_container__qty(arg) custom__create(
+     arg
+     [obj
+          :core_qty = fn (item, container) item.qty(container.custom__get_data())
+     ]
+)
+
+let broken_array__qty = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_qty = fn (_, _) heap_string()
+     ]
+]
+
+fn to_broken_array__qty(arg) new (@main.broken_array__qty):value <= arg
+
+fn to_broken_custom_array__qty(arg) custom__create(
+     arg
+     [obj
+          :core_qty = fn (_, _) heap_string()
+     ]
+)
+
+let error_container__qty = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_qty = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__qty(arg) new (@main.error_container__qty):value <= arg
+
+fn to_error_custom_container__qty(arg) custom__create(
+     arg
+     [obj
+          :core_qty = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__qty() {
+     test('2'.qty("") === 0)
+     test('1'.qty("") === 0)
+     test('2'.qty("1") === 0)
+     test('1'.qty("1") === 1)
+     test('1'.qty("122333444455555") === 1)
+     test('2'.qty("122333444455555") === 2)
+     test('3'.qty("122333444455555") === 3)
+     test('4'.qty("122333444455555") === 4)
+     test('5'.qty("122333444455555") === 5)
+     test('_'.qty("122333444455555") === 0)
+
+     test('_'.qty(("_1223334444555556" ++ "g")[1, 17]) === 0)
+     test('g'.qty(("_1223334444555556" ++ "g")[1, 17]) === 0)
+     test('1'.qty(("_1223334444555556" ++ "g")[1, 17]) === 1)
+     test('2'.qty(("_1223334444555556" ++ "g")[1, 17]) === 2)
+     test('3'.qty(("_1223334444555556" ++ "g")[1, 17]) === 3)
+     test('4'.qty(("_1223334444555556" ++ "g")[1, 17]) === 4)
+     test('5'.qty(("_1223334444555556" ++ "g")[1, 17]) === 5)
+     test('6'.qty(("_1223334444555556" ++ "g")[1, 17]) === 1)
+
+     test('0'.qty("000000000000000") === 15)
+     test('1'.qty("000000000000000") === 0)
+     test('1'.qty("000000000000001") === 1)
+     test('0'.qty("000000000000001") === 14)
+     test('0'.qty("100000000000000") === 14)
+     test('0'.qty(("00000000000000000" ++ "0")[1, 17]) === 16)
+     test('1'.qty(("10000000000000000" ++ "1")[1, 17]) === 0)
+     test('1'.qty(("10000000000000001" ++ "1")[1, 17]) === 1)
+     test('0'.qty(("10000000000000001" ++ "1")[1, 17]) === 15)
+     test('1'.qty(("11000000000000000" ++ "1")[1, 17]) === 1)
+     test('0'.qty(("11000000000000000" ++ "1")[1, 17]) === 15)
+
+     test('\000092'.qty("") === 0)
+     test('\000091'.qty("") === 0)
+     test('\000092'.qty("\000091") === 0)
+     test('\000091'.qty("\000091") === 1)
+     test('\000090'.qty("\000090\0000912\000093\000094\000097\000096\000097") === 1)
+     test('\000093'.qty("\000090\0000912\000093\000094\000097\000096\000097") === 1)
+     test('\000097'.qty("\000090\0000912\000093\000094\000097\000096\000097") === 2)
+
+     let string = rnd_string()
+     let char   = rnd_char()
+     test(char.qty(string) === string.filter(_ === char).len())
+
+     test(u"2"[0].qty(u"") === 0)
+     test(u"1"[0].qty(u"") === 0)
+     test(u"2"[0].qty(u"1") === 0)
+     test(u"1"[0].qty(u"1") === 1)
+     test(u"1"[0].qty(u"12233344445555") === 1)
+     test(u"2"[0].qty(u"12233344445555") === 2)
+     test(u"3"[0].qty(u"12233344445555") === 3)
+     test(u"4"[0].qty(u"12233344445555") === 4)
+     test(u"5"[0].qty(u"12233344445555") === 4)
+     test(u"_"[0].qty(u"12233344445555") === 0)
+
+     test(u"_"[0].qty((u"_1223334444555556" ++ u"g")[1, 17]) === 0)
+     test(u"g"[0].qty((u"_1223334444555556" ++ u"g")[1, 17]) === 0)
+     test(u"1"[0].qty((u"_1223334444555556" ++ u"g")[1, 17]) === 1)
+     test(u"2"[0].qty((u"_1223334444555556" ++ u"g")[1, 17]) === 2)
+     test(u"3"[0].qty((u"_1223334444555556" ++ u"g")[1, 17]) === 3)
+     test(u"4"[0].qty((u"_1223334444555556" ++ u"g")[1, 17]) === 4)
+     test(u"5"[0].qty((u"_1223334444555556" ++ u"g")[1, 17]) === 5)
+     test(u"6"[0].qty((u"_1223334444555556" ++ u"g")[1, 17]) === 1)
+
+     test(u"0"[0].qty(u"00000000000000") === 14)
+     test(u"1"[0].qty(u"00000000000000") === 0)
+     test(u"1"[0].qty(u"00000000000001") === 1)
+     test(u"0"[0].qty(u"00000000000001") === 13)
+     test(u"0"[0].qty(u"10000000000000") === 13)
+     test(u"0"[0].qty((u"00000000000000000" ++ u"0")[1, 17]) === 16)
+     test(u"1"[0].qty((u"10000000000000000" ++ u"1")[1, 17]) === 0)
+     test(u"1"[0].qty((u"10000000000000001" ++ u"1")[1, 17]) === 1)
+     test(u"0"[0].qty((u"10000000000000001" ++ u"1")[1, 17]) === 15)
+     test(u"1"[0].qty((u"11000000000000000" ++ u"1")[1, 17]) === 1)
+     test(u"0"[0].qty((u"11000000000000000" ++ u"1")[1, 17]) === 15)
+
+     let array = rnd_byte_array()
+     let byte  = rnd_byte()
+     test(byte.qty(array) === array.filter(_ === byte).len())
+
+     let string_6 = heap_string()
+     let string_1 = string_6 ++ "1"
+     let string_2 = string_6 ++ "2"
+     let string_3 = string_6 ++ "3"
+     let string_4 = string_6 ++ "4"
+     let string_5 = string_6 ++ "5"
+     test(string_2.qty([array]) === 0)
+     test(string_2.qty([array].init(10)) === 0)
+     test(string_1.qty([array]) === 0)
+     test(string_2.qty([array string_1]) === 0)
+     test(string_1.qty([array string_1]) === 1)
+     test(string_1.qty([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 1)
+     test(string_2.qty([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 2)
+     test(string_3.qty([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 3)
+     test(string_4.qty([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 4)
+     test(string_5.qty([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 5)
+     test(string_6.qty([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]) === 0)
+     test(string_1.qty([array string_1, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5, string_6][1, 16]) === 1)
+     test(string_2.qty([array string_1, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5, string_6][1, 16]) === 2)
+     test(string_3.qty([array string_1, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5, string_6][1, 16]) === 3)
+     test(string_4.qty([array string_1, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5, string_6][1, 16]) === 4)
+     test(string_5.qty([array string_1, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5, string_6][1, 16]) === 5)
+     test(string_6.qty([array string_1, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5, string_6][1, 16]) === 0)
+
+     let array  = rnd_string_array()
+     let string = if rnd_bool(); array[(rnd() & 0xffff) % len(array)] else rnd_string()
+     test(string.qty(array) === array.filter(_ === string).len())
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test(string_0.qty([table]) === 0)
+     test(string_0.qty([table].init(10)) === 0)
+     test(string_0.qty([table string_0 = string_1]) === 0)
+     test(string_0.qty([table string_1 = string_0]) === 1)
+     test(string_0.qty([table string_1 = string_0, string_2 = string_0]) === 2)
+     test(string_1.qty([table string_0 = string_1, string_2 = string_3, string_4 = string_5]) === 1)
+     test(string_3.qty([table string_0 = string_1, string_2 = string_3, string_4 = string_5]) === 1)
+     test(string_5.qty([table string_0 = string_1, string_2 = string_3, string_4 = string_5]) === 1)
+
+     let array = rnd_string_array()
+     let table = loop([table], fn (table) {
+          let table = new (table)[rnd_string()] <= array[len(table)]
+          break(len(array) === len(table), table)
+     })
+     let string = if rnd_bool(); array[(rnd() & 0xffff) % len(array)] else rnd_string()
+     test(string.qty(table) === table.filter(_ === string).len())
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_3 = string_0 ++ "3"
+     let string_5 = string_0 ++ "5"
+     test(string_0.qty([obj]) === 0)
+     test(string_0.qty([obj].init(10)) === 0)
+     test(string_0.qty([obj :_ = [obj :1 = string_0]]) === 0)
+     test(string_0.qty([obj :0 = string_1]) === 0)
+     test(string_0.qty([obj :0 = string_1, :_ = [obj :1 = string_0]]) === 0)
+     test(string_0.qty([obj :1 = string_0]) === 1)
+     test(string_0.qty([obj :1 = string_0, :_ = [obj :1 = string_0]]) === 1)
+     test(string_0.qty([obj :1 = string_0, :2 = string_0]) === 2)
+     test(string_0.qty([obj :1 = string_0, :2 = string_0, :_ = [obj :1 = string_0]]) === 2)
+     test(string_1.qty([obj :0 = string_1, :2 = string_3, :4 = string_5]) === 1)
+     test(string_3.qty([obj :0 = string_1, :2 = string_3, :4 = string_5]) === 1)
+     test(string_5.qty([obj :0 = string_1, :2 = string_3, :4 = string_5]) === 1)
+     test(string_1.qty([obj :0 = string_1, :2 = string_3, :4 = string_5, :_ = [obj :1 = string_1]]) === 1)
+     test(string_3.qty([obj :0 = string_1, :2 = string_3, :4 = string_5, :_ = [obj :1 = string_3]]) === 1)
+     test(string_5.qty([obj :0 = string_1, :2 = string_3, :4 = string_5, :_ = [obj :1 = string_5]]) === 1)
+
+     let array = rnd_string_array()
+     let obj   = loop([obj], fn (obj) {
+          let key = loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+          let obj = new (obj)[key] <= array[len(obj)]
+          break(len(array) === len(obj), obj)
+     })
+     let string = if rnd_bool(); array[(rnd() & 0xffff) % len(array)] else rnd_string()
+     test(string.qty(obj) === obj.filter(_ === string).len())
+
+     test('1'.qty("123123".to_container__qty()) === 2)
+     test('0'.qty("123123".to_container__qty()) === 0)
+     test('1'.qty("123123".to_custom_container__qty()) === 2)
+     test('0'.qty("123123".to_custom_container__qty()) === 0)
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.qty(heap_string()).get_error_id() === :1)
+     test(heap_string().qty(error_1).get_error_id() === :1)
+     test(error_1.qty(error_2).get_error_id() === :1)
+     test(error_2.qty(error_1).get_error_id() === :2)
+
+     test([box heap_string()].scarlet__erase_info().qty(heap_string()).get_error_id() === :invalid_type)
+     test([box heap_string()].scarlet__erase_info().qty([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test(null.scarlet__erase_info().qty([array].init(10)).get_error_id() === :invalid_type)
+     test((_ ++ _).scarlet__erase_info().qty([array].init(10)).get_error_id() === :invalid_type)
+     test((_ ++ heap_string()).scarlet__erase_info().qty([array].init(10)).get_error_id() === :invalid_type)
+     test([breaker heap_string()].scarlet__erase_info().qty([array].init(10)).get_error_id() === :invalid_type)
+     test(thread(fn() null).scarlet__erase_info().qty([array].init(10)).get_error_id() === :invalid_type)
+     test(make_channel()[0].scarlet__erase_info().qty([array].init(10)).get_error_id() === :invalid_type)
+     test(heap_string().qty("").get_error_id() === :invalid_type)
+     test(heap_string().qty(heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().qty(u"").get_error_id() === :invalid_type)
+     test(heap_string().qty(heap_byte_array()).get_error_id() === :invalid_type)
+
+     test(heap_string().qty(to_broken_array__qty([array])).get_error_id() === :invalid_type)
+     test(heap_string().qty(to_broken_custom_array__qty([array])).get_error_id() === :invalid_type)
+     test(heap_string().qty(to_error_container__qty([array])).get_error_id() === :3)
+     test(heap_string().qty(to_error_custom_container__qty([array])).get_error_id() === :4)
+}

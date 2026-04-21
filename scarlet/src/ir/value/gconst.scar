@@ -1,0 +1,19 @@
+fn ir__gconst(ir_name, code, possible_types, exp_data, ir, is_last) {
+     let [box gconst_reg, exp_data] = exp_data.new_reg()
+
+     let ir = ir ++ "t_any const " ++ gconst_reg ++ "=get_gc_" ++ ir_name ++ "(thrd_data);\n"
+
+     let ir = ir__assume_type(gconst_reg, possible_types, ir)
+     let ir = if is_last; ir__raw_return(ir, gconst_reg) else ir
+
+     [box
+          new (@main.t_operand) {
+               :code           <= code
+               :ir             <= gconst_reg
+               :possible_types <= possible_types
+               :is_gconst      <= true
+          }
+
+          exp_data, ir
+     ]
+}

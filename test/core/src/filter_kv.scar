@@ -1,0 +1,701 @@
+let container__filter_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_filter_kv = fn (container, func) to_container__filter_kv(container:value.filter_kv(func))
+          :core___equal__ = fn (container_1, container_2) container_1:value === container_2:value
+     ]
+]
+
+fn to_container__filter_kv(arg) new (@main.container__filter_kv):value <= arg
+
+fn to_custom_container__filter_kv(arg) custom__create(
+     arg
+     [obj
+          :core_filter_kv = fn (container, func) to_custom_container__filter_kv(custom__get_data(container).filter_kv(func))
+          :core___equal__ = fn (container_1, container_2) container_1.custom__get_data() === container_2.custom__get_data()
+     ]
+)
+
+let broken_container__filter_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_filter_kv = fn (_, _) heap_table()
+     ]
+]
+
+fn to_broken_container__filter_kv(arg) new (@main.broken_container__filter_kv):value <= arg
+
+fn to_broken_custom_container__filter_kv(arg) custom__create(
+     arg
+     [obj
+          :core_filter_kv = fn (_, _) heap_table()
+     ]
+)
+
+let error_container__filter_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_filter_kv = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__filter_kv(arg) new (@main.error_container__filter_kv):value <= arg
+
+fn to_error_custom_container__filter_kv(arg) custom__create(
+     arg
+     [obj
+          :core_filter_kv = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__filter_kv() {
+     let items = "0123456".to_array()
+     test("".filter_kv(fn (idx, char) idx === 0 && char === items[0]) === "")
+     test("1".filter_kv(fn (idx, char) idx === 0 && char === items[1]) === "1")
+     test("1".filter_kv(fn (idx, char) idx =/= 0 && char === items[1]) === "")
+     test("1".filter_kv(fn (idx, char) idx === 0 && char =/= items[1]) === "")
+     test("012233344445555".filter_kv(fn (idx, char) idx.even?() && char =/= items[0]) === "2334455")
+     test("012233344445555".filter_kv(fn (idx, char) idx.even?() && char =/= items[1]) === "02334455")
+     test("012233344445555".filter_kv(fn (idx, char) idx.even?() && char =/= items[2]) === "0334455")
+     test("012233344445555".filter_kv(fn (idx, char) idx.even?() && char =/= items[3]) === "024455")
+     test("012233344445555".filter_kv(fn (idx, char) idx.even?() && char =/= items[4]) === "023355")
+     test("012233344445555".filter_kv(fn (idx, char) idx.even?() && char =/= items[5]) === "023344")
+     test("012233344445555".filter_kv(fn (idx, char) idx.even?() && char =/= items[6]) === "02334455")
+
+     let items = "\000091\0000b3\0000ab!\0000a4\0000a7\0000b5f".to_array()
+     test("\000091".filter_kv(fn (idx, char) idx === 0 && char === items[0]) === "\000091")
+     test("\000091".filter_kv(fn (idx, char) idx =/= 0 && char === items[0]) === "")
+     test("\000091".filter_kv(fn (idx, char) idx === 0 && char =/= items[0]) === "")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".filter_kv(fn (idx, char) idx.even?() && char =/= items[0]) === "\0000ab!\0000a4\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".filter_kv(fn (idx, char) idx.even?() && char =/= items[1]) === "\000091\0000ab!\0000a4\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".filter_kv(fn (idx, char) idx.even?() && char =/= items[2]) === "\000091!\0000a4\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".filter_kv(fn (idx, char) idx.even?() && char =/= items[3]) === "\000091\0000ab\0000a4\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".filter_kv(fn (idx, char) idx.even?() && char =/= items[4]) === "\000091\0000ab!\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".filter_kv(fn (idx, char) idx.even?() && char =/= items[5]) === "\000091\0000ab!\0000a4\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".filter_kv(fn (idx, char) idx.even?() && char =/= items[6]) === "\000091\0000ab!\0000a4")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".filter_kv(fn (idx, char) idx.even?() && char =/= items[7]) === "\000091\0000ab!\0000a4\0000b5")
+
+     let items  = "01234567fg".to_array()
+     let string = ("0011012375611135f" ++ "g0")[1, 18]
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[0]) === "1135115g")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[1]) === "0355g")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[2]) === "01135115g")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[3]) === "0115115g")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[4]) === "01135115g")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[5]) === "011311g")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[6]) === "01135115g")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[7]) === "01135115g")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[8]) === "01135115g")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[9]) === "01135115")
+     string.ignore()
+
+     let items = "01234567fg".to_array()
+     test(("0011012375611135f" ++ "g0")[1, 18].filter_kv(fn (idx, char) idx.even?() && char =/= items[0]) === "1135115g")
+     test(("0011012375611135f" ++ "g0")[1, 18].filter_kv(fn (idx, char) idx.even?() && char =/= items[1]) === "0355g")
+     test(("0011012375611135f" ++ "g0")[1, 18].filter_kv(fn (idx, char) idx.even?() && char =/= items[2]) === "01135115g")
+     test(("0011012375611135f" ++ "g0")[1, 18].filter_kv(fn (idx, char) idx.even?() && char =/= items[3]) === "0115115g")
+     test(("0011012375611135f" ++ "g0")[1, 18].filter_kv(fn (idx, char) idx.even?() && char =/= items[4]) === "01135115g")
+     test(("0011012375611135f" ++ "g0")[1, 18].filter_kv(fn (idx, char) idx.even?() && char =/= items[5]) === "011311g")
+     test(("0011012375611135f" ++ "g0")[1, 18].filter_kv(fn (idx, char) idx.even?() && char =/= items[6]) === "01135115g")
+     test(("0011012375611135f" ++ "g0")[1, 18].filter_kv(fn (idx, char) idx.even?() && char =/= items[7]) === "01135115g")
+     test(("0011012375611135f" ++ "g0")[1, 18].filter_kv(fn (idx, char) idx.even?() && char =/= items[8]) === "01135115g")
+     test(("0011012375611135f" ++ "g0")[1, 18].filter_kv(fn (idx, char) idx.even?() && char =/= items[9]) === "01135115")
+
+     let items = "01234567fg".to_array()
+     test(("011012375611135f" ++ "g").filter_kv(fn (idx, char) idx.even?() && char =/= items[0]) === "1135115g")
+     test(("011012375611135f" ++ "g").filter_kv(fn (idx, char) idx.even?() && char =/= items[1]) === "0355g")
+     test(("011012375611135f" ++ "g").filter_kv(fn (idx, char) idx.even?() && char =/= items[2]) === "01135115g")
+     test(("011012375611135f" ++ "g").filter_kv(fn (idx, char) idx.even?() && char =/= items[3]) === "0115115g")
+     test(("011012375611135f" ++ "g").filter_kv(fn (idx, char) idx.even?() && char =/= items[4]) === "01135115g")
+     test(("011012375611135f" ++ "g").filter_kv(fn (idx, char) idx.even?() && char =/= items[5]) === "011311g")
+     test(("011012375611135f" ++ "g").filter_kv(fn (idx, char) idx.even?() && char =/= items[6]) === "01135115g")
+     test(("011012375611135f" ++ "g").filter_kv(fn (idx, char) idx.even?() && char =/= items[7]) === "01135115g")
+     test(("011012375611135f" ++ "g").filter_kv(fn (idx, char) idx.even?() && char =/= items[8]) === "01135115g")
+     test(("011012375611135f" ++ "g").filter_kv(fn (idx, char) idx.even?() && char =/= items[9]) === "01135115")
+
+     let items  = "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7g".to_array()
+     let string = ("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11]
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[0]) === "\0000ab\0000a7 \0000ae")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[1]) === "\000091\0000ab\0000a7 \0000ae")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[2]) === "\000091\0000a7 \0000ae")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[3]) === "\000091\0000ab\0000a7 \0000ae")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[4]) === "\000091\0000ab \0000ae")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[5]) === "\000091\0000ab\0000a7 \0000ae")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[6]) === "\000091\0000ab\0000a7\0000ae")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[7]) === "\000091\0000ab\0000a7 \0000ae")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[8]) === "\000091\0000ab\0000a7 ")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[9]) === "\000091\0000ab\0000a7 \0000ae")
+     test(string.filter_kv(fn (idx, char) idx.even?() && char =/= items[10]) === "\000091\0000ab\0000a7 \0000ae")
+     string.ignore()
+
+     let items = "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7g".to_array()
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[0]) === "\0000ab\0000a7 \0000ae")
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[1]) === "\000091\0000ab\0000a7 \0000ae")
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[2]) === "\000091\0000a7 \0000ae")
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[3]) === "\000091\0000ab\0000a7 \0000ae")
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[4]) === "\000091\0000ab \0000ae")
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[5]) === "\000091\0000ab\0000a7 \0000ae")
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[6]) === "\000091\0000ab\0000a7\0000ae")
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[7]) === "\000091\0000ab\0000a7 \0000ae")
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[8]) === "\000091\0000ab\0000a7 ")
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[9]) === "\000091\0000ab\0000a7 \0000ae")
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].filter_kv(fn (idx, char) idx.even?() && char =/= items[10]) === "\000091\0000ab\0000a7 \0000ae")
+
+     let items = "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7g".to_array()
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[0]) === "\0000ab\0000a7 \0000ae")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[1]) === "\000091\0000ab\0000a7 \0000ae")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[2]) === "\000091\0000a7 \0000ae")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[3]) === "\000091\0000ab\0000a7 \0000ae")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[4]) === "\000091\0000ab \0000ae")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[5]) === "\000091\0000ab\0000a7 \0000ae")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[6]) === "\000091\0000ab\0000a7\0000ae")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[7]) === "\000091\0000ab\0000a7 \0000ae")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[8]) === "\000091\0000ab\0000a7 ")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[9]) === "\000091\0000ab\0000a7 \0000ae")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").filter_kv(fn (idx, char) idx.even?() && char =/= items[10]) === "\000091\0000ab\0000a7 \0000ae")
+
+     let items  = "01".to_array()
+     let string = ("0101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 65]
+     test(string.filter_kv(fn (_, char) char === items[0]) === "00000000000000000000000000000000")
+     test(string.filter_kv(fn (idx, _) idx.odd?()) === "00000000000000000000000000000000")
+     test(string.filter_kv(fn (_, char) char === items[1]) === "11111111111111111111111111111111")
+     test(string.filter_kv(fn (idx, _) idx.even?()) === "11111111111111111111111111111111")
+     string.ignore()
+
+     let items = "01".to_array()
+     test(("0101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 65].filter_kv(fn (_, char) char === items[0]) === "00000000000000000000000000000000")
+     test(("0101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 65].filter_kv(fn (idx, _) idx.odd?()) === "00000000000000000000000000000000")
+     test(("0101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 65].filter_kv(fn (_, char) char === items[1]) === "11111111111111111111111111111111")
+     test(("0101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 65].filter_kv(fn (idx, _) idx.even?()) === "11111111111111111111111111111111")
+
+     let items = "01".to_array()
+     test(("101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (_, char) char === items[0]) === "00000000000000000000000000000000")
+     test(("101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (idx, _) idx.odd?()) === "00000000000000000000000000000000")
+     test(("101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (_, char) char === items[1]) === "11111111111111111111111111111111")
+     test(("101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (idx, _) idx.even?()) === "11111111111111111111111111111111")
+
+     let items  = "01".to_array()
+     let string = ("10101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 66]
+     test(string.filter_kv(fn (_, char) char === items[0]) === "000000000000000000000000000000000")
+     test(string.filter_kv(fn (idx, _) idx.even?()) === "000000000000000000000000000000000")
+     test(string.filter_kv(fn (_, char) char === items[1]) === "11111111111111111111111111111111")
+     test(string.filter_kv(fn (idx, _) idx.odd?()) === "11111111111111111111111111111111")
+     string.ignore()
+
+     let items = "01".to_array()
+     test(("10101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 66].filter_kv(fn (_, char) char === items[0]) === "000000000000000000000000000000000")
+     test(("10101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 66].filter_kv(fn (idx, _) idx.even?()) === "000000000000000000000000000000000")
+     test(("10101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 66].filter_kv(fn (_, char) char === items[1]) === "11111111111111111111111111111111")
+     test(("10101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 66].filter_kv(fn (idx, _) idx.odd?()) === "11111111111111111111111111111111")
+
+     let items = "01".to_array()
+     test(("0101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (_, char) char === items[0]) === "000000000000000000000000000000000")
+     test(("0101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (idx, _) idx.even?()) === "000000000000000000000000000000000")
+     test(("0101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (_, char) char === items[1]) === "11111111111111111111111111111111")
+     test(("0101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (idx, _) idx.odd?()) === "11111111111111111111111111111111")
+
+     let items  = "01".to_array()
+     let string = ("010101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 67]
+     test(string.filter_kv(fn (_, char) char === items[0]) === "000000000000000000000000000000000")
+     test(string.filter_kv(fn (idx, _) idx.odd?()) === "000000000000000000000000000000000")
+     test(string.filter_kv(fn (_, char) char === items[1]) === "111111111111111111111111111111111")
+     test(string.filter_kv(fn (idx, _) idx.even?()) === "111111111111111111111111111111111")
+     string.ignore()
+
+     let items = "01".to_array()
+     test(("010101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 67].filter_kv(fn (_, char) char === items[0]) === "000000000000000000000000000000000")
+     test(("010101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 67].filter_kv(fn (idx, _) idx.odd?()) === "000000000000000000000000000000000")
+     test(("010101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 67].filter_kv(fn (_, char) char === items[1]) === "111111111111111111111111111111111")
+     test(("010101010101010101010101010101010101010101010101010101010101010101" ++ "01")[1, 67].filter_kv(fn (idx, _) idx.even?()) === "111111111111111111111111111111111")
+
+     let items = "01".to_array()
+     test(("10101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (_, char) char === items[0]) === "000000000000000000000000000000000")
+     test(("10101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (idx, _) idx.odd?()) === "000000000000000000000000000000000")
+     test(("10101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (_, char) char === items[1]) === "111111111111111111111111111111111")
+     test(("10101010101010101010101010101010101010101010101010101010101010101" ++ "0").filter_kv(fn (idx, _) idx.even?()) === "111111111111111111111111111111111")
+
+     let items = "0".to_array()
+     test(("000000000000000000000000" ++ "0").filter_kv(fn (_, char) char === items[0]) === "0000000000000000000000000")
+     test(("000000000000000000000000" ++ "0").filter_kv(fn (_, char) char =/= items[0]) === "")
+     test(("100000000000000000000000" ++ "0").filter_kv(fn (_, char) char =/= items[0]) === "1")
+     test(("100000000000000000000000" ++ "0").filter_kv(fn (_, char) char === items[0]) === "000000000000000000000000")
+     test(("00000000012345600000000000000" ++ "0").filter_kv(fn (_, char) char =/= items[0]) === "123456")
+     test(("000000000123456789abcdefg00000000000000" ++ "0").filter_kv(fn (_, char) char =/= items[0]) === "123456789abcdefg")
+
+     let [box string_1, string_2] = if (rnd() & 1) === 0 {
+          let string_1 = rnd_string()
+          let string_2 = if (rnd() & 1) === 0; string_1 else null
+          [box string_1, string_2]
+     } else [box "Constant String \000093\0000ae\0000b6\0000ba\0000a2\0000ac\0000b0\0000a2\0000c2 \000093\0000b5\0000b3\0000b1\0000ad\0000a2", null]
+     let expected_string = string_1.foldl_kv("", fn (expected_string, idx, char) if char.lower?() && idx.even?(); expected_string.append(char) else expected_string)
+     test(string_1.filter_kv(fn (idx, char) char.lower?() && idx.even?()) === expected_string)
+     string_2.ignore()
+
+     let [box string_1, string_2] = if (rnd() & 1) === 0 {
+          let string_1 = rnd_string()
+          let string_2 = if (rnd() & 1) === 0; string_1 else null
+          [box string_1, string_2]
+     } else [box "Constant String \000093\0000ae\0000b6\0000ba\0000a2\0000ac\0000b0\0000a2\0000c2 \000093\0000b5\0000b3\0000b1\0000ad\0000a2", null]
+     let expected_string = string_1.foldl_kv("", fn (expected_string, idx, char) if char.lower?() && idx.even?(); expected_string.append(char) else expected_string)
+     test(string_1.filter_kv(fn (idx, char) string_1 === 17 || char.lower?() && idx.even?()) === expected_string)
+     string_2.ignore()
+
+     let items = u"0123456".to_array()
+     test(u"".filter_kv(fn (idx, byte) idx === 0 && byte === items[0]) === u"")
+     test(u"1".filter_kv(fn (idx, byte) idx === 0 && byte === items[1]) === u"1")
+     test(u"1".filter_kv(fn (idx, byte) idx =/= 0 && byte === items[1]) === u"")
+     test(u"1".filter_kv(fn (idx, byte) idx === 0 && byte =/= items[1]) === u"")
+     test(u"01223334444555".filter_kv(fn (idx, byte) idx.even?() && byte =/= items[0]) === u"233445")
+     test(u"01223334444555".filter_kv(fn (idx, byte) idx.even?() && byte =/= items[1]) === u"0233445")
+     test(u"01223334444555".filter_kv(fn (idx, byte) idx.even?() && byte =/= items[2]) === u"033445")
+     test(u"01223334444555".filter_kv(fn (idx, byte) idx.even?() && byte =/= items[3]) === u"02445")
+     test(u"01223334444555".filter_kv(fn (idx, byte) idx.even?() && byte =/= items[4]) === u"02335")
+     test(u"01223334444555".filter_kv(fn (idx, byte) idx.even?() && byte =/= items[5]) === u"023344")
+     test(u"01223334444555".filter_kv(fn (idx, byte) idx.even?() && byte =/= items[6]) === u"0233445")
+
+     let items  = u"01234567fg".to_array()
+     let string = (u"0011012375611135f" ++ u"g0")[1, 18]
+     test(string.filter_kv(fn (idx, byte) idx.even?() && byte =/= items[0]) === u"1135115g")
+     test(string.filter_kv(fn (idx, byte) idx.even?() && byte =/= items[1]) === u"0355g")
+     test(string.filter_kv(fn (idx, byte) idx.even?() && byte =/= items[2]) === u"01135115g")
+     test(string.filter_kv(fn (idx, byte) idx.even?() && byte =/= items[3]) === u"0115115g")
+     test(string.filter_kv(fn (idx, byte) idx.even?() && byte =/= items[4]) === u"01135115g")
+     test(string.filter_kv(fn (idx, byte) idx.even?() && byte =/= items[5]) === u"011311g")
+     test(string.filter_kv(fn (idx, byte) idx.even?() && byte =/= items[6]) === u"01135115g")
+     test(string.filter_kv(fn (idx, byte) idx.even?() && byte =/= items[7]) === u"01135115g")
+     test(string.filter_kv(fn (idx, byte) idx.even?() && byte =/= items[8]) === u"01135115g")
+     test(string.filter_kv(fn (idx, byte) idx.even?() && byte =/= items[9]) === u"01135115")
+     string.ignore()
+
+     let items = u"01234567fg".to_array()
+     test((u"0011012375611135f" ++ u"g0")[1, 18].filter_kv(fn (idx, byte) idx.even?() && byte =/= items[0]) === u"1135115g")
+     test((u"0011012375611135f" ++ u"g0")[1, 18].filter_kv(fn (idx, byte) idx.even?() && byte =/= items[1]) === u"0355g")
+     test((u"0011012375611135f" ++ u"g0")[1, 18].filter_kv(fn (idx, byte) idx.even?() && byte =/= items[2]) === u"01135115g")
+     test((u"0011012375611135f" ++ u"g0")[1, 18].filter_kv(fn (idx, byte) idx.even?() && byte =/= items[3]) === u"0115115g")
+     test((u"0011012375611135f" ++ u"g0")[1, 18].filter_kv(fn (idx, byte) idx.even?() && byte =/= items[4]) === u"01135115g")
+     test((u"0011012375611135f" ++ u"g0")[1, 18].filter_kv(fn (idx, byte) idx.even?() && byte =/= items[5]) === u"011311g")
+     test((u"0011012375611135f" ++ u"g0")[1, 18].filter_kv(fn (idx, byte) idx.even?() && byte =/= items[6]) === u"01135115g")
+     test((u"0011012375611135f" ++ u"g0")[1, 18].filter_kv(fn (idx, byte) idx.even?() && byte =/= items[7]) === u"01135115g")
+     test((u"0011012375611135f" ++ u"g0")[1, 18].filter_kv(fn (idx, byte) idx.even?() && byte =/= items[8]) === u"01135115g")
+     test((u"0011012375611135f" ++ u"g0")[1, 18].filter_kv(fn (idx, byte) idx.even?() && byte =/= items[9]) === u"01135115")
+
+     let items = u"01234567fg".to_array()
+     test((u"011012375611135f" ++ u"g").filter_kv(fn (idx, byte) idx.even?() && byte =/= items[0]) === u"1135115g")
+     test((u"011012375611135f" ++ u"g").filter_kv(fn (idx, byte) idx.even?() && byte =/= items[1]) === u"0355g")
+     test((u"011012375611135f" ++ u"g").filter_kv(fn (idx, byte) idx.even?() && byte =/= items[2]) === u"01135115g")
+     test((u"011012375611135f" ++ u"g").filter_kv(fn (idx, byte) idx.even?() && byte =/= items[3]) === u"0115115g")
+     test((u"011012375611135f" ++ u"g").filter_kv(fn (idx, byte) idx.even?() && byte =/= items[4]) === u"01135115g")
+     test((u"011012375611135f" ++ u"g").filter_kv(fn (idx, byte) idx.even?() && byte =/= items[5]) === u"011311g")
+     test((u"011012375611135f" ++ u"g").filter_kv(fn (idx, byte) idx.even?() && byte =/= items[6]) === u"01135115g")
+     test((u"011012375611135f" ++ u"g").filter_kv(fn (idx, byte) idx.even?() && byte =/= items[7]) === u"01135115g")
+     test((u"011012375611135f" ++ u"g").filter_kv(fn (idx, byte) idx.even?() && byte =/= items[8]) === u"01135115g")
+     test((u"011012375611135f" ++ u"g").filter_kv(fn (idx, byte) idx.even?() && byte =/= items[9]) === u"01135115")
+
+     let items  = u"01".to_array()
+     let string = (u"0101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 65]
+     test(string.filter_kv(fn (_, byte) byte === items[0]) === u"00000000000000000000000000000000")
+     test(string.filter_kv(fn (idx, _) idx.odd?()) === u"00000000000000000000000000000000")
+     test(string.filter_kv(fn (_, byte) byte === items[1]) === u"11111111111111111111111111111111")
+     test(string.filter_kv(fn (idx, _) idx.even?()) === u"11111111111111111111111111111111")
+     string.ignore()
+
+     let items = u"01".to_array()
+     test((u"0101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 65].filter_kv(fn (_, byte) byte === items[0]) === u"00000000000000000000000000000000")
+     test((u"0101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 65].filter_kv(fn (idx, _) idx.odd?()) === u"00000000000000000000000000000000")
+     test((u"0101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 65].filter_kv(fn (_, byte) byte === items[1]) === u"11111111111111111111111111111111")
+     test((u"0101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 65].filter_kv(fn (idx, _) idx.even?()) === u"11111111111111111111111111111111")
+
+     let items = u"01".to_array()
+     test((u"101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (_, byte) byte === items[0]) === u"00000000000000000000000000000000")
+     test((u"101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (idx, _) idx.odd?()) === u"00000000000000000000000000000000")
+     test((u"101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (_, byte) byte === items[1]) === u"11111111111111111111111111111111")
+     test((u"101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (idx, _) idx.even?()) === u"11111111111111111111111111111111")
+
+     let items  = u"01".to_array()
+     let string = (u"10101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 66]
+     test(string.filter_kv(fn (_, byte) byte === items[0]) === u"000000000000000000000000000000000")
+     test(string.filter_kv(fn (idx, _) idx.even?()) === u"000000000000000000000000000000000")
+     test(string.filter_kv(fn (_, byte) byte === items[1]) === u"11111111111111111111111111111111")
+     test(string.filter_kv(fn (idx, _) idx.odd?()) === u"11111111111111111111111111111111")
+     string.ignore()
+
+     let items = u"01".to_array()
+     test((u"10101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 66].filter_kv(fn (_, byte) byte === items[0]) === u"000000000000000000000000000000000")
+     test((u"10101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 66].filter_kv(fn (idx, _) idx.even?()) === u"000000000000000000000000000000000")
+     test((u"10101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 66].filter_kv(fn (_, byte) byte === items[1]) === u"11111111111111111111111111111111")
+     test((u"10101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 66].filter_kv(fn (idx, _) idx.odd?()) === u"11111111111111111111111111111111")
+
+     let items = u"01".to_array()
+     test((u"0101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (_, byte) byte === items[0]) === u"000000000000000000000000000000000")
+     test((u"0101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (idx, _) idx.even?()) === u"000000000000000000000000000000000")
+     test((u"0101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (_, byte) byte === items[1]) === u"11111111111111111111111111111111")
+     test((u"0101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (idx, _) idx.odd?()) === u"11111111111111111111111111111111")
+
+     let items  = u"01".to_array()
+     let string = (u"010101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 67]
+     test(string.filter_kv(fn (_, byte) byte === items[0]) === u"000000000000000000000000000000000")
+     test(string.filter_kv(fn (idx, _) idx.odd?()) === u"000000000000000000000000000000000")
+     test(string.filter_kv(fn (_, byte) byte === items[1]) === u"111111111111111111111111111111111")
+     test(string.filter_kv(fn (idx, _) idx.even?()) === u"111111111111111111111111111111111")
+     string.ignore()
+
+     let items = u"01".to_array()
+     test((u"010101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 67].filter_kv(fn (_, byte) byte === items[0]) === u"000000000000000000000000000000000")
+     test((u"010101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 67].filter_kv(fn (idx, _) idx.odd?()) === u"000000000000000000000000000000000")
+     test((u"010101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 67].filter_kv(fn (_, byte) byte === items[1]) === u"111111111111111111111111111111111")
+     test((u"010101010101010101010101010101010101010101010101010101010101010101" ++ u"01")[1, 67].filter_kv(fn (idx, _) idx.even?()) === u"111111111111111111111111111111111")
+
+     let items = u"01".to_array()
+     test((u"10101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (_, byte) byte === items[0]) === u"000000000000000000000000000000000")
+     test((u"10101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (idx, _) idx.odd?()) === u"000000000000000000000000000000000")
+     test((u"10101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (_, byte) byte === items[1]) === u"111111111111111111111111111111111")
+     test((u"10101010101010101010101010101010101010101010101010101010101010101" ++ u"0").filter_kv(fn (idx, _) idx.even?()) === u"111111111111111111111111111111111")
+
+     test((u"000000000000000000000000" ++ u"0").filter_kv(fn (_, byte) byte === items[0]) === u"0000000000000000000000000")
+     test((u"000000000000000000000000" ++ u"0").filter_kv(fn (_, byte) byte =/= items[0]) === u"")
+     test((u"100000000000000000000000" ++ u"0").filter_kv(fn (_, byte) byte =/= items[0]) === u"1")
+     test((u"100000000000000000000000" ++ u"0").filter_kv(fn (_, byte) byte === items[0]) === u"000000000000000000000000")
+     test((u"00000000012345600000000000000" ++ u"0").filter_kv(fn (_, byte) byte =/= items[0]) === u"123456")
+     test((u"000000000123456789abcdefg00000000000000" ++ u"0").filter_kv(fn (_, byte) byte =/= items[0]) === u"123456789abcdefg")
+
+     let [box array_1, array_2] = if (rnd() & 1) === 0 {
+          let array_1 = rnd_byte_array()
+          let array_2 = if (rnd() & 1) === 0; array_1 else null
+          [box array_1, array_2]
+     } else [box u"Constant String \000093\0000ae\0000b6\0000ba\0000a2\0000ac\0000b0\0000a2\0000c2 \000093\0000b5\0000b3\0000b1\0000ad\0000a2", null]
+     let expected_array = array_1.foldl_kv(u"", fn (expected_array, idx, byte) if byte > 0b80 && idx.even?(); expected_array.append(byte) else expected_array)
+     test(array_1.filter_kv(fn (idx, byte) byte > 0b80 && idx.even?()) === expected_array)
+     array_2.ignore()
+
+     let [box array_1, array_2] = if (rnd() & 1) === 0 {
+          let array_1 = rnd_byte_array()
+          let array_2 = if (rnd() & 1) === 0; array_1 else null
+          [box array_1, array_2]
+     } else [box u"Constant String \000093\0000ae\0000b6\0000ba\0000a2\0000ac\0000b0\0000a2\0000c2 \000093\0000b5\0000b3\0000b1\0000ad\0000a2", null]
+     let expected_array = array_1.foldl_kv(u"", fn (expected_array, idx, byte) if byte > 0b80 && idx.even?(); expected_array.append(byte) else expected_array)
+     test(array_1.filter_kv(fn (idx, byte) array_1 === 17 || byte > 0b80 && idx.even?()) === expected_array)
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     let string_6 = string_0 ++ "6"
+     test([array].filter_kv(fn (idx, item) idx === 0 && item === string_0) === [array])
+     let array = [array].init(10)
+     test(array.filter_kv(fn (idx, item) idx === 0 && item === string_0) === [array])
+     array.ignore()
+     let array = [array string_0, string_1, string_0][1, 2]
+     test(array.filter_kv(fn (idx, item) idx === 0 && item === string_1) === [array string_1])
+     test(array.filter_kv(fn (idx, item) idx =/= 0 && item === string_1) === [array])
+     test(array.filter_kv(fn (idx, item) idx === 0 && item =/= string_1) === [array])
+     array.ignore()
+     let array = [array string_0, string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_0][1, 11]
+     test(array.filter_kv(fn (idx, item) idx.even?() && item =/= string_0) === [array string_2, string_3, string_3, string_5])
+     test(array.filter_kv(fn (idx, item) idx.even?() && item =/= string_1) === [array string_0, string_2, string_3, string_3, string_5])
+     test(array.filter_kv(fn (idx, item) idx.even?() && item =/= string_2) === [array string_0, string_3, string_3, string_5])
+     test(array.filter_kv(fn (idx, item) idx.even?() && item =/= string_3) === [array string_0, string_2, string_5])
+     test(array.filter_kv(fn (idx, item) idx.even?() && item =/= string_4) === [array string_0, string_2, string_3, string_3, string_5])
+     test(array.filter_kv(fn (idx, item) idx.even?() && item =/= string_5) === [array string_0, string_2, string_3, string_3])
+     array.ignore()
+
+     test([array].init(10).filter_kv(fn (idx, item) idx === 0 && item === string_0) === [array])
+     test([array string_0, string_1, string_0][1, 2].filter_kv(fn (idx, item) idx === 0 && item === string_1) === [array string_1])
+     test([array string_0, string_1, string_0][1, 2].filter_kv(fn (idx, item) idx =/= 0 && item === string_1) === [array])
+     test([array string_0, string_1, string_0][1, 2].filter_kv(fn (idx, item) idx === 0 && item =/= string_1) === [array])
+     test([array string_0, string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_0][1, 11].filter_kv(fn (idx, item) idx.even?() && item =/= string_0) === [array string_2, string_3, string_3, string_5])
+     test([array string_0, string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_0][1, 11].filter_kv(fn (idx, item) idx.even?() && item =/= string_1) === [array string_0, string_2, string_3, string_3, string_5])
+     test([array string_0, string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_0][1, 11].filter_kv(fn (idx, item) idx.even?() && item =/= string_2) === [array string_0, string_3, string_3, string_5])
+     test([array string_0, string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_0][1, 11].filter_kv(fn (idx, item) idx.even?() && item =/= string_3) === [array string_0, string_2, string_5])
+     test([array string_0, string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_0][1, 11].filter_kv(fn (idx, item) idx.even?() && item =/= string_4) === [array string_0, string_2, string_3, string_3, string_5])
+     test([array string_0, string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_0][1, 11].filter_kv(fn (idx, item) idx.even?() && item =/= string_5) === [array string_0, string_2, string_3, string_3])
+
+     test([array string_1].filter_kv(fn (idx, item) idx === 0 && item === string_1) === [array string_1])
+     test([array string_1].filter_kv(fn (idx, item) idx =/= 0 && item === string_1) === [array])
+     test([array string_1].filter_kv(fn (idx, item) idx === 0 && item =/= string_1) === [array])
+     test([array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5].filter_kv(fn (idx, item) idx.even?() && item =/= string_0) === [array string_2, string_3, string_3, string_5])
+     test([array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5].filter_kv(fn (idx, item) idx.even?() && item =/= string_1) === [array string_0, string_2, string_3, string_3, string_5])
+     test([array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5].filter_kv(fn (idx, item) idx.even?() && item =/= string_2) === [array string_0, string_3, string_3, string_5])
+     test([array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5].filter_kv(fn (idx, item) idx.even?() && item =/= string_3) === [array string_0, string_2, string_5])
+     test([array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5].filter_kv(fn (idx, item) idx.even?() && item =/= string_4) === [array string_0, string_2, string_3, string_3, string_5])
+     test([array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5].filter_kv(fn (idx, item) idx.even?() && item =/= string_5) === [array string_0, string_2, string_3, string_3])
+
+     let array = [array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 65]
+     test(array.filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (idx, _) idx.odd?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test(array.filter_kv(fn (idx, _) idx.even?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     array.ignore()
+
+     let array = [array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0]
+     test(array.filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (idx, _) idx.odd?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test(array.filter_kv(fn (idx, _) idx.even?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     array.ignore()
+
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 65].filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 65].filter_kv(fn (idx, _) idx.odd?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 65].filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 65].filter_kv(fn (idx, _) idx.even?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (idx, _) idx.odd?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (idx, _) idx.even?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+
+     let array = [array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 66]
+     test(array.filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (idx, _) idx.even?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test(array.filter_kv(fn (idx, _) idx.odd?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     array.ignore()
+
+     let array = [array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0]
+     test(array.filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (idx, _) idx.even?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test(array.filter_kv(fn (idx, _) idx.odd?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     array.ignore()
+
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 66].filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 66].filter_kv(fn (idx, _) idx.even?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 66].filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 66].filter_kv(fn (idx, _) idx.odd?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (idx, _) idx.even?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (idx, _) idx.odd?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+
+     let array = [array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 67]
+     test(array.filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (idx, _) idx.odd?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test(array.filter_kv(fn (idx, _) idx.even?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     array.ignore()
+
+     let array = [array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0]
+     test(array.filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (idx, _) idx.odd?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test(array.filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test(array.filter_kv(fn (idx, _) idx.even?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     array.ignore()
+
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 67].filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 67].filter_kv(fn (idx, _) idx.odd?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 67].filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test([array string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1][1, 67].filter_kv(fn (idx, _) idx.even?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (idx, _) idx.odd?()) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (_, item) item === string_1) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+     test([array string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0, string_1, string_0].filter_kv(fn (idx, _) idx.even?()) === [array string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1, string_1])
+
+     test([array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0].filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0].filter_kv(fn (_, item) item =/= string_0) === [array])
+     test([array string_1, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0].filter_kv(fn (_, item) item =/= string_0) === [array string_1])
+     test([array string_1, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0].filter_kv(fn (_, item) item === string_0) === [array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0])
+     test([array string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0, string_0].filter_kv(fn (_, item) item =/= string_0) === [array string_1, string_2, string_3, string_4, string_5, string_6])
+
+     let array_1        = rnd_string_array()
+     let array_2        = if (rnd() & 1) === 0; array_1 else null
+     let expected_array = array_1.foldl_kv([array], fn (expected_array, idx, string) if not string.short_type?() && idx.even?(); expected_array.append(string) else expected_array)
+     test(array_1.filter_kv(fn (idx, string) not string.short_type?() && idx.even?()) === expected_array)
+     array_2.ignore()
+
+     let array_1        = rnd_string_array()
+     let array_2        = if (rnd() & 1) === 0; array_1 else null
+     let expected_array = array_1.foldl_kv([array], fn (expected_array, idx, string) if not string.short_type?() && idx.even?(); expected_array.append(string) else expected_array)
+     test(array_1.filter_kv(fn (idx, string) array_1 === 17 || not string.short_type?() && idx.even?()) === expected_array)
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test([table].filter_kv(fn (key, value) key === string_1 && value === string_0) === [table])
+     let table = [table].init(10)
+     test(table.filter_kv(fn (key, value) key === string_1 && value === string_0) === [table])
+     table.ignore()
+     let table = [table string_0 = string_1]
+     test(table.filter_kv(fn (key, value) key === string_0 && value === string_1) === [table string_0 = string_1])
+     test(table.filter_kv(fn (key, value) key =/= string_0 && value === string_1) === [table])
+     test(table.filter_kv(fn (key, value) key === string_0 && value =/= string_1) === [table])
+     table.ignore()
+     let table = [table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0]
+     test(table.filter_kv(fn (key, value) key =/= string_5 && value =/= string_0) === [table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5])
+     test(table.filter_kv(fn (key, value) key =/= string_0 && value =/= string_1) === [table string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0])
+     test(table.filter_kv(fn (key, value) key =/= string_1 && value =/= string_2) === [table string_0 = string_1, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0])
+     test(table.filter_kv(fn (key, value) key =/= string_2 && value =/= string_3) === [table string_0 = string_1, string_1 = string_2, string_3 = string_4, string_4 = string_5, string_5 = string_0])
+     test(table.filter_kv(fn (key, value) key =/= string_3 && value =/= string_4) === [table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_4 = string_5, string_5 = string_0])
+     test(table.filter_kv(fn (key, value) key =/= string_4 && value =/= string_5) === [table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_5 = string_0])
+     test(table.filter_kv(fn (key, value) key =/= string_5 && value =/= string_5) === [table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4])
+     table.ignore()
+
+     test([table].init(10).filter_kv(fn (key, value) key === string_1 && value === string_0) === [table])
+     test([table string_0 = string_1].filter_kv(fn (key, value) key === string_0 && value === string_1) === [table string_0 = string_1])
+     test([table string_0 = string_1].filter_kv(fn (key, value) key =/= string_0 && value === string_1) === [table])
+     test([table string_0 = string_1].filter_kv(fn (key, value) key === string_0 && value =/= string_1) === [table])
+     test([table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0].filter_kv(fn (key, value) key =/= string_5 && value =/= string_0) === [table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5])
+     test([table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0].filter_kv(fn (key, value) key =/= string_0 && value =/= string_1) === [table string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0])
+     test([table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0].filter_kv(fn (key, value) key =/= string_1 && value =/= string_2) === [table string_0 = string_1, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0])
+     test([table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0].filter_kv(fn (key, value) key =/= string_2 && value =/= string_3) === [table string_0 = string_1, string_1 = string_2, string_3 = string_4, string_4 = string_5, string_5 = string_0])
+     test([table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0].filter_kv(fn (key, value) key =/= string_3 && value =/= string_4) === [table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_4 = string_5, string_5 = string_0])
+     test([table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0].filter_kv(fn (key, value) key =/= string_4 && value =/= string_5) === [table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_5 = string_0])
+     test([table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4, string_4 = string_5, string_5 = string_0].filter_kv(fn (key, value) key =/= string_5 && value =/= string_5) === [table string_0 = string_1, string_1 = string_2, string_2 = string_3, string_3 = string_4])
+
+     let table_1        = rnd_string_table()
+     let table_2        = if (rnd() & 1) === 0; table_1 else null
+     let expected_table = table_1.foldl_kv([table], fn (expected_table, key, value) if not (key.short_type?() || value.short_type?()); new (expected_table)[key] <= value else expected_table)
+     test(table_1.filter_kv(fn (key, value) not (key.short_type?() || value.short_type?())) === expected_table)
+     table_2.ignore()
+
+     let table_1        = rnd_string_table()
+     let table_2        = if (rnd() & 1) === 0; table_1 else null
+     let expected_table = table_1.foldl_kv([table], fn (expected_table, key, value) if not (key.short_type?() || value.short_type?()); new (expected_table)[key] <= value else expected_table)
+     test(table_1.filter_kv(fn (key, value) table_1 === 17 || not (key.short_type?() || value.short_type?())) === expected_table)
+     table_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test([obj].filter_kv(fn (key, value) key === :0 && value === string_0) === [obj])
+     let obj = [obj].init(10)
+     test(obj.filter_kv(fn (key, value) key === :0 && value === string_0) === [obj])
+     obj.ignore()
+     let obj = [obj :0 = string_1]
+     test(obj.filter_kv(fn (key, value) key === :0 && value === string_1) === [obj :0 = string_1])
+     test(obj.filter_kv(fn (key, value) key =/= :0 && value === string_1) === [obj])
+     test(obj.filter_kv(fn (key, value) key === :0 && value =/= string_1) === [obj])
+     obj.ignore()
+     let obj = [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0]
+     test(obj.filter_kv(fn (key, value) key =/= :5 && value =/= string_0) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5])
+     test(obj.filter_kv(fn (key, value) key =/= :0 && value =/= string_1) === [obj :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0])
+     test(obj.filter_kv(fn (key, value) key =/= :1 && value =/= string_2) === [obj :0 = string_1, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0])
+     test(obj.filter_kv(fn (key, value) key =/= :2 && value =/= string_3) === [obj :0 = string_1, :1 = string_2, :3 = string_4, :4 = string_5, :5 = string_0])
+     test(obj.filter_kv(fn (key, value) key =/= :3 && value =/= string_4) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :4 = string_5, :5 = string_0])
+     test(obj.filter_kv(fn (key, value) key =/= :4 && value =/= string_5) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :5 = string_0])
+     test(obj.filter_kv(fn (key, value) key =/= :5 && value =/= string_5) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4])
+     obj.ignore()
+     let obj = [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]]
+     test(obj.filter_kv(fn (key, value) key =/= :5 && value =/= string_0) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5])
+     test(obj.filter_kv(fn (key, value) key =/= :5 && value =/= string_0):_ === [obj :7 = string_1])
+     test(obj.filter_kv(fn (key, value) key =/= :0 && value =/= string_1) === [obj :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0])
+     test(obj.filter_kv(fn (key, value) key =/= :0 && value =/= string_1):_ === [obj :7 = string_1])
+     test(obj.filter_kv(fn (key, value) key =/= :1 && value =/= string_2) === [obj :0 = string_1, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0])
+     test(obj.filter_kv(fn (key, value) key =/= :1 && value =/= string_2):_ === [obj :7 = string_1])
+     test(obj.filter_kv(fn (key, value) key =/= :2 && value =/= string_3) === [obj :0 = string_1, :1 = string_2, :3 = string_4, :4 = string_5, :5 = string_0])
+     test(obj.filter_kv(fn (key, value) key =/= :2 && value =/= string_3):_ === [obj :7 = string_1])
+     test(obj.filter_kv(fn (key, value) key =/= :3 && value =/= string_4) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :4 = string_5, :5 = string_0])
+     test(obj.filter_kv(fn (key, value) key =/= :3 && value =/= string_4):_ === [obj :7 = string_1])
+     test(obj.filter_kv(fn (key, value) key =/= :4 && value =/= string_5) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :5 = string_0])
+     test(obj.filter_kv(fn (key, value) key =/= :4 && value =/= string_5):_ === [obj :7 = string_1])
+     test(obj.filter_kv(fn (key, value) key =/= :5 && value =/= string_5) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4])
+     test(obj.filter_kv(fn (key, value) key =/= :5 && value =/= string_5):_ === [obj :7 = string_1])
+     obj.ignore()
+
+     test([obj].init(10).filter_kv(fn (key, value) key === :0 && value === string_0) === [obj])
+     test([obj :0 = string_1].filter_kv(fn (key, value) key === :0 && value === string_1) === [obj :0 = string_1])
+     test([obj :0 = string_1].filter_kv(fn (key, value) key =/= :0 && value === string_1) === [obj])
+     test([obj :0 = string_1].filter_kv(fn (key, value) key === :0 && value =/= string_1) === [obj])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0].filter_kv(fn (key, value) key =/= :5 && value =/= string_0) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0].filter_kv(fn (key, value) key =/= :0 && value =/= string_1) === [obj :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0].filter_kv(fn (key, value) key =/= :1 && value =/= string_2) === [obj :0 = string_1, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0].filter_kv(fn (key, value) key =/= :2 && value =/= string_3) === [obj :0 = string_1, :1 = string_2, :3 = string_4, :4 = string_5, :5 = string_0])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0].filter_kv(fn (key, value) key =/= :3 && value =/= string_4) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :4 = string_5, :5 = string_0])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0].filter_kv(fn (key, value) key =/= :4 && value =/= string_5) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :5 = string_0])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0].filter_kv(fn (key, value) key =/= :5 && value =/= string_5) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :5 && value =/= string_0) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :5 && value =/= string_0):_ === [obj :7 = string_1])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :0 && value =/= string_1) === [obj :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :0 && value =/= string_1):_ === [obj :7 = string_1])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :1 && value =/= string_2) === [obj :0 = string_1, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :1 && value =/= string_2):_ === [obj :7 = string_1])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :2 && value =/= string_3) === [obj :0 = string_1, :1 = string_2, :3 = string_4, :4 = string_5, :5 = string_0])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :2 && value =/= string_3):_ === [obj :7 = string_1])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :3 && value =/= string_4) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :4 = string_5, :5 = string_0])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :3 && value =/= string_4):_ === [obj :7 = string_1])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :4 && value =/= string_5) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :5 = string_0])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :4 && value =/= string_5):_ === [obj :7 = string_1])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :5 && value =/= string_5) === [obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4])
+     test([obj :0 = string_1, :1 = string_2, :2 = string_3, :3 = string_4, :4 = string_5, :5 = string_0, :_ = [obj :7 = string_1]].filter_kv(fn (key, value) key =/= :5 && value =/= string_5):_ === [obj :7 = string_1])
+
+     let obj_1        = rnd_string_obj()
+     let obj_2        = if (rnd() & 1) === 0; obj_1 else null
+     let expected_obj = obj_1.foldl_kv([obj], fn (expected_obj, key, value) if key < :naaaz && not value.short_type?(); new (expected_obj)[key] <= value else expected_obj)
+     test(obj_1.filter_kv(fn (key, value) key < :naaaz && not value.short_type?()) === expected_obj)
+     obj_2.ignore()
+
+     let obj_1        = rnd_string_obj()
+     let obj_2        = if (rnd() & 1) === 0; obj_1 else null
+     let expected_obj = obj_1.foldl_kv([obj], fn (expected_obj, key, value) if key < :naaaz && not value.short_type?(); new (expected_obj)[key] <= value else expected_obj)
+     test(obj_1.filter_kv(fn (key, value) obj_1 === 17 || key < :naaaz && not value.short_type?()) === expected_obj)
+     obj_2.ignore()
+
+     test(to_container__filter_kv("1234").filter_kv(fn (_, char) char =/= '2') === to_container__filter_kv("134"))
+     test(to_container__filter_kv("1234").filter_kv(fn (_, char) char =/= '3') === to_container__filter_kv("124"))
+     test(to_custom_container__filter_kv("1234").filter_kv(fn (_, char) char =/= '2') === to_custom_container__filter_kv("134"))
+     test(to_custom_container__filter_kv("1234").filter_kv(fn (_, char) char =/= '3') === to_custom_container__filter_kv("124"))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.filter_kv(fn (key, value) key === value === string_1).get_error_id() === :1)
+     test("".filter_kv(error_1).get_error_id() === :1)
+     test(error_1.filter_kv(error_2).get_error_id() === :1)
+     test(error_2.filter_kv(error_1).get_error_id() === :2)
+     test(error_1.filter_kv(heap_string()).get_error_id() === :1)
+     test((_ === heap_string()).scarlet__erase_info().filter_kv(error_1).get_error_id() === :1)
+
+     test((_ === heap_string()).scarlet__erase_info().filter_kv(fn (key, value) key === value === string_1).get_error_id() === :invalid_type)
+     test(heap_string().filter_kv(heap_table()).get_error_id() === :invalid_type)
+     test((_ === heap_string()).scarlet__erase_info().filter_kv(heap_table()).get_error_id() === :invalid_type)
+
+     test(to_broken_container__filter_kv("").filter_kv(_ === _).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__filter_kv("").filter_kv(_ === _).get_error_id() === :invalid_type)
+     test(to_error_container__filter_kv("").filter_kv(_ === _).get_error_id() === :3)
+     test(to_error_custom_container__filter_kv("").filter_kv(_ === _).get_error_id() === :4)
+
+     test("".filter_kv(fn (_, _, _) string_1) === "")
+     test(u"".filter_kv(fn (_, _, _) string_1) === u"")
+     test([array].filter_kv(fn (_, _, _) string_1) === [array])
+     test([table].filter_kv(fn (_, _, _) string_1) === [table])
+     test([obj].filter_kv(fn (_, _, _) string_1) === [obj])
+     test([obj :_ = [obj]].filter_kv(fn (_, _, _) string_1) === [obj])
+     test([obj :_ = [obj]].filter_kv(fn (_, _, _) string_1):_ === [obj])
+
+     test("".filter_kv(fn (_, _) string_1) === "")
+     test(u"".filter_kv(fn (_, _) string_1) === u"")
+     test([array].filter_kv(fn (_, _) string_1) === [array])
+     test([table].filter_kv(fn (_, _) string_1) === [table])
+     test([obj].filter_kv(fn (_, _) string_1) === [obj])
+     test([obj :_ = [obj]].filter_kv(fn (_, _) string_1) === [obj])
+     test([obj :_ = [obj]].filter_kv(fn (_, _) string_1):_ === [obj])
+
+     test("1".filter_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().filter_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"1".filter_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().filter_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array heap_string()].filter_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table heap_string() = heap_string()].filter_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :1 = heap_string()].filter_kv(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test("1".filter_kv(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test(heap_string().filter_kv(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test(u"1".filter_kv(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test(heap_byte_array().filter_kv(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test([array heap_string()].filter_kv(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test([table heap_string() = heap_string()].filter_kv(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test([obj :1 = heap_string()].filter_kv(fn (_, _) string_1).get_error_id() === :invalid_type)
+}

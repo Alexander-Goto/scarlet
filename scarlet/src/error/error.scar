@@ -1,0 +1,224 @@
+`cold`
+fn error__flag_not_alone(flag) fail("Error: The \"" ++ flag ++ "\" flag must be specified without any other flags.")
+
+`cold`
+fn error__flag_set_twice(flag) fail("Error: The \"" ++ flag ++ "\" flag must be specified once.")
+
+`cold`
+fn error__unknown_flag(flag) fail("Error: The \"" ++ flag ++ "\" flag is unknown to the compiler.")
+
+`cold`
+fn error__no_sources() fail("Error: No source code specified.")
+
+`cold`
+fn error__no_out() fail("Error: Output file name not specified.")
+
+`cold`
+fn error__no_name() fail("Error: Module name not specified.")
+
+`cold`
+fn error__src_module_in_bin_modules(name) fail("Error: The module named \"" ++ name ++ "\" if both loaded and compiled.")
+
+`cold`
+fn error__no_end_id(start_id, end_id) fail("Error: " ++ msg__make(start_id, "Found " ++ start_id:text ++ " but no matching " ++ end_id ++ "."))
+
+`cold`
+fn error__cant_load_file(file_name) fail("Error: Failed to load file \"" ++ file_name ++ "\".")
+
+`cold`
+fn error__cant_save_to_file(file_name) fail("Error: Failed to save data to file \"" ++ file_name ++ "\".")
+
+`cold`
+fn error__invalid_file_enc(file_name) fail("Error: File \"" ++ file_name ++ "\" has invalid encoding.")
+
+`cold`
+fn error__invalid_char_in_src(char) {
+     let msg = if char:text.first().graphic?() && not char:text.first().space?();
+          "The use of the '" ++ char:text ++ "' character is allowed only in a comment, string(\"\") and character('')"
+     else "The use of a character with corsar code " ++ char:text.first().to_int().to_string() ++ " is allowed only in a comment, string(\"\") and character('')"
+
+     fail("Error: " ++ msg__make(char, msg))
+}
+
+`cold`
+fn error__not_ustring_ze(co_ords) fail("Error: " ++ msg__make(co_ords, "Only unicode strings can be null-terminated."))
+
+`cold`
+fn error__already_exists(name, owner) fail("Error: " ++ msg__make(name, "The " ++ owner ++ " \"" ++ name:text ++ "\" already exists."))
+
+`cold`
+fn error__too_many_chars(char) fail("Error: " ++ msg__make(char, "A constant of type \"char\" must contain one character. (" ++ char:text ++ ")"))
+
+`cold`
+fn error__invalid_escape_sequence(sequence) fail("Error: " ++ msg__make(sequence, sequence:text ++ " is an invalid escape sequence."))
+
+`cold`
+fn error__unexpected_eof(file_name) fail("Error: The \"" ++ file_name ++ "\" file has ended, even though there should be more data in it.")
+
+`cold`
+fn error__not_expected_token(token, variants) {
+     let msg = switch variants.type()
+     case "core.null":
+          if token:text == "\n"
+               "Unexpected end of line."
+          else "The text \"" ++ token:text ++ "\" should not be in the place where it is."
+     case "core.string":
+          if token:text == "\n"
+               "The end of the line should be replaced by the text \"" ++ variants ++ "\""
+          else if variants == "\n"
+               "Instead of the text \"" ++ token:text ++ "\" there should be a new line."
+          else "Instead of the text \"" ++ token:text ++ "\" there should be the text \"" ++ variants ++ "\"."
+     case "core.set":
+          (if token:text == "\n"
+               "At the end of the line "
+          else "In place of the text \"" ++ token:text ++ "\"") ++
+               " must be one of the following options: " ++
+               variants.foldl([set], fn (variants, variant) variants.append(if variant == "\n"; "a new line" else "\"" ++ variant ++ "\"")).join(", ") ++ "."
+     default: unreachable()
+
+     fail("Error: " ++ msg__make(token, msg))
+}
+
+`cold`
+fn error__invalid_module_name(name) fail("Error: \"" ++ name ++ "\" is an invalid module name.")
+
+`cold`
+fn error__invalid_name(name, owner) fail("Error: " ++ msg__make(name, "\"" ++ name:text ++ "\" is an invalid " ++ owner ++ " name."))
+
+`cold`
+fn error__invalid_attribute(attribute, owner) fail("Error: " ++ msg__make(attribute, "\"" ++ attribute:text ++ "\" is an invalid " ++ owner ++ " attribute."))
+
+`cold`
+fn error__incompatible_attributes(attribute_1, attribute_2) fail("Error: " ++ msg__make(attribute_1, "The attributes \"" ++ attribute_1:text ++ "\" and \"" ++ attribute_2 ++ "\" are incompatible."))
+
+`cold`
+fn error__fn_params_num_exceeded(param) fail("Error: " ++ msg__make(param, "The maximum number of function parameters is 16."))
+
+`cold`
+fn error__invalid_error_items_num(co_ords) fail("Error: " ++ msg__make(co_ords, "The error must include three items: an error code, a text message, and additional error data."))
+
+`cold`
+fn error__invalid_breaker_items_num(co_ords) fail("Error: " ++ msg__make(co_ords, "The breaker can only have one item."))
+
+`cold`
+fn error__box_items_num_exceeded(co_ords) fail("Error: " ++ msg__make(co_ords, "The maximum number of items in a box is 16."))
+
+`cold`
+fn error__not_names_in_unpack(co_ords) fail("Error: " ++ msg__make(co_ords, "When unpacking, no constant name is specified."))
+
+`cold`
+fn error__gconst_is_error_or_breaker(gconst) fail("Error: " ++ msg__make(gconst, "A global constant can't be an error or an breaker."))
+
+`cold`
+fn error__reuse(exp, type) fail("Error: " ++ msg__make(exp, "Reuse of a constant of type \"core." ++ type.join(", core.") ++ "\". (" ++ exp:text ++ ")"))
+
+`cold`
+fn error__invalid_type(exp, expected, has) {
+     let expected = switch expected.type()
+     case "core.null":
+          null
+     case "core.string":
+          if "short_".prefix_of?(expected); expected.drop(6) else expected
+     case "core.set": {
+          let expected = expected.foldl([set], fn (expected, type) expected.append(if "short_".prefix_of?(type); type.drop(6) else type)).remove("holder")
+          if expected.len() == 1; expected.take_one() else expected
+     }
+     default: unreachable()
+
+     let has = switch has.type()
+     case "core.string":
+          if "short_".prefix_of?(has); has.drop(6) else has
+     case "core.set": {
+          let has = has.foldl([set], fn (has, type) has.append(if "short_".prefix_of?(type); type.drop(6) else type)).remove("holder")
+          if has.len() == 1; has.take_one() else has
+     }
+     default: unreachable()
+
+     let msg = "The expression \"" ++ exp:text ++ "\" is of an incorrect type.\n" ++ switch expected.type()
+     case "core.null":
+          ""
+     case "core.string":
+          "Expected type is " ++ expected ++ ".\n"
+     case "core.set":
+          "Expected types: " ++ expected.join(", ") ++ ".\n"
+     default: unreachable()
+
+     let msg = msg ++ if has.type() == "core.string"
+          "Expression type is " ++ has ++ "."
+     else "Expression types: " ++ has.join(", ") ++ "."
+
+     fail("Error: " ++ msg__make(exp, msg))
+}
+
+`cold`
+fn error__not_unicode_char(co_ords) fail("Error: " ++ msg__make(co_ords, "A character does not exist in unicode."))
+
+`cold`
+fn error__not_found(name, owner) fail("Error: " ++ msg__make(name, owner.first().ascii_to_upper().to_string() ++ owner.drop(1) ++ " named \"" ++ name:text ++ "\" not found."))
+
+`cold`
+fn error__invalid_float(float) fail("Error: " ++ msg__make(float, "\"" ++ float:text ++ "\" is not a valid floating point number."))
+
+`cold`
+fn error__recursive_gconst(name) fail("Error: " ++ msg__make(name, "The constant \"" ++ name:text ++ "\" refers to itself."))
+
+`cold`
+fn error__found_few_variants(name, owner, modules)
+     fail("Error: " ++ msg__make(name, "There are several modules with \"" ++ name:text ++ "\" " ++ owner ++ ". (Modules: " ++ modules.join(", ") ++ ")"))
+
+`cold`
+fn error__invalid_int(int) fail("Error: " ++ msg__make(int, "\"" ++ int:text ++ "\" is not a valid integer number."))
+
+`cold`
+fn error__too_many_borrowed(co_ords) fail("Error: " ++ msg__make(co_ords, "The maximum number of constants borrowed by a lambda function from outside is 65535. (this limit was exceeded)"))
+
+`cold`
+fn error__invalid_token(token) fail("Error: " ++ msg__make(token, "The token must be 1-22 lowercase english characters long and may have one of the following suffixes: '!', '!!', '?'."))
+
+`cold`
+fn error__ignored_error(code) fail("Error: " ++ msg__make(code, "The expression \"" ++ code:text ++ "\" return's an error, which is ignored."))
+
+`cold`
+fn error__to_many_unpack_names(co_ords) fail("Error: " ++ msg__make(co_ords, "When unpacking, there are more constants names specified than are corresponding items."))
+
+`cold`
+fn error__out_of_bounds(value) fail("Error: " ++ msg__make(value, "The value of \"" ++ value:text ++ "\" is out of bounds."))
+
+`cold`
+fn error__incorrect_switch_variant(exp) fail("Error: " ++ msg__make(exp, "The expression \"" ++ exp:text ++ "\" is not independent."))
+
+`cold`
+fn error__wrong_args_num(func) fail("Error: " ++ msg__make(func, "The wrong number of arguments was passed to the function \"" ++ func:text ++ "\"."))
+
+`cold`
+fn error__div_by_zero(zero) fail("Error: " ++ msg__make(zero, "Division by zero."))
+
+`cold`
+fn error__nan_cmp(nan) fail("Error: " ++ msg__make(nan, "Comparsion with NaN."))
+
+`cold`
+fn error__invalid_item_type(co_ords, expected, has) fail("Error: " ++ msg__make(co_ords, "The container item is of an incorrect type.\n" ++ "Expected type is " ++ expected ++ ".\n" ++ "Item type is " ++ has ++ "."))
+
+`cold`
+fn error__not_utf8_string(string) fail("Error: " ++ msg__make(string, string:text ++ " is not valid utf-8 string."))
+
+`cold`
+fn error__not_found_when_make_prg(owner, module, name, module_exists)
+     if module_exists
+          fail("Error: The " ++ owner ++ " " ++ name ++ " from the " ++ module ++ " module is requred, but there is no such " ++ owner ++ " in the " ++ module ++ " module.")
+     else fail("Error: The " ++ owner ++ " " ++ name ++ " from the " ++ module ++ " module is requred, but there is no such module.")
+
+`cold`
+fn error__not_found_ir_const(module) fail("Data from the \"" ++ module ++ "\" module was used, but the module itself was not loaded.")
+
+`cold`
+fn error__no_main() fail("The main function was not found in the main module.")
+
+`cold`
+fn error__invalid_main() fail("The main function must not have attributes or parameters.")
+
+`cold`
+fn error__two_modules_with_same_name(name) fail("Error: Two modules have the name \"" ++ name ++ "\".")
+
+`cold`
+fn error__incorrect_module_file(file_name) fail("Error: File \"" ++ file_name ++ "\" is not a valid module.")

@@ -1,0 +1,77 @@
+fn ir__core_fn_max_min(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain) {
+     let [box arg_0, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, is_first_in_chain)
+     let [box arg_1, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, is_first_in_chain)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg_0:code:text ++ ", " ++ arg_1:code:text ++ ")")
+
+     let arg_0_is_nan = arg_0:comptime_val:type === "float" && arg_0:comptime_val:value.nan?()
+     let arg_1_is_nan = arg_1:comptime_val:type === "float" && arg_1:comptime_val:value.nan?()
+     if arg_0_is_nan || arg_1_is_nan
+          error__nan_cmp((if arg_0_is_nan; arg_0 else arg_1):code)
+     else null
+
+     if arg_0:comptime_val.null?() || arg_1:comptime_val.null?() || not arg_0:comptime_val:type.in?(@main.always_ord_types) {
+          if arg_0:comptime_val:type === "obj" && arg_0:comptime_val:value[:_][if fn_ir_name == "McoreFNmax"; :core_max else :core_min].null?()
+               error__invalid_type(arg_0:code, if fn_ir_name == "McoreFNmax"; ".core_max" else ".core_min", "obj")
+          else null
+
+          let arg_0_possible_types = arg_0:possible_types
+          let arg_1_possible_types = arg_1:possible_types
+
+          let result_possible_types = if arg_0_possible_types.null?()
+               @main.ord_types__mtd
+          else {
+               let new_arg_0_possible_types = arg_0_possible_types.filter(_.in?(@main.ord_types__mtd)).prepare_types_for_cmp()
+               if new_arg_0_possible_types.empty?()
+                    error__invalid_type(arg_0:code, @main.ord_types__mtd, arg_0_possible_types)
+               else new_arg_0_possible_types
+          }
+
+          let result_possible_types = if arg_1_possible_types.null?()
+               result_possible_types
+          else {
+               let new_arg_1_possible_types = arg_1_possible_types.filter(_.in?(result_possible_types)).prepare_types_for_cmp()
+               if new_arg_1_possible_types.empty?()
+                    error__invalid_type(arg_1:code, result_possible_types, arg_1_possible_types)
+               else new_arg_1_possible_types
+          }
+
+          let result_possible_types = if "string".in?(result_possible_types) && not (arg_0.maybe_has_type?("string") || arg_1.maybe_has_type?("string"))
+               result_possible_types.remove("string")
+          else if "short_string".in?(result_possible_types) && not (arg_0.maybe_has_type?("short_string") || arg_1.maybe_has_type?("short_string"))
+               result_possible_types.remove("short_string")
+          else result_possible_types
+
+          let result_possible_types = if "byte_array".in?(result_possible_types) && not (arg_0.maybe_has_type?("byte_array") || arg_1.maybe_has_type?("byte_array"))
+               result_possible_types.remove("byte_array")
+          else if "short_byte_array".in?(result_possible_types) && not (arg_0.maybe_has_type?("short_byte_array") || arg_1.maybe_has_type?("short_byte_array"))
+               result_possible_types.remove("short_byte_array")
+          else result_possible_types
+
+          let result_possible_types = if arg_0_possible_types.null?() || arg_1_possible_types.null?() ||
+                    arg_0_possible_types.len() /= 1 || not arg_0_possible_types.take_one().in?(@main.always_ord_types) ||
+                    arg_0_possible_types /= arg_1_possible_types
+               result_possible_types.append("error")
+          else result_possible_types
+
+          let [box operand, exp_data, ir, final_data, dependencies, src_gconsts] = ir__fn_call(fn_ir_name, [array arg_0, arg_1], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+
+          [box new (operand):possible_types <= result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts]
+     } else {
+          arg_1.maybe_has_type!(arg_0:possible_types.prepare_types_for_cmp())
+
+          let operand = if fn_ir_name == "McoreFNmax"
+               if arg_0:comptime_val:value >= arg_1:comptime_val:value; arg_0 else arg_1
+          else if arg_0:comptime_val:value <= arg_1:comptime_val:value; arg_0 else arg_1
+
+          let operand = new (operand):code <= code
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

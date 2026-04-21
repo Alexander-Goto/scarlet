@@ -1,0 +1,89 @@
+let num__even = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_even? = fn (num) num:value.even?()
+     ]
+]
+
+fn to_num__even?(arg) new (@main.num__even):value <= arg
+
+fn to_custom_num__even?(arg) custom__create(
+     arg
+     [obj
+          :core_even? = fn (num) num.custom__get_data().even?()
+     ]
+)
+
+let broken_num__even = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_even? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__even?(arg) new (@main.broken_num__even):value <= arg
+
+fn to_broken_custom_num__even?(arg) custom__create(
+     arg
+     [obj
+          :core_even? = fn (_) heap_string()
+     ]
+)
+
+let error_num__even = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_even? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__even?(arg) new (@main.error_num__even):value <= arg
+
+fn to_error_custom_num__even?(arg) custom__create(
+     arg
+     [obj
+          :core_even? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__even?() {
+     test(0.even?())
+     test(2.even?())
+     test(9223372036854775806.even?())
+     test(-2.even?())
+     test(-9223372036854775808.even?())
+     test(not 1.even?())
+     test(not 3.even?())
+     test(not 9223372036854775807.even?())
+     test(not -1.even?())
+     test(not -3.even?())
+     test(not -9223372036854775807.even?())
+
+     test(0b00.even?())
+     test(0b02.even?())
+     test(0bfe.even?())
+     test(not 0b01.even?())
+     test(not 0b03.even?())
+     test(not 0bff.even?())
+
+     test(to_num__even?(10).even?())
+     test(not to_num__even?(11).even?())
+     test(not to_num__even?(17).even?())
+
+     test(to_custom_num__even?(10).even?())
+     test(not to_custom_num__even?(11).even?())
+     test(not to_custom_num__even?(17).even?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.even?().get_error_id() === :1)
+     test(heap_table().even?().get_error_id() === :invalid_type)
+
+     test(to_broken_num__even?(0).even?().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__even?(0).even?().get_error_id() === :invalid_type)
+     test(to_error_num__even?(0).even?().get_error_id() === :3)
+     test(to_error_custom_num__even?(0).even?().get_error_id() === :4)
+}

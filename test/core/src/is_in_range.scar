@@ -1,0 +1,143 @@
+let const__in_range = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_cmp = fn (const_1, const_2) cmp(const_1:value, const_2:value)
+     ]
+]
+
+fn to_const__in_range?(arg) new (@main.const__in_range):value <= arg
+
+fn to_custom_const__in_range?(arg) custom__create(
+     arg
+     [obj
+          :core_cmp = fn (const_1, const_2) cmp(const_1.custom__get_data(), const_2.custom__get_data())
+     ]
+)
+
+`noinline`
+fn test__in_range?() {
+     test("".in_range?("", "a"))
+     test(not "".in_range?("", ""))
+     test("ab".in_range?("a", "b"))
+     test("0123456789abcde".in_range?("0", "1"))
+     test("0123456789abcdef".in_range?("0123456789abcde", "1"))
+
+     let string_1 = rnd_string()
+     let string_2 = rnd_string()
+     let string_3 = rnd_string()
+     test(string_1.in_range?(string_2, string_3) === (string_1 >= string_2 && string_1 < string_3))
+
+     test(u"".in_range?(u"", u"a"))
+     test(not u"".in_range?(u"", u""))
+     test(u"ab".in_range?(u"a", u"b"))
+     test(u"0123456789abcde".in_range?(u"0", u"1"))
+     test(u"0123456789abcdef".in_range?(u"0123456789abcde", u"1"))
+
+     let array_1 = rnd_byte_array()
+     let array_2 = rnd_byte_array()
+     let array_3 = rnd_byte_array()
+     test(array_1.in_range?(array_2, array_3) === (array_1 >= array_2 && array_1 < array_3))
+
+     test(:0.in_range?(:0, :00))
+     test(not :0.in_range?(:0, :0))
+     test(:ab.in_range?(:a, :b))
+     test(:0123456789abcde.in_range?(:0, :1))
+
+     let token_1 = rnd_token()
+     let token_2 = rnd_token()
+     let token_3 = rnd_token()
+     test(token_1.in_range?(token_2, token_3) === (token_1 >= token_2 && token_1 < token_3))
+
+     test(0x00.in_range?(0x00, 0x01))
+     test(not 0x00.in_range?(0x00, 0x00))
+     test(0xa0.in_range?(0xa0, 0xb0))
+
+     let byte_1 = rnd_byte()
+     let byte_2 = rnd_byte()
+     let byte_3 = rnd_byte()
+     test(byte_1.in_range?(byte_2, byte_3) === (byte_1 >= byte_2 && byte_1 < byte_3))
+
+     test('a'.in_range?('a', 'b'))
+     test(not 'a'.in_range?('a', 'a'))
+     test('b'.in_range?('a', 'c'))
+
+     let char_1 = rnd_char()
+     let char_2 = rnd_char()
+     let char_3 = rnd_char()
+     test(char_1.in_range?(char_2, char_3) === (char_1 >= char_2 && char_1 < char_3))
+
+     test(0.in_range?(0, 1))
+     test(0.in_range?(-1, 1))
+     test(not 0.in_range?(-1, 0))
+     test(not 0.in_range?(0, 0))
+     test(not -9223372036854775808.in_range?(-9223372036854775808, -9223372036854775808))
+     test(not 9223372036854775807.in_range?(9223372036854775807, 9223372036854775807))
+     test((rnd() & -2).in_range?(-9223372036854775808, 9223372036854775807))
+
+     let int_1 = rnd()
+     let int_2 = rnd()
+     let int_3 = rnd()
+     test(int_1.in_range?(int_2, int_3) === (int_1 >= int_2 && int_1 < int_3))
+
+     test(0.int_to_time().in_range?(0.int_to_time(), 1.int_to_time()))
+     test(1.int_to_time().in_range?(0.int_to_time(), 2.int_to_time()))
+     test(not 1.int_to_time().in_range?(0.int_to_time(), 1.int_to_time()))
+     test(not 0.int_to_time().in_range?(0.int_to_time(), 0.int_to_time()))
+
+     let time_1 = (rnd() >> 2).int_to_time()
+     let time_2 = (rnd() >> 2).int_to_time()
+     let time_3 = (rnd() >> 2).int_to_time()
+     test(time_1.in_range?(time_2, time_3) === (time_1 >= time_2 && time_1 < time_3))
+
+     test(0.0.in_range?(0.0, 1.0))
+     test(0.0.in_range?(-1.0, 1.0))
+     test(not 0.0.in_range?(-1.0, 0.0))
+     test(not 0.0.in_range?(0.0, 0.0))
+
+     let float_1 = rnd_float()
+     let float_2 = rnd_float()
+     let float_3 = rnd_float()
+     test(float_1.in_range?(float_2, float_3) === (float_1 >= float_2 && float_1 < float_3))
+
+     test([array].in_range?([array], [array 1]))
+     test([array].init(10).in_range?([array].init(10), [array heap_string()]))
+     test(not [array].init(10).in_range?([array].init(10), [array].init(10)))
+
+     let array_1 = rnd_string_array()
+     let array_2 = rnd_string_array()
+     let array_3 = rnd_string_array()
+     test(array_1.in_range?(array_2, array_3) === (array_1 >= array_2 && array_1 < array_3))
+
+     test(0.to_const__in_range?().in_range?(0.to_const__in_range?(), 1.to_const__in_range?()))
+     test(not 0.to_const__in_range?().in_range?(0.to_const__in_range?(), 0.to_const__in_range?()))
+     test(0.to_custom_const__in_range?().in_range?(0.to_custom_const__in_range?(), 1.to_custom_const__in_range?()))
+     test(not 0.to_custom_const__in_range?().in_range?(0.to_custom_const__in_range?(), 0.to_custom_const__in_range?()))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let error_3 = expected_error(:3, heap_string(), heap_string())
+     test(error_1.in_range?(heap_string(), heap_string()).get_error_id() === :1)
+     test(heap_string().in_range?(error_1, heap_string()).get_error_id() === :1)
+     test(heap_string().in_range?(heap_string(), error_1).get_error_id() === :1)
+     test(error_1.in_range?(error_2, error_3).get_error_id() === :1)
+     test(error_3.in_range?(error_2, error_1).get_error_id() === :3)
+
+     test(heap_string().in_range?(heap_string(), heap_byte_array()).get_error_id() === :invalid_type)
+     test(heap_string().in_range?(heap_byte_array(), heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().in_range?(heap_byte_array(), heap_byte_array()).get_error_id() === :invalid_type)
+     test(heap_byte_array().in_range?(heap_string(), heap_string()).get_error_id() === :invalid_type)
+     test(heap_byte_array().in_range?(heap_string(), heap_byte_array()).get_error_id() === :invalid_type)
+     test(heap_byte_array().in_range?(heap_byte_array(), heap_string()).get_error_id() === :invalid_type)
+     test(heap_table().in_range?(heap_table(), heap_table()).get_error_id() === :invalid_type)
+
+     test(nan().in_range?(0.0, 0.0).get_error_id() === :nan_cmp)
+     test(0.0.in_range?(nan(), 0.0).get_error_id() === :nan_cmp)
+     test(0.0.in_range?(0.0, nan()).get_error_id() === :nan_cmp)
+     test(nan().in_range?(nan(), nan()).get_error_id() === :nan_cmp)
+
+     test([array nan()].in_range?([array 0.0], [array 0.0]).get_error_id() === :nan_cmp)
+     test([array 0.0].in_range?([array nan()], [array 0.0]).get_error_id() === :nan_cmp)
+     test([array 0.0].in_range?([array 0.0], [array nan()]).get_error_id() === :nan_cmp)
+     test([array nan()].in_range?([array nan()], [array nan()]).get_error_id() === :nan_cmp)
+}

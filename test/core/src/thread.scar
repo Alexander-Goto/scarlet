@@ -1,0 +1,18 @@
+`noinline`
+fn test__thread() {
+     let time_after_2_sec_thrd = thread(fn () {
+          sleep(2'000'000'000)
+          time()
+     })
+     let current_time_thrd = thread(fn () time())
+
+     let time_after_2_sec = time_after_2_sec_thrd.wait()
+     let current_time     = current_time_thrd.wait()
+
+     test(time_after_2_sec > current_time)
+
+     let string = heap_string()
+     test(thread(expected_error(:1, heap_string(), heap_string())).get_error_id() === :1)
+     test(thread(heap_string()).get_error_id() === :invalid_type)
+     test(thread(fn (_) string).get_error_id() === :wrong_num_fn_args)
+}

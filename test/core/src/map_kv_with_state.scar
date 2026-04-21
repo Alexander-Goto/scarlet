@@ -1,0 +1,297 @@
+let container__map_kv_with_state = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_map_kv_with_state = fn (container, state, func) {
+               let [box container, state] = container:value.map_kv_with_state(state, func)
+               [box to_container__map_kv_with_state(container), state]
+          }
+          :core___equal__ = fn (container_1, container_2) container_1:value === container_2:value
+     ]
+]
+
+fn to_container__map_kv_with_state(arg) new (@main.container__map_kv_with_state):value <= arg
+
+fn to_custom_container__map_kv_with_state(arg) custom__create(
+     arg
+     [obj
+          :core_map_kv_with_state = fn (container, state, func) {
+               let [box container, state] = custom__get_data(container).map_kv_with_state(state, func)
+               [box to_custom_container__map_kv_with_state(container), state]
+          }
+          :core___equal__ = fn (container_1, container_2) container_1.custom__get_data() === container_2.custom__get_data()
+     ]
+)
+
+let broken_container__map_kv_with_state = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_map_kv_with_state = fn (_, _, _) _ ++ heap_table()
+     ]
+]
+
+fn to_broken_container__map_kv_with_state(arg) new (@main.broken_container__map_kv_with_state):value <= arg
+
+fn to_broken_custom_container__map_kv_with_state(arg) custom__create(
+     arg
+     [obj
+          :core_map_kv_with_state = fn (_, _, _) _ ++ heap_table()
+     ]
+)
+
+let error_container__map_kv_with_state = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_map_kv_with_state = fn (_, _, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__map_kv_with_state(arg) new (@main.error_container__map_kv_with_state):value <= arg
+
+fn to_error_custom_container__map_kv_with_state(arg) custom__create(
+     arg
+     [obj
+          :core_map_kv_with_state = fn (_, _, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__map_kv_with_state() {
+     let heap_string = heap_string()
+
+     let items = "3".to_array()
+     test("".map_kv_with_state(heap_string, fn (_, _, _) null) === [box "", heap_string])
+     test("1".map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "2", heap_string])
+     test("122333444455555".map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "2/3040737384848", heap_string])
+
+     let items = "\000093".to_array()
+     test("\000091".map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "\000092", heap_string])
+     test("\0000912\000092\000093\000093\000093\000094\000094".map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "\000092/\000093\000090\000094\000090\000097\000093", heap_string])
+
+     let items  = "3".to_array()
+     let string = "011012375611135" ++ "f"
+     test("011012375611135f".map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "1.2-2/46852.208e", heap_string])
+     test(string.map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "1.2-2/46852.208e", heap_string])
+     test(string.map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "1.2-2/46852.208e", heap_string])
+
+     let items  = "\000093".to_array()
+     let string = "\000090\000091\000091\000090\000091\000092\000093\000097\000095\000096\000091\000091\000091\000093\000095" ++ "\00009f"
+     test("\000090\000091\000091\000090\000091\000092\000093\000097\000095\000096\000091\000091\000091\000093\000095\00009f".map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "\000091\00008e\000092\00008d\000092\00008f\000094\000096\000098\000095\000092\00008e\000092\000090\000098\00009e", heap_string])
+     test(string.map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "\000091\00008e\000092\00008d\000092\00008f\000094\000096\000098\000095\000092\00008e\000092\000090\000098\00009e", heap_string])
+     test(string.map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "\000091\00008e\000092\00008d\000092\00008f\000094\000096\000098\000095\000092\00008e\000092\000090\000098\00009e", heap_string])
+
+     let items  = "3".to_array()
+     let string = ("0011012375611135f" ++ "0")[1, 17]
+     test("0011012375611135f0"[1, 17].map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "1.2-2/46852.208e", heap_string])
+     test(string.map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "1.2-2/46852.208e", heap_string])
+     test(string.map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "1.2-2/46852.208e", heap_string])
+
+     let items  = "\000093".to_array()
+     let string = ("0\000090\000091\000091\000090\000091\000092\000093\000097\000095\000096\000091\000091\000091\000093\000095\00009f" ++ "0")[1, 17]
+     test("0\000090\000091\000091\000090\000091\000092\000093\000097\000095\000096\000091\000091\000091\000093\000095\00009f0"[1, 17].map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "\000091\00008e\000092\00008d\000092\00008f\000094\000096\000098\000095\000092\00008e\000092\000090\000098\00009e", heap_string])
+     test(string.map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "\000091\00008e\000092\00008d\000092\00008f\000094\000096\000098\000095\000092\00008e\000092\000090\000098\00009e", heap_string])
+     test(string.map_kv_with_state(heap_string, fn (str, idx, char) [box str, (char.to_int() + (if char > items[0]; 1 else -1) + if idx.even?(); 2 else -2).to_char()]) === [box "\000091\00008e\000092\00008d\000092\00008f\000094\000096\000098\000095\000092\00008e\000092\000090\000098\00009e", heap_string])
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = [box string_1.map_kv(fn (idx, char)
+          if not char.in_range?('\000004', (@main.last_corsar_code - 2).to_char())
+               char
+          else (char.to_int() + if idx.even?(); 1 else -1).to_char()
+     ), heap_string]
+     let have = string_1.map_kv_with_state(heap_string, fn (str, idx, char)
+          [box
+               str
+
+               if not char.in_range?('\000004', (@main.last_corsar_code - 2).to_char())
+                    char
+               else (char.to_int() + if idx.even?(); 1 else -1).to_char()
+          ]
+     )
+     test(expected === have)
+     string_2.ignore()
+
+     let items = u"3".to_array()
+     test(u"".map_kv_with_state(heap_string, fn (str, idx, byte) [box str, byte + (if byte > items[0]; 0b01 else 0bff) + if idx.even?(); 0b02 else 0bfe]) === [box u"", heap_string])
+     test(u"1".map_kv_with_state(heap_string, fn (str, idx, byte) [box str, byte + (if byte > items[0]; 0b01 else 0bff) + if idx.even?(); 0b02 else 0bfe]) === [box u"2", heap_string])
+     test(u"12233344445555".map_kv_with_state(heap_string, fn (str, idx, byte) [box str, byte + (if byte > items[0]; 0b01 else 0bff) + if idx.even?(); 0b02 else 0bfe]) === [box u"2/304073738484", heap_string])
+
+     let items  = u"3".to_array()
+     let array = u"011012375611135" ++ u"f"
+     test(u"011012375611135f".map_kv_with_state(heap_string, fn (str, idx, byte) [box str, byte + (if byte > items[0]; 0b01 else 0bff) + if idx.even?(); 0b02 else 0bfe]) === [box u"1.2-2/46852.208e", heap_string])
+     test(array.map_kv_with_state(heap_string, fn (str, idx, byte) [box str, byte + (if byte > items[0]; 0b01 else 0bff) + if idx.even?(); 0b02 else 0bfe]) === [box u"1.2-2/46852.208e", heap_string])
+     test(array.map_kv_with_state(heap_string, fn (str, idx, byte) [box str, byte + (if byte > items[0]; 0b01 else 0bff) + if idx.even?(); 0b02 else 0bfe]) === [box u"1.2-2/46852.208e", heap_string])
+
+     let items  = u"3".to_array()
+     let array = (u"0011012375611135f" ++ u"0")[1, 17]
+     test(u"0011012375611135f0"[1, 17].map_kv_with_state(heap_string, fn (str, idx, byte) [box str, byte + (if byte > items[0]; 0b01 else 0bff) + if idx.even?(); 0b02 else 0bfe]) === [box u"1.2-2/46852.208e", heap_string])
+     test(array.map_kv_with_state(heap_string, fn (str, idx, byte) [box str, byte + (if byte > items[0]; 0b01 else 0bff) + if idx.even?(); 0b02 else 0bfe]) === [box u"1.2-2/46852.208e", heap_string])
+     test(array.map_kv_with_state(heap_string, fn (str, idx, byte) [box str, byte + (if byte > items[0]; 0b01 else 0bff) + if idx.even?(); 0b02 else 0bfe]) === [box u"1.2-2/46852.208e", heap_string])
+
+     let array_1  = rnd_byte_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = [box array_1.map_kv(fn (idx, byte) byte + if idx.even?(); 0b01 else 0bff), heap_string]
+     let have     = array_1.map_kv_with_state(heap_string, fn (str, idx, byte) [box str, byte + if idx.even?(); 0b01 else 0bff])
+     test(expected === have)
+     array_2.ignore()
+
+     let string_1 = heap_string
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([array].map_kv_with_state(heap_string, fn (str, idx, string) [box str, string ++ idx.to_string()]) === [box [array], heap_string])
+     test([array].init(10).map_kv_with_state(heap_string, fn (str, idx, string) [box str, string ++ idx.to_string()]) === [box [array], heap_string])
+     test([array string_1].map_kv_with_state(heap_string, fn (str, idx, string) [box str, string ++ idx.to_string()]) === [box [array string_1 ++ "0"], heap_string])
+     test([array "1", "2", "3"].map_kv_with_state(heap_string, fn (str, idx, string) [box str, string ++ idx.to_string()]) === [box [array "10", "21", "32"], heap_string])
+     test([array "0", "1", "2", "3", "0"][1, 4].map_kv_with_state(heap_string, fn (str, idx, string) [box str, string ++ idx.to_string()]) === [box [array "10", "21", "32"], heap_string])
+
+     let array = [array string_1, string_2, string_3]
+     test(array.map_kv_with_state(heap_string, fn (str, idx, string) [box str, string ++ idx.to_string()]) === [box [array string_1 ++ "0", string_2 ++ "1", string_3 ++ "2"], heap_string])
+     test(array.map_kv_with_state(heap_string, fn (str, idx, string) [box str, string ++ idx.to_string()]) === [box [array string_1 ++ "0", string_2 ++ "1", string_3 ++ "2"], heap_string])
+
+     let array = [array string_3, string_1, string_2, string_3, string_1][1, 4]
+     test(array.map_kv_with_state(heap_string, fn (str, idx, string) [box str, string ++ idx.to_string()]) === [box [array string_1 ++ "0", string_2 ++ "1", string_3 ++ "2"], heap_string])
+     test(array.map_kv_with_state(heap_string, fn (str, idx, string) [box str, string ++ idx.to_string()]) === [box [array string_1 ++ "0", string_2 ++ "1", string_3 ++ "2"], heap_string])
+
+     test([array 1, 2, 3, 4].map_kv_with_state(heap_string, fn (str, idx, num) [box str, (idx + num).to_string()]) === [box [array "1", "3", "5", "7"], heap_string])
+
+     let array_1  = rnd_string_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = [box array_1.map_kv(fn (idx, string) string ++ idx.to_string()), heap_string]
+     let have     = array_1.map_kv_with_state(heap_string, fn (str, idx, string) [box str, string ++ idx.to_string()])
+     test(expected === have)
+     array_2.ignore()
+
+     let string_1 = heap_string
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([table].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key]) === [box [table], heap_string])
+     test([table].init(10).map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key]) === [box [table], heap_string])
+     test([table string_3 = string_1].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key]) === [box [table string_3 = string_1 ++ string_3], heap_string])
+     test([table "0" = "1", "1" = "2", "2" = "3"].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key]) === [box [table "0" = "10", "1" = "21", "2" = "32"], heap_string])
+
+     let table = [table string_3 = string_1, string_1 = string_2, string_2 = string_3]
+     test(table.map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key]) === [box [table string_3 = string_1 ++ string_3, string_1 = string_2 ++ string_1, string_2 = string_3 ++ string_2], heap_string])
+     test(table.map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key]) === [box [table string_3 = string_1 ++ string_3, string_1 = string_2 ++ string_1, string_2 = string_3 ++ string_2], heap_string])
+
+     test([table 0 = 1, 1 = 2, 2 = 3, 3 = 4].map_kv_with_state(heap_string, fn (str, key, value) [box str, (key + value).to_string()]) === [box [table 0 = "1", 1 = "3", 2 = "5", 3 = "7"], heap_string])
+
+     let table_1  = rnd_string_table()
+     let table_2  = if rnd_bool(); table_1 else null
+     let expected = [box table_1.map_kv(fn (key, value) value ++ key), heap_string]
+     let have     = table_1.map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key])
+     test(expected === have)
+     table_2.ignore()
+
+     let string_1 = heap_string
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([obj].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj], heap_string])
+     test([obj :_ = [obj :1 = 2]].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj], heap_string])
+     test([obj :_ = [obj :1 = 2]].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()])[0]:_ === [obj :1 = 2])
+     test([obj].init(10).map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj], heap_string])
+     test([obj :3 = string_1].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj :3 = string_1 ++ "3"], heap_string])
+     test([obj :3 = string_1, :_ = [obj :1 = 2]].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj :3 = string_1 ++ "3"], heap_string])
+     test([obj :3 = string_1, :_ = [obj :1 = 2]].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()])[0]:_ === [obj :1 = 2])
+     test([obj :0 = "1", :1 = "2", :2 = "3"].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj :0 = "10", :1 = "21", :2 = "32"], heap_string])
+     test([obj :0 = "1", :1 = "2", :2 = "3", :_ = [obj :1 = 2]].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj :0 = "10", :1 = "21", :2 = "32"], heap_string])
+     test([obj :0 = "1", :1 = "2", :2 = "3", :_ = [obj :1 = 2]].map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()])[0]:_ === [obj :1 = 2])
+
+     let obj = [obj :3 = string_1, :1 = string_2, :2 = string_3]
+     test(obj.map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj :3 = string_1 ++ "3", :1 = string_2 ++ "1", :2 = string_3 ++ "2"], heap_string])
+     test(obj.map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj :3 = string_1 ++ "3", :1 = string_2 ++ "1", :2 = string_3 ++ "2"], heap_string])
+
+     let obj = [obj :3 = string_1, :1 = string_2, :2 = string_3, :_ = [obj :1 = 2]]
+     test(obj.map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj :3 = string_1 ++ "3", :1 = string_2 ++ "1", :2 = string_3 ++ "2"], heap_string])
+     test(obj.map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()]) === [box [obj :3 = string_1 ++ "3", :1 = string_2 ++ "1", :2 = string_3 ++ "2"], heap_string])
+
+     let obj = [obj :3 = string_1, :1 = string_2, :2 = string_3, :_ = [obj :1 = 2]]
+     test(obj.map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()])[0]:_ === [obj :1 = 2])
+     test(obj.map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()])[0]:_ === [obj :1 = 2])
+
+     test([obj :0 = 1, :1 = 2, :2 = 3, :3 = 4].map_kv_with_state(heap_string, fn (str, key, value) [box str, key.to_string() ++ value.to_string()]) === [box [obj :0 = "01", :1 = "12", :2 = "23", :3 = "34"], heap_string])
+
+     let obj_1    = rnd_string_obj()
+     let obj_2    = if rnd_bool(); obj_1 else null
+     let expected = [box obj_1.map_kv(fn (key, value) value ++ key.to_string()), heap_string]
+     let have     = obj_1.map_kv_with_state(heap_string, fn (str, key, value) [box str, value ++ key.to_string()])
+     test(expected === have)
+     obj_2.ignore()
+
+     test(to_container__map_kv_with_state("abCD").map_kv_with_state(heap_string, fn (str, idx, char) [box str, if idx.even?(); char.ascii_to_lower() else char]) === [box to_container__map_kv_with_state("abcD"), heap_string])
+     test(to_container__map_kv_with_state("abCD").map_kv_with_state(heap_string, fn (str, idx, char) [box str, if idx.even?(); char.ascii_to_upper() else char]) === [box to_container__map_kv_with_state("AbCD"), heap_string])
+     test(to_custom_container__map_kv_with_state("abCD").map_kv_with_state(heap_string, fn (str, idx, char) [box str, if idx.even?(); char.ascii_to_lower() else char]) === [box to_custom_container__map_kv_with_state("abcD"), heap_string])
+     test(to_custom_container__map_kv_with_state("abCD").map_kv_with_state(heap_string, fn (str, idx, char) [box str, if idx.even?(); char.ascii_to_upper() else char]) === [box to_custom_container__map_kv_with_state("AbCD"), heap_string])
+
+     let array = [array heap_string, heap_string, heap_string]
+     test(array.map_kv_with_state(heap_string, fn (str, idx, _) [box str, if idx.even?(); heap_string else array[idx]]) === [box array, heap_string])
+
+     let error_1 = expected_error(:1, heap_string, heap_string)
+     let error_2 = expected_error(:2, heap_string, heap_string)
+     let error_3 = expected_error(:3, heap_string, heap_string)
+     test(error_1.map_kv_with_state(heap_string, heap_string.insert_to(_, _)).get_error_id() === :1)
+     test(heap_string.map_kv_with_state(error_1, heap_string.insert_to(_, _)).get_error_id() === :1)
+     test(error_1.map_kv_with_state(heap_string, error_1).get_error_id() === :1)
+     test(error_1.map_kv_with_state(error_2, error_3).get_error_id() === :1)
+     test(error_3.map_kv_with_state(error_2, error_1).get_error_id() === :3)
+     test(error_1.map_kv_with_state(heap_string, heap_string).get_error_id() === :1)
+     test((_ === heap_string).scarlet__erase_info().map_kv_with_state(error_1, error_2).get_error_id() === :1)
+
+     test((_ === heap_string).scarlet__erase_info().map_kv_with_state(heap_string, heap_string.insert_to(_, _)).get_error_id() === :invalid_type)
+     test(heap_string.map_kv_with_state(heap_string, heap_table()).get_error_id() === :invalid_type)
+     test((_ === heap_string).scarlet__erase_info().map_kv_with_state(heap_string, heap_table()).get_error_id() === :invalid_type)
+
+     test(to_broken_container__map_kv_with_state("").map_kv_with_state(heap_string, _ === heap_string).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__map_kv_with_state("").map_kv_with_state(heap_string, _ === heap_string).get_error_id() === :invalid_type)
+     test(to_error_container__map_kv_with_state("").map_kv_with_state(heap_string, _ === heap_string).get_error_id() === :3)
+     test(to_error_custom_container__map_kv_with_state("").map_kv_with_state(heap_string, _ === heap_string).get_error_id() === :4)
+
+     test("".map_kv_with_state(heap_string, fn (_) heap_string) === [box "", heap_string])
+     test(u"".map_kv_with_state(heap_string, fn (_) heap_string) === [box u"", heap_string])
+     test([array].map_kv_with_state(heap_string, fn (_) heap_string) === [box [array], heap_string])
+     test([table].map_kv_with_state(heap_string, fn (_) heap_string) === [box [table], heap_string])
+     test([obj].map_kv_with_state(heap_string, fn (_) heap_string) === [box [obj], heap_string])
+     test([obj :_ = [obj]].map_kv_with_state(heap_string, fn (_) heap_string) === [box [obj], heap_string])
+     test([obj :_ = [obj]].map_kv_with_state(heap_string, fn (_) heap_string)[0]:_ === [obj])
+
+     test("1".map_kv_with_state(heap_string, fn (_) heap_string).get_error_id() === :wrong_num_fn_args)
+     test(heap_string.map_kv_with_state(heap_string, fn (_) heap_string).get_error_id() === :wrong_num_fn_args)
+     test(u"1".map_kv_with_state(heap_string, fn (_) heap_string).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().map_kv_with_state(heap_string, fn (_) heap_string).get_error_id() === :wrong_num_fn_args)
+     test([array heap_string].map_kv_with_state(heap_string, fn (_) heap_string).get_error_id() === :wrong_num_fn_args)
+     test([table heap_string = heap_string].map_kv_with_state(heap_string, fn (_) heap_string).get_error_id() === :wrong_num_fn_args)
+     test([obj :1 = heap_string].map_kv_with_state(heap_string, fn (_) heap_string).get_error_id() === :wrong_num_fn_args)
+
+     test("1".map_kv_with_state(heap_string, fn (_, _, _) heap_string).get_error_id() === :invalid_type)
+     test("1".map_kv_with_state(heap_string, fn (_, _, _) heap_string).get_error_id() === :invalid_type)
+     test(heap_string.map_kv_with_state(heap_string, fn (_, _, _) heap_string).get_error_id() === :invalid_type)
+     test(u"1".map_kv_with_state(heap_string, fn (_, _, _) heap_string).get_error_id() === :invalid_type)
+     test(heap_byte_array().map_kv_with_state(heap_string, fn (_, _, _) heap_string).get_error_id() === :invalid_type)
+     test([array heap_string].map_kv_with_state(heap_string, fn (_, _, _) heap_string).get_error_id() === :invalid_type)
+     test([table heap_string = heap_string].map_kv_with_state(heap_string, fn (_, _, _) heap_string).get_error_id() === :invalid_type)
+     test([obj :1 = heap_string].map_kv_with_state(heap_string, fn (_, _, _) heap_string).get_error_id() === :invalid_type)
+
+     test("1".map_kv_with_state(heap_string, fn (_, _, _) [box null, heap_string]).get_error_id() === :invalid_type)
+     test("1".map_kv_with_state(heap_string, fn (_, _, _) [box null, heap_string]).get_error_id() === :invalid_type)
+     test(heap_string.map_kv_with_state(heap_string, fn (_, _, _) [box null, heap_string]).get_error_id() === :invalid_type)
+     test(u"1".map_kv_with_state(heap_string, fn (_, _, _) [box null, heap_string]).get_error_id() === :invalid_type)
+
+     test("1".map_kv_with_state(heap_string, fn (_, _, _) [box]).get_error_id() === :unpk_not_enough_items)
+     test("1".map_kv_with_state(heap_string, fn (_, _, _) [box]).get_error_id() === :unpk_not_enough_items)
+     test(heap_string.map_kv_with_state(heap_string, fn (_, _, _) [box]).get_error_id() === :unpk_not_enough_items)
+     test(u"1".map_kv_with_state(heap_string, fn (_, _, _) [box]).get_error_id() === :unpk_not_enough_items)
+     test(heap_byte_array().map_kv_with_state(heap_string, fn (_, _, _) [box]).get_error_id() === :unpk_not_enough_items)
+     test([array heap_string].map_kv_with_state(heap_string, fn (_, _, _) [box]).get_error_id() === :unpk_not_enough_items)
+     test([table heap_string = heap_string].map_kv_with_state(heap_string, fn (_, _, _) [box]).get_error_id() === :unpk_not_enough_items)
+     test([obj :1 = heap_string].map_kv_with_state(heap_string, fn (_, _, _) [box]).get_error_id() === :unpk_not_enough_items)
+
+     test("1".map_kv_with_state(heap_string, fn (_, _, _) [box heap_string]).get_error_id() === :unpk_not_enough_items)
+     test("1".map_kv_with_state(heap_string, fn (_, _, _) [box heap_string]).get_error_id() === :unpk_not_enough_items)
+     test(heap_string.map_kv_with_state(heap_string, fn (_, _, _) [box heap_string]).get_error_id() === :unpk_not_enough_items)
+     test(u"1".map_kv_with_state(heap_string, fn (_, _, _) [box heap_string]).get_error_id() === :unpk_not_enough_items)
+     test(heap_byte_array().map_kv_with_state(heap_string, fn (_, _, _) [box heap_string]).get_error_id() === :unpk_not_enough_items)
+     test([array heap_string].map_kv_with_state(heap_string, fn (_, _, _) [box heap_string]).get_error_id() === :unpk_not_enough_items)
+     test([table heap_string = heap_string].map_kv_with_state(heap_string, fn (_, _, _) [box heap_string]).get_error_id() === :unpk_not_enough_items)
+     test([obj :1 = heap_string].map_kv_with_state(heap_string, fn (_, _, _) [box heap_string]).get_error_id() === :unpk_not_enough_items)
+}

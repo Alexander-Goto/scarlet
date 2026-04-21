@@ -1,0 +1,146 @@
+type             | data 0..119                                              | type_id 120..127 | comment
+-----------------+----------------------------------------------------------+------------------+------------------------------------------------------------------
+short_string     | chars [15]u8                                             | 0                | unused char is always 0, ctf8 chars, used this format if possible
+int              | i64, (u56)0                                              | 1                |
+float            | u64, (u56)0                                              | 2                |
+bool             | u1, (u7)0, (u112)0                                       | 3                |
+null             | -                                                        | 4                |
+char             | u24, (u96)0                                              | 5                | reversed (bytes) corsar code
+byte             | u8, (u112)0                                              | 6                |
+short_byte_array | bytes [14]u8                                             | 7                | unused bytes is always 0, used this format if possible
+                 | len   u8                                                 |                  |
+                 |                                                          |                  |
+time             | i64, (u56)0                                              | 8                | seconds from 00:00:00 01.01.01
+token            | u120                                                     | 9                |
+short_fn         | fn_address ptr64                                         | 10               | params_len <= 16, used this format if possible
+                 | params_len u5                                            |                  |
+                 |                                                          |                  |
+holder           | type u8                                                  | 11               | types:
+                 |                                                          |                  |   1 - fn arg
+                 |                                                          |                  |   2 - uninit gconst
+                 |                                                          |                  |   3 - now init gconst
+                 |                                                          |                  |   4 - used thread result
+                 |                                                          |                  |   5 - unused thread result
+                 |                                                          |                  |   6 - waiting thread result
+                 |                                                          |                  |   9 - untyped
+                 |                                                          |                  |
+obj              | ptr64                                                    | 12               | if fix_idx_offset == 120 then not fix
+                 |   ref_cnt        u40                                     |                  | if fix then chunk_size == 1
+                 |   _              u17                                     |                  | if fix and deleted then {key: key with holder, value: null}
+                 |   fix_idx_offset u7                                      |                  |
+                 |   hash_seed      u64                                     |                  |
+                 |   methods        any                                     |                  |
+                 |   kvs            [last_index + 1][chunk_size](token,any) |                  |
+                 |                                                          |                  |
+                 | len                           u40                        |                  |
+                 | last_index = (-1) >> (64 - x) u5                         |                  |
+                 | chunk_size = x + 1            u8                         |                  |
+                 |                                                          |                  |
+string           | ptr64                                                    | 13               | if slice_len 0xfff_ffff then is not slice and slice_offset = 0
+                 |   ref_cnt   u40                                          |                  |
+                 |   len       u44                                          |                  |
+                 |   capacity  u44                                          |                  |
+                 |   chars     [capacity]u24                                |                  |
+                 |                                                          |                  |
+                 | slice_offset u28                                         |                  |
+                 | slice_len    u28                                         |                  |
+                 |                                                          |                  |
+array            | ptr64                                                    | 14               | if slice_len 0xfff_ffff then is not slice and slice_offset = 0
+                 |   ref_cnt   u40                                          |                  |
+                 |   len       u44                                          |                  |
+                 |   capacity  u44                                          |                  |
+                 |   items     [capacity]any                                |                  |
+                 |                                                          |                  |
+                 | slice_offset u28                                         |                  |
+                 | slice_len    u28                                         |                  |
+                 |                                                          |                  |
+table            | ptr64                                                    | 15               |
+                 |   ref_cnt   u40                                          |                  |
+                 |   _         u24                                          |                  |
+                 |   hash_seed u64                                          |                  |
+                 |   kvs       [last_index + 1][chunk_size](any,any)        |                  |
+                 |                                                          |                  |
+                 | len                           u40                        |                  |
+                 | last_index = (-1) >> (64 - x) u5                         |                  |
+                 | chunk_size = x + 1            u8                         |                  |
+                 |                                                          |                  |
+set              | ptr64                                                    | 16               |
+                 |   ref_cnt   u40                                          |                  |
+                 |   _         u24                                          |                  |
+                 |   hash_seed u64                                          |                  |
+                 |   items     [last_index + 1][chunk_size]any              |                  |
+                 |                                                          |                  |
+                 | len                           u40                        |                  |
+                 | last_index = (-1) >> (64 - x) u5                         |                  |
+                 | chunk_size = x + 1            u8                         |                  |
+                 |                                                          |                  |
+byte_array       | ptr64                                                    | 17               | if slice_len 0xfff_ffff then is not slice and slice_offset = 0
+                 |   ref_cnt   u40                                          |                  |
+                 |   len       u44                                          |                  |
+                 |   capacity  u44                                          |                  |
+                 |   bytes     [capacity]u8                                 |                  |
+                 |                                                          |                  |
+                 | slice_offset u28                                         |                  |
+                 | slice_len    u28                                         |                  |
+                 |                                                          |                  |
+custom           | ptr64                                                    | 18               |
+                 |   ref_cnt u40                                            |                  |
+                 |   _       u24                                            |                  |
+                 |   fns ptr64                                              |                  |
+                 |     call_mtd        ptr                                  |                  |
+                 |     has_mtd         ptr                                  |                  |
+                 |     free_function   ptr                                  |                  |
+                 |     to_global_const ptr                                  |                  |
+                 |     type            ptr                                  |                  |
+                 |     dump            ptr                                  |                  |
+                 |     to_shared__own  ptr                                  |                  |
+                 |   ?                                                      |                  |
+                 |                                                          |                  |
+box              | items  ptr64([len]any)                                   | 19               | len <= 16, local in thread data
+                 | len    u5                                                |                  |
+                 | global u1                                                |                  |
+                 | idx    u6                                                |                  |
+                 | shared u1                                                |                  |
+                 |                                                          |                  |
+channel          | ptr64                                                    | 20               | align(mutex) = 64
+                 |   local_ref_cnt u40                                      |                  |
+                 |   _             u24                                      |                  |
+                 |   main_fields ptr                                        |                  |
+                 |     mutex               mutex                            |                  |
+                 |     cond_var            cond_var                         |                  |
+                 |     main_ref_cnt        u64                              |                  |
+                 |     writers_len         u64                              |                  |
+                 |     readers_len         u64                              |                  |
+                 |     waiting_threads_len u64                              |                  |
+                 |     len                 u64                              |                  |
+                 |     capacity            u64                              |                  |
+                 |     index_of_first      u64                              |                  |
+                 |     items               ptr([capacity]any)               |                  |
+                 |                                                          |                  |
+                 |   read  u1                                               |                  |
+                 |   write u1                                               |                  |
+                 |                                                          |                  |
+thread           | ptr64(thrd_result)                                       | 21               |
+fn               | ptr64 | linear_idx                                       | 22               | params_len <= 16, paramsCapacity <= 16
+                 |   ref_cnt    u40                                         |                  |
+                 |   _          u24                                         |                  |
+                 |   fn_address ptr64                                       |                  |
+                 |   args       [params_capacity]any                        |                  |
+                 |   borrowed   [borrowed_len]any                           |                  |
+                 |                                                          |                  |
+                 | params_len      u5                                       |                  |
+                 | params_capacity u5                                       |                  |
+                 | borrowed_len    u16                                      |                  |
+                 | linear_alloc    u1                                       |                  |
+                 | holders_mask    u16                                      |                  |
+                 |                                                          |                  |
+breaker          | item_bytes_0_111 u112                                    | 23               | last u16 in thread data
+                 | idx              u8                                      |                  |
+                 |                                                          |                  |
+error            | ptr64                                                    | 24               |
+                 |   ref_cnt u40                                            |                  |
+                 |   _       u24                                            |                  |
+                 |   owner   ptr64(const sys_str[0])                        |                  |
+                 |   id      token                                          |                  |
+                 |   msg     (short_string|string)                          |                  |
+                 |   data    any                                            |                  |

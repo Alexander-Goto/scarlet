@@ -1,0 +1,33 @@
+fn ir__core_fn_table_to_obj(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     if arg:comptime_val:type =/= "table" {
+          arg.maybe_has_type!("table")
+
+          ir__fn_call("McoreFNtable_to_obj", [array arg], code, [set "obj", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let arg_code = arg:code
+          let operand  = new (arg) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:type  <= "obj"
+               :comptime_val:value => fn (table) table.foldl_kv([table].init(table.len()), fn (obj, key, value) {
+                    if key:type /= "token"
+                         error__invalid_item_type(arg_code, "token", key:type)
+                    else null
+
+                    new (obj)[key:value] <= value
+               })
+               :possible_types <= [set "obj"]
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

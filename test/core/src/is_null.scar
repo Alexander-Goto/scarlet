@@ -1,0 +1,10 @@
+`noinline`
+fn test__null?() {
+     test(null.null?())
+     test(not "".null?())
+     test(not 0.null?())
+     test(not heap_string().null?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.null?().get_error_id() === :1)
+}

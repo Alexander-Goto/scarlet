@@ -1,0 +1,7 @@
+let t_unreachable = [obj
+     :scar_type = "t_unreachable"
+     :keyword   = @main.t_token
+]
+
+fn unreachable_to_operand(unreachable, exp_data, ir, final_data, dependencies, src_gconsts)
+     ir__unreachable(new (unreachable:keyword):text <= "unreachable()", exp_data, ir, final_data, dependencies, src_gconsts)

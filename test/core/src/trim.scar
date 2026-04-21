@@ -1,0 +1,170 @@
+let string__trim = [obj
+     :value = ""
+
+     :_ = [obj
+          :core_trim      = fn (string) to_string__trim(string:value.trim())
+          :core___equal__ = fn (string_1, string_2) string_1:value === string_2:value
+     ]
+]
+
+fn to_string__trim(string) new (@main.string__trim):value <= string
+
+fn to_custom_string__trim(string) custom__create(
+     string
+     [obj
+          :core_trim      = fn (string) to_custom_string__trim(string.custom__get_data().trim())
+          :core___equal__ = fn (string_1, string_2) string_1.custom__get_data() === string_2.custom__get_data()
+     ]
+)
+
+let broken_string__trim = [obj
+     :value = ""
+
+     :_ = [obj
+          :core_trim = fn (_) heap_table()
+     ]
+]
+
+fn to_broken_string__trim(string) new (@main.broken_string__trim):value <= string
+
+fn to_broken_custom_string__trim(string) custom__create(
+     string
+     [obj
+          :core_trim = fn (_) heap_table()
+     ]
+)
+
+let error_string__trim = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_trim = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_string__trim(string) new (@main.error_string__trim):value <= string
+
+fn to_error_custom_string__trim(string) custom__create(
+     string
+     [obj
+          :core_trim = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__trim() {
+     test("".trim() === "")
+     test("0".trim() === "0")
+     test("01".trim() === "01")
+     test("012".trim() === "012")
+     test("0123".trim() === "0123")
+     test("01234".trim() === "01234")
+     test("012345".trim() === "012345")
+     test("0123456".trim() === "0123456")
+     test("01234567".trim() === "01234567")
+     test("012345678".trim() === "012345678")
+     test("0123456789".trim() === "0123456789")
+     test("0123456789a".trim() === "0123456789a")
+     test("0123456789ab".trim() === "0123456789ab")
+     test("0123456789abc".trim() === "0123456789abc")
+     test("0123456789abcd".trim() === "0123456789abcd")
+     test("0123456789abcde".trim() === "0123456789abcde")
+
+     test("\t".trim() === "")
+     test("\t\t".trim() === "")
+     test("\t0\t".trim() === "0")
+     test("\t01\t".trim() === "01")
+     test("\t012\t".trim() === "012")
+     test("\t0123\t".trim() === "0123")
+     test("\t01234\t".trim() === "01234")
+     test("\t012345\t".trim() === "012345")
+     test("\t0123456\t".trim() === "0123456")
+     test("\t01234567\t".trim() === "01234567")
+     test("\t012345678\t".trim() === "012345678")
+     test("\t0123456789\t".trim() === "0123456789")
+     test("\t0123456789a\t".trim() === "0123456789a")
+     test("\t0123456789ab\t".trim() === "0123456789ab")
+     test("\t0123456789abc\t".trim() === "0123456789abc")
+     test("\t0123456789abcd\t".trim() === "0123456789abcd")
+     test("\t0123456789abcde\t".trim() === "0123456789abcde")
+
+     test(" ".trim() === "")
+     test("  ".trim() === "")
+     test(" 0 ".trim() === "0")
+     test(" 01 ".trim() === "01")
+     test(" 012 ".trim() === "012")
+     test(" 0123 ".trim() === "0123")
+     test(" 01234 ".trim() === "01234")
+     test(" 012345 ".trim() === "012345")
+     test(" 0123456 ".trim() === "0123456")
+     test(" 01234567 ".trim() === "01234567")
+     test(" 012345678 ".trim() === "012345678")
+     test(" 0123456789 ".trim() === "0123456789")
+     test(" 0123456789a ".trim() === "0123456789a")
+     test(" 0123456789ab ".trim() === "0123456789ab")
+     test(" 0123456789abc ".trim() === "0123456789abc")
+     test(" 0123456789abcd ".trim() === "0123456789abcd")
+     test(" 0123456789abcde ".trim() === "0123456789abcde")
+
+     test("\n".trim() === "")
+     test("\n\n".trim() === "")
+     test("\n0\n".trim() === "0")
+     test("\n01\n".trim() === "01")
+     test("\n012\n".trim() === "012")
+     test("\n0123\n".trim() === "0123")
+     test("\n01234\n".trim() === "01234")
+     test("\n012345\n".trim() === "012345")
+     test("\n0123456\n".trim() === "0123456")
+     test("\n01234567\n".trim() === "01234567")
+     test("\n012345678\n".trim() === "012345678")
+     test("\n0123456789\n".trim() === "0123456789")
+     test("\n0123456789a\n".trim() === "0123456789a")
+     test("\n0123456789ab\n".trim() === "0123456789ab")
+     test("\n0123456789abc\n".trim() === "0123456789abc")
+     test("\n0123456789abcd\n".trim() === "0123456789abcd")
+     test("\n0123456789abcde\n".trim() === "0123456789abcde")
+
+     test(" \t\n".trim() === "")
+     test(" \t\n \t\n".trim() === "")
+     test(" \t\n0 \t\n".trim() === "0")
+     test(" \t\n01 \t\n".trim() === "01")
+     test(" \t\n012 \t\n".trim() === "012")
+     test(" \t\n0123 \t\n".trim() === "0123")
+     test(" \t\n01234 \t\n".trim() === "01234")
+     test(" \t\n012345 \t\n".trim() === "012345")
+     test(" \t\n0123456 \t\n".trim() === "0123456")
+     test(" \t\n01234567 \t\n".trim() === "01234567")
+     test(" \t\n012345678 \t\n".trim() === "012345678")
+     test(" \t\n0123456789 \t\n".trim() === "0123456789")
+     test(" \t\n0123456789a \t\n".trim() === "0123456789a")
+     test(" \t\n0123456789ab \t\n".trim() === "0123456789ab")
+     test(" \t\n0123456789abc \t\n".trim() === "0123456789abc")
+     test(" \t\n0123456789abcd \t\n".trim() === "0123456789abcd")
+     test(" \t\n0123456789abcde \t\n".trim() === "0123456789abcde")
+
+     test("\t\t\t\t\t\n\t\t \t\n\t\t\n\n\t\n \t \t\t \n\t  \n\t\t\n\t\n\n\t \n\n\t\n\n\n\n\n \n \t\n \n\n   \t\t \t\n \t  \n\t \n\n \n   \t  \n   ".trim() === "")
+
+     let len = (rnd() & 1023) + 1
+     let string_1 = loop("", fn (string) {
+          let string = string.append(if rnd_bool(); rnd_char() else "\t\n k"[rnd() & 3])
+          break(len(string) === len, string)
+     }).drop(rnd() & (len / 2))
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = string_1.drop_while(_.in?("\t\n ")).reverse().drop_while(_.in?("\t\n ")).reverse()
+     test(expected === string_1.trim())
+     string_2.ignore()
+
+     test(to_string__trim("\t\t\t0123456\t\t\t").trim() === to_string__trim("0123456"))
+     test(to_string__trim("01\n").trim() === to_string__trim("01"))
+
+     test(to_custom_string__trim("\t\t\t0123456\t\t\t").trim() === to_custom_string__trim("0123456"))
+     test(to_custom_string__trim("01\n").trim() === to_custom_string__trim("01"))
+
+     test(expected_error(:1, heap_string(), heap_string()).trim().get_error_id() === :1)
+     test(heap_table().trim().get_error_id() === :invalid_type)
+
+     test(to_broken_string__trim("").trim().get_error_id() === :invalid_type)
+     test(to_broken_custom_string__trim("").trim().get_error_id() === :invalid_type)
+     test(to_error_string__trim("").trim().get_error_id() === :3)
+     test(to_error_custom_string__trim("").trim().get_error_id() === :4)
+}

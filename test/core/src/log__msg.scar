@@ -1,0 +1,19 @@
+`noinline`
+fn test__log__msg() {
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(log__msg(error_1, heap_string()).get_error_id() === :1)
+     test(log__msg(@core.log_lvl__minimum, error_1).get_error_id() === :1)
+     test(log__msg(error_1, error_2).get_error_id() === :1)
+     test(log__msg(error_2, error_1).get_error_id() === :2)
+     test(log__msg(heap_string(), error_1).get_error_id() === :1)
+     test(log__msg(error_1, heap_table()).get_error_id() === :1)
+
+     test(log__msg(heap_string(), heap_string()).get_error_id() === :invalid_type)
+     test(log__msg(@core.log_lvl__maximum, heap_table()).get_error_id() === :invalid_type)
+
+     test(log__msg(@core.log_lvl__minimum.scarlet__erase_info() - 1, heap_string()).get_error_id() === :out_of_bounds)
+     test(log__msg(@core.log_lvl__maximum.scarlet__erase_info() + 1, heap_string()).get_error_id() === :out_of_bounds)
+     test(log__msg(9223372036854775807.scarlet__erase_info(), heap_string()).get_error_id() === :out_of_bounds)
+     test(log__msg(-9223372036854775808.scarlet__erase_info(), heap_string()).get_error_id() === :out_of_bounds)
+}

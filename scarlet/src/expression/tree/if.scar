@@ -1,0 +1,73 @@
+let t_if_exp = [obj
+     :scar_type = "t_if_exp"
+
+     :keyword   = @main.t_token
+     :predicate = :i_expression
+     :then      = :i_expression
+     :else      = :i_expression
+]
+
+fn if_exp_independent?(if_exp, independent_consts)
+     if_exp:predicate.independent?(independent_consts) &&
+     if_exp:then.independent?(independent_consts)      &&
+     if_exp:else.independent?(independent_consts)
+
+fn analyze_if_exp(if_exp, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let [box last_use_info, lambdas_data, def_ids] = if_exp:predicate.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+     let keyword_coded_id = format_int(if_exp:keyword.get_token_id(), 32, false)
+     let then_contexts    = contexts.append("ifth:" ++ keyword_coded_id)
+     let else_contexts    = contexts.append("ifel:" ++ keyword_coded_id)
+
+     let [box then_last_use_info, lambdas_data, def_ids] = if_exp:then.analyze(@main.t_last_use_info, lambdas_data, then_contexts, name_ids, def_ids)
+     let [box else_last_use_info, lambdas_data, def_ids] = if_exp:else.analyze(@main.t_last_use_info, lambdas_data, else_contexts, name_ids, def_ids)
+
+     let last_use_info = merge_branches(last_use_info, [array then_last_use_info, else_last_use_info])
+     [box last_use_info, lambdas_data, def_ids]
+}
+
+fn if_exp_to_operand(if_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let [box predicate_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          if_exp:predicate.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box then_operand, exp_data, then_ir, final_data, dependencies, src_gconsts] =
+          if_exp:then.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, is_last, is_linear_alloc, false, true)
+     let [box else_operand, exp_data, else_ir, final_data, dependencies, src_gconsts] =
+          if_exp:else.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, is_last, is_linear_alloc, false, true)
+
+     let code = new (if_exp:keyword):text <= "if " ++ predicate_operand:code:text ++ "; " ++ then_operand:code:text ++ " else " ++ else_operand:code:text
+
+     let keyword_coded_id    = format_int(if_exp:keyword.get_token_id(), 32, false)
+     let then_context_consts = contexts["ifth:" ++ keyword_coded_id] <? [set]
+     let else_context_consts = contexts["ifel:" ++ keyword_coded_id] <? [set]
+
+     let name_ids = exp_data:name_ids
+     let [box only_in_then, only_in_then_and_else] = then_context_consts.foldl([box [set], [set]], fn (state, def_id) {
+          let [box only_in_then, only_in_then_and_else] = state
+
+          let const_name = name_ids[def_id]
+          if const_name.null?()
+               [box only_in_then, only_in_then_and_else]
+          else if def_id.in?(else_context_consts)
+               [box only_in_then, only_in_then_and_else.append(const_name)]
+          else [box only_in_then.append(const_name), only_in_then_and_else]
+     })
+
+     let only_in_else = else_context_consts.foldl([set], fn (only_in_else, def_id) {
+          let const_name = name_ids[def_id]
+          if const_name.null?() || def_id.in?(then_context_consts)
+               only_in_else
+          else only_in_else.append(const_name)
+     })
+
+     ir__if(
+          predicate_operand
+
+          then_operand, then_ir
+          else_operand, else_ir
+
+          code
+
+          only_in_then, only_in_else, only_in_then_and_else
+          exp_data, ir, final_data, dependencies, src_gconsts, is_last
+     )
+}

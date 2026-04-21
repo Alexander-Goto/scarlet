@@ -1,0 +1,82 @@
+let num__tan = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_tan       = fn (num) to_num__tan(num:value.tan())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__tan(arg) new (@main.num__tan):value <= arg
+
+fn to_custom_num__tan(arg) custom__create(
+     arg
+     [obj
+          :core_tan       = fn (num) to_custom_num__tan(num.custom__get_data().tan())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__tan = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_tan = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__tan(arg) new (@main.broken_num__tan):value <= arg
+
+fn to_broken_custom_num__tan(arg) custom__create(
+     arg
+     [obj
+          :core_tan = fn (_) heap_string()
+     ]
+)
+
+let error_num__tan = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_tan = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__tan(arg) new (@main.error_num__tan):value <= arg
+
+fn to_error_custom_num__tan(arg) custom__create(
+     arg
+     [obj
+          :core_tan = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__tan() {
+     test(0.0.tan().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(-0.0.tan().scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test(0.1.tan().in_range?(0.09, 0.11))
+     test(-0.1.tan().in_range?(-0.11, -0.09))
+     test(1.0.tan().in_range?(1.54, 1.56))
+     test(-1.0.tan().in_range?(-1.56, -1.54))
+     test(123.3.tan().in_range?(0.97, 0.99))
+     test(-123.3.tan().in_range?(-0.99, -0.97))
+     test(inf().tan().nan?())
+     test(neg_inf().tan().nan?())
+     test(nan().tan().nan?())
+
+     test(to_num__tan(0.0).tan():value.in_range?(-0.01, 0.01))
+     test(to_num__tan(-1.0).tan():value.in_range?(-1.56, -1.54))
+
+     test(to_custom_num__tan(0.0).tan().custom__get_data().in_range?(-0.01, 0.01))
+     test(to_custom_num__tan(-1.0).tan().custom__get_data().in_range?(-1.56, -1.54))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.tan().get_error_id() === :1)
+     test(heap_string().tan().get_error_id() === :invalid_type)
+
+     test(to_broken_num__tan(1.0).tan().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__tan(1.0).tan().get_error_id() === :invalid_type)
+     test(to_error_num__tan(1.0).tan().get_error_id() === :3)
+     test(to_error_custom_num__tan(1.0).tan().get_error_id() === :4)
+}

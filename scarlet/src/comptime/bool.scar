@@ -1,0 +1,10 @@
+fn comptime_bool(value, code)
+     new (@main.t_operand) {
+          :code           <= code
+          :ir             <= if value; "bool__true" else "bool__false"
+          :possible_types <= [set "bool"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "bool"
+               :value <= value
+          }
+     }

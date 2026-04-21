@@ -1,0 +1,86 @@
+fn ir__core_fn_move_self_copy(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box array, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box from, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box to, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box len, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[3].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ array:code:text ++ ", " ++ from:code:text ++ ", " ++ to:code:text ++ ", " ++ len:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+     array.maybe_has_type!(valid_types)
+     from.maybe_has_type!("int")
+     to.maybe_has_type!("int")
+     len.maybe_has_type!("int")
+
+     let array_value = array:comptime_val:value
+     let from_value  = from:comptime_val:value
+     let to_value    = to:comptime_val:value
+     let len_value   = len:comptime_val:value
+
+     let array_is_comptime = not array_value.null?()
+     let from_is_comptime  = not from_value.null?()
+     let to_is_comptime    = not to_value.null?()
+     let len_is_comptime   = not len_value.null?()
+
+     if from_is_comptime && from_value < 0
+          error__out_of_bounds(from:code)
+     else if to_is_comptime && to_value < 0
+          error__out_of_bounds(to:code)
+     else if len_is_comptime && len_value < 0
+          error__out_of_bounds(len:code)
+     else null
+
+     if array_is_comptime && array:comptime_val:type /= "obj" {
+          let array_len = array_value.len()
+
+          if from_is_comptime && from_value > array_len
+               error__out_of_bounds(from:code)
+          else if to_is_comptime && to_value > array_len
+               error__out_of_bounds(to:code)
+          else if len_is_comptime && (
+               len_value > array_len ||
+               from_is_comptime && (from_value + len_value) > array_len ||
+               to_is_comptime   && (to_value + len_value) > array_len
+          )
+               error__out_of_bounds(len:code)
+          else null
+     } else null
+
+     if not (array_is_comptime && from_is_comptime && to_is_comptime && len_is_comptime) || array:comptime_val:type == "obj" {
+          if array:comptime_val:type === "obj" && array_value[:_][if fn_ir_name == "McoreFNmove"; :core_move else :core_self_copy].null?()
+               error__invalid_type(array:code, if fn_ir_name == "McoreFNmove"; ".core_move" else ".core_self_copy", "obj")
+          else null
+
+          ir__fn_call(
+               fn_ir_name, [array array, from, to, len], code
+
+               if array:possible_types.null?()
+                    valid_types.append("error")
+               else {
+                    let possible_types = array:possible_types.filter(_.in?(valid_types)).append("error")
+                    if fn_ir_name == "McoreFNmove"
+                         possible_types
+                    else possible_types.prepare_types_for_cmp()
+               }
+
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     } else {
+          let operand = new (array) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:value => if fn_ir_name == "McoreFNmove"; _.move(from_value, to_value, len_value) else _.self_copy(from_value, to_value, len_value)
+          }
+          let operand = if fn_ir_name == "McoreFNmove"; operand else new (operand):possible_types <= operand:comptime_val.get_type_for_operand()
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

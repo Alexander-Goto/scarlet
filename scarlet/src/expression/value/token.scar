@@ -1,0 +1,14 @@
+let t_token_in_exp = [obj
+     :scar_type = "t_token_in_exp"
+     :value     = @main.t_token
+]
+
+fn token_to_operand(token, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let value   = str_to_tkn(token:value:text.drop(1))
+     let operand = comptime_token(value, token:value)
+     if is_last {
+          let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+          [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+     } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+}

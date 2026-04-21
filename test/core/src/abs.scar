@@ -1,0 +1,92 @@
+let num__abs = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_abs       = fn (num) to_num__abs(num:value.abs())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__abs(arg) new (@main.num__abs):value <= arg
+
+fn to_custom_num__abs(arg) custom__create(
+     arg
+     [obj
+          :core_abs       = fn (num) to_custom_num__abs(num.custom__get_data().abs())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__abs = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_abs = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__abs(arg) new (@main.broken_num__abs):value <= arg
+
+fn to_broken_custom_num__abs(arg) custom__create(
+     arg
+     [obj
+          :core_abs = fn (_) heap_string()
+     ]
+)
+
+let error_num__abs = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_abs = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__abs(arg) new (@main.error_num__abs):value <= arg
+
+fn to_error_custom_num__abs(arg) custom__create(
+     arg
+     [obj
+          :core_abs = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__abs() {
+     test(0.abs() === 0)
+     test(1.abs() === 1)
+     test(-1.abs() === 1)
+     test(-708044971986000615.abs() === 708044971986000615)
+     test(-1964724193136850828.abs() === 1964724193136850828)
+     test(-9223372036854775808.abs() === -9223372036854775808)
+     test(-9223372036854775807.abs() === 9223372036854775807)
+     test(9223372036854775807.abs() === 9223372036854775807)
+
+     test(0.0.abs().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(-0.0.abs().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(0.1.abs().scarlet__split!!!()[0] === 0.1.scarlet__split!!!()[0])
+     test(-0.1.abs().scarlet__split!!!()[0] === 0.1.scarlet__split!!!()[0])
+     test(inf().abs().scarlet__split!!!()[0] === inf().scarlet__split!!!()[0])
+     test(neg_inf().abs().scarlet__split!!!()[0] === inf().scarlet__split!!!()[0])
+     test(11122.3.abs().scarlet__split!!!()[0] === 11122.3.scarlet__split!!!()[0])
+     test(-11122.3.abs().scarlet__split!!!()[0] === 11122.3.scarlet__split!!!()[0])
+     test(nan().abs().nan?())
+
+     test(to_num__abs(0).abs() === to_num__abs(0))
+     test(to_num__abs(-708044971986000615).abs() === to_num__abs(708044971986000615))
+     test(to_num__abs(708044971986000615).abs() === to_num__abs(708044971986000615))
+
+     test(to_custom_num__abs(0).abs() === to_custom_num__abs(0))
+     test(to_custom_num__abs(-708044971986000615).abs() === to_custom_num__abs(708044971986000615))
+     test(to_custom_num__abs(708044971986000615).abs() === to_custom_num__abs(708044971986000615))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     let string  = heap_string()
+     test(error.abs().get_error_id() === :1)
+     test(string.abs().get_error_id() === :invalid_type)
+
+     test(to_broken_num__abs(1).abs().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__abs(1).abs().get_error_id() === :invalid_type)
+     test(to_error_num__abs(1).abs().get_error_id() === :3)
+     test(to_error_custom_num__abs(1).abs().get_error_id() === :4)
+}

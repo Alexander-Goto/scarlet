@@ -1,0 +1,85 @@
+`noinline`
+fn test__run_app() {
+     let [box process, child_stdout, child_stdin, child_stderr] = run_app(
+          fs_path("test")
+          [array "--child".scarlet__erase_value()]
+          new (@core.env_vars)["new_var"] <= "new_var_value"
+          @std.raf__stdout | @std.raf__stdin | @std.raf__stderr
+     )
+
+     child_stdin->write(u"line_1\nline_2")->flush()
+     test(child_stdout->read_tail()[1] === u"stdout string")
+     let stderr_line = child_stderr->read_tail()[1]
+     if stderr_line === u"stderr string"
+          test(true)
+     else {
+          test(false)
+          stderr_line.uprintln()
+     }
+
+     test(process->wait() == 0)
+     test(process->try_wait() == 0)
+     test(process->wait() == 0)
+
+     test(process.type() == "std.process")
+     test(process.dump().type() == "core.string")
+
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table].init(10), rnd() & 7).null?())
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let error_3 = expected_error(:3, heap_string(), heap_string())
+     let error_4 = expected_error(:4, heap_string(), heap_string())
+
+     test(process->wait(error_1).get_error_id() == :1)
+     test(process->wait(heap_string()).get_error_id() == :wrong_num_fn_args)
+     test(process->wait(heap_string(), heap_string()).get_error_id() == :wrong_num_fn_args)
+     test(process->wait(error_1, heap_string()).get_error_id() == :1)
+     test(process->wait(heap_string(), error_1).get_error_id() == :1)
+     test(process->wait(error_2, error_1).get_error_id() == :2)
+     test(process->wait(error_1, error_2).get_error_id() == :1)
+
+     test(process->try_wait(error_1).get_error_id() == :1)
+     test(process->try_wait(heap_string()).get_error_id() == :wrong_num_fn_args)
+     test(process->try_wait(heap_string(), heap_string()).get_error_id() == :wrong_num_fn_args)
+     test(process->try_wait(error_1, heap_string()).get_error_id() == :1)
+     test(process->try_wait(heap_string(), error_1).get_error_id() == :1)
+     test(process->try_wait(error_2, error_1).get_error_id() == :2)
+     test(process->try_wait(error_1, error_2).get_error_id() == :1)
+
+     test(process->kajdfghkjdf(heap_string()).get_error_id() == :invalid_type)
+     test(process->kajdfghkjdf(error_1).get_error_id() == :1)
+     test(process->kajdfghkjdf(error_1, error_2).get_error_id() == :1)
+     test(process->kajdfghkjdf(error_2, error_1).get_error_id() == :2)
+
+     test(run_app(error_1, [array heap_string()], [table].init(10), rnd() & 7).get_error_id() == :1)
+     test(run_app(fs_path("__not_app__"), error_1, [table].init(10), rnd() & 7).get_error_id() == :1)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], error_1, rnd() & 7).get_error_id() == :1)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table].init(10), error_1).get_error_id() == :1)
+     test(run_app(error_2, [array heap_string()], [table].init(10), error_1).get_error_id() == :2)
+     test(run_app(error_1, error_2, error_3, error_4).get_error_id() == :1)
+     test(run_app(error_4, error_3, error_2, error_1).get_error_id() == :4)
+     test(run_app(error_1, heap_string(), heap_string(), heap_string()).get_error_id() == :1)
+     test(run_app(heap_string(), error_1, heap_string(), heap_string()).get_error_id() == :1)
+     test(run_app(heap_string(), heap_string(), error_1, heap_string()).get_error_id() == :1)
+     test(run_app(heap_string(), heap_string(), heap_string(), error_1).get_error_id() == :1)
+
+     test(run_app(heap_string(), [array heap_string()], [table].init(10), rnd() & 7).get_error_id() == :invalid_type)
+     test(run_app(stdout(), [array heap_string()], [table].init(10), rnd() & 7).get_error_id() == :invalid_type)
+     test(run_app(fs_path("__not_app__"), heap_string(), [table].init(10), rnd() & 7).get_error_id() == :invalid_type)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], heap_string(), rnd() & 7).get_error_id() == :invalid_type)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table].init(10), heap_string()).get_error_id() == :invalid_type)
+     test(run_app(heap_string(), heap_string(), heap_string(), heap_string()).get_error_id() == :invalid_type)
+
+     test(run_app(fs_path("__not_app__"), [array "\00001a00".scarlet__erase_value() ++ "z".repeat(20)], [table].init(10), rnd() & 7).get_error_id() == :text_recoding)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table "\00001a00".scarlet__erase_value() ++ "z".repeat(20) = heap_string()], rnd() & 7).get_error_id() == :text_recoding)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table heap_string() = "\00001a00".scarlet__erase_value() ++ "z".repeat(20)], rnd() & 7).get_error_id() == :text_recoding)
+     test(run_app(fs_path("__not_app__"), [array "\00001a00".scarlet__erase_value() ++ "z".repeat(20)], [table "\00001a00".scarlet__erase_value() ++ "z".repeat(20) = "\00001a00".scarlet__erase_value() ++ "z".repeat(20)], rnd() & 7).get_error_id() == :text_recoding)
+
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table].init(10), -1).get_error_id() == :flags)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table].init(10), 8).get_error_id() == :flags)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table].init(10), 15).get_error_id() == :flags)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table].init(10), 0.max_val()).get_error_id() == :flags)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table].init(10), 0.min_val()).get_error_id() == :flags)
+     test(run_app(fs_path("__not_app__"), [array heap_string()], [table].init(10), rnd() | 8).get_error_id() == :flags)
+}

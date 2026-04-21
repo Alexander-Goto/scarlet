@@ -1,0 +1,95 @@
+let num__odd = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_even? = fn (num) num:value.even?()
+     ]
+]
+
+fn to_num__odd?(arg) new (@main.num__odd):value <= arg
+
+fn to_custom_num__odd?(arg) custom__create(
+     arg
+     [obj
+          :core_even? = fn (num) num.custom__get_data().even?()
+     ]
+)
+
+let broken_num__odd = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_even? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__odd?(arg) new (@main.broken_num__odd):value <= arg
+
+fn to_broken_custom_num__odd?(arg) custom__create(
+     arg
+     [obj
+          :core_even? = fn (_) heap_string()
+     ]
+)
+
+let error_num__odd = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_even? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__odd?(arg) new (@main.error_num__odd):value <= arg
+
+fn to_error_custom_num__odd?(arg) custom__create(
+     arg
+     [obj
+          :core_even? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__odd?() {
+     test(not 0.odd?())
+     test(not 2.odd?())
+     test(not 9223372036854775806.odd?())
+     test(not -2.odd?())
+     test(not -9223372036854775808.odd?())
+     test(1.odd?())
+     test(3.odd?())
+     test(9223372036854775807.odd?())
+     test(-1.odd?())
+     test(-3.odd?())
+     test(-9223372036854775807.odd?())
+
+     let int = rnd()
+     test(int.odd?() =/= int.even?())
+
+     test(not 0b00.odd?())
+     test(not 0b02.odd?())
+     test(not 0bfe.odd?())
+     test(0b01.odd?())
+     test(0b03.odd?())
+     test(0bff.odd?())
+
+     let byte = rnd_byte()
+     test(byte.odd?() =/= byte.even?())
+
+     test(not to_num__odd?(10).odd?())
+     test(to_num__odd?(11).odd?())
+     test(to_num__odd?(17).odd?())
+
+     test(not to_custom_num__odd?(10).odd?())
+     test(to_custom_num__odd?(11).odd?())
+     test(to_custom_num__odd?(17).odd?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.odd?().get_error_id() === :1)
+     test(heap_table().odd?().get_error_id() === :invalid_type)
+
+     test(to_broken_num__odd?(0).odd?().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__odd?(0).odd?().get_error_id() === :invalid_type)
+     test(to_error_num__odd?(0).odd?().get_error_id() === :3)
+     test(to_error_custom_num__odd?(0).odd?().get_error_id() === :4)
+}

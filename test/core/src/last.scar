@@ -1,0 +1,103 @@
+let array__last = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_last = fn (array) array:value.last()
+     ]
+]
+
+fn to_array__last(arg) new (@main.array__last):value <= arg
+
+fn to_custom_array__last(arg) custom__create(
+     arg
+     [obj
+          :core_last = fn (array) array.custom__get_data().last()
+     ]
+)
+
+let broken_array__last = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_last = fn (_) [box heap_string()]
+     ]
+]
+
+fn to_broken_array__last(arg) new (@main.broken_array__last):value <= arg
+
+fn to_broken_custom_array__last(arg) custom__create(
+     arg
+     [obj
+          :core_last = fn (_) [box heap_string()]
+     ]
+)
+
+let error_array__last = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_last = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__last(arg) new (@main.error_array__last):value <= arg
+
+fn to_error_custom_array__last(arg) custom__create(
+     arg
+     [obj
+          :core_last = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__last() {
+     test("0".last() === '0')
+     test("01".last() === '1')
+     test("102".last() === '2')
+     test("0123456789abcde".last() === 'e')
+     test("0123456789abcdefg".last() === 'g')
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5".last() === '\0000b5')
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".last() === '\0000b3')
+     test(("0123456789abcde" ++ "f").last() === 'f')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 " ++ "\0000af\0000ab\0000b3").last() === '\0000b3')
+     let rnd_string = rnd_string()
+     test(rnd_string.last() === rnd_string[len(rnd_string) - 1])
+
+     test(u"0".last() === u"0"[0])
+     test(u"01".last() === u"1"[0])
+     test(u"102".last() === u"2"[0])
+     test(u"0123456789abcde".last() === u"e"[0])
+     test(u"0123456789abcdefg".last() === u"g"[0])
+     test((u"0123456789abcde" ++ u"f").last() === u"f"[0])
+     let rnd_byte_array = rnd_byte_array()
+     test(rnd_byte_array.last() === rnd_byte_array[len(rnd_byte_array) - 1])
+
+     test([array 1].last() === 1)
+     test([array 1, 2].last() === 2)
+     test([array 1, 2, 3].last() === 3)
+     test([array heap_string()].last() === heap_string())
+     test([array heap_string(), 12].last() === 12)
+     test([array 1, heap_string(), 12].last() === 12)
+     test(([array heap_string(), 2, 3] ++ [array heap_string() ++ "a", 2, 3, 4]).last() === 4)
+     let rnd_array = rnd_string_array()
+     test(rnd_array.last() === rnd_array[len(rnd_array) - 1])
+
+     test(to_array__last("1").last() === '1')
+     test(to_array__last("23").last() === '3')
+
+     test(to_custom_array__last("1").last() === '1')
+     test(to_custom_array__last("23").last() === '3')
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.last().get_error_id() === :1)
+     test(heap_table().last().get_error_id() === :invalid_type)
+
+     test("".scarlet__erase_info().last().get_error_id() === :out_of_bounds)
+     test(u"".scarlet__erase_info().last().get_error_id() === :out_of_bounds)
+     test([array].scarlet__erase_info().last().get_error_id() === :out_of_bounds)
+
+     test(to_broken_array__last("").last().get_error_id() === :invalid_type)
+     test(to_broken_custom_array__last("").last().get_error_id() === :invalid_type)
+     test(to_error_array__last("").last().get_error_id() === :3)
+     test(to_error_custom_array__last("").last().get_error_id() === :4)
+}

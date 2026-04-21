@@ -1,0 +1,40 @@
+fn ir__core_fn_to_lower_to_upper(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@main.string_types__char) {
+          if arg:comptime_val:type =/= "obj"
+               arg.maybe_has_type!(@main.string_types__char_mtd)
+          else if arg:comptime_val:value[:_][if fn_ir_name == "McoreFNto_lower"; :core_to_lower else :core_to_upper].null?()
+               error__invalid_type(arg:code, if fn_ir_name == "McoreFNto_lower"; ".core_to_lower" else ".core_to_upper", "obj")
+          else null
+
+          ir__fn_call(
+               fn_ir_name, [array arg], code
+
+               if arg.has_type?(@main.string_types__char)
+                    @main.string_types
+               else if arg.maybe_has_type?([set "obj", "custom"])
+                    @main.common_types__error
+               else @main.string_types__error
+
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     } else {
+          let operand = new (arg) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:type  <= "string"
+               :comptime_val:value => if fn_ir_name == "McoreFNto_lower"; to_lower(_) else to_upper(_)
+          }
+          let operand = new (operand):possible_types <= operand:comptime_val.get_type_for_operand()
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

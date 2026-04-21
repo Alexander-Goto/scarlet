@@ -1,0 +1,2 @@
+fn ir__raw_ref_cnt__inc(ir_operand, owner_name_ir_const, ir) ir ++ "ref_cnt__inc(thrd_data," ++ ir_operand ++ "," ++ owner_name_ir_const ++ ");\n"
+fn ir__raw_ref_cnt__dec(ir_operand, ir) ir ++ "ref_cnt__dec(thrd_data," ++ ir_operand ++ ");\n"

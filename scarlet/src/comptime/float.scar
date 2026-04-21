@@ -1,0 +1,9 @@
+fn comptime_float(value, code)
+     new (@main.t_operand) {
+          :code           <= code
+          :possible_types <= [set "float"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "float"
+               :value <= value
+          }
+     }

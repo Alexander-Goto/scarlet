@@ -1,0 +1,103 @@
+fn ir__raw_const(prefix, suffix, final_data, dependencies) {
+     let name = final_data:ir_splited_consts[suffix][prefix]
+     if not name.null?()
+          [box name, final_data, new (dependencies):ir_consts => _.append(name)]
+     else {
+          let name = "IC" ++ @main.compiled_module_name ++ "S" ++ final_data:ir_consts.len().format_int(32, false)
+          [box
+               name
+
+               new (final_data) {
+                    :ir_splited_consts[suffix][prefix] <= name
+                    :ir_consts[name]                   <= prefix ++ name ++ suffix
+               }
+
+               new (dependencies):ir_consts => _.append(name)
+          ]
+     }
+}
+
+fn ir__memcpy_items(dst_reg, dst_offset, src_items, ir, final_data, dependencies) {
+     let src_len = src_items.len()
+
+     loop([box ir, final_data, dependencies, 0], fn (state) {
+          let [box ir, final_data, dependencies, idx] = state
+
+          let ir_idx             = (idx + dst_offset).to_ir_num()
+          let comptime_items     = src_items.drop(idx).take_while(fn (item) not item:comptime_val.null?())
+          let comptime_items_len = comptime_items.len()
+
+          if comptime_items_len < 2 {
+               let new_idx = idx + 1
+
+               break(new_idx == src_len, [box
+                    ir ++ dst_reg ++ "[" ++ ir_idx ++ "]=" ++ src_items[idx]:ir ++ ";\n"
+                    final_data, dependencies, new_idx
+               ])
+          } else {
+               let ir_list = comptime_items.foldl("{", fn (ir_list, item) ir_list ++ item:ir ++ ",")
+               let ir_list = new (ir_list)[ir_list.len() - 1] <= '}'
+               let align   = if comptime_items_len > 3; "[[gnu::aligned(64)]]\n" else "[[gnu::aligned(32)]]\n"
+
+               let [box ir_list_const, final_data, dependencies] = ir__raw_const(align ++ "static t_any const ", "[" ++ comptime_items_len.to_ir_num() ++ "]=" ++ ir_list ++ ";\n", final_data, dependencies)
+
+               let ir = ir ++
+                    "memcpy_inline(&" ++ dst_reg ++ "[" ++ ir_idx ++ "]," ++ ir_list_const ++ "," ++ (comptime_items_len * 16).to_ir_num() ++ ");\n"
+               let idx = idx + comptime_items_len
+
+               break(idx == src_len, [box ir, final_data, dependencies, idx])
+          }
+     })
+}
+
+fn ir__prepare_args_to_fn_call(consts, ir, final_data, dependencies, fn_call_is_last) {
+     let consts_len = consts.len()
+
+     if consts_len == 0
+          [box "nullptr", ir, final_data, dependencies]
+     else if consts_len == 1
+          if not fn_call_is_last && (consts.first():ir.first() == '_' || consts.first():ir.first().ascii_letter?())
+               [box "&" ++ consts.first():ir, ir, final_data, dependencies]
+          else [box "thrd_data->fns_args", ir ++ "thrd_data->fns_args[0]=" ++ consts.first():ir ++ ";\n", final_data, dependencies]
+     else if consts.any(true, fn (const) const:comptime_val.null?()) {
+          let [box ir, final_data, dependencies] = ir__memcpy_items("thrd_data->fns_args", 0, consts, ir, final_data, dependencies)
+
+          [box "thrd_data->fns_args", ir, final_data, dependencies]
+     } else {
+          let ir_list = consts.foldl("{", fn (ir_list, const) ir_list ++ const:ir ++ ",")
+          let ir_list = new (ir_list)[ir_list.len() - 1] <= '}'
+
+          let [box ir_list_const, final_data, dependencies] = ir__raw_const("static t_any const ", "[" ++ consts_len.to_ir_num() ++ "]=" ++ ir_list ++ ";\n", final_data, dependencies)
+
+          [box ir_list_const, ir, final_data, dependencies]
+     }
+}
+
+fn ir__create_ir_array(consts, exp_data, ir, final_data, dependencies) {
+     let consts_len = consts.len()
+
+     if consts_len == 0
+         [box "nullptr", exp_data, ir, final_data, dependencies]
+     else if consts_len == 1
+          if consts.first():ir.first() == '_' || consts.first():ir.first().ascii_letter?()
+               [box "&" ++ consts.first():ir, exp_data, ir, final_data, dependencies]
+          else {
+               let [box reg, exp_data] = exp_data.new_reg()
+
+               [box "&" ++ reg, exp_data, ir ++ "t_any const " ++ reg ++ "=" ++ consts.first():ir ++ ";\n", final_data, dependencies]
+          }
+     else if consts.any(true, fn (const) const:comptime_val.null?()) {
+          let [box reg, exp_data] = exp_data.new_reg()
+          let ir                  = ir ++ "t_any " ++ reg ++ "[" ++ consts_len.to_ir_num() ++ "];\n"
+          let [box ir, final_data, dependencies] = ir__memcpy_items(reg, 0, consts, ir, final_data, dependencies)
+
+          [box reg, exp_data, ir, final_data, dependencies]
+     } else {
+          let ir_list = consts.foldl("{", fn (ir_list, const) ir_list ++ const:ir ++ ",")
+          let ir_list = new (ir_list)[ir_list.len() - 1] <= '}'
+
+          let [box ir_list_const, final_data, dependencies] = ir__raw_const("static t_any const ", "[" ++ consts_len.to_ir_num() ++ "]=" ++ ir_list ++ ";\n", final_data, dependencies)
+
+          [box ir_list_const, exp_data, ir, final_data, dependencies]
+     }
+}

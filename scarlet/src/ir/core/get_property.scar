@@ -1,0 +1,46 @@
+fn ir__get_field_call(object, field_tkn, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let is_comptime = not (object:comptime_val.null?() || field_tkn:comptime_val.null?())
+     let is_null     = object.has_type?("null") && field_tkn.has_type?("token")
+
+     let [box result_operand, exp_data, ir, final_data, dependencies] = if not (is_comptime || is_null) {
+          let [box object, final_data, dependencies]       = object.has_ir!(final_data, dependencies)
+          let [box field_tkn, final_data, dependencies] = field_tkn.has_ir!(final_data, dependencies)
+
+          let [box result_reg, exp_data] = exp_data.new_reg()
+          let ir                         = ir ++ "t_any const " ++ result_reg ++ "=get_obj_field__own(thrd_data," ++ object:ir ++ "," ++ field_tkn:ir ++ ");\n"
+
+          let type = if object.has_type?("obj") && field_tkn.has_type?("token")
+               @main.common_types__null
+          else @main.common_types__null_error
+
+          let ir = ir__assume_type(result_reg, type, ir)
+
+          [box
+               new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= type
+               }
+
+               exp_data, ir, final_data, dependencies
+          ]
+     } else if is_null
+          [box comptime_null(code), exp_data, ir, final_data, dependencies]
+     else {
+          let field_value   = object:comptime_val:value[field_tkn:comptime_val:value]
+          let field_operand = if field_value.null?(); comptime_null(code) else new (object) {
+               :ir             <= null
+               :code           <= code
+               :comptime_val   <= field_value
+               :possible_types <= field_value.get_type_for_operand()
+          }
+
+          [box field_operand, exp_data, ir, final_data, dependencies]
+     }
+
+     if is_last {
+          let [box result_operand, final_data, dependencies] = result_operand.has_ir!(final_data, dependencies)
+
+          [box result_operand, exp_data, ir__raw_return(ir, result_operand:ir), final_data, dependencies, src_gconsts]
+     } else [box result_operand, exp_data, ir, final_data, dependencies, src_gconsts]
+}

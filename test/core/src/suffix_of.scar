@@ -1,0 +1,232 @@
+let array__suffix_of = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_suffix_of? = fn (suffix, array) suffix:value.suffix_of?(array:value)
+     ]
+]
+
+fn to_array__suffix_of(arg) new (@main.array__suffix_of):value <= arg
+
+fn to_custom_array__suffix_of(arg) custom__create(
+     arg
+     [obj
+          :core_suffix_of? = fn (suffix, array) suffix.custom__get_data().suffix_of?(array.custom__get_data())
+     ]
+)
+
+let broken_array__suffix_of = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_suffix_of? = fn (_, _) heap_string()
+     ]
+]
+
+fn to_broken_array__suffix_of(arg) new (@main.broken_array__suffix_of):value <= arg
+
+fn to_broken_custom_array__suffix_of(arg) custom__create(
+     arg
+     [obj
+          :core_suffix_of? = fn (_, _) heap_string()
+     ]
+)
+
+let error_array__suffix_of = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_suffix_of? = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__suffix_of(arg) new (@main.error_array__suffix_of):value <= arg
+
+fn to_error_custom_array__suffix_of(arg) custom__create(
+     arg
+     [obj
+          :core_suffix_of? = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__suffix_of?() {
+     test("".suffix_of?(""))
+     test(not "1".suffix_of?(""))
+     test("".suffix_of?("a"))
+     test("1".suffix_of?("1"))
+     test(not "1".suffix_of?("2"))
+     test(not "2".suffix_of?("1"))
+     test(not "12".suffix_of?("1"))
+     test("".suffix_of?("555554444333221"))
+     test("1".suffix_of?("555554444333221"))
+     test(not "2".suffix_of?("555554444333221"))
+     test(not "3".suffix_of?("555554444333221"))
+     test(not "4".suffix_of?("555554444333221"))
+     test(not "5".suffix_of?("555554444333221"))
+     test(not "6".suffix_of?("555554444333221"))
+     test("3221".suffix_of?("555554444333221"))
+     test("555554444333221".suffix_of?("555554444333221"))
+     test(not "321".suffix_of?("555554444333221"))
+     test(not "4221".suffix_of?("555554444333221"))
+     test(not "455554444333221".suffix_of?("555554444333221"))
+     test(not "555554444333220".suffix_of?("555554444333221"))
+     test(not "555554444333222".suffix_of?("555554444333221"))
+
+     test(not "5555554444333221".suffix_of?("555554444333221"))
+     test(not heap_string().suffix_of?("555554444333221"))
+
+     let string = ("0666666555554444333221" ++ "0")[1, 22]
+     test("".suffix_of?(string))
+     test("1".suffix_of?(string))
+     test("21".suffix_of?(string))
+     test("221".suffix_of?(string))
+     test("3221".suffix_of?(string))
+     test("33221".suffix_of?(string))
+     test("333221".suffix_of?(string))
+     test("666666555554444333221".suffix_of?(string))
+     test(string.suffix_of?(string))
+     test(not "2".suffix_of?(string))
+     test(not "3".suffix_of?(string))
+     test(not "4".suffix_of?(string))
+     test(not "5".suffix_of?(string))
+     test(not "6".suffix_of?(string))
+     test(not "7".suffix_of?(string))
+     test(not "65".suffix_of?(string))
+     test(not "54".suffix_of?(string))
+     test(not "35".suffix_of?(string))
+     test(not "01".suffix_of?(string))
+     test(not "60".suffix_of?(string))
+     test(not "11".suffix_of?(string))
+     test(not "655554444333221".suffix_of?(string))
+     test(not "55555444433322".suffix_of?(string))
+     test(not "6666666555554444333221".suffix_of?(string))
+     test(not "6666665555544443332216".suffix_of?(string))
+     test(not "166666655555444433322".suffix_of?(string))
+     test(not "666665555544443332216".suffix_of?(string))
+
+     let string = rnd_string()
+     let suffix = if rnd_bool()
+          rnd_string()
+     else string.drop((rnd() & 0xffff'ffff) % len(string))
+     test((if len(suffix) > len(string); false else string.drop(len(string) - len(suffix)) === suffix) === suffix.suffix_of?(string))
+
+     test(u"".suffix_of?(u""))
+     test(not u"1".suffix_of?(u""))
+     test(u"".suffix_of?(u"a"))
+     test(u"1".suffix_of?(u"1"))
+     test(not u"1".suffix_of?(u"2"))
+     test(not u"2".suffix_of?(u"1"))
+     test(not u"12".suffix_of?(u"1"))
+     test(u"".suffix_of?(u"55554444333221"))
+     test(u"1".suffix_of?(u"55554444333221"))
+     test(not u"2".suffix_of?(u"55554444333221"))
+     test(not u"3".suffix_of?(u"55554444333221"))
+     test(not u"4".suffix_of?(u"55554444333221"))
+     test(not u"5".suffix_of?(u"55554444333221"))
+     test(not u"6".suffix_of?(u"55554444333221"))
+     test(u"3221".suffix_of?(u"55554444333221"))
+     test(u"55554444333221".suffix_of?(u"55554444333221"))
+     test(not u"321".suffix_of?(u"55554444333221"))
+     test(not u"4221".suffix_of?(u"55554444333221"))
+     test(not u"45554444333221".suffix_of?(u"55554444333221"))
+     test(not u"55554444333220".suffix_of?(u"55554444333221"))
+     test(not u"55554444333222".suffix_of?(u"55554444333221"))
+
+     test(not u"555554444333221".suffix_of?(u"55554444333221"))
+     test(not heap_byte_array().suffix_of?(u"55554444333221"))
+
+     let array = (u"0666666555554444333221" ++ u"0")[1, 22]
+     test(u"".suffix_of?(array))
+     test(u"1".suffix_of?(array))
+     test(u"21".suffix_of?(array))
+     test(u"221".suffix_of?(array))
+     test(u"3221".suffix_of?(array))
+     test(u"33221".suffix_of?(array))
+     test(u"333221".suffix_of?(array))
+     test(u"666666555554444333221".suffix_of?(array))
+     test(array.suffix_of?(array))
+     test(not u"2".suffix_of?(array))
+     test(not u"3".suffix_of?(array))
+     test(not u"4".suffix_of?(array))
+     test(not u"5".suffix_of?(array))
+     test(not u"6".suffix_of?(array))
+     test(not u"7".suffix_of?(array))
+     test(not u"65".suffix_of?(array))
+     test(not u"54".suffix_of?(array))
+     test(not u"35".suffix_of?(array))
+     test(not u"01".suffix_of?(array))
+     test(not u"60".suffix_of?(array))
+     test(not u"11".suffix_of?(array))
+     test(not u"655554444333221".suffix_of?(array))
+     test(not u"55555444433322".suffix_of?(array))
+     test(not u"6666666555554444333221".suffix_of?(array))
+     test(not u"6666665555544443332216".suffix_of?(array))
+     test(not u"166666655555444433322".suffix_of?(array))
+     test(not u"666665555544443332216".suffix_of?(array))
+
+     let array = rnd_byte_array()
+     let suffix = if rnd_bool()
+          rnd_byte_array()
+     else array.drop((rnd() & 0xffff'ffff) % len(array))
+     test((if len(suffix) > len(array); false else array.drop(len(array) - len(suffix)) === suffix) === suffix.suffix_of?(array))
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     let string_6 = string_0 ++ "6"
+     test([array].suffix_of?([array]))
+     test([array].init(10).suffix_of?([array].init(10)))
+     test(not [array string_0, string_1, string_0][1, 2].suffix_of?([array].init(10)))
+     test([array].init(10).suffix_of?([array string_1]))
+     test([array string_0, string_1, string_0][1, 2].suffix_of?([array string_0, string_1, string_0][1, 2]))
+     test(not [array string_0, string_1, string_0][1, 2].suffix_of?([array string_0, string_2, string_0][1, 2]))
+     test(not [array string_0, string_2, string_0][1, 2].suffix_of?([array string_0, string_1, string_0][1, 2]))
+     test(not [array string_0, string_1, string_2, string_0][1, 3].suffix_of?([array string_0, string_1, string_0][1, 2]))
+     test([array].init(10).suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test([array string_0, string_1, string_0][1, 2].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test(not [array string_0, string_2, string_0][1, 2].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test(not [array string_0, string_3, string_0][1, 2].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test(not [array string_0, string_4, string_0][1, 2].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test(not [array string_0, string_5, string_0][1, 2].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test(not [array string_0, string_6, string_0][1, 2].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test([array string_0, string_3, string_2, string_2, string_1, string_0][1, 5].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test(not [array string_0, string_3, string_2, string_1, string_0][1, 4].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test(not [array string_0, string_4, string_2, string_2, string_1, string_0][1, 5].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test(not [array string_0, string_4, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test(not [array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_0, string_0][1, 15].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+     test(not [array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_2, string_0][1, 15].suffix_of?([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]))
+
+     let array = rnd_string_array()
+     let suffix = if rnd_bool()
+          rnd_string_array()
+     else array.drop((rnd() & 0xffff'ffff) % len(array))
+     test((if len(suffix) > len(array); false else array.drop(len(array) - len(suffix)) === suffix) === suffix.suffix_of?(array))
+
+     test("23".to_array__suffix_of().suffix_of?("123123".to_array__suffix_of()))
+     test("".to_array__suffix_of().suffix_of?("123123".to_array__suffix_of()))
+     test(not "12".to_array__suffix_of().suffix_of?("123123".to_array__suffix_of()))
+     test("23".to_custom_array__suffix_of().suffix_of?("123123".to_custom_array__suffix_of()))
+     test("".to_custom_array__suffix_of().suffix_of?("123123".to_custom_array__suffix_of()))
+     test(not "12".to_custom_array__suffix_of().suffix_of?("123123".to_custom_array__suffix_of()))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.suffix_of?(heap_string()).get_error_id() === :1)
+     test(heap_string().suffix_of?(error_1).get_error_id() === :1)
+     test(error_1.suffix_of?(error_2).get_error_id() === :1)
+     test(error_2.suffix_of?(error_1).get_error_id() === :2)
+
+     test([box heap_string()].scarlet__erase_info().suffix_of?(heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().suffix_of?([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([box heap_string()].scarlet__erase_info().suffix_of?([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+
+     test([array].to_broken_array__suffix_of().suffix_of?(to_broken_array__suffix_of([array])).get_error_id() === :invalid_type)
+     test([array].to_broken_custom_array__suffix_of().suffix_of?(to_broken_custom_array__suffix_of([array])).get_error_id() === :invalid_type)
+     test([array].to_error_array__suffix_of().suffix_of?(to_error_array__suffix_of([array])).get_error_id() === :3)
+     test([array].to_error_custom_array__suffix_of().suffix_of?(to_error_custom_array__suffix_of([array])).get_error_id() === :4)
+}

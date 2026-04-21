@@ -1,0 +1,45 @@
+fn ir__core_fn_is_in(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box item, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box container, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ item:code:text ++ ", " ++ container:code:text ++ ")")
+
+     item.maybe_has_type!(
+          if container.has_type?(@main.string_types)
+               "char"
+          else if container.has_type?(@main.byte_array_types)
+               "byte"
+          else if container.has_type?("set")
+               @main.all_hash_map_key_types
+          else @main.look_types
+     )
+     container.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom"])
+
+     if item:comptime_val.null?() || container:comptime_val.null?() || not item:comptime_val:type.in?(@main.comptime_eq_types) ||
+          container:comptime_val:type == "obj" && not container:comptime_val:value[:_][:core_look_in].null?()
+     {
+          let result_possible_types = if
+                    item.has_type?("char") && container.has_type?(@main.string_types)             ||
+                    item.has_type?("byte") && container.has_type?(@main.byte_array_types)         ||
+                    item.has_type?(@main.look_types) && container.has_type?("array")              ||
+                    item.has_type?(@main.always_hash_map_key_types) && container.has_type?("set") ||
+                    item.has_type?(@main.look_types) && container.has_type?("table")
+               [set "bool"]
+          else [set "bool", "error"]
+
+          ir__fn_call("McoreFNinB", [array item, container], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let operand = comptime_bool(
+               (
+                    if container:comptime_val:type.in?([array "string", "byte_array"])
+                         item:comptime_val:value
+                    else item:comptime_val
+               ).in?(container:comptime_val:value)
+
+               code
+          )
+          [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+     }
+}

@@ -1,0 +1,109 @@
+let num__sqr = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___mul__   = fn (num_1, num_2) to_num__sqr(num_1:value * num_2:value)
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__sqr(arg) new (@main.num__sqr):value <= arg
+
+fn to_custom_num__sqr(arg) custom__create(
+     arg
+     [obj
+          :core___mul__   = fn (num_1, num_2) to_custom_num__sqr(num_1.custom__get_data() * num_2.custom__get_data())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__sqr = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___mul__ = fn (_, _) heap_string()
+     ]
+]
+
+fn to_broken_num__sqr(arg) new (@main.broken_num__sqr):value <= arg
+
+fn to_broken_custom_num__sqr(arg) custom__create(
+     arg
+     [obj
+          :core___mul__ = fn (_, _) heap_string()
+     ]
+)
+
+let error_num__sqr = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___mul__ = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__sqr(arg) new (@main.error_num__sqr):value <= arg
+
+fn to_error_custom_num__sqr(arg) custom__create(
+     arg
+     [obj
+          :core___mul__ = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__sqr() {
+     test(0b00.sqr() === 0b00)
+     test(0b01.sqr() === 0b01)
+     test(0b02.sqr() === 0b04)
+     test(0b03.sqr() === 0b09)
+     test(0b04.sqr() === 0b10)
+     test(0bff.sqr() === 0b01)
+     let num = rnd_byte()
+     test(num.sqr() === num * num)
+
+     test(0.sqr() === 0)
+     test(1.sqr() === 1)
+     test(2.sqr() === 4)
+     test(3.sqr() === 9)
+     test(4.sqr() === 16)
+     test(-1.sqr() === 1)
+     test(-2.sqr() === 4)
+     test(-3.sqr() === 9)
+     test(-4.sqr() === 16)
+     test(9223372036854775807.sqr() === 1)
+     test(-9223372036854775808.sqr() === 0)
+     let num = rnd()
+     test(num.sqr() === num * num)
+
+     test(0.0.sqr().in_range?(0.0, 0.1))
+     test(-0.0.sqr().in_range?(0.0, 0.1))
+     test(1.0.sqr().in_range?(1.0, 1.1))
+     test(2.0.sqr().in_range?(4.0, 4.1))
+     test(3.0.sqr().in_range?(9.0, 9.1))
+     test(4.0.sqr().in_range?(16.0, 16.1))
+     test(-4.0.sqr().in_range?(16.0, 16.1))
+     test(4.1.sqr().in_range?(16.8, 16.9))
+     test(-4.1.sqr().in_range?(16.8, 16.9))
+     test(inf().sqr().inf?())
+     test(neg_inf().sqr().inf?())
+     test(nan().sqr().nan?())
+     let num = rnd_float()
+     test(num.sqr() === num * num)
+
+     test((to_num__sqr(0).sqr()) === to_num__sqr(0))
+     test((to_num__sqr(-100).sqr()) === to_num__sqr(10000))
+
+     test(to_custom_num__sqr(0).sqr() === to_custom_num__sqr(0))
+     test(to_custom_num__sqr(-100).sqr() === to_custom_num__sqr(10000))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     let string  = heap_string()
+     test(error.sqr().get_error_id() === :1)
+     test(string.sqr().get_error_id() === :invalid_type)
+
+     test(to_broken_num__sqr(1).sqr().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__sqr(1).sqr().get_error_id() === :invalid_type)
+     test(to_error_num__sqr(1).sqr().get_error_id() === :3)
+     test(to_error_custom_num__sqr(1).sqr().get_error_id() === :4)
+}

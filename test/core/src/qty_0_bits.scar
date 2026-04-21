@@ -1,0 +1,110 @@
+let num__qty_0_bits = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_qty_0_bits = fn (num) num:value.qty_0_bits()
+     ]
+]
+
+fn to_num__qty_0_bits(arg) new (@main.num__qty_0_bits):value <= arg
+
+fn to_custom_num__qty_0_bits(arg) custom__create(
+     arg
+     [obj
+          :core_qty_0_bits = fn (num) num.custom__get_data().qty_0_bits()
+     ]
+)
+
+let broken_num__qty_0_bits = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_qty_0_bits = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__qty_0_bits(arg) new (@main.broken_num__qty_0_bits):value <= arg
+
+fn to_broken_custom_num__qty_0_bits(arg) custom__create(
+     arg
+     [obj
+          :core_qty_0_bits = fn (_) heap_string()
+     ]
+)
+
+let error_num__qty_0_bits = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_qty_0_bits = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__qty_0_bits(arg) new (@main.error_num__qty_0_bits):value <= arg
+
+fn to_error_custom_num__qty_0_bits(arg) custom__create(
+     arg
+     [obj
+          :core_qty_0_bits = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__qty_0_bits() {
+     test(0.qty_0_bits() === 64)
+     test(2.qty_0_bits() === 63)
+     test(9223372036854775806.qty_0_bits() === 2)
+     test(-2.qty_0_bits() === 1)
+     test(-9223372036854775808.qty_0_bits() === 63)
+     test(1.qty_0_bits() === 63)
+     test(3.qty_0_bits() === 62)
+     test(9223372036854775807.qty_0_bits() === 1)
+     test(-1.qty_0_bits() === 0)
+     test(-3.qty_0_bits() === 1)
+     test(-9223372036854775807.qty_0_bits() === 62)
+     test(0x5555'55ff'ffff'aaaa.qty_0_bits() === 20)
+
+     let int      = rnd()
+     let expected = loop([box 0, int.neg_bits()], fn (state) {
+          let [box result, int] = state
+
+          if int === 0
+               [breaker result]
+          else [box result + (int & 1), int >> 1]
+     })
+     test(expected === int.qty_0_bits())
+
+     test(0b00.qty_0_bits() === 8)
+     test(0b02.qty_0_bits() === 7)
+     test(0bfe.qty_0_bits() === 1)
+     test(0b01.qty_0_bits() === 7)
+     test(0b03.qty_0_bits() === 6)
+     test(0bff.qty_0_bits() === 0)
+
+     let byte     = rnd_byte()
+     let expected = loop([box 0, byte.neg_bits().to_int()], fn (state) {
+          let [box result, byte] = state
+
+          if byte === 0
+               [breaker result]
+          else [box result + (byte & 1), byte >> 1]
+     })
+     test(expected === byte.qty_0_bits())
+
+     test(to_num__qty_0_bits(0x5555'55ff'ffff'aaaa).qty_0_bits() === 20)
+     test(to_num__qty_0_bits(11).qty_0_bits() === 61)
+     test(to_num__qty_0_bits(17).qty_0_bits() === 62)
+
+     test(to_custom_num__qty_0_bits(0x5555'55ff'ffff'aaaa).qty_0_bits() === 20)
+     test(to_custom_num__qty_0_bits(11).qty_0_bits() === 61)
+     test(to_custom_num__qty_0_bits(17).qty_0_bits() === 62)
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.qty_0_bits().get_error_id() === :1)
+     test(heap_table().qty_0_bits().get_error_id() === :invalid_type)
+
+     test(to_broken_num__qty_0_bits(0).qty_0_bits().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__qty_0_bits(0).qty_0_bits().get_error_id() === :invalid_type)
+     test(to_error_num__qty_0_bits(0).qty_0_bits().get_error_id() === :3)
+     test(to_error_custom_num__qty_0_bits(0).qty_0_bits().get_error_id() === :4)
+}

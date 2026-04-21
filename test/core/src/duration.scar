@@ -1,0 +1,23 @@
+`noinline`
+fn test__duration() {
+     test(0.int_to_time().duration(0.int_to_time()) === 0)
+     test(1.int_to_time().duration(0.int_to_time()) === 1)
+     test(0.int_to_time().duration(1.int_to_time()) === 1)
+     test(5565.int_to_time().duration(77.int_to_time()) === 5488)
+     test(77.int_to_time().duration(5565.int_to_time()) === 5488)
+     test(9223372036825516799.int_to_time().duration(0.int_to_time()) === 9223372036825516799)
+     test(0.int_to_time().duration(9223372036825516799.int_to_time()) === 9223372036825516799)
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.duration(0.int_to_time()).get_error_id() === :1)
+     test(0.int_to_time().duration(error_1).get_error_id() === :1)
+     test(error_1.duration(error_2).get_error_id() === :1)
+     test(error_2.duration(error_1).get_error_id() === :2)
+     test(error_1.duration(heap_string()).get_error_id() === :1)
+     test(heap_string().duration(error_1).get_error_id() === :1)
+
+     test(heap_string().duration(0.int_to_time()).get_error_id() === :invalid_type)
+     test(0.int_to_time().duration(heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().duration(heap_string()).get_error_id() === :invalid_type)
+}

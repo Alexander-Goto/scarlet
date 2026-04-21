@@ -1,0 +1,9 @@
+let comptime_holder_val = new (@main.t_comptime_val):type <= "holder"
+
+fn comptime_holder(code)
+     new (@main.t_operand) {
+          :code           <= code
+          :ir             <= "(const t_any){.bytes={[0]=tid__holder,[15]=tid__holder}}"
+          :possible_types <= [set "holder"]
+          :comptime_val   <= @main.comptime_holder_val
+     }

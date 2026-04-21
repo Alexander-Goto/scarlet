@@ -1,0 +1,10 @@
+fn ir__core_fn_wait(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box thread, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ thread:code:text ++ ")")
+
+     thread.maybe_has_type!("thread")
+
+     ir__fn_call("McoreFNwait", [array thread], code, null, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

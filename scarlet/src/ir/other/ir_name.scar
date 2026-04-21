@@ -1,0 +1,8 @@
+fn disassemble_ir_name(ir_name) {
+     let type_idx = ir_name.drop(1).foldl_kv(null, fn (_, idx, char) if char.ascii_upper?(); [breaker idx + 1] else null)
+     let module   = ir_name[1, type_idx]
+     let type     = ir_name[type_idx, type_idx + 2]
+     let name     = ir_name.drop(type_idx + 2)
+
+     [box module, name, type]
+}

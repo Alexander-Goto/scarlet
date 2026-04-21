@@ -1,0 +1,47 @@
+let t_box = [obj
+     :scar_type = "t_box"
+
+     :open_char = @main.t_token
+     :items     = [array] # [array @i_expression*]
+]
+
+fn box_independent?(box, independent_consts) box:items.all(true, fn (item) item.independent?(independent_consts))
+
+fn analyze_box(box, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     box:items.foldl([box last_use_info, lambdas_data, def_ids], fn (state, item) {
+          let [box last_use_info, lambdas_data, def_ids] = state
+
+          item.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     })
+
+fn box_to_operand(box, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_comptime, is_box] = if box:items.empty?()
+          [box [array], "[box]", exp_data, ir, final_data, dependencies, src_gconsts, true, true]
+     else box:items.foldl([box [array].init(box:items.len()), "[box", exp_data, ir, final_data, dependencies, src_gconsts, true, true], fn (state, item) {
+          let [box items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_comptime, is_box] = state
+
+          let [box item, exp_data, ir, final_data, dependencies, src_gconsts] =
+               item.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+          if item.has_type?("error")
+               error__invalid_type(item:code, @main.not_error_types, "error")
+          else null
+
+          let items       = items.append(item)
+          let code        = code ++ " " ++ item:code:text ++ ","
+          let is_comptime = is_comptime && not item:comptime_val.null?()
+          let is_box      = is_box && not item.maybe_has_type?("error")
+
+          [box items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_comptime, is_box]
+     })
+
+     let code = new (box:open_char):text <= if code.last() == ','; new (code)[code.len() - 1] <= ']' else code
+     if is_comptime {
+          let operand = comptime_box(items, code)
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     } else ir__box(items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_box, is_last)
+}

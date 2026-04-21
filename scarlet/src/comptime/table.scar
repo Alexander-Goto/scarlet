@@ -1,0 +1,18 @@
+fn comptime_table(kvs, code) if kvs.empty?()
+     new (@main.t_operand) {
+          :code           <= code
+          :ir             <= "empty_table"
+          :possible_types <= [set "table"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "table"
+               :value <= [table]
+          }
+     }
+else new (@main.t_operand) {
+     :code           <= code
+     :possible_types <= [set "table"]
+     :comptime_val   <= new (@main.t_comptime_val) {
+          :type  <= "table"
+          :value <= kvs.foldl([table].init(kvs.len()), fn (table, kv) new (table)[kv:key:comptime_val] <= kv:value:comptime_val)
+     }
+}

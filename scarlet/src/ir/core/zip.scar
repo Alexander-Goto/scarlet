@@ -1,0 +1,24 @@
+fn ir__core_fn_zip(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box array_1, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box array_2, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, true, false, true)
+     let [box func, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, true, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ array_1:code:text ++ ", " ++ array_2:code:text ++ ", " ++ func:code:text ++ ")")
+
+     let [box array_2_expected_types, result_possible_types] = if array_1.has_type?([set "short_string", "string", "short_byte_array", "byte_array", "array"])
+          [box [set "short_string", "string", "short_byte_array", "byte_array", "array"], [set "array", "error"]]
+     else if array_1.has_type?([set "table", "set"])
+          [box [set "table", "set", "obj"], [set "table", "error"]]
+     else {
+          array_1.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom"])
+          [box @main.common_types, @main.common_types__error]
+     }
+
+     array_2.maybe_has_type!(array_2_expected_types)
+     func.maybe_has_type!(@main.fn_types)
+
+     ir__fn_call("McoreFNzip", [array array_1, array_2, func], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

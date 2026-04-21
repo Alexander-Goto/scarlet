@@ -1,0 +1,76 @@
+let const__max_val = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_max_val   = fn (const) const:value.max_val().to_const__max_val()
+          :core___equal__ = fn (const_1, const_2) const_1:value === const_2:value
+     ]
+]
+
+fn to_const__max_val(arg) new (@main.const__max_val):value <= arg
+
+fn to_custom_const__max_val(arg) custom__create(
+     arg
+     [obj
+          :core_max_val   = fn (const) const.custom__get_data().max_val().to_custom_const__max_val()
+          :core___equal__ = fn (const_1, const_2) const_1.custom__get_data() === const_2.custom__get_data()
+     ]
+)
+
+let broken_const__max_val = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_max_val = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_const__max_val(arg) new (@main.broken_const__max_val):value <= arg
+
+fn to_broken_custom_const__max_val(arg) custom__create(
+     arg
+     [obj
+          :core_max_val = fn (_) heap_string()
+     ]
+)
+
+let error_const__max_val = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_max_val = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__max_val(arg) new (@main.error_const__max_val):value <= arg
+
+fn to_error_custom_const__max_val(arg) custom__create(
+     arg
+     [obj
+          :core_max_val = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__max_val() {
+     test(rnd_token().max_val() === :zzzzzzzzzzzzzzzzzzzzzz?)
+     test(rnd_byte().max_val() === 0bff)
+     test(rnd().max_val() === 9223372036854775807)
+     test((rnd() >> 2).int_to_time().max_val() === 9223372036825516799.int_to_time())
+     test(rnd_float().max_val().inf?())
+     test(nan().max_val().inf?())
+     test(inf().max_val().inf?())
+     test(neg_inf().max_val().inf?())
+
+     test(rnd().to_const__max_val().max_val() === 9223372036854775807.to_const__max_val())
+     test(rnd().to_custom_const__max_val().max_val() === 9223372036854775807.to_custom_const__max_val())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(max_val(error).get_error_id() === :1)
+     test(max_val(heap_string()).get_error_id() === :invalid_type)
+
+     test(to_broken_const__max_val(0).max_val().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__max_val(0).max_val().get_error_id() === :invalid_type)
+     test(to_error_const__max_val(0).max_val().get_error_id() === :3)
+     test(to_error_custom_const__max_val(0).max_val().get_error_id() === :4)
+}

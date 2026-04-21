@@ -1,0 +1,25 @@
+fn ir__core_fn_not(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let code = new (exp:operator):text => _ ++ (" " ++ arg:code:text)
+
+     arg.maybe_has_type!("bool")
+
+     if arg:comptime_val.null?()
+          if arg.has_type?("bool") {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+               let ir                         = ir ++ "t_any const " ++ result_reg ++ "={.bytes={" ++ arg:ir ++ ".bytes[0]^1,[15]=tid__bool}};\n"
+
+               let operand = new (arg) {
+                    :ir   <= result_reg
+                    :code <= code
+               }
+
+               [box operand, exp_data, if is_last; ir__raw_return(ir, result_reg) else ir, final_data, dependencies, src_gconsts]
+          } else ir__fn_call("McoreFNnot", [array arg], code, if arg.has_type?("bool"); [set "bool"] else [set "bool", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else {
+          let operand = comptime_bool(not arg:comptime_val:value, code)
+          [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+     }
+}

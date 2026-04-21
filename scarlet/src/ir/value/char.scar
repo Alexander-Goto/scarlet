@@ -1,0 +1,11 @@
+fn ir__char_to_bytes(char) {
+     let char_code = char.to_int()
+     if char_code < 256
+          ",0x0,0x0,0x" ++ char_code.to_byte().to_string()
+     else {
+          let bytes = format_int(char_code, 16, false)
+          let bytes = "0".repeat(6 - bytes.len()) ++ bytes
+
+          ",0x" ++ bytes[0, 2] ++ ",0x" ++ bytes[2, 4] ++ ",0x" ++ bytes[4, 6]
+     }
+}

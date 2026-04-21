@@ -1,0 +1,119 @@
+let const__ascii_to_lower = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_to_lower = fn (arg) to_const__ascii_to_lower(arg:value.ascii_to_lower())
+          :core___equal__      = fn (arg_1, arg_2) arg_1:value === arg_2:value
+     ]
+]
+
+fn to_const__ascii_to_lower(arg) new (@main.const__ascii_to_lower):value <= arg
+
+fn to_custom_const__ascii_to_lower(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_to_lower = fn (arg) to_custom_const__ascii_to_lower(arg.custom__get_data().ascii_to_lower())
+          :core___equal__      = fn (arg_1, arg_2) arg_1.custom__get_data() === arg_2.custom__get_data()
+     ]
+)
+
+let broken_const__ascii_to_lower = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_to_lower = fn (_) heap_table()
+     ]
+]
+
+fn to_broken_const__ascii_to_lower(arg) new (@main.broken_const__ascii_to_lower):value <= arg
+
+fn to_broken_custom_const__ascii_to_lower(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_to_lower = fn (_) heap_table()
+     ]
+)
+
+let error_const__ascii_to_lower = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_to_lower = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__ascii_to_lower(arg) new (@main.error_const__ascii_to_lower):value <= arg
+
+fn to_error_custom_const__ascii_to_lower(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_to_lower = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__ascii_to_lower() {
+     test('\000001'.ascii_to_lower() === '\000001')
+     test('\000008'.ascii_to_lower() === '\000008')
+     test('\000009'.ascii_to_lower() === '\000009')
+     test('\000020'.ascii_to_lower() === '\000020')
+     test('!'.ascii_to_lower() === '!')
+     test('~'.ascii_to_lower() === '~')
+     test('0'.ascii_to_lower() === '0')
+     test('9'.ascii_to_lower() === '9')
+     test('a'.ascii_to_lower() === 'a')
+     test('z'.ascii_to_lower() === 'z')
+     test('A'.ascii_to_lower() === 'a')
+     test('Z'.ascii_to_lower() === 'z')
+
+     test("\000001".ascii_to_lower() === "\000001")
+     test("\000008".ascii_to_lower() === "\000008")
+     test("\000009".ascii_to_lower() === "\000009")
+     test("\000020".ascii_to_lower() === "\000020")
+     test("!".ascii_to_lower() === "!")
+     test("~".ascii_to_lower() === "~")
+     test("0".ascii_to_lower() === "0")
+     test("9".ascii_to_lower() === "9")
+     test("a".ascii_to_lower() === "a")
+     test("z".ascii_to_lower() === "z")
+     test("A".ascii_to_lower() === "a")
+     test("Z".ascii_to_lower() === "z")
+     test("az".ascii_to_lower() === "az")
+     test("AZ".ascii_to_lower() === "az")
+     test("azAZ".ascii_to_lower() === "azaz")
+     test("AZaz".ascii_to_lower() === "azaz")
+     test("aZAz".ascii_to_lower() === "azaz")
+     test("\0000ac\0000c2\0000ba\0000b9".ascii_to_lower() === "\0000ac\0000c2\0000ba\0000b9")
+     test("z\0000ac\0000c2\0000ba\0000b9z".ascii_to_lower() === "z\0000ac\0000c2\0000ba\0000b9z")
+     test("\00008b\0000a1\000099\000098".ascii_to_lower() === "\00008b\0000a1\000099\000098")
+     test("Z\00008b\0000a1\000099\000098Z".ascii_to_lower() === "z\00008b\0000a1\000099\000098z")
+     test("Hello World".ascii_to_lower() === "hello world")
+     test("0123456789abcde".ascii_to_lower() === "0123456789abcde")
+     test("0123456789ABCDE".ascii_to_lower() === "0123456789abcde")
+     test("abcdefffffffffz".ascii_to_lower() === "abcdefffffffffz")
+     test("ABCDEFFFFFFFFFZ".ascii_to_lower() === "abcdefffffffffz")
+     test("Hello WorldHello World".ascii_to_lower() === "hello worldhello world")
+     test("0123456789abcdef".ascii_to_lower() === "0123456789abcdef")
+     test("0123456789ABCDEF".ascii_to_lower() === "0123456789abcdef")
+     test("abcdeffffffffffz".ascii_to_lower() === "abcdeffffffffffz")
+     test("ABCDEFFFFFFFFFFZ".ascii_to_lower() === "abcdeffffffffffz")
+
+     let string = rnd_string()
+     test(string.map(fn (char) if char.in_range?('A', '['); (char.to_int() + 32).to_char() else char) === string.ascii_to_lower())
+     test(string.map(_.ascii_to_lower()) === string.ascii_to_lower())
+
+     test(to_const__ascii_to_lower('a').ascii_to_lower() === to_const__ascii_to_lower('a'))
+     test(to_const__ascii_to_lower('Z').ascii_to_lower() === to_const__ascii_to_lower('z'))
+
+     test(to_custom_const__ascii_to_lower('a').ascii_to_lower() === to_custom_const__ascii_to_lower('a'))
+     test(to_custom_const__ascii_to_lower('Z').ascii_to_lower() === to_custom_const__ascii_to_lower('z'))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.ascii_to_lower().get_error_id() === :1)
+     test(heap_table().ascii_to_lower().get_error_id() === :invalid_type)
+
+     test(to_broken_const__ascii_to_lower("").ascii_to_lower().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__ascii_to_lower("").ascii_to_lower().get_error_id() === :invalid_type)
+     test(to_error_const__ascii_to_lower("").ascii_to_lower().get_error_id() === :3)
+     test(to_error_custom_const__ascii_to_lower("").ascii_to_lower().get_error_id() === :4)
+}

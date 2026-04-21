@@ -1,0 +1,719 @@
+fn ir__core_fn_call(
+     fn_ir_name, fn_exp
+     last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts
+     is_last, is_first_in_chain
+)
+     switch fn_ir_name
+     case "McoreFN__add__", "McoreFN__mul__", "McoreFN__sub__":
+          ir__core_fn___add_mul_sub__(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFN__and__", "McoreFN__or__", "McoreFN__xor__":
+          ir__core_fn___and_or_xor__(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFN__ashr__":
+          ir__core_fn___ashr__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFN__concat__":
+          ir__core_fn___concat__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFN__div__", "McoreFN__mod__":
+          ir__core_fn___div_mod__(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFN__equal__":
+          ir__core_fn___equal__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFN__get_item__":
+          ir__core_fn___get_item__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFN__great__":
+          ir__core_fn___great__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFN__great_or_eq__":
+          ir__core_fn___great_or_eq__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFN__less__":
+          ir__core_fn___less__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFN__less_or_eq__":
+          ir__core_fn___less_or_eq__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFN__lshr__", "McoreFN__shl__":
+          ir__core_fn___lshr_shl__(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFN__not_equal__":
+          ir__core_fn___not_equal__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFN__slice__":
+          ir__core_fn___slice__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFN__strong_equal__":
+          ir__core_fn___strong_equal__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFN__strong_not_equal__":
+          ir__core_fn___strong_not_equal__(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNabs", "McoreFNneg":
+          ir__core_fn_abs_neg(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFNacos", "McoreFNasin", "McoreFNatan", "McoreFNceil", "McoreFNcos", "McoreFNexp", "McoreFNfloor", "McoreFNlog"
+               "McoreFNlog2", "McoreFNlog10", "McoreFNround", "McoreFNsin", "McoreFNtan", "McoreFNtrunc":
+          ir__core_fn_float_to_float(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFNall", "McoreFNall_kv", "McoreFNany", "McoreFNany_kv":
+          ir__core_fn_all_all_kv_any_any_kv(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNappend":
+          ir__core_fn_append(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNappend_new":
+          ir__core_fn_append_new(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNascii_ctrlB", "McoreFNascii_digitB", "McoreFNascii_graphicB", "McoreFNascii_letterB", "McoreFNascii_lowerB"
+               "McoreFNascii_spaceB", "McoreFNascii_symbolB", "McoreFNascii_upperB", "McoreFNctrlB", "McoreFNdigitB", "McoreFNgraphicB"
+               "McoreFNletterB", "McoreFNlowerB", "McoreFNspaceB", "McoreFNsymbolB", "McoreFNupperB":
+          ir__core_fn_char_is(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNascii_to_lower", "McoreFNascii_to_upper":
+          ir__core_fn_ascii_to_lower_ascii_to_upper(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNasciiB":
+          ir__core_fn_is_ascii(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNassemble_time":
+          ir__core_fn_assemble_time(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNbox_len":
+          ir__core_fn_box_len(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNbreak":
+          ir__core_fn_break(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNcall_stack":
+          ir__core_fn_call_stack(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNcall_stack_onB":
+          ir__core_fn_is_call_stack_on(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNcap":
+          ir__core_fn_cap(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNchar_lang":
+          ir__core_fn_char_lang(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNchar_to_uchar":
+          ir__core_fn_char_to_uchar(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNclear":
+          ir__core_fn_clear(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNcmp":
+          ir__core_fn_cmp(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNcopy":
+          ir__core_fn_copy(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNday", "McoreFNhour", "McoreFNminute", "McoreFNmonth", "McoreFNsecond", "McoreFNyear":
+          ir__core_fn_time_one_component(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNdebugB":
+          ir__core_fn_is_debug(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNdelete":
+          ir__core_fn_delete(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNdeserialize":
+          ir__core_fn_deserialize(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNdisassemble_time":
+          ir__core_fn_disassemble_time(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNdrop", "McoreFNtake":
+          ir__core_fn_drop_take(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNdrop_while", "McoreFNtake_while":
+          ir__core_fn_drop_while_take_while(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNdump":
+          ir__core_fn_dump(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNduration":
+          ir__core_fn_duration(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNeach_to_each", "McoreFNeach_to_each_kv", "McoreFNmap", "McoreFNmap_kv":
+          ir__core_fn_each_to_each_each_to_each_kv_map_map_kv(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNempty_val":
+          ir__core_fn_empty_val(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNemptyB":
+          ir__core_fn_is_empty(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNerrorB":
+          ir__core_fn_is_error(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNevenB", "McoreFNoddB":
+          ir__core_fn_is_even_is_odd(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNexit":
+          ir__core_fn_exit(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNexp2", "McoreFNsqr":
+          ir__core_fn_exp2_sqr(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFNexpected_error":
+          ir__core_fn_expected_error(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNfail":
+          ir__core_fn_fail(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNfilter", "McoreFNfilter_kv":
+          ir__core_fn_filter_filter_kv(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNfirst", "McoreFNlast":
+          ir__core_fn_first_last(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNfoldl", "McoreFNfoldl_kv", "McoreFNfoldr", "McoreFNfoldr_kv":
+          ir__core_fn_foldl_foldl_kv_foldr_foldr_kv(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNfoldl1", "McoreFNfoldr1":
+          ir__core_fn_foldl1_foldr1(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNformat_int":
+          ir__core_fn_format_int(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNget_error_data":
+          ir__core_fn_get_error_data(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNget_error_id":
+          ir__core_fn_get_error_id(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNget_error_msg":
+          ir__core_fn_get_error_msg(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNhash":
+          ir__core_fn_hash(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNimplement":
+          ir__core_fn_implement(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNin_rangeB":
+          ir__core_fn_is_in_range(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNinB":
+          ir__core_fn_is_in(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNinfB", "McoreFNnanB", "McoreFNneg_infB":
+          ir__core_fn_float_is(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNinherits_from":
+          ir__core_fn_inherits_from(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNinit":
+          ir__core_fn_init(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNinsert_part_to":
+          ir__core_fn_insert_part_to(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNinsert_to":
+          ir__core_fn_insert_to(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNint_to_time":
+          ir__core_fn_int_to_time(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNjoin":
+          ir__core_fn_join(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNkey_ofB":
+          ir__core_fn_is_key_of(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNlen":
+          ir__core_fn_len(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNlog__debug_msg", "McoreFNlog__msg":
+          ir__core_fn_log_msg(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNlook_from_end_in", "McoreFNlook_other_from_end_in":
+          ir__core_fn_look_from_end(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNlook_in", "McoreFNlook_other_in":
+          ir__core_fn_look(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNlook_part_from_end_in", "McoreFNlook_part_in":
+          ir__core_fn_look_part(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNloop":
+          ir__core_fn_loop(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNmake_channel":
+          ir__core_fn_make_channel(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNmap_with_state", "McoreFNmap_kv_with_state":
+          ir__core_fn_map_with_state_map_kv_with_state(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNmax", "McoreFNmin":
+          ir__core_fn_max_min(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFNmax_val", "McoreFNmin_val":
+          ir__core_fn_max_val_min_val(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFNmove", "McoreFNself_copy":
+          ir__core_fn_move_self_copy(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNnot":
+          ir__core_fn_not(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNneg_bits", "McoreFNreverse_bits":
+          ir__core_fn_neg_bits_reverse_bits(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFNnullB":
+          ir__core_fn_is_null(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNobj_to_table":
+          ir__core_fn_obj_to_table(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNokA":
+          ir__core_fn_ok_check(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNparse_int":
+          ir__core_fn_parse_int(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNpart_ofB", "McoreFNprefix_ofB", "McoreFNsuffix_ofB":
+          ir__core_fn_is_part_of_is_prefix_of_is_suffix_of(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNpop":
+          ir__core_fn_pop(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNpower":
+          ir__core_fn_power(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFNprint", "McoreFNprintln":
+          ir__core_fn_prints(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNpush":
+          ir__core_fn_push(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNqty":
+          ir__core_fn_qty(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNqty_0_bits", "McoreFNqty_1_bits", "McoreFNqty_leading_0_bits"
+               "McoreFNqty_leading_1_bits", "McoreFNqty_trailing_0_bits", "McoreFNqty_trailing_1_bits":
+          ir__core_fn_qty_bits(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNread_from_memAAA":
+          ir__core_fn_read_from_mem(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNremove":
+          ir__core_fn_remove(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNrepeat":
+          ir__core_fn_repeat(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNreplace":
+          ir__core_fn_replace(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNreplace_part":
+          ir__core_fn_replace_part(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNreserve":
+          ir__core_fn_reserve(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNreverse":
+          ir__core_fn_reverse(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNreverse_bytes":
+          ir__core_fn_reverse_bytes(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFNrnd":
+          ir__core_fn_rnd(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNrotate_left", "McoreFNrotate_right":
+          ir__core_fn_rotate_left_rotate_right(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     case "McoreFNsqrt":
+          ir__core_fn_sqrt(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNscarlet__erase_info":
+          ir__scarlet__erase_info(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNscarlet__erase_value":
+          ir__scarlet__erase_value(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNscarlet__joinAAA":
+          ir__scarlet__join(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNscarlet__rnd":
+          ir__scarlet__rnd(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNscarlet__splitAAA":
+          ir__scarlet__split(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNserialize":
+          ir__core_fn_serialize(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNset_log_level":
+          ir__core_fn_set_log_level(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNshort_typeB":
+          ir__core_fn_is_short_type(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNshuffle_box":
+          ir__core_fn_shuffle_box(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNsleep":
+          ir__core_fn_sleep(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNsort", "McoreFNstable_sort":
+          ir__core_fn_sort_stable_sort(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNsort_fn", "McoreFNstable_sort_fn":
+          ir__core_fn_sort_fn_stable_sort_fn(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNsplit":
+          ir__core_fn_split(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNsplit_by_part":
+          ir__core_fn_split_by_part(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNstr_to_tkn":
+          ir__core_fn_str_to_tkn(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNstr_to_ustr":
+          ir__core_fn_str_to_ustr(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNtable_to_obj":
+          ir__core_fn_table_to_obj(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNtake_one":
+          ir__core_fn_take_one(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNtake_one_kv":
+          ir__core_fn_take_one_kv(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNthread":
+          ir__core_fn_thread(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNtime":
+          ir__core_fn_time(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNtime_limit_pop":
+          ir__core_fn_time_limit_pop(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNtime_limit_wait":
+          ir__core_fn_time_limit_wait(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNtimezone":
+          ir__core_fn_timezone(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNto_array":
+          ir__core_fn_to_array(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNto_bool":
+          ir__core_fn_to_bool(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNto_box":
+          ir__core_fn_to_box(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNto_byte":
+          ir__core_fn_to_byte(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNto_char":
+          ir__core_fn_to_char(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNto_float":
+          ir__core_fn_to_float(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNto_int":
+          ir__core_fn_to_int(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNto_lower", "McoreFNto_upper":
+          ir__core_fn_to_lower_to_upper(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNto_string":
+          ir__core_fn_to_string(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNtrim":
+          ir__core_fn_trim(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNtype":
+          ir__core_fn_type(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNuchar_to_ustr":
+          ir__core_fn_uchar_to_ustr(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNuncopyable_errorB":
+          ir__core_fn_is_uncopyable_error(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNunslice":
+          ir__core_fn_unslice(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNuprint", "McoreFNuprintln":
+          ir__core_fn_uprints(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNustr_to_str":
+          ir__core_fn_ustr_to_str(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNwait":
+          ir__core_fn_wait(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNwrite_to_memAAA":
+          ir__core_fn_write_to_mem(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNyield":
+          ir__core_fn_yield(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNzip":
+          ir__core_fn_zip(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "McoreFNzip_n":
+          ir__core_fn_zip_n(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     default:
+          unreachable()
+
+fn get_core_fn_partial_app_linear_alloc_mask(name)
+     switch name
+     case "McoreFNdrop_while", "McoreFNeach_to_each", "McoreFNeach_to_each_kv", "McoreFNfilter", "McoreFNfilter_kv"
+               "McoreFNfoldl1", "McoreFNfoldr1", "McoreFNloop", "McoreFNmap", "McoreFNmap_kv"
+               "McoreFNsort_fn", "McoreFNstable_sort_fn", "McoreFNtake_while", "McoreFNzip_n":
+          2
+     case "McoreFNall", "McoreFNall_kv", "McoreFNany", "McoreFNany_kv", "McoreFNfoldl", "McoreFNfoldl_kv", "McoreFNfoldr"
+               "McoreFNfoldr_kv", "McoreFNmap_with_state", "McoreFNmap_kv_with_state", "McoreFNzip":
+          4
+     default:
+          0
+
+fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
+     switch name
+     case "McoreFN__add__", "McoreFN__div__", "McoreFN__mod__", "McoreFN__mul__", "McoreFN__sub__", "McoreFNpower":
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.num_types__mtd_holder))
+     case "McoreFN__and__", "McoreFN__or__", "McoreFN__xor__":
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.bit_types__mtd_holder))
+     case "McoreFN__ashr__": {
+          args.first().maybe_has_type!([set "int", "obj", "custom", "holder"])
+          args[1].maybe_has_type!([set "byte", "int", "holder"])
+     }
+     case "McoreFN__concat__":
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.concat_types__mtd_holder))
+     case "McoreFN__equal__", "McoreFN__not_equal__", "McoreFNcmp", "McoreFNscarlet__joinAAA":
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.copyable_not_error_types__holder))
+     case "McoreFN__get_item__": {
+          args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "null", "obj", "table", "set", "custom", "holder"])
+          args[1].maybe_has_type!(@main.copyable_not_error_types__holder)
+     }
+     case "McoreFN__great__", "McoreFN__great_or_eq__", "McoreFN__less__", "McoreFN__less_or_eq__", "McoreFNmax", "McoreFNmin":
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.ord_types__mtd_holder))
+     case "McoreFN__lshr__", "McoreFN__shl__", "McoreFNrotate_left", "McoreFNrotate_right": {
+          args.first().maybe_has_type!(@main.bit_types__mtd_holder)
+          args[1].maybe_has_type!([set "byte", "int", "holder"])
+     }
+     case "McoreFN__slice__", "McoreFNdelete": {
+          args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
+          args[1].maybe_has_type!([set "int", "holder"])
+          args[2].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFN__strong_equal__", "McoreFN__strong_not_equal__":
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!([set
+               "short_string", "string", "token", "bool", "byte", "char", "int", "time", "float", "short_byte_array", "byte_array"
+               "table", "set", "array", "obj", "custom", "holder"
+          ]))
+     case "McoreFNall", "McoreFNany": {
+          args.first().maybe_has_type!([set
+               "short_string", "string", "short_byte_array", "byte_array"
+               "table", "set", "array", "obj", "custom", "holder"
+          ])
+          args[1].maybe_has_type!([set "bool", "holder"])
+          args[2].maybe_has_type!(@main.fn_types__holder)
+     }
+     case "McoreFNall_kv", "McoreFNany_kv": {
+          args.first().maybe_has_type!([set
+               "short_string", "string", "short_byte_array", "byte_array"
+               "table", "array", "obj", "custom", "holder"
+          ])
+          args[1].maybe_has_type!([set "bool", "holder"])
+          args[2].maybe_has_type!(@main.fn_types__holder)
+     }
+     case "McoreFNappend": {
+          args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "set", "array", "obj", "custom", "holder"])
+          args[1].maybe_has_type!(@main.copyable_common_types__holder)
+     }
+     case "McoreFNappend_new", "McoreFNremove": {
+          args.first().maybe_has_type!([set "set", "obj", "custom", "holder"])
+          args[1].maybe_has_type!(@main.copyable_common_types__holder)
+     }
+     case "McoreFNabs", "McoreFNacos", "McoreFNascii_ctrlB", "McoreFNascii_digitB", "McoreFNascii_graphicB", "McoreFNascii_letterB", "McoreFNascii_lowerB"
+               "McoreFNascii_spaceB", "McoreFNascii_symbolB", "McoreFNascii_to_lower", "McoreFNascii_to_upper", "McoreFNascii_upperB", "McoreFNasciiB"
+               "McoreFNasin",  "McoreFNatan", "McoreFNbox_len", "McoreFNcap", "McoreFNceil", "McoreFNchar_lang", "McoreFNchar_to_uchar", "McoreFNclear"
+               "McoreFNcos", "McoreFNctrlB", "McoreFNdeserialize", "McoreFNdigitB", "McoreFNdump", "McoreFNempty_val", "McoreFNemptyB", "McoreFNerrorB"
+               "McoreFNevenB", "McoreFNexp", "McoreFNexp2", "McoreFNfail", "McoreFNfirst", "McoreFNfloor", "McoreFNget_error_data", "McoreFNget_error_id"
+               "McoreFNget_error_msg", "McoreFNgraphicB", "McoreFNinfB", "McoreFNint_to_time", "McoreFNlast", "McoreFNlen", "McoreFNletterB", "McoreFNlog"
+               "McoreFNlog10", "McoreFNlog2", "McoreFNlowerB", "McoreFNmax_val", "McoreFNmin_val", "McoreFNnanB", "McoreFNneg", "McoreFNneg_bits"
+               "McoreFNneg_infB", "McoreFNnot", "McoreFNnullB", "McoreFNobj_to_table", "McoreFNoddB", "McoreFNokA", "McoreFNpop", "McoreFNprint"
+               "McoreFNprintln", "McoreFNqty_0_bits", "McoreFNqty_1_bits", "McoreFNqty_leading_0_bits", "McoreFNqty_leading_1_bits"
+               "McoreFNqty_trailing_0_bits", "McoreFNqty_trailing_1_bits", "McoreFNreverse", "McoreFNreverse_bits", "McoreFNreverse_bytes", "McoreFNround"
+               "McoreFNscarlet__rnd", "McoreFNscarlet__splitAAA", "McoreFNset_log_level", "McoreFNshort_typeB", "McoreFNsin", "McoreFNsleep", "McoreFNspaceB"
+               "McoreFNsqr", "McoreFNsqrt", "McoreFNstr_to_tkn", "McoreFNstr_to_ustr", "McoreFNsymbolB", "McoreFNtable_to_obj", "McoreFNtake_one"
+               "McoreFNtake_one_kv", "McoreFNtan", "McoreFNthread", "McoreFNto_array", "McoreFNto_bool", "McoreFNto_box", "McoreFNto_byte", "McoreFNto_char"
+               "McoreFNto_float", "McoreFNto_int", "McoreFNto_lower", "McoreFNto_string", "McoreFNto_upper", "McoreFNtrim", "McoreFNtrunc", "McoreFNtype"
+               "McoreFNuchar_to_ustr", "McoreFNuncopyable_errorB", "McoreFNunslice", "McoreFNupperB", "McoreFNuprint", "McoreFNuprintln"
+               "McoreFNustr_to_str", "McoreFNwait":
+          null
+     case "McoreFNassemble_time":
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!([set "int", "holder"]))
+     case "McoreFNbreak": {
+          args.first().maybe_has_type!([set "bool", "holder"])
+          args[1].maybe_has_type!(@main.not_error_types__holder)
+     }
+     case "McoreFNcopy": {
+          let arg_0 = args.first()
+          let arg_1 = args[1]
+          let arg_2 = args[2]
+
+          let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+          if arg_0.has_type?("holder") || arg_2.has_type?("holder") {
+               let valid_types = valid_types.append("holder")
+               arg_0.maybe_has_type!(valid_types)
+               arg_1.maybe_has_type!([set "int", "holder"])
+               arg_2.maybe_has_type!(valid_types)
+          } else {
+               let arg_0_possible_types = args.first():possible_types
+               let arg_0_possible_types = if arg_0_possible_types.null?()
+                    valid_types
+               else {
+                    let new_arg_0_possible_types = arg_0_possible_types.filter(_.in?(valid_types))
+                    if new_arg_0_possible_types.empty?()
+                         error__invalid_type(arg_0:code, valid_types, arg_0_possible_types)
+                    else new_arg_0_possible_types
+               }
+
+               arg_1.maybe_has_type!([set "int", "holder"])
+               arg_2.maybe_has_type!(if arg_0_possible_types.len() == valid_types.len(); valid_types else prepare_types_for_cmp(arg_0_possible_types))
+          }
+     }
+     case "McoreFNday", "McoreFNdisassemble_time", "McoreFNhour", "McoreFNminute", "McoreFNmonth", "McoreFNsecond", "McoreFNyear": {
+          args.first().maybe_has_type!([set "time", "holder"])
+          args[1].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNdrop", "McoreFNrepeat", "McoreFNtake": {
+          args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
+          args[1].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNdrop_while", "McoreFNsort_fn", "McoreFNstable_sort_fn", "McoreFNtake_while": {
+          args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
+          args[1].maybe_has_type!(@main.fn_types__holder)
+     }
+     case "McoreFNduration":
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!([set "time", "holder"]))
+     case "McoreFNeach_to_each", "McoreFNeach_to_each_kv",  "McoreFNfilter_kv", "McoreFNmap", "McoreFNmap_kv": {
+          args.first().maybe_has_type!([set
+               "short_string", "string", "short_byte_array", "byte_array"
+               "table", "array", "obj", "custom", "holder"
+          ])
+          args[1].maybe_has_type!(@main.fn_types__holder)
+     }
+     case "McoreFNexpected_error": {
+          args.first().maybe_has_type!([set "token", "holder"])
+          args[1].maybe_has_type!([set "short_string", "string", "holder"])
+          args[2].maybe_has_type!(@main.copyable_common_types__holder_null)
+     }
+     case "McoreFNfilter", "McoreFNfoldl1", "McoreFNfoldr1": {
+          args.first().maybe_has_type!([set
+               "short_string", "string", "short_byte_array", "byte_array"
+               "table", "set", "array", "obj", "custom", "holder"
+          ])
+          args[1].maybe_has_type!(@main.fn_types__holder)
+     }
+     case "McoreFNfoldl", "McoreFNfoldr": {
+          args.first().maybe_has_type!([set
+               "short_string", "string", "short_byte_array", "byte_array"
+               "table", "set", "array", "obj", "custom", "holder"
+          ])
+          args[1].maybe_has_type!(@main.copyable_not_error_types__holder)
+          args[2].maybe_has_type!(@main.fn_types__holder)
+     }
+     case "McoreFNfoldl_kv", "McoreFNfoldr_kv", "McoreFNmap_with_state", "McoreFNmap_kv_with_state": {
+          args.first().maybe_has_type!([set
+               "short_string", "string", "short_byte_array", "byte_array"
+               "table", "array", "obj", "custom", "holder"
+          ])
+          args[1].maybe_has_type!(@main.copyable_not_error_types__holder)
+          args[2].maybe_has_type!(@main.fn_types__holder)
+     }
+     case "McoreFNformat_int": {
+          args.first().maybe_has_type!([set "int", "holder"])
+          args[1].maybe_has_type!([set "int", "holder"])
+          args[2].maybe_has_type!([set "bool", "holder"])
+     }
+     case "McoreFNhash": {
+          args.first().maybe_has_type!(@main.all_hash_map_key_types__holder)
+          args[1].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNimplement", "McoreFNinherits_from": {
+          args.first().maybe_has_type!([set "obj", "holder"])
+          args[1].maybe_has_type!([set "array", "obj", "holder"])
+     }
+     case "McoreFNinB": {
+          args.first().maybe_has_type!(@main.copyable_common_types__holder)
+          args[1].maybe_has_type!([set
+               "short_string", "string", "short_byte_array", "byte_array"
+               "table", "set", "array", "obj", "custom", "holder"
+          ])
+     }
+     case "McoreFNin_rangeB": {
+          let arg_0 = args.first()
+          let arg_1 = args[1]
+          let arg_2 = args[2]
+
+          let not_holder  = if arg_0.has_type?("holder"); arg_1 else arg_0
+          if arg_2.has_type?("holder") {
+               arg_0.maybe_has_type!(@main.ord_types__mtd_holder)
+               arg_1.maybe_has_type!(@main.ord_types__mtd_holder)
+          } else {
+               let not_holder_possible_types = not_holder:possible_types
+               let not_holder_possible_types = if not_holder_possible_types.null?()
+                    @main.ord_types__mtd
+               else {
+                    let new_not_holder_possible_types = not_holder_possible_types.filter(_.in?(@main.ord_types__mtd))
+                    if new_not_holder_possible_types.empty?()
+                         error__invalid_type(not_holder:code, @main.ord_types__mtd, not_holder_possible_types)
+                    else new_not_holder_possible_types
+               }
+
+               arg_2.maybe_has_type!(if not_holder_possible_types.len() == @main.ord_types__mtd.len(); @main.ord_types__mtd else prepare_types_for_cmp(not_holder_possible_types))
+          }
+     }
+     case "McoreFNinit": {
+          args.first().maybe_has_type!([set "table", "set", "array", "obj", "custom", "holder"])
+          args[1].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNinsert_part_to": {
+          let arg_0 = args.first()
+          let arg_1 = args[1]
+          let arg_2 = args[2]
+
+          let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+          if arg_0.has_type?("holder") || arg_1.has_type?("holder") {
+               let valid_types = valid_types.append("holder")
+               arg_0.maybe_has_type!(valid_types)
+               arg_1.maybe_has_type!(valid_types)
+          } else {
+               let arg_0_possible_types = args.first():possible_types
+               let arg_0_possible_types = if arg_0_possible_types.null?()
+                    valid_types
+               else {
+                    let new_arg_0_possible_types = arg_0_possible_types.filter(_.in?(valid_types))
+                    if new_arg_0_possible_types.empty?()
+                         error__invalid_type(arg_0:code, valid_types, arg_0_possible_types)
+                    else new_arg_0_possible_types
+               }
+
+               arg_1.maybe_has_type!(if arg_0_possible_types.len() == valid_types.len(); valid_types else prepare_types_for_cmp(arg_0_possible_types))
+          }
+          arg_2.maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNinsert_to": {
+          args.first().maybe_has_type!(@main.copyable_common_types__holder)
+          args[1].maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
+          args[2].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNjoin": {
+          args.first().maybe_has_type!([set "table", "set", "array", "obj", "holder"])
+          args[1].maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
+     }
+     case "McoreFNkey_ofB": {
+          args.first().maybe_has_type!(@main.all_hash_map_key_types__holder)
+          args[1].maybe_has_type!([set "table", "set", "obj", "custom", "holder"])
+     }
+     case "McoreFNlog__debug_msg", "McoreFNlog__msg": {
+          args.first().maybe_has_type!([set "int", "holder"])
+          args[1].maybe_has_type!([set "short_string", "string"])
+     }
+     case "McoreFNlook_from_end_in", "McoreFNlook_other_from_end_in": {
+          args.first().maybe_has_type!(@main.copyable_common_types__holder)
+          args[1].maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
+     }
+     case "McoreFNlook_in", "McoreFNlook_other_in": {
+          args.first().maybe_has_type!(@main.copyable_common_types__holder)
+          args[1].maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom", "holder"])
+     }
+     case "McoreFNlook_part_from_end_in", "McoreFNlook_part_in", "McoreFNpart_ofB", "McoreFNprefix_ofB", "McoreFNsplit_by_part"
+               "McoreFNsuffix_ofB":
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"]))
+     case "McoreFNloop": {
+          args.first().maybe_has_type!(@main.copyable_not_error_types__holder)
+          args[1].maybe_has_type!(@main.fn_types__holder)
+     }
+     case "McoreFNmove", "McoreFNself_copy": {
+          args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
+          args[1].maybe_has_type!([set "int", "holder"])
+          args[2].maybe_has_type!([set "int", "holder"])
+          args[3].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNparse_int": {
+          args.first().maybe_has_type!([set "short_string", "string", "holder"])
+          args[1].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNpush": {
+          args.first().maybe_has_type!([set "channel", "holder"])
+          args[1].maybe_has_type!(@main.copyable_not_error_types__holder)
+     }
+     case "McoreFNqty": {
+          args.first().maybe_has_type!(@main.copyable_common_types__holder)
+          args[1].maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "array", "obj", "custom", "holder"])
+     }
+     case "McoreFNread_from_memAAA": {
+          args.first().maybe_has_type!(@main.copyable_not_error_types__holder)
+          args[1].maybe_has_type!([set "int", "holder"])
+          args[2].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNreplace": {
+          let arg_0             = args.first()
+          let arg_0_valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "table", "array", "obj", "custom", "holder"]
+
+          let tail_args_valid_types = if arg_0.has_type?("error")
+               error__invalid_type(arg_0:code, arg_0_valid_types, "error")
+          else if arg_0.has_type?(@main.string_types__error)
+               [set "char", "holder"]
+          else if arg_0.has_type?(@main.byte_array_types__error)
+               [set "byte", "holder"]
+          else {
+               arg_0.maybe_has_type!(arg_0_valid_types)
+               @main.copyable_common_types__holder
+          }
+
+          args[1].maybe_has_type!(tail_args_valid_types)
+          args[2].maybe_has_type!(tail_args_valid_types)
+     }
+     case "McoreFNreplace_part": {
+          let arg_0 = args.first()
+          let arg_1 = args[1]
+          let arg_2 = args[2]
+
+          let not_holder  = if arg_0.has_type?("holder"); arg_1 else arg_0
+          let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+          if arg_2.has_type?("holder") {
+               let valid_types = valid_types.append("holder")
+               arg_0.maybe_has_type!(valid_types)
+               arg_1.maybe_has_type!(valid_types)
+          } else {
+               let not_holder_possible_types = not_holder:possible_types
+               let not_holder_possible_types = if not_holder_possible_types.null?()
+                    valid_types
+               else {
+                    let new_not_holder_possible_types = not_holder_possible_types.filter(_.in?(valid_types))
+                    if new_not_holder_possible_types.empty?()
+                         error__invalid_type(not_holder:code, valid_types, not_holder_possible_types)
+                    else new_not_holder_possible_types
+               }
+
+               arg_2.maybe_has_type!(if not_holder_possible_types.len() == valid_types.len(); valid_types else prepare_types_for_cmp(not_holder_possible_types))
+          }
+     }
+     case "McoreFNreserve": {
+          args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom", "holder"])
+          args[1].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNscarlet__erase_info", "McoreFNscarlet__erase_value":
+          error__not_found(fn_name_for_error, "function")
+     case "McoreFNserialize": {
+          args.first().maybe_has_type!([set
+               "short_string", "string", "token", "bool", "byte", "char", "int", "time", "float"
+               "short_byte_array", "byte_array", "table", "set", "array", "obj", "holder"
+          ])
+          args[1].maybe_has_type!(@main.byte_array_types__holder)
+     }
+     case "McoreFNshuffle_box":
+          args.foldl(null, fn (_, arg) if arg.has_type?("box"); error__reuse(arg:code, arg:possible_types) else null)
+     case "McoreFNsort", "McoreFNstable_sort": {
+          args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
+          args[1].maybe_has_type!([set "bool", "holder"])
+     }
+     case "McoreFNsplit": {
+          args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
+          args[1].maybe_has_type!(@main.copyable_common_types__holder)
+     }
+     case "McoreFNtime_limit_pop": {
+          args.first().maybe_has_type!([set "channel", "holder"])
+          args[1].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNtime_limit_wait": {
+          args.first().maybe_has_type!([set "channel", "holder"])
+          args[1].maybe_has_type!([set "int", "holder"])
+     }
+     case "McoreFNwrite_to_memAAA": {
+          args.first().maybe_has_type!(@main.copyable_not_error_types__holder)
+          args[1].maybe_has_type!([set "int", "holder"])
+          args[2].maybe_has_type!([set "short_byte_array", "byte_array", "holder"])
+     }
+     case "McoreFNzip": {
+          let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom", "holder"]
+
+          let arg_0 = args.first()
+          let arg_1 = args[1]
+          if arg_0.has_type?("error")
+               error__invalid_type(arg_0:code, valid_types, "error")
+          else if arg_0.has_type?([set "short_string", "string", "short_byte_array", "byte_array", "array", "error"])
+               arg_1.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array"])
+          else if arg_1.has_type?("error")
+               error__invalid_type(arg_1:code, valid_types, "error")
+          else if arg_1.has_type?([set "short_string", "string", "short_byte_array", "byte_array", "array", "error"])
+               arg_0.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array"])
+          else {
+               arg_0.maybe_has_type!(valid_types)
+               arg_1.maybe_has_type!(valid_types)
+          }
+
+          args[2].maybe_has_type!(@main.fn_types__holder)
+     }
+     case "McoreFNzip_n": {
+          if args.first().has_type?("box"); error__reuse(args.first():code, args.first():possible_types) else null
+          args[1].maybe_has_type!(@main.fn_types__holder)
+     }
+     default:
+          unreachable()

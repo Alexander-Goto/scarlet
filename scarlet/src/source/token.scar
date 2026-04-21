@@ -1,0 +1,18 @@
+let t_token = [obj
+     :scar_type = "t_token"
+
+     :text = ""
+     :file = ""
+     :line = 1
+     :row  = 1
+]
+
+fn src_token_valid?(token) {
+     let suffix_idx           = token.foldr_kv(token.len(), fn (_, idx, char) if char.in?("?!"); 0 else [breaker idx + 1])
+     let suffix               = token.drop(suffix_idx)
+     let token_without_suffix = token.take(suffix_idx)
+
+     suffix.in?([set "", "?", "!", "!!!"]) && token_without_suffix.len() <= 22 && token_without_suffix.all(false, fn (char) char.ascii_lower?() || char.digit?() || char == '_')
+}
+
+fn get_token_id(token) token:line << 18 ^ token:row

@@ -1,0 +1,90 @@
+let char__ascii_space = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_space? = fn (char) char:value.ascii_space?()
+     ]
+]
+
+fn to_char__ascii_space?(arg) new (@main.char__ascii_space):value <= arg
+
+fn to_custom_char__ascii_space?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_space? = fn (char) char.custom__get_data().ascii_space?()
+     ]
+)
+
+let broken_char__ascii_space = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_space? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_char__ascii_space?(arg) new (@main.broken_char__ascii_space):value <= arg
+
+fn to_broken_custom_char__ascii_space?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_space? = fn (_) heap_string()
+     ]
+)
+
+let error_char__ascii_space = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_space? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__ascii_space?(arg) new (@main.error_char__ascii_space):value <= arg
+
+fn to_error_custom_char__ascii_space?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_space? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__ascii_space?() {
+     test(not '\000001'.ascii_space?())
+     test(not '\000008'.ascii_space?())
+     test(not '\00000a'.ascii_space?())
+     test(not '\00001f'.ascii_space?())
+     test(not '\00007f'.ascii_space?())
+     test('\000009'.ascii_space?())
+     test('\t'.ascii_space?())
+     test('\000020'.ascii_space?())
+     test(' '.ascii_space?())
+     test(not '\00007e'.ascii_space?())
+     test(not 'a'.ascii_space?())
+     test(not 'z'.ascii_space?())
+     test(not 'A'.ascii_space?())
+     test(not 'Z'.ascii_space?())
+     test(not '\00008b'.ascii_space?())
+     test(not '\0000ac'.ascii_space?())
+     test(not '0'.ascii_space?())
+     test(not '9'.ascii_space?())
+
+     let string = rnd_string()
+     test(string.filter(fn (char) char === '\t' || char === ' ') === string.filter(ascii_space?(_)))
+
+     test(to_char__ascii_space?(' ').ascii_space?())
+     test(not to_char__ascii_space?('a').ascii_space?())
+
+     test(to_custom_char__ascii_space?(' ').ascii_space?())
+     test(not to_custom_char__ascii_space?('a').ascii_space?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.ascii_space?().get_error_id() === :1)
+     test(heap_table().ascii_space?().get_error_id() === :invalid_type)
+
+     test(to_broken_char__ascii_space?('a').ascii_space?().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__ascii_space?('a').ascii_space?().get_error_id() === :invalid_type)
+     test(to_error_char__ascii_space?('a').ascii_space?().get_error_id() === :3)
+     test(to_error_custom_char__ascii_space?('a').ascii_space?().get_error_id() === :4)
+}

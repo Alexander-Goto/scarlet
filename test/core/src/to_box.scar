@@ -1,0 +1,218 @@
+let container__to_box = [obj
+     :value = [table]
+
+     :_ = [obj
+          :core_to_box = fn (container) container:value.to_box()
+     ]
+]
+
+fn to_container__to_box(arg) new (@main.container__to_box):value <= arg
+
+fn to_custom_container__to_box(arg) custom__create(
+     arg
+     [obj
+          :core_to_box = fn (container) custom__get_data(container).to_box()
+     ]
+)
+
+let broken_container__to_box = [obj
+     :value = [table]
+
+     :_ = [obj
+          :core_to_box = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_container__to_box(arg) new (@main.broken_container__to_box):value <= arg
+
+fn to_broken_custom_container__to_box(arg) custom__create(
+     arg
+     [obj
+          :core_to_box = fn (_) heap_string()
+     ]
+)
+
+let error_container__to_box = [obj
+     :value = [table]
+
+     :_ = [obj
+          :core_to_box = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__to_box(arg) new (@main.error_container__to_box):value <= arg
+
+fn to_error_custom_container__to_box(arg) custom__create(
+     arg
+     [obj
+          :core_to_box = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__to_box() {
+     test("".to_box() === [box])
+     test("0".to_box() === [box '0'])
+     test("01".to_box() === [box '0', '1'])
+     test("012".to_box() === [box '0', '1', '2'])
+     test("0123".to_box() === [box '0', '1', '2', '3'])
+     test("01234".to_box() === [box '0', '1', '2', '3', '4'])
+     test("012345".to_box() === [box '0', '1', '2', '3', '4', '5'])
+     test("0123456".to_box() === [box '0', '1', '2', '3', '4', '5', '6'])
+     test("01234567".to_box() === [box '0', '1', '2', '3', '4', '5', '6', '7'])
+     test("012345678".to_box() === [box '0', '1', '2', '3', '4', '5', '6', '7', '8'])
+     test("0123456789".to_box() === [box '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+     test("0123456789a".to_box() === [box '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a'])
+     test("0123456789ab".to_box() === [box '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b'])
+     test("0123456789abc".to_box() === [box '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c'])
+     test("0123456789abcd".to_box() === [box '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd'])
+     test("0123456789abcde".to_box() === [box '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e'])
+     test("0123456789abcdef".to_box() === [box '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'])
+     test(("00123456789abcdef" ++ "0")[1, 17].to_box() === [box '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'])
+
+     let string  = rnd_string()
+     let correct = if string.len() > 16
+          string.to_box().get_error_id() === :out_of_bounds
+     else loop(0, fn (idx) {
+          if idx === len(string)
+               [breaker true]
+          else if string.to_box()[idx] === string[idx]
+               idx + 1
+          else [breaker false]
+     })
+     test(correct)
+
+     test(u"".to_box() === [box])
+     test(u"0".to_box() === [box u"0"[0]])
+     test(u"01".to_box() === [box u"0"[0], u"1"[0]])
+     test(u"012".to_box() === [box u"0"[0], u"1"[0], u"2"[0]])
+     test(u"0123".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0]])
+     test(u"01234".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0]])
+     test(u"012345".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0]])
+     test(u"0123456".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0]])
+     test(u"01234567".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0]])
+     test(u"012345678".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0], u"8"[0]])
+     test(u"0123456789".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0], u"8"[0], u"9"[0]])
+     test(u"0123456789a".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0], u"8"[0], u"9"[0], u"a"[0]])
+     test(u"0123456789ab".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0], u"8"[0], u"9"[0], u"a"[0], u"b"[0]])
+     test(u"0123456789abc".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0], u"8"[0], u"9"[0], u"a"[0], u"b"[0], u"c"[0]])
+     test(u"0123456789abcd".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0], u"8"[0], u"9"[0], u"a"[0], u"b"[0], u"c"[0], u"d"[0]])
+     test(u"0123456789abcde".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0], u"8"[0], u"9"[0], u"a"[0], u"b"[0], u"c"[0], u"d"[0], u"e"[0]])
+     test(u"0123456789abcdef".to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0], u"8"[0], u"9"[0], u"a"[0], u"b"[0], u"c"[0], u"d"[0], u"e"[0], u"f"[0]])
+
+     test((u"00123456789abcde" ++ u"0")[1, 16].to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0], u"8"[0], u"9"[0], u"a"[0], u"b"[0], u"c"[0], u"d"[0], u"e"[0]])
+     test((u"00123456789abcdef" ++ u"0")[1, 17].to_box() === [box u"0"[0], u"1"[0], u"2"[0], u"3"[0], u"4"[0], u"5"[0], u"6"[0], u"7"[0], u"8"[0], u"9"[0], u"a"[0], u"b"[0], u"c"[0], u"d"[0], u"e"[0], u"f"[0]])
+
+     let array   = rnd_byte_array()
+     let correct = if array.len() > 16
+          array.to_box().get_error_id() === :out_of_bounds
+     else loop( 0, fn (idx) {
+          if idx === len(array)
+               [breaker true]
+          else if array.to_box()[idx] === array[idx]
+               idx + 1
+          else [breaker false]
+     })
+     test(correct)
+
+     let string_0 = heap_string()
+     let string_1 = heap_string() ++ "1"
+     let string_2 = heap_string() ++ "2"
+     let string_3 = heap_string() ++ "3"
+     let string_4 = heap_string() ++ "4"
+     let string_5 = heap_string() ++ "5"
+     let string_6 = heap_string() ++ "6"
+     let string_7 = heap_string() ++ "7"
+     let string_8 = heap_string() ++ "8"
+     let string_9 = heap_string() ++ "9"
+     let string_a = heap_string() ++ "a"
+     let string_b = heap_string() ++ "b"
+     let string_c = heap_string() ++ "c"
+     let string_d = heap_string() ++ "d"
+     let string_e = heap_string() ++ "e"
+     let string_f = heap_string() ++ "f"
+     test([array].to_box() === [box])
+     test([array string_0].to_box() === [box string_0])
+     test([array string_0, string_1].to_box() === [box string_0, string_1])
+     test([array string_0, string_1, string_2].to_box() === [box string_0, string_1, string_2])
+     test([array string_0, string_1, string_2, string_3].to_box() === [box string_0, string_1, string_2, string_3])
+     test([array string_0, string_1, string_2, string_3, string_4].to_box() === [box string_0, string_1, string_2, string_3, string_4])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5, string_6].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5, string_6])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a, string_b].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a, string_b])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a, string_b, string_c].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a, string_b, string_c])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a, string_b, string_c, string_d].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a, string_b, string_c, string_d])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a, string_b, string_c, string_d, string_e].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a, string_b, string_c, string_d, string_e])
+     test([array string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a, string_b, string_c, string_d, string_e, string_f].to_box() === [box string_0, string_1, string_2, string_3, string_4, string_5, string_6, string_7, string_8, string_9, string_a, string_b, string_c, string_d, string_e, string_f])
+
+     let array   = rnd_string_array()
+     let correct = if array.len() > 16
+          array.to_box().get_error_id() === :out_of_bounds
+     else loop( 0, fn (idx) {
+          if idx === len(array)
+               [breaker true]
+          else if array.to_box()[idx] === array[idx]
+               idx + 1
+          else [breaker false]
+     })
+     test(correct)
+
+     test([obj].to_box() === [box])
+     test([obj].init(10).to_box() === [box])
+     test([obj :_ = [obj]].to_box() === [box])
+     test([obj :0 = string_0].to_box() === [box string_0])
+     test([obj :0 = string_0, :_ = [obj]].to_box() === [box string_0])
+     test([obj :0 = string_0, :1 = string_1].to_box().to_array().sort(true) === [array string_0, string_1])
+     test([obj :0 = string_0, :1 = string_1, :_ = [obj]].to_box().to_array().sort(true) === [array string_0, string_1])
+
+     let obj     = rnd_string_obj()
+     let correct = if obj.len() > 16
+          obj.to_box().get_error_id() === :out_of_bounds
+     else obj.to_box().to_array().sort(true) === obj.to_array().sort(true)
+     test(correct)
+
+     test([table].to_box() === [box])
+     test([table].init(10).to_box() === [box])
+     test([table string_0 = string_1].to_box() === [box string_1])
+     test([table string_0 = string_1, string_1 = string_2].to_box().to_array().sort(true) === [array string_1, string_2])
+
+     let table   = rnd_string_table()
+     let correct = if table.len() > 16
+          table.to_box().get_error_id() === :out_of_bounds
+     else table.to_box().to_array().sort(true) === table.to_array().sort(true)
+     test(correct)
+
+     test([set].to_box() === [box])
+     test([set].init(10).to_box() === [box])
+     test([set string_0].to_box() === [box string_0])
+     test([set string_0, string_1].to_box().to_array().sort(true) === [array string_0, string_1])
+
+     let set     = rnd_string_set()
+     let correct = if set.len() > 16
+          set.to_box().get_error_id() === :out_of_bounds
+     else set.to_box().to_array().sort(true) === set.to_array().sort(true)
+     test(correct)
+
+     test([box].to_box() === [box])
+     test([box string_0].to_box() === [box string_0])
+     test([box string_0, [box 1]].to_box() === [box string_0, [box 1]])
+
+     test("0123".to_container__to_box().to_box() === [box '0', '1', '2', '3'])
+     test("3210".to_container__to_box().to_box() === [box '3', '2', '1', '0'])
+
+     test("0123".to_custom_container__to_box().to_box() === [box '0', '1', '2', '3'])
+     test("3210".to_custom_container__to_box().to_box() === [box '3', '2', '1', '0'])
+
+     test(expected_error(:1, heap_string(), heap_string()).to_box().get_error_id() === :1)
+
+     test((heap_string() ++ _).scarlet__erase_info().to_box().get_error_id() === :invalid_type)
+
+     test(to_broken_container__to_box("").to_box().get_error_id() === :invalid_type)
+     test(to_broken_custom_container__to_box("").to_box().get_error_id() === :invalid_type)
+     test(to_error_container__to_box("").to_box().get_error_id() === :3)
+     test(to_error_custom_container__to_box("").to_box().get_error_id() === :4)
+}

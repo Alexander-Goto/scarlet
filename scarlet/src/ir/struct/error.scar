@@ -1,0 +1,26 @@
+fn ir__error(id, msg, data, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box id, final_data, dependencies]   = id.has_ir!(final_data, dependencies)
+     let [box msg, final_data, dependencies]  = msg.has_ir!(final_data, dependencies)
+     let [box data, final_data, dependencies] = data.has_ir!(final_data, dependencies)
+
+     let [box error_reg, exp_data] = exp_data.new_reg()
+
+     let ir = ir ++ "t_any const " ++ error_reg ++ "=error__new__own(thrd_data," ++ exp_data:owner_name_ir_const ++ "," ++ id:ir ++ "," ++ msg:ir ++ "," ++ data:ir ++ ");\n"
+
+     let type = [set "error"]
+     let ir   = ir__assume_type(error_reg, type, ir)
+
+     let ir = if is_last
+          ir__raw_return(ir, error_reg)
+     else ir
+
+     [box
+          new (@main.t_operand) {
+               :code           <= code
+               :ir             <= error_reg
+               :possible_types <= type
+          }
+
+          exp_data, ir, final_data, dependencies, src_gconsts
+     ]
+}

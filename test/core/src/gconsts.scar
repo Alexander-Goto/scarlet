@@ -1,0 +1,16 @@
+`noinline`
+fn test__gconsts() {
+     test(@core.cli_args.type() === "core.array")
+     test(@core.cpu_cores_num > 0)
+     test(@core.env_vars.type() === "core.table")
+     test(@core.log_lvl__hint.type() === "core.int")
+     test(@core.log_lvl__important.type() === "core.int")
+     test(@core.log_lvl__maximum.type() === "core.int")
+     test(@core.log_lvl__may_require_attention.type() === "core.int")
+     test(@core.log_lvl__minimum.type() === "core.int")
+     test(@core.log_lvl__require_attention.type() === "core.int")
+     test(@core.log_lvl__very_important.type() === "core.int")
+     test(@core.pi.in_range?(3.14, 3.15))
+     test(@core.platform > "")
+     test(@core.sys_lang > "")
+}

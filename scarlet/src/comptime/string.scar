@@ -1,0 +1,18 @@
+fn comptime_string(value, code) if value.empty?()
+     new (@main.t_operand) {
+          :code           <= code
+          :ir             <= "(const t_any){}"
+          :possible_types <= [set "short_string"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "string"
+               :value <= ""
+          }
+     }
+else new (@main.t_operand) {
+     :code           <= code
+     :possible_types <= if value.short_type?(); [set "short_string"] else [set "string"]
+     :comptime_val   <= new (@main.t_comptime_val) {
+          :type  <= "string"
+          :value <= value
+     }
+}

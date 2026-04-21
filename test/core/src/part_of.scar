@@ -1,0 +1,327 @@
+let array__part_of = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_look_part_in = fn (part, array) part:value.look_part_in(array:value)
+     ]
+]
+
+fn to_array__part_of(arg) new (@main.array__part_of):value <= arg
+
+fn to_custom_array__part_of(arg) custom__create(
+     arg
+     [obj
+          :core_look_part_in = fn (part, array) part.custom__get_data().look_part_in(array.custom__get_data())
+     ]
+)
+
+let broken_array__part_of = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_look_part_in = fn (_, _) heap_string()
+     ]
+]
+
+fn to_broken_array__part_of(arg) new (@main.broken_array__part_of):value <= arg
+
+fn to_broken_custom_array__part_of(arg) custom__create(
+     arg
+     [obj
+          :core_look_part_in = fn (_, _) heap_string()
+     ]
+)
+
+let error_array__part_of = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_look_part_in = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__part_of(arg) new (@main.error_array__part_of):value <= arg
+
+fn to_error_custom_array__part_of(arg) custom__create(
+     arg
+     [obj
+          :core_look_part_in = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__part_of?() {
+     test("".part_of?(""))
+     test(not "1".part_of?(""))
+     test("".part_of?("a"))
+     test("1".part_of?("1"))
+     test(not "1".part_of?("2"))
+     test(not "2".part_of?("1"))
+     test("".part_of?("122333444455555"))
+     test("1".part_of?("122333444455555"))
+     test("2".part_of?("122333444455555"))
+     test("3".part_of?("122333444455555"))
+     test("4".part_of?("122333444455555"))
+     test("5".part_of?("122333444455555"))
+     test(not "6".part_of?("122333444455555"))
+     test(not "54".part_of?("122333444455555"))
+     test(not "35".part_of?("122333444455555"))
+     test(not "01".part_of?("122333444455555"))
+     test(not "11".part_of?("122333444455555"))
+     test(not "122333444455556".part_of?("122333444455555"))
+     test(not "222333444455555".part_of?("122333444455555"))
+     test("12".part_of?("122333444455555"))
+     test("23".part_of?("122333444455555"))
+     test("33".part_of?("122333444455555"))
+     test("555".part_of?("122333444455555"))
+     test("4455".part_of?("122333444455555"))
+     test("122333444455555".part_of?("122333444455555"))
+
+     test(not "1223334444555555".part_of?("122333444455555"))
+     test(not heap_string().part_of?("122333444455555"))
+
+     test(not "\000091".part_of?(""))
+     test("".part_of?("\00009a"))
+     test("\000091".part_of?("\000091"))
+     test(not "1".part_of?("\000091"))
+     test(not "\000091".part_of?("1"))
+     test(not "\000091".part_of?("\000092"))
+     test(not "\000092".part_of?("\000091"))
+     test("".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test("\000091".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test("\000092".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test("2".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test("\000093".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test("\000094".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+
+     test(not "\000095".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test(not "\000094\000093".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test(not "\000092\000094".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test(not "\000092\000092".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test(not "\000090\000091".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test(not "\000091\000091".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test(not "\0000912\000092\000093\000093\000093\000094\000095".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test(not "\0000902\000092\000093\000093\000093\000094\000094".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test("\0000912".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test("2\000092".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test("\000092\000093".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test("\000093\000093".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+     test("\000093\000094\000094".part_of?("\0000912\000092\000093\000093\000093\000094\000094"))
+
+     let string = ("0122333444455555666666" ++ "0")[1, 22]
+     test("".part_of?(string))
+     test("1".part_of?(string))
+     test("2".part_of?(string))
+     test("3".part_of?(string))
+     test("4".part_of?(string))
+     test("5".part_of?(string))
+     test("6".part_of?(string))
+     test(not "7".part_of?(string))
+     test(not "65".part_of?(string))
+     test(not "54".part_of?(string))
+     test(not "35".part_of?(string))
+     test(not "01".part_of?(string))
+     test(not "60".part_of?(string))
+     test(not "11".part_of?(string))
+     test(not "122333444455556".part_of?(string))
+     test(not "222333444455555".part_of?(string))
+     test("12".part_of?(string))
+     test("23".part_of?(string))
+     test("33".part_of?(string))
+     test("555".part_of?(string))
+     test("4455".part_of?(string))
+     test("56666".part_of?(string))
+     test("666".part_of?(string))
+
+     let string = ("0\000091\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096\000096\000096\000096\000096\000096" ++ "0")[1, 22]
+     test("".part_of?(string))
+     test("\000091".part_of?(string))
+     test("\000092".part_of?(string))
+     test("\000093".part_of?(string))
+     test("\000094".part_of?(string))
+     test("\000095".part_of?(string))
+     test("\000096".part_of?(string))
+     test(not "\000097".part_of?(string))
+     test(not "\000096\000095".part_of?(string))
+     test(not "\000095\000094".part_of?(string))
+     test(not "\000093\000095".part_of?(string))
+     test(not "\000090\000091".part_of?(string))
+     test(not "\000096\000090".part_of?(string))
+     test(not "\000091\000091".part_of?(string))
+     test(not "\000091\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000096".part_of?(string))
+     test(not "\000092\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095".part_of?(string))
+     test("\000091\000092".part_of?(string))
+     test("\000092\000093".part_of?(string))
+     test("\000093\000093".part_of?(string))
+     test("\000095\000095\000095".part_of?(string))
+     test("\000094\000094\000095\000095".part_of?(string))
+     test("\000095\000096\000096\000096\000096".part_of?(string))
+     test("\000096\000096\000096".part_of?(string))
+
+     let string = ("0122333444455555666666" ++ "0")[1, 22]
+     test(("01223334444555556" ++ "0")[1, 17].part_of?(string))
+     test(not ("01223334444555555" ++ "0")[1, 17].part_of?(string))
+     test(not ("00223334444555556" ++ "0")[1, 17].part_of?(string))
+     test(("03444455555666666" ++ "0")[1, 17].part_of?(string))
+     test(not ("03444455555666660" ++ "0")[1, 17].part_of?(string))
+     test(not ("00444455555666666" ++ "0")[1, 17].part_of?(string))
+     test(string.part_of?(string))
+
+     let string = ("0\000091\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096\000096\000096\000096\000096\000096" ++ "0")[1, 22]
+     test(("0\000091\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096" ++ "0")[1, 17].part_of?(string))
+     test(not ("0\000091\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000095" ++ "0")[1, 17].part_of?(string))
+     test(not ("0\000090\000092\000092\000093\000093\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096" ++ "0")[1, 17].part_of?(string))
+     test(("0\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096\000096\000096\000096\000096\000096" ++ "0")[1, 17].part_of?(string))
+     test(not ("0\000093\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096\000096\000096\000096\000096\000090" ++ "0")[1, 17].part_of?(string))
+     test(not ("0\000090\000094\000094\000094\000094\000095\000095\000095\000095\000095\000096\000096\000096\000096\000096\000096" ++ "0")[1, 17].part_of?(string))
+     test(string.part_of?(string))
+
+     let string = rnd_string()
+     let part   = if rnd_bool()
+          rnd_string()
+     else {
+          let from = (rnd() & 0xffff'ffff) % len(string)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(string) - from)
+          string[from, to]
+     }
+     test((part.look_part_in(string).type() === "core.int") === part.part_of?(string))
+
+     test(u"".part_of?(u""))
+     test(not u"1".part_of?(u""))
+     test(u"".part_of?(u"a"))
+     test(u"1".part_of?(u"1"))
+     test(not u"1".part_of?(u"2"))
+     test(not u"2".part_of?(u"1"))
+     test(u"".part_of?(u"12233344445555"))
+     test(u"1".part_of?(u"12233344445555"))
+     test(u"2".part_of?(u"12233344445555"))
+     test(u"3".part_of?(u"12233344445555"))
+     test(u"4".part_of?(u"12233344445555"))
+     test(u"5".part_of?(u"12233344445555"))
+     test(not u"6".part_of?(u"12233344445555"))
+     test(not u"54".part_of?(u"12233344445555"))
+     test(not u"35".part_of?(u"12233344445555"))
+     test(not u"01".part_of?(u"12233344445555"))
+     test(not u"11".part_of?(u"12233344445555"))
+     test(not u"12233344445556".part_of?(u"12233344445555"))
+     test(not u"22233344445555".part_of?(u"12233344445555"))
+     test(u"12".part_of?(u"12233344445555"))
+     test(u"23".part_of?(u"12233344445555"))
+     test(u"33".part_of?(u"12233344445555"))
+     test(u"555".part_of?(u"12233344445555"))
+     test(u"4455".part_of?(u"12233344445555"))
+     test(u"12233344445555".part_of?(u"12233344445555"))
+
+     test(not u"122333444455555".part_of?(u"12233344445555"))
+     test(not heap_byte_array().part_of?(u"12233344445555"))
+
+     let array = (u"0122333444455555666666" ++ u"0")[1, 22]
+     test(u"".part_of?(array))
+     test(u"1".part_of?(array))
+     test(u"2".part_of?(array))
+     test(u"3".part_of?(array))
+     test(u"4".part_of?(array))
+     test(u"5".part_of?(array))
+     test(u"6".part_of?(array))
+     test(not u"7".part_of?(array))
+     test(not u"65".part_of?(array))
+     test(not u"54".part_of?(array))
+     test(not u"35".part_of?(array))
+     test(not u"01".part_of?(array))
+     test(not u"60".part_of?(array))
+     test(not u"11".part_of?(array))
+     test(not u"122333444455556".part_of?(array))
+     test(not u"222333444455555".part_of?(array))
+     test(u"12".part_of?(array))
+     test(u"23".part_of?(array))
+     test(u"33".part_of?(array))
+     test(u"555".part_of?(array))
+     test(u"4455".part_of?(array))
+     test(u"56666".part_of?(array))
+     test(u"666".part_of?(array))
+
+     let array = (u"0122333444455555666666" ++ u"0")[1, 22]
+     test((u"01223334444555556" ++ u"0")[1, 17].part_of?(array))
+     test(not (u"01223334444555555" ++ u"0")[1, 17].part_of?(array))
+     test(not (u"00223334444555556" ++ u"0")[1, 17].part_of?(array))
+     test((u"03444455555666666" ++ u"0")[1, 17].part_of?(array))
+     test(not (u"03444455555666660" ++ u"0")[1, 17].part_of?(array))
+     test(not (u"00444455555666666" ++ u"0")[1, 17].part_of?(array))
+     test(array.part_of?(array))
+
+     let array = rnd_byte_array()
+     let part  = if rnd_bool()
+          rnd_byte_array()
+     else {
+          let from = (rnd() & 0xffff'ffff) % len(array)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(array) - from)
+          array[from, to]
+     }
+     test((part.look_part_in(array).type() === "core.int") === part.part_of?(array))
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test([array].part_of?([array]))
+     test([array].init(10).part_of?([array].init(10)))
+     test(not [array string_1].part_of?([array].init(10)))
+     test([array].init(10).part_of?([array string_5]))
+     test([array string_1].part_of?([array string_1]))
+     test(not [array string_1].part_of?([array string_2]))
+     test(not [array string_2].part_of?([array string_1]))
+     test([array].init(10).part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_1].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_2].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_3].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_4].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_5].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test(not [array string_0].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test(not [array string_5, string_4].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test(not [array string_3, string_5].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test(not [array string_0, string_1].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test(not [array string_1, string_1].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test(not [array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_0].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test(not [array string_2, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_1, string_2].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_2, string_3].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_3, string_3].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_5, string_5, string_5].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_4, string_4, string_5, string_5].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+     test(not [array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5, string_5].part_of?([array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_5]))
+
+     let array = rnd_string_array()
+     let part  = if rnd_bool()
+          rnd_string_array()
+     else {
+          let from = (rnd() & 0xffff'ffff) % len(array)
+          let to   = from + (rnd() & 0xffff'ffff) % (len(array) - from)
+          array[from, to]
+     }
+     test((part.look_part_in(array).type() === "core.int") === part.part_of?(array))
+
+     test("23".to_array__part_of().part_of?("123123".to_array__part_of()))
+     test("".to_array__part_of().part_of?("123123".to_array__part_of()))
+     test(not "33".to_array__part_of().part_of?("123123".to_array__part_of()))
+     test("23".to_custom_array__part_of().part_of?("123123".to_custom_array__part_of()))
+     test("".to_custom_array__part_of().part_of?("123123".to_custom_array__part_of()))
+     test(not "33".to_custom_array__part_of().part_of?("123123".to_custom_array__part_of()))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.part_of?(heap_string()).get_error_id() === :1)
+     test(heap_string().part_of?(error_1).get_error_id() === :1)
+     test(error_1.part_of?(error_2).get_error_id() === :1)
+     test(error_2.part_of?(error_1).get_error_id() === :2)
+
+     test([box heap_string()].scarlet__erase_info().part_of?(heap_string()).get_error_id() === :invalid_type)
+     test([box heap_string()].scarlet__erase_info().part_of?([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+
+     test([array].to_broken_array__part_of().part_of?(to_broken_array__part_of([array])).get_error_id() === :invalid_type)
+     test([array].to_broken_custom_array__part_of().part_of?(to_broken_custom_array__part_of([array])).get_error_id() === :invalid_type)
+     test([array].to_error_array__part_of().part_of?(to_error_array__part_of([array])).get_error_id() === :3)
+     test([array].to_error_custom_array__part_of().part_of?(to_error_custom_array__part_of([array])).get_error_id() === :4)
+}

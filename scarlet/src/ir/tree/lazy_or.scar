@@ -1,0 +1,132 @@
+fn ir__lazy_or(left_operand, right_operand, right_ir, code, right_context_consts, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     left_operand.maybe_has_type!("bool")
+
+     let name_ids                = exp_data:name_ids
+     let named_consts            = exp_data:named_consts
+     let free_right_for_left__ir = right_context_consts.foldl("", fn (free_right_for_left__ir, constant_id) {
+          let name = name_ids[constant_id]
+          if name.null?()
+               free_right_for_left__ir
+          else named_consts[name]:operand.dec_ref_cnt(free_right_for_left__ir)
+     })
+
+     if not left_operand:comptime_val.null?()
+          if left_operand:comptime_val:value {
+               let ir = ir ++ free_right_for_left__ir
+               let ir = if is_last; ir__raw_return(ir, "bool__true") else ir
+
+               [box new (left_operand):code <= code, exp_data, ir, final_data, dependencies, src_gconsts]
+          } else {
+               let ir = ir ++ right_ir
+               if right_operand.has_type?("bool") {
+                    let ir = if is_last; ir__raw_return(ir, right_operand:ir) else ir
+
+                    [box new (right_operand):code <= code, exp_data, ir, final_data, dependencies, src_gconsts]
+               } else {
+                    right_operand.maybe_has_type!("bool")
+
+                    let [box result_reg, exp_data] = exp_data.new_reg()
+                    let right_is_result__code      = result_reg ++ "=" ++ right_operand:ir ++ ";\n"
+
+                    let ir = ir__raw_if(
+                         ir ++ "t_any " ++ result_reg ++ ";\n"
+
+                         right_operand:ir ++ ".bytes[15]!=tid__bool"
+                         :unlikely
+
+                         ir__raw_if(
+                              ""
+
+                              right_operand:ir ++ ".bytes[15]==tid__error"
+                              :unknown
+
+                              right_is_result__code
+
+                              right_operand.dec_ref_cnt("") ++ result_reg ++ "=error__invalid_type(thrd_data," ++ exp_data:owner_name_ir_const ++ ");\n"
+                         )
+
+                         right_is_result__code
+                    )
+
+                    let possible_types = [set "bool", "error"]
+                    let result_operand = new (@main.t_operand) {
+                         :code           <= code
+                         :ir             <= result_reg
+                         :possible_types <= possible_types
+                    }
+                    let ir = ir__assume_type(result_reg, possible_types, ir)
+                    let ir = if is_last; ir__raw_return(ir, result_reg) else ir
+
+                    [box result_operand, exp_data, ir, final_data, dependencies, src_gconsts]
+               }
+          }
+     else {
+          let [box result_reg, exp_data] = exp_data.new_reg()
+          let left_is_result__code       = result_reg ++ "=" ++ left_operand:ir ++ ";\n"
+          let right_is_result__code      = result_reg ++ "=" ++ right_operand:ir ++ ";\n"
+
+          let left_bool_code = ir__raw_if(
+               ""
+
+               left_operand:ir ++ ".bytes[0]==1"
+               :unknown
+
+               free_right_for_left__ir ++ result_reg ++ "=bool__true;\n"
+
+               right_ir ++ if right_operand.has_type?("bool")
+                    right_is_result__code
+               else ir__raw_if(
+                    ""
+
+                    right_operand:ir ++ ".bytes[15]!=tid__bool"
+                    :unlikely
+
+                    ir__raw_if(
+                         ""
+
+                         right_operand:ir ++ ".bytes[15]==tid__error"
+                         :unknown
+
+                         right_is_result__code
+
+                         right_operand.dec_ref_cnt("") ++ result_reg ++ "=error__invalid_type(thrd_data," ++ exp_data:owner_name_ir_const ++ ");\n"
+                    )
+
+                    right_is_result__code
+               )
+          )
+
+          let ir = ir ++ "t_any " ++ result_reg ++ ";\n" ++ if left_operand.has_type?("bool")
+               left_bool_code
+          else ir__raw_if(
+               ""
+
+               left_operand:ir ++ ".bytes[15]!=tid__bool"
+               :unlikely
+
+               ir__raw_if(
+                    free_right_for_left__ir
+
+                    left_operand:ir ++ ".bytes[15]==tid__error"
+                    :unknown
+
+                    left_is_result__code
+
+                    left_operand.dec_ref_cnt("") ++ result_reg ++ "=error__invalid_type(thrd_data," ++ exp_data:owner_name_ir_const ++ ");\n"
+               )
+
+               left_bool_code
+          )
+
+          let possible_types = if left_operand.has_type?("bool") && right_operand.has_type?("bool"); [set "bool"] else [set "bool", "error"]
+          let result_operand = new (@main.t_operand) {
+               :code           <= code
+               :ir             <= result_reg
+               :possible_types <= possible_types
+          }
+          let ir = ir__assume_type(result_reg, possible_types, ir)
+          let ir = if is_last; ir__raw_return(ir, result_reg) else ir
+
+          [box result_operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

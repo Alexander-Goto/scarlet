@@ -1,0 +1,5 @@
+`noinline`
+fn test__scarlet__rnd() {
+     test(scarlet__rnd().type() === "core.int")
+     test(scarlet__rnd() === scarlet__rnd())
+}

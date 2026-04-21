@@ -1,0 +1,291 @@
+let array__drop = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_drop      = fn (arr, n) to_array__drop(arr:value.drop(n))
+          :core___equal__ = fn (array_1, array_2) array_1:value === array_2:value
+     ]
+]
+
+fn to_array__drop(arg) new (@main.array__drop):value <= arg
+
+fn to_custom_array__drop(arg) custom__create(
+     arg
+     [obj
+          :core_drop      = fn (arr, n) to_custom_array__drop(custom__get_data(arr).drop(n))
+          :core___equal__ = fn (array_1, array_2) array_1.custom__get_data() === array_2.custom__get_data()
+     ]
+)
+
+let broken_array__drop = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_drop = fn (_, _) heap_table()
+     ]
+]
+
+fn to_broken_array__drop(arg) new (@main.broken_array__drop):value <= arg
+
+fn to_broken_custom_array__drop(arg) custom__create(
+     arg
+     [obj
+          :core_drop = fn (_, _) heap_table()
+     ]
+)
+
+let error_array__drop = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_drop = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__drop(arg) new (@main.error_array__drop):value <= arg
+
+fn to_error_custom_array__drop(arg) custom__create(
+     arg
+     [obj
+          :core_drop = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__drop() {
+     test("".drop(0) === "")
+     test("1".drop(0) === "1")
+     test("1".drop(1) === "")
+     test("0123456789abcde".drop(0) === "0123456789abcde")
+     test("0123456789abcde".drop(1) === "123456789abcde")
+     test("0123456789abcde".drop(2) === "23456789abcde")
+     test("0123456789abcde".drop(3) === "3456789abcde")
+     test("0123456789abcde".drop(4) === "456789abcde")
+     test("0123456789abcde".drop(5) === "56789abcde")
+     test("0123456789abcde".drop(6) === "6789abcde")
+     test("0123456789abcde".drop(7) === "789abcde")
+     test("0123456789abcde".drop(8) === "89abcde")
+     test("0123456789abcde".drop(9) === "9abcde")
+     test("0123456789abcde".drop(10) === "abcde")
+     test("0123456789abcde".drop(11) === "bcde")
+     test("0123456789abcde".drop(12) === "cde")
+     test("0123456789abcde".drop(13) === "de")
+     test("0123456789abcde".drop(14) === "e")
+     test("0123456789abcde".drop(15) === "")
+
+     test("\0000ac".drop(0) === "\0000ac")
+     test("\0000ac".drop(1) === "")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop(0) === "\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop(1) === "\0000b3\0000ab!!!\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop(2) === "\0000ab!!!\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop(3) === "!!!\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop(4) === "!!\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop(5) === "!\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop(6) === "\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop(7) === "\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop(8) === "\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop(9) === "")
+
+     test("0123456789abcdef".drop(0) === "0123456789abcdef")
+     test("0123456789abcdef".drop(1) === "123456789abcdef")
+     test("0123456789abcdef".drop(2) === "23456789abcdef")
+     test("0123456789abcdef".drop(3) === "3456789abcdef")
+     test("0123456789abcdef".drop(4) === "456789abcdef")
+     test("0123456789abcdef".drop(5) === "56789abcdef")
+     test("0123456789abcdef".drop(6) === "6789abcdef")
+     test("0123456789abcdef".drop(7) === "789abcdef")
+     test("0123456789abcdef".drop(8) === "89abcdef")
+     test("0123456789abcdef".drop(9) === "9abcdef")
+     test("0123456789abcdef".drop(10) === "abcdef")
+     test("0123456789abcdef".drop(11) === "bcdef")
+     test("0123456789abcdef".drop(12) === "cdef")
+     test("0123456789abcdef".drop(13) === "def")
+     test("0123456789abcdef".drop(14) === "ef")
+     test("0123456789abcdef".drop(15) === "f")
+     test("0123456789abcdef".drop(16) === "")
+
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(0) === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(1) === "\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(2) === "\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(3) === "\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(4) === "\0000a7\0000b5 \0000af\0000ab\0000b3")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(5) === "\0000b5 \0000af\0000ab\0000b3")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(6) === " \0000af\0000ab\0000b3")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(7) === "\0000af\0000ab\0000b3")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(8) === "\0000ab\0000b3")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(9) === "\0000b3")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ab\0000b3".drop(10) === "")
+
+     let [box string_1, string_2] = if (rnd() & 1) === 0 {
+          let string_1 = rnd_string()
+          let string_2 = if (rnd() & 1) === 0; string_1 else null
+          [box string_1, string_2]
+     } else [box "Constant String \000093\0000ae\0000b6\0000ba\0000a2\0000ac\0000b0\0000a2\0000c2 \000093\0000b5\0000b3\0000b1\0000ad\0000a2", null]
+     let len             = len(string_1)
+     let n               = (rnd() >> 1) % (len + 1)
+     let expected_string = string_1[n, len].unslice()
+     test(string_1.drop(n) === expected_string)
+     string_2.ignore()
+
+     test(u"".drop(0) === u"")
+     test(u"1".drop(0) === u"1")
+     test(u"1".drop(1) === u"")
+     test(u"0123456789abcd".drop(0) === u"0123456789abcd")
+     test(u"0123456789abcd".drop(1) === u"123456789abcd")
+     test(u"0123456789abcd".drop(2) === u"23456789abcd")
+     test(u"0123456789abcd".drop(3) === u"3456789abcd")
+     test(u"0123456789abcd".drop(4) === u"456789abcd")
+     test(u"0123456789abcd".drop(5) === u"56789abcd")
+     test(u"0123456789abcd".drop(6) === u"6789abcd")
+     test(u"0123456789abcd".drop(7) === u"789abcd")
+     test(u"0123456789abcd".drop(8) === u"89abcd")
+     test(u"0123456789abcd".drop(9) === u"9abcd")
+     test(u"0123456789abcd".drop(10) === u"abcd")
+     test(u"0123456789abcd".drop(11) === u"bcd")
+     test(u"0123456789abcd".drop(12) === u"cd")
+     test(u"0123456789abcd".drop(13) === u"d")
+     test(u"0123456789abcd".drop(14) === u"")
+
+     test(u"0123456789abcde".drop(0) === u"0123456789abcde")
+     test(u"0123456789abcde".drop(1) === u"123456789abcde")
+     test(u"0123456789abcde".drop(2) === u"23456789abcde")
+     test(u"0123456789abcde".drop(3) === u"3456789abcde")
+     test(u"0123456789abcde".drop(4) === u"456789abcde")
+     test(u"0123456789abcde".drop(5) === u"56789abcde")
+     test(u"0123456789abcde".drop(6) === u"6789abcde")
+     test(u"0123456789abcde".drop(7) === u"789abcde")
+     test(u"0123456789abcde".drop(8) === u"89abcde")
+     test(u"0123456789abcde".drop(9) === u"9abcde")
+     test(u"0123456789abcde".drop(10) === u"abcde")
+     test(u"0123456789abcde".drop(11) === u"bcde")
+     test(u"0123456789abcde".drop(12) === u"cde")
+     test(u"0123456789abcde".drop(13) === u"de")
+     test(u"0123456789abcde".drop(14) === u"e")
+     test(u"0123456789abcde".drop(15) === u"")
+
+     let [box array_1, array_2] = if (rnd() & 1) === 0 {
+          let array_1 = rnd_byte_array()
+          let array_2 = if (rnd() & 1) === 0; array_1 else null
+          [box array_1, array_2]
+     } else [box u"Constant String \000093\0000ae\0000b6\0000ba\0000a2\0000ac\0000b0\0000a2\0000c2 \000093\0000b5\0000b3\0000b1\0000ad\0000a2", null]
+     let len            = len(array_1)
+     let n              = (rnd() >> 1) % (len + 1)
+     let expected_array = array_1[n, len].unslice()
+     test(array_1.drop(n) === expected_array)
+     array_2.ignore()
+
+     test([array].drop(0) === [array])
+     test([array].init(10).drop(0) === [array])
+     test([array 1].drop(0) === [array 1])
+     test([array 1].drop(1) === [array])
+     test([array 1, 2, 3, 4, 5].drop(1) === [array 2, 3, 4, 5])
+     test([array 1, 2, 3, 4, 5].drop(2) === [array 3, 4, 5])
+     test([array 1, 2, 3, 4, 5].drop(3) === [array 4, 5])
+     test([array 1, 2, 3, 4, 5].drop(4) === [array 5])
+     test([array 1, 2, 3, 4, 5].drop(5) === [array])
+
+     let string_1  = heap_string()
+     let string_2  = string_1 ++ "2"
+     let string_3  = string_1 ++ "3"
+     let string_4  = string_1 ++ "4"
+     let string_5  = string_1 ++ "5"
+     test([array string_1].drop(0) === [array string_1])
+     test([array string_1].drop(1) === [array])
+     test([array string_1, string_2, string_3, string_4, string_5].drop(0) === [array string_1, string_2, string_3, string_4, string_5])
+     test([array string_1, string_2, string_3, string_4, string_5].drop(1) === [array string_2, string_3, string_4, string_5])
+     test([array string_1, string_2, string_3, string_4, string_5].drop(2) === [array string_3, string_4, string_5])
+     test([array string_1, string_2, string_3, string_4, string_5].drop(3) === [array string_4, string_5])
+     test([array string_1, string_2, string_3, string_4, string_5].drop(4) === [array string_5])
+     test([array string_1, string_2, string_3, string_4, string_5].drop(5) === [array])
+
+     let [box array_1, array_2] = if (rnd() & 1) === 0 {
+          let array_1 = rnd_string_array()
+          let array_2 = if (rnd() & 1) === 0; array_1 else null
+          [box array_1, array_2]
+     } else [box [array 7, 2, 4, 1, "dfsdf", 0, -14, [table]], null]
+     let len            = len(array_1)
+     let n              = (rnd() >> 1) % (len + 1)
+     let expected_array = array_1[n, len].unslice()
+     test(array_1.drop(n) === expected_array)
+     array_2.ignore()
+
+     test([array].to_array__drop().drop(0) === [array].to_array__drop())
+     test([array].init(10).to_array__drop().drop(0) === [array].to_array__drop())
+     test([array 1].to_array__drop().drop(0) === [array 1].to_array__drop())
+     test([array 1].to_array__drop().drop(1) === [array].to_array__drop())
+     test([array 1, 2, 3, 4, 5].to_array__drop().drop(1) === [array 2, 3, 4, 5].to_array__drop())
+     test([array 1, 2, 3, 4, 5].to_array__drop().drop(2) === [array 3, 4, 5].to_array__drop())
+     test([array 1, 2, 3, 4, 5].to_array__drop().drop(3) === [array 4, 5].to_array__drop())
+     test([array 1, 2, 3, 4, 5].to_array__drop().drop(4) === [array 5].to_array__drop())
+     test([array 1, 2, 3, 4, 5].to_array__drop().drop(5) === [array].to_array__drop())
+
+     test([array].to_custom_array__drop().drop(0) === [array].to_custom_array__drop())
+     test([array].init(10).to_custom_array__drop().drop(0) === [array].to_custom_array__drop())
+     test([array 1].to_custom_array__drop().drop(0) === [array 1].to_custom_array__drop())
+     test([array 1].to_custom_array__drop().drop(1) === [array].to_custom_array__drop())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop().drop(1) === [array 2, 3, 4, 5].to_custom_array__drop())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop().drop(2) === [array 3, 4, 5].to_custom_array__drop())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop().drop(3) === [array 4, 5].to_custom_array__drop())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop().drop(4) === [array 5].to_custom_array__drop())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop().drop(5) === [array].to_custom_array__drop())
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.drop(0).get_error_id() === :1)
+     test("".drop(error_1).get_error_id() === :1)
+     test(error_1.drop(error_2).get_error_id() === :1)
+     test(error_2.drop(error_1).get_error_id() === :2)
+     test(error_1.drop(heap_string()).get_error_id() === :1)
+     test(heap_table().drop(error_1).get_error_id() === :1)
+
+     test(heap_table().drop(0).get_error_id() === :invalid_type)
+     test(heap_string().drop(heap_table()).get_error_id() === :invalid_type)
+     test(heap_table().drop(heap_table()).get_error_id() === :invalid_type)
+
+     test("".drop(1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("".drop(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("".drop(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("".drop(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("0123456789abcde".drop(16.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("0123456789abcde".drop(17.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("0123456789abcde".drop(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("0123456789abcde".drop(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("0123456789abcde".drop(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("0123456789abcde".append('f').drop(17.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("0123456789abcde".append('f').drop(18.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("0123456789abcde".append('f').drop(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("0123456789abcde".append('f').drop(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("0123456789abcde".append('f').drop(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"".drop(1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"".drop(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"".drop(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"".drop(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd".drop(15.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd".drop(16.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd".drop(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd".drop(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd".drop(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd".append(u"f"[0]).drop(16.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd".append(u"f"[0]).drop(17.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd".append(u"f"[0]).drop(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd".append(u"f"[0]).drop(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd".append(u"f"[0]).drop(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array].drop(1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array].drop(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array].drop(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array].drop(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string()].drop(2.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string()].drop(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string()].drop(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string()].drop(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string(), heap_string()].drop(3.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string(), heap_string()].drop(4.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string(), heap_string()].drop(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string(), heap_string()].drop(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array heap_string(), heap_string()].drop(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test(to_broken_array__drop("").drop(0).get_error_id() === :invalid_type)
+     test(to_broken_custom_array__drop("").drop(0).get_error_id() === :invalid_type)
+     test(to_error_array__drop("").drop(0).get_error_id() === :3)
+     test(to_error_custom_array__drop("").drop(0).get_error_id() === :4)
+}

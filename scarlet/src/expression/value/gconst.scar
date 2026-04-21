@@ -1,0 +1,52 @@
+let t_gconst_in_exp = [obj
+     :scar_type = "t_gconst_in_exp"
+     :name      = @main.t_token
+]
+
+fn gconst_to_operand(gconst, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let final_gconst = final_data.get_gconst(gconst:name)
+
+     let [box final_gconst, final_data, src_gconsts] = if final_gconst:ir.empty?() {
+          let [box _, short_name]           = disassemble_ir_name(final_gconst:ir_name)
+          let [box src_gconsts, src_gconst] = new (src_gconsts)[short_name] <<= null
+          if src_gconst.null?()
+               error__recursive_gconst(gconst:name)
+          else null
+
+          let [box final_data, src_gconsts] = gconst_to_final(src_gconst, final_data, src_gconsts)
+          let final_gconst                  = final_data:gconsts[short_name][@main.compiled_module_name]
+
+          [box final_gconst, final_data, src_gconsts]
+     } else [box final_gconst, final_data, src_gconsts]
+
+     if "@core.".prefix_of?(gconst:name:text) && final_gconst:comptime_val.null?() && "return (const t_any)".prefix_of?(final_gconst:ir) {
+          let operand = new (@main.t_operand) {
+               :code           <= gconst:name
+               :ir             <= final_gconst:ir[7, final_gconst:ir.len() - 2]
+               :possible_types <= final_gconst:possible_types
+               :is_gconst      <= true
+          }
+
+          [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+     } else {
+          let result_has_unknown_type = not (@main.compiled_module_name == "main" || (@main.compiled_module_name ++ "G").prefix_of?(final_gconst:ir_name.drop(1)))
+          if result_has_unknown_type || final_gconst:comptime_val.null?() {
+               let [box operand, exp_data, ir] = ir__gconst(final_gconst:ir_name, gconst:name, if result_has_unknown_type; null else final_gconst:possible_types, exp_data, ir, is_last)
+
+               [box operand, exp_data, ir, final_data, new (dependencies):gconsts => _.append(gconst:name:text.drop(1)), src_gconsts]
+          } else {
+               let operand = new (@main.t_operand) {
+                    :code           <= gconst:name
+                    :ir             <= final_gconst:operand_ir
+                    :possible_types <= final_gconst:possible_types
+                    :comptime_val   <= final_gconst:comptime_val
+               }
+
+               let dependencies = if "return ".prefix_of?(final_gconst:ir)
+                    join_dependencies(dependencies, final_gconst:dependencies)
+               else new (dependencies):gconsts => _.append(gconst:name:text.drop(1))
+
+               [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+          }
+     }
+}

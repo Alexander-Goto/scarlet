@@ -1,0 +1,23 @@
+fn ir__core_fn_clear(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     let valid_types = [set "table", "set", "array", "obj", "custom"]
+     if arg:comptime_val:type =/= "obj"
+          arg.maybe_has_type!(valid_types)
+     else null
+
+     ir__fn_call(
+          "McoreFNclear", [array arg], code
+
+          if arg.has_type?([set "table", "set", "array"])
+               arg:possible_types
+          else if arg:possible_types.null?()
+               valid_types.append("error")
+          else arg:possible_types.filter(_.in?(valid_types)).append("error")
+
+          exp_data, ir, final_data, dependencies, src_gconsts, is_last
+     )
+}

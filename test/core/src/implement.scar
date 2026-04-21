@@ -1,0 +1,153 @@
+`noinline`
+fn test__implement() {
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test([obj].implement([obj]) === [obj])
+     test([obj].implement([obj]):_.null?())
+     test([obj].init(10).implement([obj].init(10)) === [obj])
+     test([obj].init(10).implement([obj].init(10)):_.null?())
+     test([obj].implement([obj :0 = string_0]) === [obj])
+     test([obj].implement([obj :0 = string_0]):_ === [obj :0 = string_0])
+     test([obj].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]) === [obj])
+     test([obj].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_ === [obj :0 = string_0])
+     test([obj].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_:_.null?())
+
+     test([obj :2 = string_2].implement([obj]) === [obj :2 = string_2])
+     test([obj :2 = string_2].implement([obj]):_.null?())
+     test([obj :2 = string_2].implement([obj].init(10)) === [obj :2 = string_2])
+     test([obj :2 = string_2].implement([obj].init(10)):_.null?())
+     test([obj :2 = string_2].implement([obj :0 = string_0]) === [obj :2 = string_2])
+     test([obj :2 = string_2].implement([obj :0 = string_0]):_ === [obj :0 = string_0])
+     test([obj :2 = string_2].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]) === [obj :2 = string_2])
+     test([obj :2 = string_2].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_ === [obj :0 = string_0])
+     test([obj :2 = string_2].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_:_.null?())
+
+     test([obj :_ = [obj]].implement([obj]) === [obj])
+     test([obj :_ = [obj]].implement([obj]):_ === [obj])
+     test([obj :_ = [obj]].implement([obj].init(10)) === [obj])
+     test([obj :_ = [obj]].implement([obj].init(10)):_ === [obj])
+     test([obj :_ = [obj]].implement([obj :0 = string_0]) === [obj])
+     test([obj :_ = [obj]].implement([obj :0 = string_0]):_ === [obj :0 = string_0])
+     test([obj :_ = [obj]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]) === [obj])
+     test([obj :_ = [obj]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_ === [obj :0 = string_0])
+     test([obj :_ = [obj]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_:_.null?())
+
+     test([obj :_ = [obj :2 = string_2]].implement([obj]) === [obj])
+     test([obj :_ = [obj :2 = string_2]].implement([obj]):_ === [obj :2 = string_2])
+     test([obj :_ = [obj :2 = string_2]].implement([obj].init(10)) === [obj])
+     test([obj :_ = [obj :2 = string_2]].implement([obj].init(10)):_ === [obj :2 = string_2])
+     test([obj :_ = [obj :2 = string_2]].implement([obj :0 = string_0]) === [obj])
+     test([obj :_ = [obj :2 = string_2]].implement([obj :0 = string_0]):_ === [obj :0 = string_0, :2 = string_2])
+     test([obj :_ = [obj :2 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]) === [obj])
+     test([obj :_ = [obj :2 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_ === [obj :0 = string_0, :2 = string_2])
+     test([obj :_ = [obj :2 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_:_.null?())
+
+     test([obj :_ = [obj :0 = string_2]].implement([obj]) === [obj])
+     test([obj :_ = [obj :0 = string_2]].implement([obj]):_ === [obj :0 = string_2])
+     test([obj :_ = [obj :0 = string_2]].implement([obj].init(10)) === [obj])
+     test([obj :_ = [obj :0 = string_2]].implement([obj].init(10)):_ === [obj :0 = string_2])
+     test([obj :_ = [obj :0 = string_2]].implement([obj :0 = string_0]) === [obj])
+     test([obj :_ = [obj :0 = string_2]].implement([obj :0 = string_0]):_ === [obj :0 = string_2])
+     test([obj :_ = [obj :0 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]) === [obj])
+     test([obj :_ = [obj :0 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_ === [obj :0 = string_2])
+     test([obj :_ = [obj :0 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_:_.null?())
+
+     test([obj :_ = [obj :0 = string_2, :3 = string_3]].implement([obj]) === [obj])
+     test([obj :_ = [obj :0 = string_2, :3 = string_3]].implement([obj]):_ === [obj :0 = string_2, :3 = string_3])
+     test([obj :_ = [obj :0 = string_2, :3 = string_3]].implement([obj].init(10)) === [obj])
+     test([obj :_ = [obj :0 = string_2, :3 = string_3]].implement([obj].init(10)):_ === [obj :0 = string_2, :3 = string_3])
+     test([obj :_ = [obj :0 = string_2, :3 = string_3]].implement([obj :0 = string_0, :4 = string_4]) === [obj])
+     test([obj :_ = [obj :0 = string_2, :3 = string_3]].implement([obj :0 = string_0, :4 = string_4]):_ === [obj :0 = string_2, :3 = string_3, :4 = string_4])
+     test([obj :_ = [obj :0 = string_2, :3 = string_3]].implement([obj :0 = string_0, :4 = string_4, :_ = [obj :1 = string_1]]) === [obj])
+     test([obj :_ = [obj :0 = string_2, :3 = string_3]].implement([obj :0 = string_0, :4 = string_4, :_ = [obj :1 = string_1]]):_ === [obj :0 = string_2, :3 = string_3, :4 = string_4])
+     test([obj :_ = [obj :0 = string_2, :3 = string_3]].implement([obj :0 = string_0, :4 = string_4, :_ = [obj :1 = string_1]]):_:_.null?())
+
+     test([obj :5 = string_5, :_ = [obj]].implement([obj]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj]].implement([obj]):_ === [obj])
+     test([obj :5 = string_5, :_ = [obj]].implement([obj].init(10)) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj]].implement([obj].init(10)):_ === [obj])
+     test([obj :5 = string_5, :_ = [obj]].implement([obj :0 = string_0]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj]].implement([obj :0 = string_0]):_ === [obj :0 = string_0])
+     test([obj :5 = string_5, :_ = [obj]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_ === [obj :0 = string_0])
+     test([obj :5 = string_5, :_ = [obj]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_:_.null?())
+
+     test([obj :5 = string_5, :_ = [obj :2 = string_2]].implement([obj]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :2 = string_2]].implement([obj]):_ === [obj :2 = string_2])
+     test([obj :5 = string_5, :_ = [obj :2 = string_2]].implement([obj].init(10)) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :2 = string_2]].implement([obj].init(10)):_ === [obj :2 = string_2])
+     test([obj :5 = string_5, :_ = [obj :2 = string_2]].implement([obj :0 = string_0]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :2 = string_2]].implement([obj :0 = string_0]):_ === [obj :0 = string_0, :2 = string_2])
+     test([obj :5 = string_5, :_ = [obj :2 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :2 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_ === [obj :0 = string_0, :2 = string_2])
+     test([obj :5 = string_5, :_ = [obj :2 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_:_.null?())
+
+     test([obj :5 = string_5, :_ = [obj :0 = string_2]].implement([obj]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2]].implement([obj]):_ === [obj :0 = string_2])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2]].implement([obj].init(10)) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2]].implement([obj].init(10)):_ === [obj :0 = string_2])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2]].implement([obj :0 = string_0]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2]].implement([obj :0 = string_0]):_ === [obj :0 = string_2])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_ === [obj :0 = string_2])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2]].implement([obj :0 = string_0, :_ = [obj :1 = string_1]]):_:_.null?())
+
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([obj]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([obj]):_ === [obj :0 = string_2, :3 = string_3])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([obj].init(10)) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([obj].init(10)):_ === [obj :0 = string_2, :3 = string_3])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([obj :0 = string_0, :4 = string_4]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([obj :0 = string_0, :4 = string_4]):_ === [obj :0 = string_2, :3 = string_3, :4 = string_4])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([obj :0 = string_0, :4 = string_4, :_ = [obj :1 = string_1]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([obj :0 = string_0, :4 = string_4, :_ = [obj :1 = string_1]]):_ === [obj :0 = string_2, :3 = string_3, :4 = string_4])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([obj :0 = string_0, :4 = string_4, :_ = [obj :1 = string_1]]):_:_.null?())
+
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([array]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([array]):_ === [obj :0 = string_2, :3 = string_3])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([array]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([array]):_ === [obj :0 = string_2, :3 = string_3])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([array [obj]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([array [obj]]):_ === [obj :0 = string_2, :3 = string_3])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([array [obj], [obj]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([array [obj], [obj]]):_ === [obj :0 = string_2, :3 = string_3])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([array
+          [obj :1 = string_1, :5 = string_2]
+          [obj :1 = string_1, :5 = string_3, :2 = string_4]
+     ]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :0 = string_2, :3 = string_3]].implement([array
+          [obj :1 = string_1, :3 = string_2]
+          [obj :1 = string_2, :5 = string_3, :3 = string_4]
+     ]):_ === [obj :0 = string_2, :3 = string_3, :1 = string_1, :5 = string_3])
+
+     let methods_1        = rnd_string_obj()
+     let methods_2        = if rnd_bool(); methods_1 else null
+     let obj_1            = new (rnd_string_obj()):_ <= methods_1
+     let obj_2            = if rnd_bool(); obj_1 else null
+     let interface_1      = rnd_string_obj()
+     let interface_2      = if rnd_bool(); interface_1 else null
+     let expected_methods = interface_1.foldl_kv(
+          methods_1
+          fn (expected_methods, name, method) new (expected_methods)[name] => fn (method_in_expected) method_in_expected <? method
+     )
+     test(obj_1.implement(interface_1):_ === expected_methods)
+     test((new (obj_1.implement(interface_1)):_ <= null) === (new (obj_1):_ <= null))
+     methods_2.ignore()
+     obj_2.ignore()
+     interface_2.ignore()
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.implement([obj :2 = heap_string()]).get_error_id() === :1)
+     test([obj :2 = heap_string()].implement(error_1).get_error_id() === :1)
+     test(error_1.implement(error_2).get_error_id() === :1)
+     test(error_2.implement(error_1).get_error_id() === :2)
+     test(error_1.implement(heap_string()).get_error_id() === :1)
+     test(heap_string().implement(error_1).get_error_id() === :1)
+     test(heap_string().implement([obj :2 = heap_string()]).get_error_id() === :invalid_type)
+     test([obj :2 = heap_string()].implement(heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().implement(heap_string()).get_error_id() === :invalid_type)
+}

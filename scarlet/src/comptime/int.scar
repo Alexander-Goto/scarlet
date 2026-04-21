@@ -1,0 +1,9 @@
+fn comptime_int(value, code)
+     new (@main.t_operand) {
+          :code           <= code
+          :possible_types <= [set "int"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "int"
+               :value <= value
+          }
+     }

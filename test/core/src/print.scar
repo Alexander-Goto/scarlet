@@ -1,0 +1,68 @@
+let const__print = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_print = fn (const) push(const:value, "print")
+     ]
+]
+
+fn to_const__print(arg) new (@main.const__print):value <= arg
+
+fn to_custom_const__print(arg) custom__create(
+     arg
+     [obj
+          :core_print = fn (const) push(const.custom__get_data(), "print")
+     ]
+)
+
+let broken_const__print = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_print = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_const__print(arg) new (@main.broken_const__print):value <= arg
+
+fn to_broken_custom_const__print(arg) custom__create(
+     arg
+     [obj
+          :core_print = fn (_) heap_string()
+     ]
+)
+
+let error_const__print = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_print = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__print(arg) new (@main.error_const__print):value <= arg
+
+fn to_error_custom_const__print(arg) custom__create(
+     arg
+     [obj
+          :core_print = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__print() {
+     let [box in, out] = make_channel()
+
+     test(in.to_const__print().print().null?())
+     test(time_limit_pop(out, 0) === "print")
+     test(in.to_custom_const__print().print().null?())
+     test(time_limit_pop(out, 0) === "print")
+
+     test(expected_error(:1, heap_string(), heap_string()).print().get_error_id() === :1)
+     test((_ ++ heap_string()).print().get_error_id() === :invalid_type)
+
+     test(0.to_broken_const__print().print().get_error_id() === :invalid_type)
+     test(0.to_broken_custom_const__print().print().get_error_id() === :invalid_type)
+     test(0.to_error_const__print().print().get_error_id() === :3)
+     test(0.to_error_custom_const__print().print().get_error_id() === :4)
+}

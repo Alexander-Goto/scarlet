@@ -1,0 +1,112 @@
+let const__to_lower = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_lower = fn (arg) arg:value.to_lower()
+     ]
+]
+
+fn to_const__to_lower(arg) new (@main.const__to_lower):value <= arg
+
+fn to_custom_const__to_lower(arg) custom__create(
+     arg
+     [obj
+          :core_to_lower = fn (arg) arg.custom__get_data().to_lower()
+     ]
+)
+
+let broken_const__to_lower = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_lower = fn (_) [box heap_string()]
+     ]
+]
+
+fn to_broken_const__to_lower(arg) new (@main.broken_const__to_lower):value <= arg
+
+fn to_broken_custom_const__to_lower(arg) custom__create(
+     arg
+     [obj
+          :core_to_lower = fn (_) [box heap_string()]
+     ]
+)
+
+let error_const__to_lower = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_lower = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__to_lower(arg) new (@main.error_const__to_lower):value <= arg
+
+fn to_error_custom_const__to_lower(arg) custom__create(
+     arg
+     [obj
+          :core_to_lower = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__to_lower() {
+     test('\000001'.to_lower() === "\000001")
+     test('\000008'.to_lower() === "\000008")
+     test('\000009'.to_lower() === "\000009")
+     test('\000020'.to_lower() === "\000020")
+     test('!'.to_lower() === "!")
+     test('~'.to_lower() === "~")
+     test('0'.to_lower() === "0")
+     test('9'.to_lower() === "9")
+     test('a'.to_lower() === "a")
+     test('z'.to_lower() === "z")
+     test('A'.to_lower() === "a")
+     test('Z'.to_lower() === "z")
+
+     test("\000001".to_lower() === "\000001")
+     test("\000008".to_lower() === "\000008")
+     test("\000009".to_lower() === "\000009")
+     test("\000020".to_lower() === "\000020")
+     test("!".to_lower() === "!")
+     test("~".to_lower() === "~")
+     test("0".to_lower() === "0")
+     test("9".to_lower() === "9")
+     test("a".to_lower() === "a")
+     test("z".to_lower() === "z")
+     test("A".to_lower() === "a")
+     test("Z".to_lower() === "z")
+     test("az".to_lower() === "az")
+     test("AZ".to_lower() === "az")
+     test("azAZ".to_lower() === "azaz")
+     test("AZaz".to_lower() === "azaz")
+     test("aZAz".to_lower() === "azaz")
+     test("Hello World".to_lower() === "hello world")
+     test("0123456789abcde".to_lower() === "0123456789abcde")
+     test("0123456789ABCDE".to_lower() === "0123456789abcde")
+     test("abcdefffffffffz".to_lower() === "abcdefffffffffz")
+     test("ABCDEFFFFFFFFFZ".to_lower() === "abcdefffffffffz")
+     test("Hello WorldHello World".to_lower() === "hello worldhello world")
+     test("0123456789abcdef".to_lower() === "0123456789abcdef")
+     test("0123456789ABCDEF".to_lower() === "0123456789abcdef")
+     test("abcdeffffffffffz".to_lower() === "abcdeffffffffffz")
+     test("ABCDEFFFFFFFFFFZ".to_lower() === "abcdeffffffffffz")
+
+     let string = rnd_string()
+     test(string.to_lower().foldl(true, fn (result, char) result && (not char.letter?() || char.lower?())))
+     test(string.foldl("", fn (result, char) result ++ char.to_lower()) === string.to_lower())
+
+     test(to_const__to_lower('a').to_lower() === "a")
+     test(to_const__to_lower('Z').to_lower() === "z")
+
+     test(to_custom_const__to_lower('a').to_lower() === "a")
+     test(to_custom_const__to_lower('Z').to_lower() === "z")
+
+     test(expected_error(:1, heap_string(), heap_string()).to_lower().get_error_id() === :1)
+     test(heap_table().to_lower().get_error_id() === :invalid_type)
+
+     test(to_broken_const__to_lower("").to_lower().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__to_lower("").to_lower().get_error_id() === :invalid_type)
+     test(to_error_const__to_lower("").to_lower().get_error_id() === :3)
+     test(to_error_custom_const__to_lower("").to_lower().get_error_id() === :4)
+}

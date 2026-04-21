@@ -1,0 +1,87 @@
+let not_error_types         = [set "short_string", "null", "token", "bool", "byte", "char", "int", "time", "float", "short_fn", "short_byte_array", "box", "breaker", "obj", "table", "set", "byte_array", "string", "array", "fn", "thread", "channel", "custom"]
+let not_error_types__holder = @main.not_error_types.append("holder")
+
+let string_types                 = [set "short_string", "string"]
+let string_types__mtd            = @main.string_types.append("obj").append("custom")
+let string_types__mtd_error      = @main.string_types__mtd.append("error")
+let string_types__char           = @main.string_types.append("char")
+let string_types__char_mtd       = @main.string_types__char.append("obj").append("custom")
+let string_types__char_mtd_error = @main.string_types__char_mtd.append("error")
+let string_types__error          = @main.string_types.append("error")
+
+let byte_array_types             = [set "short_byte_array", "byte_array"]
+let byte_array_types__holder     = @main.byte_array_types.append("holder")
+let byte_array_types__error      = @main.byte_array_types.append("error")
+let byte_array_types__null       = @main.byte_array_types.append("null")
+let byte_array_types__null_error = @main.byte_array_types__null.append("error")
+
+let fn_types                = [set "short_fn", "fn"]
+let fn_types__holder        = @main.fn_types.append("holder")
+
+let num_types                   = [set "byte", "int", "float"]
+let num_types__error            = @main.num_types.append("error")
+let num_types__mtd              = @main.num_types.append("obj").append("custom")
+let num_types__mtd_error        = @main.num_types__mtd.append("error")
+let num_types__mtd_holder       = @main.num_types__mtd.append("holder")
+let signed_num_types            = [set "int", "float"]
+let signed_num_types__mtd       = @main.signed_num_types.append("obj").append("custom")
+let signed_num_types__mtd_error = @main.signed_num_types__mtd.append("error")
+
+let bit_types             = [set "byte", "int"]
+let bit_types__mtd        = @main.bit_types.append("obj").append("custom")
+let bit_types__mtd_error  = @main.bit_types__mtd.append("error")
+let bit_types__mtd_holder = @main.bit_types__mtd.append("holder")
+
+let concat_types             = [set "short_string", "string", "short_byte_array", "byte_array", "array"]
+let concat_types__error      = @main.concat_types.append("error")
+let concat_types__mtd        = @main.concat_types.append("obj").append("custom")
+let concat_types__mtd_holder = @main.concat_types__mtd.append("holder")
+
+let without_managed_mem_types = [set "short_string", "null", "token", "bool", "byte", "char", "int", "time", "float", "holder", "short_fn", "short_byte_array"]
+
+let common_types             = [set "short_string", "token", "bool", "byte", "char", "int", "time", "float", "short_fn", "short_byte_array", "obj", "table", "set", "byte_array", "string", "array", "fn", "thread", "channel", "custom"]
+let common_types__error      = @main.common_types.append("error")
+let common_types__null       = @main.common_types.append("null")
+let common_types__null_error = @main.common_types__null.append("error")
+
+let copyable_not_error_types           = [set "short_string", "null", "token", "bool", "byte", "char", "int", "time", "float", "short_fn", "short_byte_array", "obj", "table", "set", "byte_array", "string", "array", "fn", "channel", "custom"]
+let copyable_not_error_types__holder   = @main.copyable_not_error_types.append("holder")
+let copyable_common_types              = [set "short_string", "token", "bool", "byte", "char", "int", "time", "float", "short_fn", "short_byte_array", "obj", "table", "set", "byte_array", "string", "array", "fn", "channel", "custom"]
+let copyable_common_types__holder      = @main.copyable_common_types.append("holder")
+let copyable_common_types__holder_null = @main.copyable_common_types__holder.append("null")
+
+let not_copyable_types        = [set "box", "breaker", "thread"]
+let not_copyable_types__error = @main.not_copyable_types.append("error")
+
+let always_hash_map_key_types          = [set "short_string", "token", "bool", "byte", "char", "int", "time", "short_byte_array", "byte_array", "string"]
+let maybe_hash_map_key_types           = [set "obj", "table", "set", "array", "custom"]
+let all_hash_map_key_types             = [set "short_string", "token", "bool", "byte", "char", "int", "time", "short_byte_array", "byte_array", "string", "obj", "table", "set", "array", "custom"]
+let all_hash_map_key_types__null       = @main.all_hash_map_key_types.append("null")
+let all_hash_map_key_types__holder     = @main.all_hash_map_key_types.append("holder")
+let all_hash_map_key_types__error      = @main.all_hash_map_key_types.append("error")
+let all_hash_map_key_types__null_error = @main.all_hash_map_key_types__error.append("null")
+
+let switch_simple_types = [set "short_string", "token", "bool", "byte", "char", "int", "time", "short_byte_array"]
+
+let ord_types               = [set "short_string", "token", "byte", "char", "int", "time", "float", "short_byte_array", "byte_array", "string", "array"]
+let ord_types__mtd          = @main.ord_types.append("obj").append("custom")
+let ord_types__mtd_holder   = @main.ord_types__mtd.append("holder")
+let simple_ord_types        = [set "byte", "int", "time"]
+let always_ord_types        = [set "short_string", "token", "byte", "char", "int", "time", "short_byte_array", "byte_array", "string"]
+let always_ord_types__float = @main.always_ord_types.append("float")
+
+let limited_ord_types            = [set "token", "byte", "int", "time", "float"]
+let limited_ord_types__mtd       = @main.limited_ord_types.append("obj").append("custom")
+let limited_ord_types__mtd_error = @main.limited_ord_types__mtd.append("error")
+
+let eq_types               = [set "short_string", "token", "bool", "byte", "char", "int", "time", "float", "short_byte_array", "box", "obj", "table", "set", "byte_array", "string", "array", "custom"]
+let comptime_eq_types      = [set "short_string", "token", "bool", "byte", "char", "int", "time", "float", "short_byte_array", "byte_array", "string"]
+let simple_eq_types        = [set "short_string", "token", "bool", "byte", "char", "int", "time", "short_byte_array"]
+let simple_eq_types__float = [set "short_string", "token", "bool", "byte", "char", "int", "time", "float", "short_byte_array"]
+
+let look_types = [set "short_string", "token", "bool", "byte", "char", "int", "time", "float", "short_byte_array", "obj", "table", "set", "byte_array", "string", "array", "custom"]
+
+let shared_types             = [set "short_string", "token", "bool", "byte", "char", "int", "time", "float", "short_fn", "short_byte_array", "box", "obj", "table", "set", "byte_array", "string", "array", "fn", "custom"]
+let shared_types__error      = @main.shared_types.append("error")
+let shared_types__null_error = @main.shared_types__error.append("null")
+let always_shared_types      = [set "short_string", "token", "bool", "byte", "char", "int", "time", "float", "short_fn", "short_byte_array", "byte_array", "string"]

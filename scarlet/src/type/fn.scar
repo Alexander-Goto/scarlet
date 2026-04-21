@@ -1,0 +1,18 @@
+fn prepare_types_for_cmp(types) {
+     let maybe_short_string     = "short_string".in?(types)
+     let maybe_long_string      = "string".in?(types)
+     let maybe_short_byte_array = "short_byte_array".in?(types)
+     let maybe_long_byte_array  = "byte_array".in?(types)
+
+     let types = if maybe_short_string == maybe_long_string
+          types
+     else if maybe_short_string
+          types.append("string")
+     else types.append("short_string")
+
+     if maybe_short_byte_array == maybe_long_byte_array
+          types
+     else if maybe_short_byte_array
+          types.append("byte_array")
+     else types.append("short_byte_array")
+}

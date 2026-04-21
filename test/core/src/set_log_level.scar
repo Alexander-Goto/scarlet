@@ -1,0 +1,17 @@
+`noinline`
+fn test__set_log_level() {
+     test(set_log_level(@core.log_lvl__maximum).null?())
+     test(set_log_level(@core.log_lvl__very_important).null?())
+     test(set_log_level(@core.log_lvl__important).null?())
+     test(set_log_level(@core.log_lvl__require_attention).null?())
+     test(set_log_level(@core.log_lvl__may_require_attention).null?())
+     test(set_log_level(@core.log_lvl__hint).null?())
+     test(set_log_level(@core.log_lvl__minimum).null?())
+
+     test(set_log_level(expected_error(:1, heap_string(), heap_string())).get_error_id() === :1)
+     test(set_log_level(heap_string()).get_error_id() === :invalid_type)
+     test(set_log_level(@core.log_lvl__minimum.scarlet__erase_info() - 1).get_error_id() === :out_of_bounds)
+     test(set_log_level(@core.log_lvl__maximum.scarlet__erase_info() + 1).get_error_id() === :out_of_bounds)
+     test(set_log_level(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(set_log_level(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+}

@@ -1,0 +1,28 @@
+fn ir__core_fn_sort_stable_sort(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box array, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box is_asc_order, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ array:code:text ++ ", " ++ is_asc_order:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+     array.maybe_has_type!(valid_types)
+     is_asc_order.maybe_has_type!("bool")
+
+     if array:comptime_val:type === "obj" && array:comptime_val:value[:_][if fn_ir_name[8] == 'o'; :core_sort else :core_stable_sort].null?()
+          error__invalid_type(array:code, if fn_ir_name[8] == 'o'; ".core_sort" else ".core_stable_sort", "obj")
+     else null
+
+     ir__fn_call(
+          fn_ir_name, [array array, is_asc_order], code
+
+          if array:possible_types.null?()
+               valid_types.append("error")
+          else if array.has_type?([set "short_string", "string", "short_byte_array", "byte_array"]) && is_asc_order.has_type?("bool")
+               array:possible_types
+          else array:possible_types.filter(_.in?(valid_types)).append("error")
+
+          exp_data, ir, final_data, dependencies, src_gconsts, is_last
+     )
+}

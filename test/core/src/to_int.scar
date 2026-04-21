@@ -1,0 +1,164 @@
+let const__to_int = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_int = fn (const) const:value.to_int()
+     ]
+]
+
+fn to_const__to_int(arg) new (@main.const__to_int):value <= arg
+
+fn to_custom_const__to_int(arg) custom__create(
+     arg
+     [obj
+          :core_to_int = fn (const) custom__get_data(const).to_int()
+     ]
+)
+
+let broken_const__to_int = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_int = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_const__to_int(arg) new (@main.broken_const__to_int):value <= arg
+
+fn to_broken_custom_const__to_int(arg) custom__create(
+     arg
+     [obj
+          :core_to_int = fn (_) heap_string()
+     ]
+)
+
+let error_const__to_int = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_int = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__to_int(arg) new (@main.error_const__to_int):value <= arg
+
+fn to_error_custom_const__to_int(arg) custom__create(
+     arg
+     [obj
+          :core_to_int = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__to_int() {
+     test("0".to_int() === 0)
+     test("+0".to_int() === 0)
+     test("1".to_int() === 1)
+     test("01".to_int() === 1)
+     test("000000000000001".to_int() === 1)
+     test("0000000000000001".to_int() === 1)
+     test(("00000000000000001" ++ "0")[1, 17].to_int() === 1)
+     test("12".to_int() === 12)
+     test("1231311123".to_int() === 1231311123)
+     test("+1".to_int() === 1)
+     test("+01".to_int() === 1)
+     test("+000000000000001".to_int() === 1)
+     test("+0000000000000001".to_int() === 1)
+     test(("0+000000000000001" ++ "0")[1, 17].to_int() === 1)
+     test("+12".to_int() === 12)
+     test("+1231311123".to_int() === 1231311123)
+     test("-1".to_int() === -1)
+     test("-01".to_int() === -1)
+     test("-000000000000001".to_int() === -1)
+     test("-0000000000000001".to_int() === -1)
+     test(("0-000000000000001" ++ "0")[1, 17].to_int() === -1)
+     test("-12".to_int() === -12)
+     test("-1231311123".to_int() === -1231311123)
+     test("9223372036854775807".to_int() === 9223372036854775807)
+     test("-9223372036854775808".to_int() === -9223372036854775808)
+
+     let int = rnd()
+     test(int.to_string().to_int() === int)
+
+     test(0b00.to_int() === 0)
+     test(0b01.to_int() === 1)
+     test(0b10.to_int() === 16)
+     test(0bff.to_int() === 255)
+     test(0bfe.to_int() === 254)
+     test(0bef.to_int() === 239)
+
+     test('\000001'.to_int() === 1)
+     test('\000010'.to_int() === 16)
+     test('\0000ff'.to_int() === 255)
+     test('\0000fe'.to_int() === 254)
+     test('\0000ef'.to_int() === 239)
+     test(' '.to_int() === 32)
+     test('a'.to_int() === 97)
+
+     test(0.to_int() === 0)
+     test(1.to_int() === 1)
+     test(9223372036854775807.to_int() === 9223372036854775807)
+     test(-1.to_int() === -1)
+     test(-9223372036854775808.to_int() === -9223372036854775808)
+
+     let int = rnd()
+     test(int.scarlet__erase_info().to_int() === int)
+
+     test(assemble_time(0, 2058, 3, 17, 18, 25, 35).to_int() === 2783615135)
+     test(assemble_time(0, 2010, 8, 13, 23, 14, 57).to_int() === 1281741297)
+
+     test(0.0.to_int() === 0)
+     test(-0.0.to_int() === 0)
+     test(0.1.to_int() === 0)
+     test(-0.1.to_int() === 0)
+     test(0.9.to_int() === 0)
+     test(-0.9.to_int() === 0)
+     test(1.2.to_int() === 1)
+     test(123.55.to_int() === 123)
+     test(-1.5.to_int() === -1)
+     test(-9223372036854775808.0.to_int() === -9223372036854775808)
+
+     test(256.9.to_const__to_int().to_int() === 256)
+     test(1.0.to_const__to_int().to_int() === 1)
+
+     test(256.9.to_custom_const__to_int().to_int() === 256)
+     test(1.0.to_custom_const__to_int().to_int() === 1)
+
+     test(expected_error(:1, heap_string(), heap_string()).to_int().get_error_id() === :1)
+
+     test(heap_table().to_int().get_error_id() === :invalid_type)
+
+     test("".to_int().null?())
+     test("+-10".to_int().null?())
+     test("-+10".to_int().null?())
+     test("1-0".to_int().null?())
+     test("1+0".to_int().null?())
+     test("1 0".to_int().null?())
+     test("\000001".to_int().null?())
+     test(("+-10" ++ "0".repeat(16)).to_int().null?())
+     test(("-+10" ++ "0".repeat(16)).to_int().null?())
+     test(("1-0" ++ "0".repeat(16)).to_int().null?())
+     test(("1+0" ++ "0".repeat(16)).to_int().null?())
+     test(("1 0" ++ "0".repeat(16)).to_int().null?())
+     test("\000001".repeat(16).to_int().null?())
+     test("0x123".to_int().null?())
+     test("fe".to_int().null?())
+
+     test("1".repeat(100).to_int().null?())
+     test("9223372036854775808".to_int().null?())
+     test("-9223372036854775809".to_int().null?())
+     test("18446744073709551616".to_int().null?())
+     test("18446744073709551615".to_int().null?())
+
+     test(9223372036854775808.0.to_int().null?())
+     test(-9223372036854777856.0.to_int().null?())
+     test(18446744073709551616.0.to_int().null?())
+     test(nan().to_int().null?())
+     test(inf().to_int().null?())
+     test(neg_inf().to_int().null?())
+
+     test(to_broken_const__to_int("").to_int().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__to_int("").to_int().get_error_id() === :invalid_type)
+     test(to_error_const__to_int("").to_int().get_error_id() === :3)
+     test(to_error_custom_const__to_int("").to_int().get_error_id() === :4)
+}

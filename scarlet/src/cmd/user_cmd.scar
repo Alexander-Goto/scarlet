@@ -1,0 +1,96 @@
+let user_cmd = get_user_cmd()
+
+let t_user_cmd = [obj
+     :cmd         = :help   # (:help|:version|:compile)
+     :module_name = ""
+     :modules     = [array] # [array @string*]
+     :sources     = [array] # [array @string*]
+     :out         = ""
+]
+
+fn get_user_cmd() {
+     let cmd = new (@main.t_user_cmd):cmd <= if @core.cli_args.empty?(); :help else :compile
+
+     let [box cmd] = @core.cli_args.foldl([box cmd, :nothing], fn (state, arg) {
+          let [box cmd, recived] = state
+
+          switch arg
+          case "-h", "--help":
+               if @core.cli_args.len() == 1
+                    [box new (cmd):cmd <= :help, :nothing]
+               else error__flag_not_alone(arg)
+          case "-v", "--version":
+               if @core.cli_args.len() == 1
+                    [box new (cmd):cmd <= :version, :nothing]
+               else error__flag_not_alone(arg)
+          case "-n", "--name":
+               if cmd:module_name.empty?()
+                    [box cmd, :module_name]
+               else error__flag_set_twice(arg)
+          case "-m", "--modules":
+               [box cmd, :modules]
+          case "-s", "--sources":
+               [box cmd, :sources]
+          case "-o", "--out":
+               if cmd:out.empty?()
+                    [box cmd, :out]
+               else error__flag_set_twice(arg)
+          default:
+               if arg.first() == '-'
+                    error__unknown_flag(arg)
+               else switch recived
+                    case :module_name: {
+                         let correct_name = arg.filter(fn (char) char.ascii_lower?() || char.ascii_digit?() || char == '_')
+                         if correct_name /= arg || arg.empty?() || not arg.first().ascii_lower?()
+                              error__invalid_module_name(arg)
+                         else null
+
+                         if arg == "core"
+                              error__src_module_in_bin_modules("core")
+                         else null
+
+                         [box new (cmd):module_name <= arg, :nothing]
+                    }
+                    case :modules:
+                         [box new (cmd):modules => _.append(arg), :modules]
+                    case :sources:
+                         [box new (cmd):sources => _.append(arg), :sources]
+                    case :out:
+                         [box new (cmd):out <= arg, :nothing]
+                    default:
+                         error__unknown_flag(arg)
+     })
+
+     if cmd:cmd == :compile {
+          if cmd:sources.empty?()
+               error__no_sources()
+          else null
+
+          if cmd:out.empty?()
+               error__no_out()
+          else null
+
+          if cmd:module_name.empty?()
+               error__no_name()
+          else null
+     } else null
+
+     cmd
+}
+
+fn run_user_cmd(cmd)
+     switch cmd:cmd
+     case :help:
+          println(@main.msg__help)
+     case :version:
+          println(@main.msg__version)
+     case :compile: {
+          let final_data = cmd:modules.load_modules()
+          let final_data = cmd:sources.load_sources(final_data)
+
+          if @main.compiled_module_name == "main"
+               create_application(final_data)
+          else create_module(final_data)
+     }
+     default:
+          unreachable()

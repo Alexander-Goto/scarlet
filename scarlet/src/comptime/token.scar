@@ -1,0 +1,9 @@
+fn comptime_token(value, code)
+     new (@main.t_operand) {
+          :code           <= code
+          :possible_types <= [set "token"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "token"
+               :value <= value
+          }
+     }

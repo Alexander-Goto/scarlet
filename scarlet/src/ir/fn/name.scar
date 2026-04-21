@@ -1,0 +1,21 @@
+fn fn__ir_name_to_full_name(name) {
+     let fn_id_idx = 'F'.look_in(name)
+
+     let name = name.self_copy(1, 0, fn_id_idx)
+     let name = new (name)[fn_id_idx - 1] <= '.'
+
+     let suffix_idx = name.foldr_kv(0, fn (_, idx, char) break(not char.ascii_upper?(), idx + 1))
+     let name       = switch name.drop(suffix_idx)
+     case "B":
+          new (name)[name.len() - 1] <= '?'
+     case "A":
+          new (name)[name.len() - 1] <= '!'
+     case "AAA":
+          copy(name, name.len() - 3, "!!!")
+     case "":
+          name
+     default: unreachable()
+
+     let name = name.self_copy(fn_id_idx + 2, fn_id_idx, name.len() - fn_id_idx - 2)
+     name.take(name.len() - 2)
+}

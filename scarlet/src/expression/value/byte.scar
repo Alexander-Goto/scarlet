@@ -1,0 +1,13 @@
+let t_byte = [obj
+     :scar_type = "t_byte"
+     :value     = @main.t_token
+]
+
+fn byte_to_operand(byte, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let operand = comptime_byte(byte:value:text.drop(2).parse_int(16).to_byte(), byte:value)
+     if is_last {
+          let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+          [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+     } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+}

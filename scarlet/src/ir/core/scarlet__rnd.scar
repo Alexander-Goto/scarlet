@@ -1,0 +1,11 @@
+let scarlet__rnd = rnd()
+
+fn ir__scarlet__rnd(rnd_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let rnd = comptime_int(@main.scarlet__rnd, new (rnd_exp:name):text => _ ++ "()")
+
+     if is_last {
+          let [box rnd, final_data, dependencies] = rnd.has_ir!(final_data, dependencies)
+
+          [box rnd, exp_data, ir__raw_return(ir, rnd:ir), final_data, dependencies, src_gconsts]
+     } else [box rnd, exp_data, ir, final_data, dependencies, src_gconsts]
+}

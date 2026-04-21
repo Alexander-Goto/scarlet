@@ -1,0 +1,100 @@
+let set__append_new = [obj
+     :value = [set]
+
+     :_ = [obj
+          :core_append_new = fn (set, item) to_set__append_new(set:value.append_new(item))
+          :core___equal__  = fn (set_1, set_2) set_1:value === set_2:value
+     ]
+]
+
+fn to_set__append_new(arg) new (@main.set__append_new):value <= arg
+
+fn to_custom_set__append_new(arg) custom__create(
+     arg
+     [obj
+          :core_append_new = fn (set, item) to_custom_set__append_new(set.custom__get_data().append_new(item))
+          :core___equal__  = fn (set_1, set_2) set_1.custom__get_data() === set_2.custom__get_data()
+     ]
+)
+
+let broken_set__append_new = [obj
+     :value = [set]
+
+     :_ = [obj
+          :core_append_new = fn (_, _) heap_table()
+     ]
+]
+
+fn to_broken_set__append_new(arg) new (@main.broken_set__append_new):value <= arg
+
+fn to_broken_custom_set__append_new(arg) custom__create(
+     arg
+     [obj
+          :core_append_new = fn (_, _) heap_table()
+     ]
+)
+
+let error_set__append_new = [obj
+     :value = [set]
+
+     :_ = [obj
+          :core_append_new = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_set__append_new(arg) new (@main.error_set__append_new):value <= arg
+
+fn to_error_custom_set__append_new(arg) custom__create(
+     arg
+     [obj
+          :core_append_new = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__append_new() {
+     test([set].append_new(1) === [set 1])
+     test([set 1].append_new(2) === [set 1, 2])
+     test([set 1, 2, 3, 4, 5].append_new(6) === [set 1, 2, 3, 4, 5, 6])
+     test([set].append_new("0123456789abcde".append('f')) === [set "0123456789abcdef"])
+     test([set "0123456789abcde".append('f')].append_new("1023456789abcde".append('f')) === [set "0123456789abcdef", "1023456789abcdef"])
+
+     let set = [set "0123456789abcde".append('f')].append_new("1123456789abcde".append('f'))
+     test(set.append_new("2123456789abcde".append('f')) === [set "0123456789abcdef", "1123456789abcdef", "2123456789abcdef"])
+     test(set.append_new(set) === [set "0123456789abcdef", "1123456789abcdef", [set "0123456789abcdef", "1123456789abcdef"]])
+     set.ignore()
+
+     let set = [set "0123456789abcde".append('f')].append_new("1123456789abcde".append('f'))
+     test(set.append_new(set) === [set "0123456789abcdef", "1123456789abcdef", [set "0123456789abcdef", "1123456789abcdef"]])
+
+     test([set].to_set__append_new().append_new(1) === [set 1].to_set__append_new())
+     test([set 1].to_set__append_new().append_new(2) === [set 1, 2].to_set__append_new())
+     test([set 1, 2, 3, 4, 5].to_set__append_new().append_new(7) === [set 1, 2, 3, 4, 5, 7].to_set__append_new())
+
+     test([set].to_custom_set__append_new().append_new(1) === [set 1].to_custom_set__append_new())
+     test([set 1].to_custom_set__append_new().append_new(2) === [set 1, 2].to_custom_set__append_new())
+     test([set 1, 2, 3, 4, 5].to_custom_set__append_new().append_new(7) === [set 1, 2, 3, 4, 5, 7].to_custom_set__append_new())
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.append_new(1).get_error_id() === :1)
+     test([set].append_new(error_1).get_error_id() === :1)
+     test(error_1.append_new(error_2).get_error_id() === :1)
+     test(error_2.append_new(error_1).get_error_id() === :2)
+     test(error_1.append_new(heap_string()).get_error_id() === :1)
+     test(heap_string().append_new(error_1).get_error_id() === :1)
+
+     test(1.0.scarlet__erase_info().append_new(1).get_error_id() === :invalid_type)
+     test(heap_string().append_new(heap_string()).get_error_id() === :invalid_type)
+     test([set].append_new(null.scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([set].append_new([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+
+     test([set heap_string()].append_new(heap_string()).null?())
+     test([set 1, heap_string()].append_new(heap_string()).null?())
+     test([set 1, heap_string()].append_new(1).null?())
+
+     test(to_broken_set__append_new([set]).append_new(heap_string()).get_error_id() === :invalid_type)
+     test(to_broken_custom_set__append_new([set]).append_new(heap_string()).get_error_id() === :invalid_type)
+     test(to_error_set__append_new([set]).append_new(heap_string()).get_error_id() === :3)
+     test(to_error_custom_set__append_new([set]).append_new(heap_string()).get_error_id() === :4)
+}

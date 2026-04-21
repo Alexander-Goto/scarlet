@@ -1,0 +1,3 @@
+fn nan() 0.0/0.0.scarlet__erase_info()
+fn inf() 1.0/0.0.scarlet__erase_info()
+fn neg_inf() -1.0/0.0.scarlet__erase_info()

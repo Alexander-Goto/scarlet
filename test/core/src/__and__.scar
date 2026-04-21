@@ -1,0 +1,136 @@
+let num__and = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___and__   = fn (num_1, num_2) to_num__and(num_1:value & num_2:value)
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__and(arg) new (@main.num__and):value <= arg
+
+fn to_custom_num__and(arg) custom__create(
+     arg
+     [obj
+          :core___and__   = fn (num_1, num_2) to_custom_num__and(num_1.custom__get_data() & num_2.custom__get_data())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__and = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___and__ = fn (_, _) heap_string()
+     ]
+]
+
+fn to_broken_num__and(arg) new (@main.broken_num__and):value <= arg
+
+fn to_broken_custom_num__and(arg) custom__create(
+     arg
+     [obj
+          :core___and__ = fn (_, _) heap_string()
+     ]
+)
+
+let error_num__and = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___and__ = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__and(arg) new (@main.error_num__and):value <= arg
+
+fn to_error_custom_num__and(arg) custom__create(
+     arg
+     [obj
+          :core___and__ = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test____and__() {
+     test((0b00 & 0b00) === 0b00)
+     test((0b00 & 0b01) === 0b00)
+     test((0b01 & 0b00) === 0b00)
+     test((0b01 & 0b01) === 0b01)
+     test((0bf0 & 0b01) === 0b00)
+     test((0b01 & 0bf0) === 0b00)
+     test((0b0f & 0b0f) === 0b0f)
+     test((0bff & 0b00) === 0b00)
+     test((0b00 & 0bff) === 0b00)
+     test((0bff & 0b01) === 0b01)
+     test((0b01 & 0bff) === 0b01)
+     test((0bff & 0b25) === 0b25)
+     test((0b25 & 0bff) === 0b25)
+     test((0bff & 0bff) === 0bff)
+     test((0b54 & 0b45) === 0b44)
+     test((0b54 & 0b15) === 0b14)
+
+     test((0 & 0) === 0)
+     test((0 & 1) === 0)
+     test((1 & 0) === 0)
+     test((1 & 1) === 1)
+     test((0 & -1) === 0)
+     test((-1 & 0) === 0)
+     test((-1 & -1) === -1)
+     test((-1 & 1) === 1)
+     test((-708044971986000615 & 8401028929648066925) === 8359807122028101897)
+     test((-1964724193136850828 & -708044971986000615) === -2006207669491974128)
+     test((-9223372036854775808 & 0) === 0)
+     test((0 & -9223372036854775808) === 0)
+     test((1 & -9223372036854775808) === 0)
+     test((-1 & -9223372036854775808) === -9223372036854775808)
+     test((-9223372036854775808 & -9223372036854775808) === -9223372036854775808)
+     test((9223372036854775807 & 0) === 0)
+     test((0 & 9223372036854775807) === 0)
+     test((1 & 9223372036854775807) === 1)
+     test((-1 & 9223372036854775807) === 9223372036854775807)
+     test((9223372036854775807 & 9223372036854775807) === 9223372036854775807)
+
+     test((to_num__and(0) & to_num__and(0)) === to_num__and(0))
+     test((to_num__and(-708044971986000615) & to_num__and(8401028929648066925)) === to_num__and(8359807122028101897))
+
+     test((to_custom_num__and(0) & to_custom_num__and(0)) === to_custom_num__and(0))
+     test((to_custom_num__and(-708044971986000615) & to_custom_num__and(8401028929648066925)) === to_custom_num__and(8359807122028101897))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let string  = heap_string()
+     test((error_1 & 1).get_error_id() === :1)
+     test((1 & error_1).get_error_id() === :1)
+     test((error_1 & error_2).get_error_id() === :1)
+     test((error_2 & error_1).get_error_id() === :2)
+     test((error_1 & string).get_error_id() === :1)
+     test((string & error_1).get_error_id() === :1)
+
+     test((string & string).get_error_id() === :invalid_type)
+     test((string & 1).get_error_id() === :invalid_type)
+     test((1 & string).get_error_id() === :invalid_type)
+     test((1 & 0b11.scarlet__erase_info()).get_error_id() === :invalid_type)
+     test((0b11.scarlet__erase_info() & 1).get_error_id() === :invalid_type)
+
+     test((to_num__and(1) & error_1).get_error_id() === :1)
+     test((error_1 & to_num__and(1)).get_error_id() === :1)
+     test((to_num__and(1) & string).get_error_id() === :invalid_type)
+     test((string & to_num__and(1)).get_error_id() === :invalid_type)
+     test((to_num__and(1) & 1).get_error_id() === :invalid_type)
+     test((1 & to_num__and(1)).get_error_id() === :invalid_type)
+     test((to_num__and(1) & to_num__and(0b11)).get_error_id() === :invalid_type)
+
+     test((to_custom_num__and(1) & error_1).get_error_id() === :1)
+     test((error_1 & to_custom_num__and(1)).get_error_id() === :1)
+     test((to_custom_num__and(1) & string).get_error_id() === :invalid_type)
+     test((string & to_custom_num__and(1)).get_error_id() === :invalid_type)
+     test((to_custom_num__and(1) & 1).get_error_id() === :invalid_type)
+     test((1 & to_custom_num__and(1)).get_error_id() === :invalid_type)
+     test((to_custom_num__and(1) & to_custom_num__and(0b11)).get_error_id() === :invalid_type)
+
+     test((to_broken_num__and(1) & to_broken_num__and(0)).get_error_id() === :invalid_type)
+     test((to_broken_custom_num__and(1) & to_broken_custom_num__and(0)).get_error_id() === :invalid_type)
+     test((to_error_num__and(1) & to_error_num__and(0)).get_error_id() === :3)
+     test((to_error_custom_num__and(1) & to_error_custom_num__and(0)).get_error_id() === :4)
+}

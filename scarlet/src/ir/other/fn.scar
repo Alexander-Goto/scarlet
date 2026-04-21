@@ -1,0 +1,153 @@
+fn ir__fn_arg(idx, code, ir) {
+     let idx = idx.to_string()
+     let reg = "__a" ++ idx
+
+     [box
+          new (@main.t_operand) {
+               :code <= code
+               :ir   <= reg
+          }
+
+          ir ++ "t_any const " ++ reg ++ "=args[" ++ idx ++ "];\n"
+     ]
+}
+
+fn ir__borrowed(original_operand, idx, ir) {
+     let idx = idx.to_string()
+     let reg = "__b" ++ idx
+     [box new (original_operand):ir <= reg, ir ++ "t_any const " ++ reg ++ "=thrd_data->borrowed_data[" ++ idx ++ "];\n"]
+}
+
+fn ir__make_fn_metadata(params_len, params_capacity, borrowed_len, is_linear_alloc, holders_mask) {
+     let metadata = format_int(params_len | params_capacity << 5 | borrowed_len << 10 | (if is_linear_alloc; 1 else 0) << 26 | holders_mask << 27, 16, false)
+     let metadata = "0".repeat(14 - metadata.len()) ++ metadata
+
+     "0x" ++ metadata[12, 14] ++ ",0x" ++ metadata[10, 12] ++ ",0x" ++ metadata[8, 10] ++ ",0x" ++ metadata[6, 8] ++
+     ",0x" ++ metadata[4, 6] ++ ",0x" ++ metadata[2, 4] ++ ",0x" ++ metadata[0, 2]
+}
+
+fn ir__partial_application(fn_ir_name, args, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let [box holders_qty, is_comptime] = args.foldl([box 0, true], fn (state, arg) {
+          let [box holders_qty, is_comptime] = state
+
+          if arg.has_type?(@main.not_copyable_types__error)
+               error__invalid_type(arg:code, @main.copyable_not_error_types, arg:possible_types)
+          else null
+
+          [box
+               if arg.has_type?("holder"); holders_qty + 1 else holders_qty
+               is_comptime && not arg:comptime_val.null?()
+          ]
+     })
+
+     let [box result_operand, exp_data, ir, final_data, dependencies] = if is_comptime
+          [box comptime_fn(fn_ir_name, args.map(_:comptime_val), [array], true, code), exp_data, ir, final_data, dependencies]
+     else {
+          let [box args, final_data, dependencies]   = operands_have_ir!(args, final_data, dependencies)
+          let [box result_maybe_error, holders_mask] = args.foldl_kv([box false, 0], fn (state, idx, arg) {
+               let [box result_maybe_error, holders_mask] = state
+
+               [box
+                    result_maybe_error || arg.maybe_has_type?(@main.not_copyable_types__error)
+                    if arg.has_type?("holder"); holders_mask | 1 << idx else holders_mask
+               ]
+          })
+
+          let [box memory_reg, exp_data]        = exp_data.new_reg()
+          let mem_size_ir                       = ((args.len() + 1) * 16).to_ir_num()
+          let [box ir, idx_reg, exp_data, fn_ir_operand] = if is_linear_alloc {
+               let [box idx_reg, exp_data] = exp_data.new_reg()
+               let fn_ir_operand           = "(const t_any){.structure={.value=" ++ idx_reg ++ ",.data={" ++ ir__make_fn_metadata(holders_qty, args.len(), 0, true, holders_mask) ++ "},.type=tid__fn}}"
+               let ir                      = ir ++ "u64 const " ++ idx_reg ++ "=linear__alloc(&thrd_data->linear_allocator," ++ mem_size_ir ++ ",16);\n" ++
+                    "t_any*const " ++ memory_reg ++ "=linear__get_mem_of_last(&thrd_data->linear_allocator);\n"
+
+               [box ir, idx_reg, exp_data, fn_ir_operand]
+          } else {
+               let fn_ir_operand = "(const t_any){.structure={.value=(u64)" ++ memory_reg ++ ",.data={" ++ ir__make_fn_metadata(holders_qty, args.len(), 0, false, holders_mask) ++ "},.type=tid__fn}}"
+               let ir            = ir ++ "t_any*const " ++ memory_reg ++ "=aligned_alloc(16," ++ mem_size_ir ++ ");\n"
+
+               [box ir, null, exp_data, fn_ir_operand]
+          }
+
+          let [box result_reg, exp_data] = exp_data.new_reg()
+          let ir                         = ir ++ (if result_maybe_error; "t_any " else "t_any const ") ++
+               result_reg ++ "=" ++ fn_ir_operand ++ ";\n"
+
+          let [box ir__is_error, ir__error_actions] = if not result_maybe_error
+               null
+          else args.foldl([box "", if is_linear_alloc; "linear__free(&thrd_data->linear_allocator," ++ idx_reg ++ ");\n" else "free(" ++ memory_reg ++ ");\n", false], fn (state, arg) {
+               let [box ir__is_error, ir__error_actions, fn_maybe_error] = state
+
+               let ir__free_arg = arg.dec_ref_cnt("")
+
+               if not arg.maybe_has_type?(@main.not_copyable_types__error)
+                    [box ir__is_error, ir__error_actions ++ ir__free_arg, fn_maybe_error]
+               else {
+                    let ir__type_check             = "type_is_not_copyable_or_error(" ++ arg:ir ++ ".bytes[15])"
+                    let ir__is_error               = (if ir__is_error.empty?(); "" else ir__is_error ++ "||") ++ ir__type_check
+                    let arg_maybe_error            = arg.maybe_has_type?("error")
+                    let ir__set_invalid_type_error = ir__free_arg ++ result_reg ++ "=error__invalid_type(thrd_data," ++ exp_data:owner_name_ir_const ++ ");\n"
+                    let ir__error_actions          = ir__raw_if(
+                         ir__error_actions
+
+                         ir__type_check ++ (if fn_maybe_error; "&&" ++ result_reg ++ ".bytes[15]!=tid__error" else "")
+                         :unknown
+                         if arg_maybe_error
+                              ir__raw_if(
+                                   ""
+
+                                   arg:ir ++ ".bytes[15]==tid__error"
+                                   :unknown
+                                   result_reg ++ "=" ++ arg:ir ++ ";\n"
+
+                                   if arg.maybe_has_type?(@main.not_copyable_types); ir__set_invalid_type_error else ir__free_arg
+                              )
+                         else ir__set_invalid_type_error
+
+                         ir__free_arg
+                    )
+
+                    [box ir__is_error, ir__error_actions, true]
+               }
+          })
+
+          let [box ir__create_fn, final_data, dependencies] = ir__memcpy_items(
+               memory_reg, 1, args
+
+               memory_reg ++ "[0]=(const t_any){.qwords={1,(u64)" ++ fn_ir_name ++ "}};\n"
+
+               final_data, dependencies
+          )
+
+          let ir = if not result_maybe_error
+               ir ++ ir__create_fn
+          else ir__raw_if(
+               ir
+
+               ir__is_error
+               :unlikely
+               ir__error_actions
+
+               ir__create_fn
+          )
+
+          let type = if result_maybe_error; [set "fn", "error"] else [set "fn"]
+          let ir   = ir__assume_type(result_reg, type, ir)
+
+          [box
+               new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= type
+               }
+
+               exp_data, ir, final_data, dependencies
+          ]
+     }
+
+     if is_last {
+          let [box result_operand, final_data, dependencies] = result_operand.has_ir!(final_data, dependencies)
+
+          [box result_operand, exp_data, ir__raw_return(ir, result_operand:ir), final_data, dependencies, src_gconsts]
+     } else [box result_operand, exp_data, ir, final_data, dependencies, src_gconsts]
+}

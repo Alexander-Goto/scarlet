@@ -1,0 +1,83 @@
+let num__sin = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_sin       = fn (num) to_num__sin(num:value.sin())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__sin(arg) new (@main.num__sin):value <= arg
+
+fn to_custom_num__sin(arg) custom__create(
+     arg
+     [obj
+          :core_sin       = fn (num) to_custom_num__sin(num.custom__get_data().sin())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__sin = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_sin = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__sin(arg) new (@main.broken_num__sin):value <= arg
+
+fn to_broken_custom_num__sin(arg) custom__create(
+     arg
+     [obj
+          :core_sin = fn (_) heap_string()
+     ]
+)
+
+let error_num__sin = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_sin = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__sin(arg) new (@main.error_num__sin):value <= arg
+
+fn to_error_custom_num__sin(arg) custom__create(
+     arg
+     [obj
+          :core_sin = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__sin() {
+     test(0.0.sin().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(-0.0.sin().scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test(0.1.sin().in_range?(0.09, 0.1))
+     test(-0.1.sin().in_range?(-0.1, -0.09))
+     test(1.0.sin().in_range?(0.84, 0.85))
+     test(-1.0.sin().in_range?(-0.85, -0.84))
+     test(123.3.sin().in_range?(-0.71, -0.70))
+     test(-123.3.sin().in_range?(0.70, 0.71))
+     test(inf().sin().nan?())
+     test(neg_inf().sin().nan?())
+     test(nan().sin().nan?())
+
+     test(to_num__sin(0.0).sin():value.in_range?(-0.01, 0.01))
+     test(to_num__sin(-1.0).sin():value.in_range?(-0.85, -0.84))
+
+     test(to_custom_num__sin(0.0).sin().custom__get_data().in_range?(-0.01, 0.01))
+     test(to_custom_num__sin(-1.0).sin().custom__get_data().in_range?(-0.85, -0.84))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     let string  = heap_string()
+     test(error.sin().get_error_id() === :1)
+     test(string.sin().get_error_id() === :invalid_type)
+
+     test(to_broken_num__sin(1.0).sin().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__sin(1.0).sin().get_error_id() === :invalid_type)
+     test(to_error_num__sin(1.0).sin().get_error_id() === :3)
+     test(to_error_custom_num__sin(1.0).sin().get_error_id() === :4)
+}

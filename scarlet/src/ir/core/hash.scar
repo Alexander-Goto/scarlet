@@ -1,0 +1,28 @@
+fn ir__core_fn_hash(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box seed, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ (arg:code:text ++ ", " ++ seed:code:text ++ ")")
+
+     arg.maybe_has_type!(@main.all_hash_map_key_types)
+     seed.maybe_has_type!("int")
+
+     if arg:comptime_val.null?() || seed:comptime_val.null?() || not arg:comptime_val:type.in?(@main.always_hash_map_key_types) {
+          ir__fn_call(
+               "McoreFNhash", [array arg, seed], code
+               if arg.has_type?(@main.always_hash_map_key_types); [set "int"] else [set "int", "error"]
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     }
+     else {
+          let operand = comptime_int(hash(arg:comptime_val:value, seed:comptime_val:value), code)
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

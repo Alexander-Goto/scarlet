@@ -1,0 +1,14 @@
+fn merge_branches(main_branch, other_branches) {
+     let main_branch = other_branches.foldl(main_branch, fn (main_branch, current_branch)
+          current_branch.foldl_kv(main_branch, fn (main_branch, def_id, _) new (main_branch)[def_id] <= null)
+     )
+
+     other_branches.foldl(main_branch, fn (main_branch, current_branch)
+          current_branch.foldl_kv(main_branch, fn (main_branch, def_id, new_use_data)
+               new (main_branch)[def_id] => fn (existed_use_data)
+                    if existed_use_data.null?()
+                         new_use_data
+                    else new_use_data.foldl_kv(existed_use_data, fn (existed_use_data, use_id, contexts) new (existed_use_data)[use_id] <= contexts)
+          )
+     )
+}

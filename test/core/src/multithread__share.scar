@@ -1,0 +1,143 @@
+`noinline`
+fn test__multithread__share() {
+     let [box in, out] = make_channel()
+
+     let string  = loop(rnd_string(), fn (string) if string.short_type?(); rnd_string() else [breaker string])
+     let address = string.scarlet__split!!!()[0]
+     push(in, string)
+     test(pop(out).scarlet__split!!!()[0] =/= address)
+     push(in, string)
+     test(pop(out).scarlet__split!!!()[0] === address)
+
+     let string = "b" ++ "a".repeat(16) ++ "b"
+     push(in, string[1, 17])
+     test(pop(out) === "a".repeat(16))
+     push(in, string[1, 17])
+     test(pop(out) === "a".repeat(16))
+
+     let array   = loop(rnd_byte_array(), fn (array) if array.short_type?(); rnd_byte_array() else [breaker array])
+     let address = array.scarlet__split!!!()[0]
+     push(in, array)
+     test(pop(out).scarlet__split!!!()[0] =/= address)
+     push(in, array)
+     test(pop(out).scarlet__split!!!()[0] === address)
+
+     let array = u"b" ++ u"a".repeat(16) ++ u"b"
+     push(in, array[1, 17])
+     test(pop(out) === u"a".repeat(16))
+     push(in, array[1, 17])
+     test(pop(out) === u"a".repeat(16))
+
+     let obj     = rnd_string_obj()
+     let address = obj.scarlet__split!!!()[0]
+     push(in, obj)
+     test(pop(out).scarlet__split!!!()[0] =/= address)
+     push(in, obj)
+     test(pop(out).scarlet__split!!!()[0] === address)
+
+     let obj = "a".repeat(16).foldl_kv([obj], fn (obj, idx, _) new (obj)[idx.to_string().str_to_tkn()] <= "a".repeat(16))
+     push(in, obj)
+     test(pop(out) === "a".repeat(16).foldl_kv([obj], fn (obj, idx, _) new (obj)[idx.to_string().str_to_tkn()] <= "a".repeat(16)))
+     push(in, obj)
+     test(pop(out) === "a".repeat(16).foldl_kv([obj], fn (obj, idx, _) new (obj)[idx.to_string().str_to_tkn()] <= "a".repeat(16)))
+
+     let string  = loop(rnd_string(), fn (string) if string.short_type?(); rnd_string() else [breaker string])
+     let address = string.scarlet__split!!!()[0]
+     let obj     = new (rnd_string_obj()):1 <= string
+     push(in, obj)
+     test(pop(out):1.scarlet__split!!!()[0] =/= address)
+
+     let obj = new (rnd_string_obj()):1 <= string
+     push(in, obj)
+     test(pop(out):1.scarlet__split!!!()[0] === address)
+
+     let table   = rnd_string_table()
+     let address = table.scarlet__split!!!()[0]
+     push(in, table)
+     test(pop(out).scarlet__split!!!()[0] =/= address)
+     push(in, table)
+     test(pop(out).scarlet__split!!!()[0] === address)
+
+     let table = "a".repeat(16).foldl_kv([table], fn (table, idx, _) new (table)[idx.to_string().repeat(16)] <= "a".repeat(16))
+     push(in, table)
+     test(pop(out) === "a".repeat(16).foldl_kv([table], fn (table, idx, _) new (table)[idx.to_string().repeat(16)] <= "a".repeat(16)))
+     push(in, table)
+     test(pop(out) === "a".repeat(16).foldl_kv([table], fn (table, idx, _) new (table)[idx.to_string().repeat(16)] <= "a".repeat(16)))
+
+     let string_1 = loop(rnd_string(), fn (string) if string.short_type?(); rnd_string() else [breaker string])
+     let string_2 = loop(rnd_string(), fn (string) if string.short_type?(); rnd_string() else [breaker string])
+     let address  = string_2.scarlet__split!!!()[0]
+     let table    = new (rnd_string_table())[string_1] <= string_2
+     push(in, table)
+     test(pop(out)[string_1].scarlet__split!!!()[0] =/= address)
+
+     let table = new (rnd_string_table())[string_1] <= string_2
+     push(in, table)
+     test(pop(out)[string_1].scarlet__split!!!()[0] === address)
+
+     let set     = rnd_string_set()
+     let address = set.scarlet__split!!!()[0]
+     push(in, set)
+     test(pop(out).scarlet__split!!!()[0] =/= address)
+     push(in, set)
+     test(pop(out).scarlet__split!!!()[0] === address)
+
+     let set = "a".repeat(16).foldl_kv([set], fn (set, idx, _) set.append(idx.to_string().repeat(16)))
+     push(in, set)
+     test(pop(out) === "a".repeat(16).foldl_kv([set], fn (set, idx, _) set.append(idx.to_string().repeat(16))))
+     push(in, set)
+     test(pop(out) === "a".repeat(16).foldl_kv([set], fn (set, idx, _) set.append(idx.to_string().repeat(16))))
+
+     let string  = loop(rnd_string(), fn (string) if string.short_type?(); rnd_string() else [breaker string])
+     let address = string.scarlet__split!!!()[0]
+     let set     = rnd_string_set().append(string)
+     push(in, set)
+     test(pop(out)[string].scarlet__split!!!()[0] =/= address)
+
+     let set         = rnd_string_set().append(string)
+     let string_copy = " ".repeat(len(string)).copy(0, string)
+     push(in, set)
+     test(pop(out)[string_copy].scarlet__split!!!()[0] === address)
+
+     let array    = rnd_string_array()
+     let address  = array.scarlet__split!!!()[0]
+     push(in, array)
+     test(pop(out).scarlet__split!!!()[0] =/= address)
+     push(in, array)
+     test(pop(out).scarlet__split!!!()[0] === address)
+
+     let array = [array "b".repeat(16)] ++ [array "a".repeat(16)].repeat(16) ++ [array "b".repeat(16)]
+     push(in, array[1, 17])
+     test(pop(out) === [array "a".repeat(16)].repeat(16))
+     push(in, array[1, 17])
+     test(pop(out) === [array "a".repeat(16)].repeat(16))
+
+     let string   = loop(rnd_string(), fn (string) if string.short_type?(); rnd_string() else [breaker string])
+     let address  = string.scarlet__split!!!()[0]
+     let array    = rnd_string_array().append(string)
+     let last_idx = len(array) - 1
+     push(in, array)
+     test(pop(out)[last_idx].scarlet__split!!!()[0] =/= address)
+
+     let array    = rnd_string_array().append(string)
+     let last_idx = len(array) - 1
+     push(in, array)
+     test(pop(out)[last_idx].scarlet__split!!!()[0] === address)
+
+     let string  = loop(rnd_string(), fn (string) if string.short_type?(); rnd_string() else [breaker string])
+     let func    = fn () string
+     let address = func.scarlet__split!!!()[0]
+     push(in, func)
+     test(pop(out).scarlet__split!!!()[0] =/= address)
+     push(in, func)
+     test(pop(out).scarlet__split!!!()[0] === address)
+
+     let address  = string.scarlet__split!!!()[0]
+     let func     = fn () string
+     push(in, func)
+     test(pop(out)().scarlet__split!!!()[0] =/= address)
+
+     let func = fn () string
+     push(in, func)
+     test(pop(out)().scarlet__split!!!()[0] === address)
+}

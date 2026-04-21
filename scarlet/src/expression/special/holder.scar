@@ -1,0 +1,9 @@
+let t_holder = [obj
+     :scar_type = "t_holder"
+     :keyword   = @main.t_token
+]
+
+fn holder_to_operand(holder, exp_data, ir, final_data, dependencies, src_gconsts, is_last, allow_holder)
+     if is_last || not allow_holder
+          error__not_expected_token(holder:keyword, null)
+     else [box comptime_holder(holder:keyword), exp_data, ir, final_data, dependencies, src_gconsts]

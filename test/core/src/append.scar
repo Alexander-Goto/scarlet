@@ -1,0 +1,166 @@
+let array__append = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_append     = fn (array, item) to_array__append(array:value.append(item))
+          :core___equal__  = fn (array_1, array_2) array_1:value === array_2:value
+     ]
+]
+
+fn to_array__append(arg) new (@main.array__append):value <= arg
+
+fn to_custom_array__append(arg) custom__create(
+     arg
+     [obj
+          :core_append     = fn (array, item) to_custom_array__append(array.custom__get_data().append(item))
+          :core___equal__  = fn (array_1, array_2) array_1.custom__get_data() === array_2.custom__get_data()
+     ]
+)
+
+let broken_array__append = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_append = fn (_, _) heap_table()
+     ]
+]
+
+fn to_broken_array__append(arg) new (@main.broken_array__append):value <= arg
+
+fn to_broken_custom_array__append(arg) custom__create(
+     arg
+     [obj
+          :core_append = fn (_, _) heap_table()
+     ]
+)
+
+let error_array__append = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_append = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__append(arg) new (@main.error_array__append):value <= arg
+
+fn to_error_custom_array__append(arg) custom__create(
+     arg
+     [obj
+          :core_append = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__append() {
+     test("".append('2') === "2")
+     test("1".append('2') === "12")
+     test("0123456789abcd".append('e') === "0123456789abcde")
+     test("0123456789abcde".append('f') === "0123456789abcdef")
+     test("".append('\000091') === "\000091")
+     test("\000091".append('\0000b5') === "\000091\0000b5")
+     test("\000091".append('z') === "\000091z")
+     test("z".append('\000091') === "z\000091")
+
+     test("0123456789abcdef".append('!') === "0123456789abcdef!")
+     test("0123456789abcdef".append('!').append('!') === "0123456789abcdef!!")
+     test("0123456789abcdef".append('\000096') === "0123456789abcdef\000096")
+     test("0123456789abcdef".append('\000096').append('\000096') === "0123456789abcdef\000096\000096")
+
+     test("0123456789abcde".append('f').unslice().append('g') === "0123456789abcdefg")
+     test("0123456789abcdef".append('g').take(16).append('0') === "0123456789abcdef0")
+     test("0123456789abcdef".append('g').drop(1).append('1') === "123456789abcdefg1")
+
+     let string = "00123456789abcdef".append('0')[1, 17]
+     test(string.append('g') === "0123456789abcdefg")
+     string.ignore()
+
+     test(u"".append(u"2"[0]) === u"2")
+     test(u"1".append(u"2"[0]) === u"12")
+     test(u"0123456789abcd".append(u"e"[0]) === u"0123456789abcde")
+     test(u"0123456789abcde".append(u"f"[0]) === u"0123456789abcdef")
+     test(u"0123456789abcdef".append(u"!"[0]) === u"0123456789abcdef!")
+     test(u"0123456789abcdef".append(u"!"[0]).append(u"!"[0]) === u"0123456789abcdef!!")
+     test(u"0123456789abcde".append(u"f"[0]).unslice().append(u"g"[0]) === u"0123456789abcdefg")
+     test(u"0123456789abcdef".append(u"g"[0]).take(16).append(u"0"[0]) === u"0123456789abcdef0")
+     test(u"0123456789abcdef".append(u"g"[0]).drop(1).append(u"1"[0]) === u"123456789abcdefg1")
+
+     let array = u"00123456789abcdef".append(0b00)[1, 17]
+     test(array.append(u"g"[0]) === u"0123456789abcdefg")
+     array.ignore()
+
+     test([array].append(1) === [array 1])
+     test([array 1].append(2) === [array 1, 2])
+     test([array 1, 2, 3, 4, 5].append(6) === [array 1, 2, 3, 4, 5, 6])
+     test([array].append("0123456789abcde".append('f')) === [array "0123456789abcdef"])
+     test([array "0123456789abcde".append('f')].append("1023456789abcde".append('f')) === [array "0123456789abcdef", "1023456789abcdef"])
+     test([array "0123456789abcde".append('f')].unslice().append(1) === [array "0123456789abcdef", 1])
+     test([array "0123456789abcde".append('f')].append("1023456789abcde".append('f')).take(1).append("2023456789abcde".append('f')) === [array "0123456789abcdef", "2023456789abcdef"])
+     test([array "0123456789abcde".append('f')].append("1023456789abcde".append('f')).drop(1).append("2023456789abcde".append('f')) === [array "1023456789abcdef", "2023456789abcdef"])
+
+     let array = [array heap_string(), "0123456789abcde".append('f'), "1123456789abcde".append('f')].append(heap_string())[1,3]
+     test(array.append("2123456789abcde".append('f')) === [array "0123456789abcdef", "1123456789abcdef", "2123456789abcdef"])
+     test(array.append(array) === [array "0123456789abcdef", "1123456789abcdef", [array "0123456789abcdef", "1123456789abcdef"]])
+     array.ignore()
+
+     let array = [array heap_string(), "0123456789abcde".append('f'), "1123456789abcde".append('f')].append(heap_string())[1,3]
+     test(array.append(array) === [array "0123456789abcdef", "1123456789abcdef", [array "0123456789abcdef", "1123456789abcdef"]])
+
+     test([set].append(1) === [set 1])
+     test([set 1].append(2) === [set 1, 2])
+     test([set 1, 2, 3, 4, 5].append(6) === [set 1, 2, 3, 4, 5, 6])
+     test([set].append("0123456789abcde".append('f')) === [set "0123456789abcdef"])
+     test([set "0123456789abcde".append('f')].append("1023456789abcde".append('f')) === [set "0123456789abcdef", "1023456789abcdef"])
+
+     let set = [set "0123456789abcde".append('f')].append("1123456789abcde".append('f'))
+     test(set.append("2123456789abcde".append('f')) === [set "0123456789abcdef", "1123456789abcdef", "2123456789abcdef"])
+     test(set.append(set) === [set "0123456789abcdef", "1123456789abcdef", [set "0123456789abcdef", "1123456789abcdef"]])
+     set.ignore()
+
+     let set = [set "0123456789abcde".append('f')].append("1123456789abcde".append('f'))
+     test(set.append(set) === [set "0123456789abcdef", "1123456789abcdef", [set "0123456789abcdef", "1123456789abcdef"]])
+
+     test([array].to_array__append().append(1) === [array 1].to_array__append())
+     test([array 1].to_array__append().append(2) === [array 1, 2].to_array__append())
+     test([array 1, 2, 3, 4, 5].to_array__append().append(7) === [array 1, 2, 3, 4, 5, 7].to_array__append())
+
+     test([array].to_custom_array__append().append(1) === [array 1].to_custom_array__append())
+     test([array 1].to_custom_array__append().append(2) === [array 1, 2].to_custom_array__append())
+     test([array 1, 2, 3, 4, 5].to_custom_array__append().append(7) === [array 1, 2, 3, 4, 5, 7].to_custom_array__append())
+
+     let error_1    = expected_error(:1, heap_string(), heap_string())
+     let error_2    = expected_error(:2, heap_string(), heap_string())
+     let heap_table = heap_table()
+     test(error_1.append(1).get_error_id() === :1)
+     test([array].append(error_1).get_error_id() === :1)
+     test(error_1.append(error_2).get_error_id() === :1)
+     test(error_2.append(error_1).get_error_id() === :2)
+     test(error_1.append(heap_table).get_error_id() === :1)
+     test(heap_table.append(error_1).get_error_id() === :1)
+     test(1.0.scarlet__erase_info().append(1).get_error_id() === :invalid_type)
+
+     test(heap_string().append(heap_table).get_error_id() === :invalid_type)
+     test(heap_string().append(heap_string()).get_error_id() === :invalid_type)
+     test(rnd_byte_array().append(heap_table).get_error_id() === :invalid_type)
+     test(rnd_byte_array().append(rnd_byte_array()).get_error_id() === :invalid_type)
+     test(rnd_string_array().append(null.scarlet__erase_info()).get_error_id() === :invalid_type)
+     test(rnd_string_array().append([box].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([set 1, 2, "0123456789abcde".append('f')].append(null.scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([set 1, 2, "0123456789abcde".append('f')].append([box].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([set 1, 2, "0123456789abcde".append('f')].append(1.0.scarlet__erase_info()).get_error_id() === :invalid_type)
+
+     test(to_array__append([array]).append(error_1).get_error_id() === :1)
+     test(error_1.append(to_array__append([array])).get_error_id() === :1)
+     test(to_array__append(heap_string()).append(heap_table).get_error_id() === :invalid_type)
+     test(heap_table.append(to_array__append([array])).get_error_id() === :invalid_type)
+
+     test(to_custom_array__append([array]).append(error_1).get_error_id() === :1)
+     test(error_1.append(to_custom_array__append([array])).get_error_id() === :1)
+     test(to_custom_array__append(heap_string()).append(heap_table).get_error_id() === :invalid_type)
+     test(heap_table.append(to_custom_array__append([array])).get_error_id() === :invalid_type)
+
+     test(to_broken_array__append([set]).append(heap_string()).get_error_id() === :invalid_type)
+     test(to_broken_custom_array__append([set]).append(heap_string()).get_error_id() === :invalid_type)
+     test(to_error_array__append([set]).append(heap_string()).get_error_id() === :3)
+     test(to_error_custom_array__append([set]).append(heap_string()).get_error_id() === :4)
+}

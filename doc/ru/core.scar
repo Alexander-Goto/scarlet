@@ -1,0 +1,2978 @@
+#*
+Ошибки:
+Любая функция из данного модуля, по умолчанию (если не указанно иное) имеет следующие особенности поведения:
+- если хотя бы один аргумент функции является ошибкой, то функция возвращает ошибку из аргумента
+- если несколько аргументов функции являются ошибками, то возвращается ошибка из аргумента который был передат первее
+- если в функцию передан аргумент, значение которого вызывает ошибку (например аргумент неверного типа),
+     но при этом есть другой аргумент с ошибкой, то функция возвращает ошибку из аргумента
+- если хотя бы один аргумент функции является ошибкой, то функция завершится до того, как выполниться любое действие влияющее на состояниее приложения
+- если аргумент функции имеет неверный тип, то функция может вернуть ошибку с кодом ':invalid_type'
+- если аргумент функции является функцией которая принимает количество аргументов отличное от указанного в сигнатуре, то функция может вернуть ошибку с кодом ':wrong_num_fn_args'.
+- если аргумент функции является функцией и при вызове функции из аргумента возвращается ошибка, то и сама функция возвращает эту ошибку.
+- если в сигнатуре функции указан аргумент с каким-либо методом и есть ещё аргумент с типом !$'имя аргумента с методом', то подразумевается что равны их типы (.core_type),
+     но непосредственно проверка типов ложится на метод.
+- функции потоко-безопасны
+
+Обозначения используемые при описании типов:
+@ustring                   - строка в кодировке utf-8, тип в реальной программе 'byte_array'
+@sysstr                    - строка полученная из системной кодировки, все символы с кодом \00001a заменяются на два таких символа,
+     а не ascii символы могут быть заменены на \00001a и шестнадцатиричный код символа в юникоде (6 цифр), тип в реальной программе 'string'.
+@type                      - указанный тип
+(type)                     - в место type может быть указанно несколько типов разделённых символом |,
+     данный синтаксис означает что константа может иметь один из указанных типов,
+     если константа подходит под описание несольких типов, то считается, что она имеет тип который был указан первее
+(types)                    - в место types должно быть указанно несколько типов разделённых символом &,
+     данный синтаксис означает что константа подходит под описание всех указанных типов
+name:type                  - тип которому присвоенно имя
+$name                      - тип которому было присвоенно имя, если тип описывет множество типов, то данный тип может быть любым из множества
+!$name                     - тоже что и $name, но если тип описывет множество типов,
+     то данный тип равняется типу костанты, которая используется при присвоении имени
+param(fn:param)            - такой же тип как и у параметра 'param' функции 'fn'
+[container item]           - где 'container' - один из следующих типов: array, box, set, obj; и объект данного типа имеет один элемент типа 'item'
+     если 'container' является типом 'array' или 'box', то в место типа одного элемента, через запятую можно указать несколько типов элементов
+     что будет означать что контейнер имеет указанное количество элементов указанного типа
+type{min,max}              - в случаях где в место одного типа можно указать несколько (например [container item]),
+     данный синтаксис означает не меньше 'min' но не больше'max' элементов указанного типа, если тип 'type' описывает некоторое множество типов,
+     то элементы могут иметь разный тип, но только из указанного множества
+type{min,}                 - тоже что и type{min,max}, но без ограничения на максимальное количество
+type{n}                    - тоже что и type{n,n}
+type*                      - тоже что и type{0,}
+type+                      - тоже что и type{1,}
+!type                      - в случаях где в место одного типа можно указать несколько (например [container item]),
+     данный синтаксис означает что все элементы должны быть одного типа
+/type                      - любой тип кроме 'type' и error
+[table key=value]          - таблица в которой ключи имеют тип 'key', а значения тип 'value'
+     если тип 'key' или 'value' описывают некоторое множество типов, то ключи или значения могут иметь разный тип, но из указанного множества
+fn(param)result            - функция принимающая один аргумент типа 'param', а возвращаемое знечение имеет тип 'result'
+     через запятую можно указать несколько типов аргументов, что будет означать что функция принимает указанное количество аргументов указанного типа
+     параметр можно не указывать, это означает что функция не принимает аргументов
+.name                      - константа имеет метод с указанным именем
+(?constraint)type          - 'type' но только если верно ограничение 'constraint', если в результате нет никакого типа,
+     то текущий вариант сигнатуры считается не подходящим
+any                        - любой тип кроме error
+common                     - любой тип кроме error, null, box, breaker
+nan                        - не число (float)
+inf                        - бесконечность (float)
+-inf                       - минус бесконечность (float)
+$=name                     - константа из того места где было объявленно имя 'name'
+!!!noreturn                - данное обозначение может использоваться вместо типа результата функции и оно означает, что функция никогда не завершит свою работу.
+value                      - не тип, а конкретно указанное значение 'value'
+
+Сигнатуры:
+Если в документации указаны несколько сигнатур функции, то в случаях когда под определённые аргументы подходит несколько сигнатур,
+     используется та, которая указанна первой.
+
+Дополнительно:
+Все функции в данном модуле, работают с объектами как с таблицей у которой нет ключа :_ (методов), но при этом могут использовать методы.
+Если в описании функции указано, что она работает с методами как со значениями, то это значит что методы воспринимаются как значения. (т.е. как будто это не объект а таблица)
+Многие функции работающие с индексными массивами, работают и со строками рассматривая их как массив из символов.
+     Узнать работает ли данная функция со строками, можно из сигнатуры.
+Если функция в качестве аргумента может принимать и строку и массив, но строку воспринимает не как массив из символов, то это указывается в описании функции.
+*#
+
+#@
+Аргументы передаваемые приложению через коммандну строку.
+
+type: [array @sysstr*]
+@#
+let cli_args = null
+
+#@
+Количество ядер процессора доступных в системе.
+
+type: @int
+@#
+let cpu_cores_num = null
+
+#@
+Переменные окружения.
+
+type: [table name:@sysstr=value:@sysstr]
+@#
+let env_vars = null
+
+#@
+Константа используемая при взаимодействии с журналом сообщений (подробности в документации к функции set_log_level).
+
+type: @int
+@#
+let log_lvl__hint = null
+
+#@
+Константа используемая при взаимодействии с журналом сообщений (подробности в документации к функции set_log_level).
+
+type: @int
+@#
+let log_lvl__important = null
+
+#@
+Константа используемая при взаимодействии с журналом сообщений (подробности в документации к функции set_log_level).
+
+type: @int
+@#
+let log_lvl__maximum = null
+
+#@
+Константа используемая при взаимодействии с журналом сообщений (подробности в документации к функции set_log_level).
+
+type: @int
+@#
+let log_lvl__may_require_attention = null
+
+#@
+Константа используемая при взаимодействии с журналом сообщений (подробности в документации к функции set_log_level).
+
+type: @int
+@#
+let log_lvl__minimum = null
+
+#@
+Константа используемая при взаимодействии с журналом сообщений (подробности в документации к функции set_log_level).
+
+type: @int
+@#
+let log_lvl__require_attention = null
+
+#@
+Константа используемая при взаимодействии с журналом сообщений (подробности в документации к функции set_log_level).
+
+type: @int
+@#
+let log_lvl__very_important = null
+
+#@
+Математическа константа Пи. (3.1415...)
+
+type: @float
+@#
+let pi = null
+
+#@
+Платформа на которой запущенно приложение.
+Пример: "linux x86_64"
+
+type: @string
+@#
+let platform = null
+
+#@
+Псевдо-случайное число.
+Генерация числа происходит при каждом запуске приложения.
+Число генерируется в диапазоне [-9223372036854775808, 9223372036854775807]
+
+type: @int
+@#
+let static_rnd = null
+
+#@
+Язык системы на которой запущенно приложение.
+Пример: "en", "ru", "be"
+
+type: @string
+@#
+let sys_lang = null
+
+#@
+Сложение двух чисел.
+
+signature:
+fn (left:nan, right:@float) nan
+fn (left:@float, right:nan) nan
+fn (left:inf, right:-inf) nan
+fn (left:-inf, right:inf) nan
+fn (left:inf, right:@float) inf
+fn (left:@float, right:inf) inf
+fn (left:-inf, right:@float) -inf
+fn (left:@float, right:-inf) -inf
+fn (left:(@byte|@int|@float|.core___add__), right:!$left) !$left
+@#
+fn (+)(left, right) null
+
+#@
+Побитовое логическое "и".
+
+signature:
+fn (left:(@byte|@int|.core___and__), right:!$left) !$left
+@#
+fn (&)(left, right) null
+
+#@
+Арифметический сдвиг в право.
+
+signature:
+fn (num:(@int|.core___ashr__), shifts:(@int|@byte)) !$num
+
+error:
+:bits_shift - если (shifts < 0) | (shifts > количество бит в 'num')
+@#
+fn (>>>)(num, shifts) null
+
+#@
+Соединение двух индексных массивов в один.
+
+signature:
+fn (left:(@string|@byte_array|@array|.core___concat__), right:!$left) !$left
+@#
+fn (++)(left, right) null
+
+#@
+Деление одного числа на другое.
+
+signature:
+fn (left:nan, right:@float) nan
+fn (left:@float, right:nan) nan
+fn (left:(0.0|-0.0), right:$left) nan
+fn (left:(?left>0.0)@float, right:0.0) inf
+fn (left:(?left>0.0)@float, right:-0.0) -inf
+fn (left:(?left<0.0)@float, right:0.0) -inf
+fn (left:(?left<0.0)@float, right:-0.0) inf
+fn (left:(@byte|@int|@float|.core___div__), right:!$left) !$left
+
+error:
+:div_by_0 - если type(left) == type(right) & (right == 0 | right == 0b00)
+@#
+fn (/)(left, right) null
+
+#@
+Сравнение двух констант на равенство.
+Если аргументы функции не являются ошибками, то функция не возвращает ошибку.
+Если функция возвращает 'true', то cmp(left, right) должно возвращать :equal,
+     если функция возвращает 'false', то cmp(left, right) не должно возвращать :equal.
+
+signature:
+fn (left:null, right:null) false
+fn (left:any, right:/!$left) false
+fn (left:nan, right:@float) false
+fn (left:@float, right:nan) false
+fn (left:(0.0|-0.0), right:$left) true
+fn (left:.core___equal__, right:any) @bool
+fn (left:any, right:!$left) @bool
+@#
+fn (===)(left, right) null
+
+#@
+Получение значения по ключу (для ассоциативных массивов и множеств) или индексу(для индексных массивов).
+Если первый аргумент функции является ассоциативным массивом и значения по указанному ключу нет, то функция возвращает 'null'.
+Если первый аргумент функции является множеством, то результат берётся из элемента внутри него, а не из второго аргумента функции.
+Если 'container' не имеет метода 'core___get_item__', то функция работает с методами как со значением.
+
+signature:
+fn (string:@string, idx:@int) @char
+fn (null, any) null
+fn (array:@byte_array, idx:@int) @byte
+fn (box:@box, idx:@int) any
+fn (table:@table, key:param(hash:arg)) (common|null)
+fn (set:@set, key:param(hash:arg)) (!$key|null)
+fn (array:@array, idx:@int) common
+fn (container:.core___get_item__, key:common) (common|null)
+fn (obj:@obj, key:@token) (common|null)
+
+error:
+:out_of_bounds - если type(container) == (@string|@byte_array|@box|@array) & key >= len(container)
+@#
+fn ([])(container, key) null
+
+#@
+Функция аналогична функции [], но работает с методами как со значениями.
+Функция вызывается при использовании следующего синтаксиса значение:токен. Пример - obj:name
+Значение 'name' должно быть известно во время компиляции.
+При частичном применении функции, 'name' обязательно указывается. obj:_ - обращение к методам, _:_ - эквивалент fn (obj) obj:_.
+
+signature:
+fn (null, any) null
+fn (obj:@obj, name:@token) (common|null)
+@#
+fn (:)(obj, name) null
+
+#@
+Функция возвращает 'true', если 'left' > 'right', иначе 'false'.
+Сравнение массивов происходит поэлементно и прекращается как только один элемент не равен другому.
+Если при сравнении массивов был достигнут конец одного масива, то больщим считается тот массив у которого больше элементов.
+Функция использует функцию 'cmp'.
+
+signature:
+fn (left:(inf|-inf), right:$=left) false
+fn (left:inf, right:@float) true
+fn (left:@float, right:inf) false
+fn (left:-inf, right:@float) false
+fn (left:@float, right:-inf) true
+fn (left:(-0.0|0.0), right:$left) false
+fn (left:(@string|@token|@byte|@char|@int|@time|@float|@byte_array|.core_cmp|[array $left*]), right:!$left) @bool
+
+error:
+:nan_cmp - если произошло сравнение двух констант типа 'float', но при этом одно из них является не числом (nan).
+@#
+fn (>)(left, right) null
+
+#@
+Функция возвращает 'true', если 'left' >= 'right', иначе 'false'.
+Сравнение массивов происходит поэлементно и прекращается как только один элемент не равен другому.
+Если при сравнении массивов был достигнут конец одного масива, то больщим считается тот массив у которого больше элементов.
+Функция использует функцию 'cmp'.
+
+signature:
+fn (left:(inf|-inf), right:$=left) true
+fn (left:inf, right:@float) true
+fn (left:@float, right:inf) false
+fn (left:-inf, right:@float) false
+fn (left:@float, right:-inf) true
+fn (left:(-0.0|0.0), right:$left) true
+fn (left:(@string|@token|@byte|@char|@int|@time|@float|@byte_array|.core_cmp|[array $left*]), right:!$left) @bool
+
+error:
+:nan_cmp - если произошло сравнение двух констант типа 'float', но при этом одно из них является не числом (nan).
+@#
+fn (>=)(left, right) null
+
+#@
+Функция возвращает 'true', если 'left' < 'right', иначе 'false'.
+Сравнение массивов происходит поэлементно и прекращается как только один элемент не равен другому.
+Если при сравнении массивов был достигнут конец одного масива, то меньшим считается тот массив у которого меньше элементов.
+Функция использует функцию 'cmp'.
+
+signature:
+fn (left:(inf|-inf), right:$=left) false
+fn (left:inf, right:@float) false
+fn (left:@float, right:inf) true
+fn (left:-inf, right:@float) true
+fn (left:@float, right:-inf) false
+fn (left:(-0.0|0.0), right:$left) false
+fn (left:(@string|@token|@byte|@char|@int|@time|@float|@byte_array|.core_cmp|[array $left*]), right:!$left) @bool
+
+error:
+:nan_cmp - если произошло сравнение двух констант типа 'float', но при этом одно из них является не числом (nan).
+@#
+fn (<)(left, right) null
+
+#@
+Функция возвращает 'true', если 'left' <= 'right', иначе 'false'.
+Сравнение массивов происходит поэлементно и прекращается как только один элемент не равен другому.
+Если при сравнении массивов был достигнут конец одного масива, то меньшим считается тот массив у которого меньше элементов.
+Функция использует функцию 'cmp'.
+
+signature:
+fn (left:(inf|-inf), right:$=left) true
+fn (left:inf, right:@float) false
+fn (left:@float, right:inf) true
+fn (left:-inf, right:@float) true
+fn (left:@float, right:-inf) false
+fn (left:(-0.0|0.0), right:$left) true
+fn (left:(@string|@token|@byte|@char|@int|@time|@float|@byte_array|.core_cmp|[array $left*]), right:!$left) @bool
+
+error:
+:nan_cmp - если произошло сравнение двух констант типа 'float', но при этом одно из них является не числом (nan).
+@#
+fn (<=)(left, right) null
+
+#@
+Логический сдвиг в право.
+
+signature:
+fn (num:(@int|@byte|.core___lshr__), shifts:(@int|@byte)) !$num
+
+error:
+:bits_shift - если (shifts < 0) | (shifts > количество бит в 'num')
+@#
+fn (>>)(num, shifts) null
+
+#@
+Остаток от деления одного числа на другое.
+Результат имеет такой же знак как и left.
+
+signature:
+fn (left:nan, right:@float) nan
+fn (left:@float, right:nan) nan
+fn (left:(inf|-inf), right:@float) nan
+fn (left:@float, right:(0.0|-0.0)) nan
+fn (left:(0.0|-0.0), right:@float) $=left
+fn (left:@float, right:(inf|-inf)) $=left
+fn (left:(@byte|@int|@float|.core___mod__), right:!$left) !$left
+
+error:
+:div_by_0 - если type(left) == type(right) & (right == 0 | right == 0b00)
+@#
+fn (%)(left, right) null
+
+#@
+Произведение двух чисел.
+
+signature:
+fn (left:nan, right:@float) nan
+fn (left:@float, right:nan) nan
+fn (left:(inf|-inf), right:(0.0|-0.0)) nan
+fn (left:(0.0|-0.0), right:(inf|-inf)) nan
+fn (left:inf, right:(?right>0.0)@float) inf
+fn (left:(?left>0.0)@float, right:inf) inf
+fn (left:inf, right:(?right<0.0)@float) -inf
+fn (left:(?left<0.0)@float, right:inf) -inf
+fn (left:-inf, right:(?right>0.0)@float) -inf
+fn (left:(?left>0.0)@float, right:-inf) -inf
+fn (left:-inf, right:(?right<0.0)@float) inf
+fn (left:(?left<0.0)@float, right:-inf) inf
+fn (left:(@byte|@int|@float|.core___mul__), right:!$left) !$left
+@#
+fn (*)(left, right) null
+
+#@
+Сравнение двух констант на неравенство.
+Если аргументы функции не являются ошибками, то функция не возвращает ошибку.
+Функция использует функцию (===).
+
+signature:
+fn (left:null, right:null) true
+fn (left:any, right:/!$left) true
+fn (left:nan, right:@float) true
+fn (left:@float, right:nan) true
+fn (left:(0.0|-0.0), right:$left) false
+fn (left:.core___equal__, right:any) @bool
+fn (left:any, right:!$left) @bool
+@#
+fn (=/=)(left, right) null
+
+#@
+Побитовое логическое "или".
+
+signature:
+fn (left:(@byte|@int|.core___or__), right:!$left) !$left
+@#
+fn (|)(left, right) null
+
+#@
+Логический сдвиг в лево.
+
+signature:
+fn (num:(@int|@byte|.core___shl__), shifts:(@int|@byte)) !$num
+
+error:
+:bits_shift - если (shifts < 0) | (shifts > количество бит в 'num')
+@#
+fn (<<)(num, shifts) null
+
+#@
+Создание индексного массива из элементов 'array' с индексом >= 'from' и < 'to'.
+Рассположение элементов сохраняется.
+
+signature:
+fn (array:(@string|@byte_array|@box|.core___slice__|@array), from:@int, to:@int) !$array
+
+error:
+:invalid_range - если (from < 0) | (from > to)
+:out_of_bounds - если to > len(array)
+@#
+fn ([,])(array, from, to) null
+
+#@
+Функция аналогична функции (===), но имеет более строгие ограничения типов аргументов.
+Если аргументы имеют следующие типы: 'box', 'table', 'set', 'array'; то для сравнения элементов используется функция (===).
+
+signature:
+fn (left:nan, right:@float) false
+fn (left:@float, right:nan) false
+fn (left:(0.0|-0.0), right:$left) true
+fn (left:(@string|@token|@bool|@byte|@char|@int|@time|@float|@byte_array|@box|@table|@set|@array|.core___strong_equal__), right:!$left) @bool
+@#
+fn (==)(left, right) null
+
+#@
+Функция аналогична функции (=/=), но имеет более строгие ограничения типов аргументов.
+Функция использует функцию (==).
+
+signature:
+fn (left:nan, right:@float) true
+fn (left:@float, right:nan) true
+fn (left:(0.0|-0.0), right:$left) false
+fn (left:(@string|@token|@bool|@byte|@char|@int|@time|@float|@byte_array|@box|@table|@set|@array|.core___strong_equal__), right:!$left) @bool
+@#
+fn (/=)(left, right) null
+
+#@
+Вычитание одного числа из другого.
+
+signature:
+fn (left:nan, right:@float) nan
+fn (left:@float, right:nan) nan
+fn (left:inf, right:inf) nan
+fn (left:-inf, right:-inf) nan
+fn (left:inf, right:@float) inf
+fn (left:@float, right:inf) -inf
+fn (left:-inf, right:@float) -inf
+fn (left:@float, right:-inf) inf
+fn (left:(@byte|@int|@float|.core___sub__), right:!$left) !$left
+@#
+fn (-)(left, right) null
+
+#@
+Побитовое исключающее "или".
+
+signature:
+fn (left:(@byte|@int|.core___xor__), right:!$left) !$left
+@#
+fn (^)(left, right) null
+
+#@
+Абсолютное значение числа.
+
+signature:
+fn (num:nan) nan
+fn (num:(@int|@float|.core_abs)) !$num
+@#
+fn abs(num) null
+
+#@
+Арккосинус числа в радианах.
+
+signature:
+fn (arg:nan) nan
+fn (arg:(?arg < -1.0 | arg > 1.0)@float) nan
+fn (arg:(@float|.core_acos)) !$arg
+@#
+fn acos(arg) null
+
+#@
+Функция применяет функцию 'func' к каждому элементу 'container' и возвращает true, если каждое применение 'func' вернуло true, иначе false.
+Функция выполняет функцию 'func' до тех пор, пока не будет понятен результат.
+Функция возвращет 'default' если контейнер является пустым.
+Функция может использовать 'func' только для вызова.
+В индексных массивах, очерёдность взятия элементов для применения функции 'func' - из начала в конец.
+
+signature:
+fn (string:@string, default:@bool, func:fn(@char)@bool) @bool
+fn (array:@byte_array, default:@bool, func:fn(@byte)@bool) @bool
+fn (container:.core_all, default:@bool, func:fn(any)) @bool
+fn (container:([obj item:common]|[table param(hash:arg) = item:common]|[set item:param(hash:arg)]|[array item:common*]), default:@bool, func:fn($item)@bool) @bool
+@#
+fn all(container, default, func) null
+
+#@
+Функция аналогична функции 'all', но 'func' принимает и ключ (индекс) и значение.
+Функция не может применятся к множеству.
+
+signature:
+fn (string:@string, default:@bool, func:fn(idx:@int, @char)@bool) @bool
+fn (array:@byte_array, default:@bool, func:fn(idx:@int, @byte)@bool) @bool
+fn (container:.core_all_kv, default:@bool, func:fn(key:any, item:any)) @bool
+fn (container:[obj item:common], default:@bool, func:fn(key:@token, $item)@bool) @bool
+fn (container:[table key:param(hash:arg) = item:common], default:@bool, func:fn($key, $item)@bool) @bool
+fn (container:[array item:common*], default:@bool, func:fn(idx:@int, $item)@bool) @bool
+@#
+fn all_kv(container, default, func) null
+
+#@
+Функция применяет функцию 'func' к каждому элементу 'container' и возвращает false, если каждое применение 'func' вернуло false, иначе true.
+Функция выполняет функцию 'func' до тех пор, пока не будет понятен результат.
+Функция возвращет 'default' если контейнер является пустым.
+Функция может использовать 'func' только для вызова.
+В индексных массивах, очерёдность взятия элементов для применения функции 'func' - из начала в конец.
+
+signature:
+fn (string:@string, default:@bool, func:fn(@char)@bool) @bool
+fn (array:@byte_array, default:@bool, func:fn(@byte)@bool) @bool
+fn (container:.core_any, default:@bool, func:fn(any)) @bool
+fn (container:([obj item:common]|[table param(hash:arg) = item:common]|[set item:param(hash:arg)]|[array item:common*]), default:@bool, func:fn($item)@bool) @bool
+@#
+fn any(arg, default, func) null
+
+#@
+Функция аналогична функции 'any', но 'func' принимает и ключ (индекс) и значение.
+Функция не может применятся к множеству.
+
+signature:
+fn (string:@string, default:@bool, func:fn(idx:@int, @char)@bool) @bool
+fn (array:@byte_array, default:@bool, func:fn(idx:@int, @byte)@bool) @bool
+fn (container:.core_any_kv, default:@bool, func:fn(key:any, item:any)) @bool
+fn (container:[obj item:common], default:@bool, func:fn(key:@token, $item)@bool) @bool
+fn (container:[table key:param(hash:arg) = item:common], default:@bool, func:fn($key, $item)@bool) @bool
+fn (container:[array item:common*], default:@bool, func:fn(idx:@int, $item)@bool) @bool
+@#
+fn any_kv(container, default, func) null
+
+#@
+Функция добавляет один элемент в конец массива, а также добавляет элемент в множество.
+При добавлении элемента в множество, новый элемент перезаписывает существующий (если он есть).
+
+signature:
+fn (string:@string, char:@char) @string
+fn (array:@byte_array, byte:@byte) @byte_array
+fn (array:@array, item:common) @array
+fn (set:@set, item:param(hash:arg)) @set
+fn (container:.core_append, item:common) !$container
+@#
+fn append(container, item) null
+
+#@
+Функция добавляет новый элемент в множество.
+Функция возвращает null если элемент уже был в множестве.
+
+signature:
+fn (set:@set, item:param(hash:arg)) (null|@set)
+fn (set:.core_append_new, item:common) (null|!$set)
+@#
+fn append_new(set, item) null
+
+#@
+Функция возвращает 'true', если все символы соответствуют стандарту ASCII, иначе 'false'.
+
+signature:
+fn (arg:(@string|@char|.core_ascii?)) @bool
+@#
+fn ascii?(arg) null
+
+#@
+Функция возвращает 'true', если символ соответствуют стандарту ASCII и является контрольным символом, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_ctrl?)) @bool
+@#
+fn ascii_ctrl?(char) null
+
+#@
+Функция возвращает 'true', если символ соответствуют стандарту ASCII и является десятичной цифрой, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_digit?)) @bool
+@#
+fn ascii_digit?(char) null
+
+#@
+Функция возвращает 'true', если символ соответствуют стандарту ASCII и при отображении занимает знакоместо, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_graphic?)) @bool
+@#
+fn ascii_graphic?(char) null
+
+#@
+Функция возвращает 'true', если символ соответствуют стандарту ASCII и является буквой, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_letter?)) @bool
+@#
+fn ascii_letter?(char) null
+
+#@
+Функция возвращает 'true', если символ соответствуют стандарту ASCII и является буквой в нижнем регистре, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_lower?)) @bool
+@#
+fn ascii_lower?(char) null
+
+#@
+Функция возвращает 'true', если символ соответствуют стандарту ASCII и при отображении занимает знакоместо, но при этом не имеет визуального отображения, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_space?)) @bool
+@#
+fn ascii_space?(char) null
+
+#@
+Функция возвращает 'true', если символ соответствуют стандарту ASCII и при отображении занимает знакоместо и имеет визуальное отображение, но не является буквой или цифрой, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_symbol?)) @bool
+@#
+fn ascii_symbol?(char) null
+
+#@
+Функция преобразует все символы соответствующие стандарту ASCII и являющихся буквами в верхнем регистре, в соответствующие буквы в нижнем регистре.
+
+signature:
+fn (arg:(@string|@char|.core_ascii_to_lower)) !$arg
+@#
+fn ascii_to_lower(arg) null
+
+#@
+Функция преобразует все символы соответствующие стандарту ASCII и являющихся буквами в нижнем регистре, в соответствующие буквы в верхнем регистре.
+
+signature:
+fn (arg:(@string|@char|.core_ascii_to_upper)) !$arg
+@#
+fn ascii_to_upper(arg) null
+
+#@
+Функция возвращает 'true', если символ соответствуют стандарту ASCII и является буквой в верхнем регистре, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_upper?)) @bool
+@#
+fn ascii_upper?(char) null
+
+#@
+Арксинус числа в радианах.
+
+signature:
+fn (arg:nan) nan
+fn (arg:(-0.0|0.0)) $=arg
+fn (arg:(?arg < -1.0 | arg > 1.0)@float) nan
+fn (arg:(@float|.core_asin)) !$arg
+@#
+fn asin(arg) null
+
+#@
+Создаёт константу с указанным временем.
+Функция возвращает null если
+     (month    < 1) | (month    > 12) |
+     (day      < 1) | (day      > 31) |
+     (hour     < 0) | (hour     > 23) |
+     (minute   < 0) | (minute   > 59) |
+     (second   < 0) | (second   > 59) |
+     (day      > количество дней в указанном году и месяце)
+     или если в указанное время по UTC год был вне диапозона [1970-292277026595]
+
+signature:
+fn (timezone:@int, year:@int, month:@int, day:@int, hour:@int, minute:@int, second:@int) (null|@time)
+
+error:
+:out_of_bounds - если (timezone < -86400) | (timezone > 86400)
+@#
+fn assemble_time(timezone, year, month, day, hour, minute, second) null
+
+#@
+Арктангенс числа в радианах.
+В сигнатуре для 'inf' и '-inf' указанно примерное значение.
+
+signature:
+fn (arg:nan) nan
+fn (arg:(-0.0|0.0)) $=arg
+fn (arg:inf) 1.570796326794897
+fn (arg:-inf) -1.570796326794897
+fn (arg:(@float|.core_atan)) !$arg
+@#
+fn atan(arg) null
+
+#@
+Функция возвращает длинну константы типа 'box' и саму эту константу.
+
+signature:
+fn (box:@box) [box @int, $=box]
+@#
+fn box_len(box) null
+
+#@
+Функция возвращает [breaker result] если 'predicate' равет true, иначе 'result'.
+
+signature:
+fn (false, result:any) $=result
+fn (true, result:any) [breaker $=result]
+@#
+fn break(predicate, result) null
+
+#@
+Если был активирован стек вызовов, то функция его и возвращает, иначе возвращает null.
+
+signature:
+fn () ([array @string*]|null)
+@#
+fn call_stack() null
+
+#@
+Функция возвращает 'true' если стек вызовов был активирован, иначе 'false'.
+
+signature:
+fn () @bool
+@#
+fn call_stack_on?() null
+
+#@
+Функция возращает колчиество элементов, которое может вмещать индексный массив, прежде чем понадобиться аллокация памяти.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_cap)) @int
+@#
+fn cap(array) null
+
+#@
+Наименьшее целое число, не меньшее чем 'num'.
+
+signature:
+fn (num:nan) nan
+fn (num:(-0.0|0.0|inf|-inf)) $=num
+fn (num:(@float|.core_ceil)) !$num
+@#
+fn ceil(num) null
+
+#@
+Функция выясняет из какого языка указанная буква.
+Если в функцию передана не буква, то функция возвращает null.
+Пример языков: "en", "ru", "be"
+
+signature:
+fn (char:(@char|.core_char_lang)) (@string|null)
+@#
+fn char_lang(char) null
+
+#@
+Код указанного символа в юникоде.
+Если аналогичного символа нет в юникоде, функция возвращает null.
+
+signature:
+fn (char:(@char|.core_char_to_uchar)) (@int|null)
+@#
+fn char_to_uchar(char) null
+
+#@
+Функция удаляет все элементы из контейнера и возвращает пустой контейнер, но при этом не уменьшает память которая была алоцированна под эти элементы.
+
+signature:
+fn (container:(.core_clear|@obj|@table|@set|@array)) !$container
+@#
+fn clear(container) null
+
+#@
+Сравнение двух констант.
+Функция возвращает следующие значения:
+:equal     - если arg_1 == arg_2
+:less      - если arg_1 < arg_2
+:great     - если arg_1 > arg_2
+:not_equal - если arg_1 != arg_2 и аргументы нельзя сравнить на 'больше', 'меньше'.
+:nan_cmp   - если при сравнении arg_1 и arg_2 произошло сравнение двух констант типа 'float', но при этом одно из них является не числом (nan).
+Если аргументы функции имеют тип @set, @table или @obj (не .core_cmp), то они сравниваются только на равенство, не равенство. (:equal, :not_equal)
+Если аргументы функции не являются ошибками, то функция не возвращает ошибку.
+Если функция возвращает :equal, то left === right должно возвращать 'true',
+     иначе left === right должно возвращать 'false'.
+
+signature:
+fn (arg_1:null, arg_2:null) :not_equal
+fn (arg_1:any, arg_2:/!$arg_1) :not_equal
+fn (arg_1:nan, arg_2:@float) :nan_cmp
+fn (arg_1:@float, arg_2:nan) :nan_cmp
+fn (left:(inf|-inf), right:$=left) :equal
+fn (left:inf, right:@float) :great
+fn (left:@float, right:inf) :less
+fn (left:-inf, right:@float) :less
+fn (left:@float, right:-inf) :great
+fn (arg_1:.core_cmp, arg_2:any) (:equal|:less|:great|:not_equal|:nan_cmp)
+fn (arg_1:any, arg_2:!$arg_1) (:equal|:less|:great|:not_equal|:nan_cmp)
+@#
+fn cmp(arg_1, arg_2) null
+
+#@
+Копирование элементов одного индекснего массива, в указанную позицию другого массива.
+Функция заменяет уже существующие элементы.
+Функция не изменяет количество элементов в копируемом массиве.
+
+signature:
+fn (dst:(@string|@byte_array|@array|.core_copy), idx:@int, src:!$dst) result:!$dst
+
+error:
+:out_of_bounds - если (idx < 0) | (len(dst) < idx + len(src))
+@#
+fn copy(dst, idx, src) null
+
+#@
+Косинус угла.
+Угол измеряется в радианах.
+
+signature:
+fn (angle:nan) nan
+fn (angle:(-inf|inf)) nan
+fn (angle:(-0.0|0.0)) 1.0
+fn (angle:(@float|.core_cos)) !$arg
+@#
+fn cos(angle) null
+
+#@
+Функция возвращает 'true', если символ является контрольным, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_ctrl?)) @bool
+@#
+fn ctrl?(char) null
+
+#@
+Функция возвращает номер дня в месяце в указанном времени.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - если (timezone < -86400) | (timezone > 86400)
+@#
+fn day(time, timezone) null
+
+#@
+Функция возвращает 'true' если был активирован режим отладки, иначе 'false'.
+
+signature:
+fn () @bool
+@#
+fn debug?() null
+
+#@
+Удаление элемнтов индексного массива с индексом >= 'from' и < 'to'.
+
+signature:
+fn (array:(@string|@byte_array|@box|.core_delete|@array), from:@int, to:@int) !$array
+
+error:
+:invalid_range - если (from < 0) | (from > to)
+:out_of_bounds - если to > len(array)
+@#
+fn delete(array, from, to) null
+
+#@
+Функция десериализует значение из 'src', возвращая значение и данные из 'src' которые не использовались для дессериализации указанного значения.
+
+signature:
+fn (src:@byte_array) [box result:param(serialize:arg), new_src:@byte_array]
+
+error:
+:out_of_bounds          - если в 'src' байты закончиличь раньше, чем был сформирован целостный результат.
+:incorrect_data         - если удалось прочитать целостный результат, но он имеет некоректную структуру.
+@#
+fn deserialize(src) null
+
+#@
+Функция возвращает 'true', если символ является десятичной цифрой, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_digit?)) @bool
+@#
+fn digit?(char) null
+
+#@
+Функция разбирает данные о времени на состовляющие.
+
+signature:
+fn (time:@time, timezone:@int) [box year:@int, month:@int, day:@int, hour:@int, minute:@int, second:@int]
+
+error:
+:out_of_bounds - если (timezone < -86400) | (timezone > 86400)
+@#
+fn disassemble_time(time, timezone) null
+
+#@
+Создание индексного массива из элементов 'array' с индексом >= 'n'.
+Рассположение элементов сохраняется.
+
+signature:
+fn (array:(@string|@byte_array|.core_drop|@array), n:@int) !$array
+
+error:
+:out_of_bounds - если (n > len(array)) | (n < 0)
+@#
+fn drop(array, n) null
+
+#@
+Создание индексного массива из элементов 'array' с индексом >= n, где n - индекс первого элемента, к которому применение функции 'func' вернуло 'false',
+     если таких элементов нет, то n = len(array)
+Очерёдность взятия элементов для применения функции 'func' - из начала в конец.
+Применение функции 'func' происходит до тех пор, пока она возвращает 'true'.
+Рассположение элементов сохраняется.
+Функция может использовать 'func' только для вызова.
+
+signature:
+fn (array:(@string|@byte_array|.core_drop_while|@array), func:fn(item:common) @bool) !$array
+@#
+fn drop_while(array, func) null
+
+#@
+Функция возвращает строку с информацией о значении константы.
+Используется для отладки.
+Не возвращает ошибку.
+Может принимать ошибку в качестве аргумента и работате с ней как со значением.
+Функция работает с методами как со значениями.
+
+signature:
+fn (arg:(any|@error)) @string
+@#
+fn dump(arg) null
+
+#@
+Количество секунд между двумя датами.
+
+signature:
+fn (time_1:@time, time_2:@time) @int
+@#
+fn duration(time_1, time_2) null
+
+#@
+Функция применяет функцию 'func' ко всем возможным парам элементов контейнера,
+      и возвращает контейнер с новыми элементыми которые были возвращены функцией 'func'.
+Если в контейнере содержиться меньше 2 элементов, то контейнер возвращается в исходном виде.
+К каждой паре элементов функция применяется только один раз.
+Если контейнер является индексным массивом, то первый аргумент функции 'func' всегда будет иметь меньший индекс в массиве, чем второй аргумент.
+Если к элементу применялась функция 'func', то при повторном применении используется значение элемента из результата прошлого применения.
+
+signature:
+fn (string:@string, func:fn(char_1:@char, char_2:@char) [box new_char_1:@char, new_char_2:@char]) @string
+fn (byte_array:@byte_array, fn(byte_1:@byte, byte_2:@byte) [box new_byte_1:@byte, new_byte_2:@byte]) @byte_array
+fn (container:(@table|@array|.core_each_to_each|@obj), func:fn(item_1:common, item_2:common) [box new_item_1:common, new_item_2:common]) !$container
+
+error:
+:unpk_not_enough_items - если 'func' вернула @box, но с количеством элементов меньше двух.
+@#
+fn each_to_each(container, func) null
+
+#@
+Функция аналогична функции each_to_each, но функция 'func' принимает не только элементы, но и их индексы или ключи.
+
+signature:
+fn (string:@string, func:fn(idx_1:@int, char_1:@char, idx_2:@int, char_2:@char) [box new_char_1:@char, new_char_2:@char]) @string
+fn (byte_array:@byte_array, fn(idx_1:@int, byte_1:@byte, idx_2:@int, byte_2:@byte) [box new_byte_1:@byte, new_byte_2:@byte]) @byte_array
+fn (array:@array, func:fn(idx_1:@int, item_1:common, idx_2:@int, item_2:common) [box new_item_1:common, new_item_2:common]) @array
+fn (container:(.core_each_to_each_kv|@table), func:fn(key_1:param(hash:arg), item_1:common, key_2:param(hash:arg), item_2:common) [box new_item_1:common, new_item_2:common]) !$container
+fn (obj:@obj, func:fn(key_1:@token, item_1:common, key_2:@token, item_2:common) [box new_item_1:common, new_item_2:common]) @obj
+
+error:
+:unpk_not_enough_items - если 'func' вернула @box, но с количеством элементов меньше двух.
+@#
+fn each_to_each_kv(container, func) null
+
+#@
+Функция возвращает 'true' если контейнер пустой, иначе 'false'.
+
+signature:
+fn (container:(@string|@byte_array|@box|@obj|@table|@set|@array|.core_empty?)) @bool
+@#
+fn empty?(container) null
+
+#@
+Функция возвращает пустой вариант контейнера, такого же типа как и 'arg'.
+Функция сохраняет методы объекта.
+
+signature:
+fn (container:(@string|@byte_array|.core_empty_val|@obj|@table|@set|@array)) !$container
+@#
+fn empty_val(container) null
+
+#@
+Функция возвращает 'true', если 'arg' имеет тип 'error, иначе 'false'.
+
+signature:
+fn (arg:@error) true
+fn (arg:any) false
+@#
+fn error?(arg) null
+
+#@
+Функция возвращает 'true' если число чётное, иначе 'false'.
+
+signature:
+fn (num:(@byte|@int|.core_even?)) @bool
+@#
+fn even?(num) null
+
+#@
+Функция завершает работу приложения без статуса ошибки.
+
+signature:
+fn () !!!noreturn
+@#
+fn exit() null
+
+#@
+Функция вычисляет e^power, где e - число Эйлера.
+
+signature:
+fn (power:nan) nan
+fn (power:(0.0|-0.0)) 1.0
+fn (power:-inf) 0.0
+fn (power:inf) inf
+fn (power:(@float|.core_exp)) !$power
+@#
+fn exp(power) null
+
+#@
+Функция вычисляет 2^power.
+
+signature:
+fn (power:nan) nan
+fn (power:(0.0|-0.0)) 1.0
+fn (power:-inf) 0.0
+fn (power:inf) inf
+fn (power:(@byte|@int|@float|.core_exp2)) !$power
+@#
+fn exp2(power) null
+
+#@
+Функция создаёт ошибку, но при этом такое создание не считается маловероятным.
+Данная функция используется когда программе нужно создать ошибку, даже не смотря на то, что программа работает корректно.
+
+signature:
+fn (id:@token, msg:@string, data:(common|null)) @error
+@#
+fn expected_error(id, msg, data) null
+
+#@
+Функция печатает в интерфейс коммандной строки сообщение и завершает работу приложения со статусом ошибки.
+Сообщение печатается как ошибочное (stderr).
+Если в место сообщения передаётся ошибка, программа завершает свою работу с данной ошибкой.
+
+signature:
+fn (msg:(@string|@error)) !!!noreturn
+@#
+`cold`
+fn fail(msg) null
+
+#@
+Функция оставляет в контейнере только те элементы, для которых применение функции 'func' вернуло 'true'.
+Функция может использовать 'func' только для вызова.
+Для индексных массивов:
+     очерёдность взятия элементов для применения функции 'func' - из начала в конец
+     рассположение элементов сохраняется
+
+signature:
+fn (string:@string, func:fn(char:@char) @bool) @string
+fn (array:@byte_array, func:fn(byte:@byte) @bool) @byte_array
+fn (container:(.core_filter|@obj|@table|@set|@array), func:fn(item:common) @bool) !$container
+@#
+fn filter(container, func) null
+
+#@
+Функция оставляет в контейнере только те элементы, для которых применение функции 'func' вернуло 'true'.
+Функция может использовать 'func' только для вызова.
+Для индексных массивов:
+     очерёдность взятия элементов для применения функции 'func' - из начала в конец
+     рассположение элементов сохраняется
+
+signature:
+fn (string:@string, func:fn(idx:@int, char:@char) @bool) @string
+fn (array:@byte_array, func:fn(idx:@int, byte:@byte) @bool) @byte_array
+fn (array:@array, func:fn(idx:@int, item:common) @bool) @array
+fn (table:@table, func:fn(key:param(hash:arg), item:common) @bool) @table
+fn (container:.core_filter_kv, func:fn(key:common, item:common) @bool) !$container
+fn (obj:@obj, func:fn(key:@token, value:common) @bool) @obj
+@#
+fn filter_kv(container, func) null
+
+#@
+Функция возвращает первый элемент в индексном массиве.
+
+signature:
+fn (string:@string) @char
+fn (byte_array:@string) @byte
+fn (array:(@array|.core_first)) common
+
+error:
+:out_of_bounds - если массив пустой.
+@#
+fn first(array) null
+
+#@
+Наибольшее целое число, не больше чем 'num'.
+
+signature:
+fn (num:nan) nan
+fn (num:(-0.0|0.0|inf|-inf)) $=num
+fn (num:(@float|.core_floor)) !$num
+@#
+fn floor(num) null
+
+#@
+Функция foldl применяет функцию 'func' к 'state' и к элементу из контейнер к котрому ранее функция 'func' не применялась,
+     результат применения 'func' становится новым 'state',
+     последний два шага применяются до тех пор пока в контейнере есть элементы к которым функция 'func' не применялась,
+     результат функции foldl - последний 'state'.
+Если функция 'func' возвращает breaker, то элемент из breaker является результатом функции foldl.
+Если контейнер является пустым, то функция просто возвращает 'state'.
+Функция может использовать 'func' только для вызова.
+Для индексных массивов очерёдность взятия элементов для применения функции 'func' - из начала в конец.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, init_state:any, func:fn(in_state:any, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|@set|@array|.core_foldl|@obj), init_state:any, func:fn(in_state:any, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+@#
+fn foldl(container, state, func) null
+
+#@
+Функция foldl1 аналогична функции foldl, но в качестве 'state', используется один из элементов 'container'.
+Елемент который был взят в качестве state, не считается элементом контейнера для использования функции 'func'.
+Для индексных массивов в качестве 'state', используется первый элемент 'container'.
+
+signature:
+fn (string:@string, func:fn(in_state:any, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, func:fn(in_state:any, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|@set|@array|.core_foldl1|@obj), func:fn(in_state:any, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+
+error:
+:out_of_bounds - если контейнер пустой.
+@#
+fn foldl1(container, func) null
+
+#@
+Функция аналогична функции foldl, но передаёт в функцию 'func' не только элемент, но и ключ или индекс данного элемента.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, idx:@int, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, init_state:any, func:fn(in_state:any, idx:@int, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (array:@array, init_state:any, func:fn(in_state:any, idx:@int, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|.core_foldl_kv), init_state:any, func:fn(in_state:any, key:param(hash:arg), value:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (obj:@obj, init_state:any, func:fn(in_state:any, key:@token, value:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+@#
+fn foldl_kv(container, state, func) null
+
+#@
+Функция аналогична функции foldl, но для индексных массивов очерёдность взятия элементов для применения функции 'func' - из конца в начало.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, init_state:any, func:fn(in_state:any, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|@set|@array|.core_foldr|@obj), init_state:any, func:fn(in_state:any, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+@#
+fn foldr(container, state, func) null
+
+#@
+Функция аналогична функции foldl1, но для индексных массивов в качестве 'state' используется последний элемент,
+     а очерёдность взятия элементов для применения функции 'func' - из конца в начало.
+
+signature:
+fn (string:@string, func:fn(in_state:any, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, func:fn(in_state:any, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|@set|@array|.core_foldr1|@obj), func:fn(in_state:any, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+
+error:
+:out_of_bounds - если контейнер пустой.
+@#
+fn foldr1(container, func) null
+
+#@
+Функция аналогична функции foldl_kv, но для индексных массивов очерёдность взятия элементов для применения функции 'func' - из конца в начало.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, idx:@int, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, init_state:any, func:fn(in_state:any, idx:@int, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (array:@array, init_state:any, func:fn(in_state:any, idx:@int, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|.core_foldr_kv), init_state:any, func:fn(in_state:any, key:param(hash:arg), value:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (obj:@obj, init_state:any, func:fn(in_state:any, key:@token, value:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+@#
+fn foldr_kv(container, state, func) null
+
+#@
+Функция возвращает строку с числом 'num' записанной в 'base' системе счисления.
+Если 'signed' равен 'false', то функция воспринимает число 'num' как беззнаковое 64-битное число.
+
+signature:
+fn (num:@int, base:@int, signed:bool) @string
+
+error:
+:out_of_bounds - если (base < 2) | (base > 36).
+@#
+fn format_int(num, base, signed) null
+
+#@
+Функция принимает ошибку и возвращает дополнительные данные из этой ошибки.
+
+signature:
+fn (error:@error) common
+@#
+fn get_error_data(error) null
+
+#@
+Функция принимает ошибку и возвращает идентификатор этой ошибки.
+
+signature:
+fn (error:@error) @token
+@#
+fn get_error_id(error) null
+
+#@
+Функция принимает ошибку и возвращает текст сообщения этой ошибки.
+
+signature:
+fn (error:@error) @string
+@#
+fn get_error_msg(error) null
+
+#@
+Функция возвращает 'true', если символ при отображении занимает знакоместо, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_graphic?)) @bool
+@#
+fn graphic?(char) null
+
+#@
+Функция вычисляет хеш сумму своего аргумента.
+'seed' - число используемое для рандомизации хэша.
+Если seed_1 /= seed_2, то весьма вероятно что hash(arg, seed_1) /= hash(arg, seed_2).
+Если seed_1 /= seed_2, arg_1 /= arg_2 и hash(arg_1, seed_1) == hash(arg_2, seed_1), то весьма вероятно что hash(arg_1, seed_2) /= hash(arg_2, seed_2).
+
+signature:
+fn (arg:(@string|@token|@bool|@byte|@char|@int|@time|@byte_array|[array $arg*]|[set $arg]|[table $arg = $arg]|.core_hash|[obj $arg]), seed:@int) @int
+@#
+fn hash(arg, seed) null
+
+#@
+Функция узнаёт номер часа в указанное время и в указанном часовом поясе.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - если (timezone < -86400) | (timezone > 86400)
+@#
+fn hour(time, timezone) null
+
+#@
+Функция копирует значения из 'interface' в методы 'obj' с тем же ключём.
+Копируются только те значения, соответствующий ключ которых отсутствует в методах 'obj'.
+Если 'interface' имеет тип @array, то фунция выполняет дейтсвия аналогичные следующему коду: interface.foldl(obj, _.implement(_)).
+
+signature:
+fn (obj:@obj, interface:(@obj|[array @obj*])) @obj
+@#
+fn implement(obj, interface) null
+
+#@
+Функция возвращает 'true', если в 'container' есть 'item', иначе 'false'.
+В ассоциативных массивах 'item' ищется только среди значений, но не среди ключей.
+Функция использует функцию 'look_in'.
+
+signature:
+fn (char:@char, string:@string) @bool
+fn (byte:@byte, array:@byte_array) @bool
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:(@array|@table|@set|.core_look_in|@obj)) @bool
+@#
+fn in?(item, container) null
+
+#@
+Функция возвращает 'true', если в 'arg' >= 'from' и 'arg' < 'to', иначе 'false'.
+Функция использует функцию 'cmp'.
+
+signature:
+fn (arg:param((<):left), from:!$arg, to:!$arg) @bool
+
+error:
+:nan_cmp - если произошло сравнение двух констант типа 'float', но при этом одно из них является не числом (nan).
+@#
+fn in_range?(arg, from, to) null
+
+#@
+Функция возвращает 'true', если 'num' == inf, иначе 'false'.
+
+signature:
+fn (num:inf) true
+fn (num:@float) false
+fn (num:.core_inf?) @bool
+@#
+fn inf?(num) null
+
+#@
+Функция копирует поля и методы из 'parent' в 'child'.
+Копируются только те поля и методы, которых нет в 'child'.
+Если 'parent' имеет тип @array, то фунция выполняет дейтсвия аналогичные следующему коду: parent.foldl(child, _.inherits_from(_)).
+
+signature:
+fn (child:@obj, parent:(@obj|[array @obj*])) $child
+@#
+fn inherits_from(child, parent) null
+
+#@
+Функция резервирует память в контейнере под 'cap' элементов.
+
+signature:
+fn (container:(@array|@table|@set|.core_init|@obj), cap:@int) !$container
+
+error:
+:out_of_bounds - если cap < 0 | cap > максимальная длинна массива.
+@#
+fn init(container, cap) null
+
+#@
+Функция вставляет элементы 'part' в 'array', в позицию 'idx'.
+
+signature:
+fn (part:(@string|@byte_array|@array|.core_insert_part_to), array:!$part, idx:@int) !$part
+
+error:
+:out_of_bounds - если (idx < 0) | (idx > len(array))
+@#
+fn insert_part_to(part, array, idx) null
+
+#@
+Функция вставляет 'item' в 'array', в позицию 'idx'.
+
+signature:
+fn (char:@char, string:@string, idx:@int) @string
+fn (byte:@byte, array:@byte_array, idx:@int) @byte_array
+fn (item:common, array:(@array|.core_insert_to), idx:@int) !$array
+
+error:
+:out_of_bounds - если (idx < 0) | (idx > len(array))
+@#
+fn insert_to(item, array, idx) null
+
+#@
+Преобразовывает количество секунд прошедших с 01.01.1970 00:00:00 +0.0, в соответствуещее время.
+
+signature:
+fn (seconds:@int) @time
+
+error:
+:out_of_bounds - если тип количество секунд не умещается в типе time.
+@#
+fn int_to_time(seconds) null
+
+#@
+Функция создаёт массив добавляя элементы из 'parts', между которыми добавляются элементы из массива 'separator'.
+Если 'parts' имеет тип array, то порядок взятия элементов - из начала в конец.
+
+signature:
+fn (parts:([obj !$separator]|[table param(hash:arg) = !$separator]|[set !$separator]|[array !$separator*]), separator:(@string|@byte_array|@array|.core_join)) !$separator
+@#
+fn join(parts, separator) null
+
+#@
+Функция возвращает 'true', если в 'container' есть значение с ключём 'key', иначе 'false'.
+Функция использует функцию ([]).
+Если 'container' не имеет метода 'core___get_item__', то функция работает с методами как со значением.
+
+signature:
+fn (key:param(hash:arg), container:(@table|@set|.core___get_item__)) @bool
+fn (key:@token, obj:@obj) @bool
+@#
+fn key_of?(key, container) null
+
+#@
+Функция возвращает последний элемент в индексном массиве.
+
+signature:
+fn (string:@string) @char
+fn (byte_array:@string) @byte
+fn (array:(@array|.core_last)) common
+
+error:
+:out_of_bounds - если массив пустой.
+@#
+fn last(array) null
+
+#@
+Количество элементов контейнера.
+
+signature:
+fn (container:(@string|@byte_array|@array|@table|@set|@box|.core_len|@obj)) @int
+@#
+fn len(container) null
+
+#@
+Функция возвращает 'true', если символ является буквой, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_letter?)) @bool
+@#
+fn letter?(char) null
+
+#@
+Натуральный логарифм числа.
+
+signature:
+fn (number:nan) nan
+fn (number:(0.0|-0.0)) -inf
+fn (number:1.0) 0.0
+fn (number:inf) inf
+fn (number:(?number<0.0)@float) nan
+fn (number:(@float|.core_log)) !$number
+@#
+fn log(number) null
+
+#@
+Десятичный логарифм числа.
+
+signature:
+fn (number:nan) nan
+fn (number:(0.0|-0.0)) -inf
+fn (number:1.0) 0.0
+fn (number:inf) inf
+fn (number:(?number<0.0)@float) nan
+fn (number:(@float|.core_log10)) !$number
+@#
+fn log10(number) null
+
+#@
+Двоичный логарифм числа.
+
+signature:
+fn (number:nan) nan
+fn (number:(0.0|-0.0)) -inf
+fn (number:1.0) 0.0
+fn (number:inf) inf
+fn (number:(?number<0.0)@float) nan
+fn (number:(@float|.core_log10)) !$number
+@#
+fn log2(number) null
+
+#@
+Функция аналогична функции 'log__msg', но сообщение записывается в журнал только если включён режим отладки.
+
+signature:
+fn (level:@int, msg:@string) null
+
+error:
+:out_of_bounds - если (level < core.log_lvl__minimum) | (level > core.log_lvl__maximum).
+@#
+fn log__debug_msg(level, msg) null
+
+#@
+Функция записывает в журнал сообщений, сообщение 'msg', но только если сообщение имеет уровень выше, чем установленный уровень журналирования. (подробности в документации к функции set_log_level).
+
+signature:
+fn (level:@int, msg:@string) null
+
+error:
+:out_of_bounds - если (level < core.log_lvl__minimum) | (level > core.log_lvl__maximum).
+@#
+fn log__msg(level, msg) null
+
+#@
+Функция возвращает наибольший индекс элемента из 'array', равного 'item'.
+Если в 'array' нет элемента равного 'item', функция возвращает null.
+
+signature:
+fn (char:@char, string:@string) (@int|null)
+fn (byte:@byte, array:@byte_array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), array:(@array|.core_look_from_end_in)) (@int|null)
+@#
+fn look_from_end_in(item, array) null
+
+#@
+Функция возвращает индекс или ключ элемента из 'container', равного 'item'.
+Если в 'container' нет элемента равного 'item', функция возвращает null.
+Если в 'container' является индексным массивом и в нём есть несколько элементов равных 'item', то возвращается наименьший индекс.
+
+signature:
+fn (char:@char, string:@string) (@int|null)
+fn (byte:@byte, array:@byte_array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:@array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:(@table|@set|.core_look_in|@obj)) (param(hash:arg)|null)
+@#
+fn look_in(item, container) null
+
+#@
+Функция аналогична функции look_from_end_in, но ищет любой элемент не равный 'item'.
+
+signature:
+fn (char:@char, string:@string) (@int|null)
+fn (byte:@byte, array:@byte_array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), array:(@array|.core_lofei)) (@int|null)
+@#
+fn look_other_from_end_in(item, array) null
+
+#@
+Функция аналогична функции look_in, но ищет любой элемент не равный 'item'.
+
+signature:
+fn (char:@char, string:@string) (@int|null)
+fn (byte:@byte, array:@byte_array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:@array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:(@table|@set|.core_look_other_in|@obj)) (param(hash:arg)|null)
+@#
+fn look_other_in(item, container) null
+
+#@
+Функция ищет все элементы 'part', рассположенных в той же последовательности, в элементах 'array'
+     и если такие элементы были найдены, возвращает индекс первого элемента 'part' в найденных элементах 'array', иначе возвращает 'null'.
+Поиск осуществляется из конца в начало.
+Если 'part' является пустым массивом, функция возвращает количество элементов 'array'.
+
+signature:
+fn (part:!$array, array:(@string|@byte_array|@array|.core_lpfei)) (@int|null)
+@#
+fn look_part_from_end_in(part, array) null
+
+#@
+Функция ищет все элементы 'part', рассположенных в той же последовательности, в элементах 'array'
+     и если такие элементы были найдены, возвращает индекс первого элемента 'part' в найденных элементах 'array', иначе возвращает 'null'.
+Поиск осуществляется с начала в конец.
+Если 'part' является пустым массивом, функция возвращает 0.
+
+signature:
+fn (part:!$array, array:(@string|@byte_array|@array|.core_look_part_in)) (@int|null)
+@#
+fn look_part_in(part, array) null
+
+#@
+К 'state' применяется 'func', если результат breaker, то элемент из breaker является результатом функции loop, иначе к результату выполнения 'func', применяется 'func',
+     и так происходит до тех пор, пока 'func' не вернёт breaker.
+
+signature:
+fn (init_state:any, func:fn(in_state:any) ([breaker result:any]|out_state:any)) $result
+@#
+fn loop(state, func) null
+
+#@
+Функция возвращает 'true', если символ является буквой в нижнем регистре, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_lower?)) @bool
+@#
+fn lower?(char) null
+
+#@
+Функция создаёт канал и возвращает его вход и выход.
+
+signature:
+fn () [box in:@channel, out:@channel]
+@#
+fn make_channel() null
+
+#@
+Функция применяет 'func' к каждому элементу 'container'.
+Функция может использовать 'func' только для вызова.
+
+signature:
+fn (string:@string, func:fn(char:@char) @char) @string
+fn (array:@byte_array, func:fn(byte:@byte) @byte) @byte_array
+fn (container:(.core_map|@obj|@table|@array), func:fn(item:common) common) !$container
+@#
+fn map(container, func) null
+
+#@
+Функция аналогична функции 'map', но 'func' принимает не только элемент, но и соответствующий ему ключ или индекс.
+
+signature:
+fn (string:@string, func:fn(idx:@int, char:@char) @char) @string
+fn (array:@byte_array, func:fn(idx:@int, byte:@byte) @byte) @byte_array
+fn (array:@array, func:fn(idx:@int, item:common) common) @array
+fn (container:(.core_map_kv|@table), func:fn(key:param(hash:arg), item:common) common) !$container
+fn (obj:@obj, func:fn(key:@token, item:common) common) @obj
+@#
+fn map_kv(container, func) null
+
+#@
+Функция аналогична функции 'map', но имеет состояние, которое может заменяться на новое, при каждом вызове 'func'.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, char:@char) [box out_state:any, @char]) [box @string, result_state:any]
+fn (array:@byte_array, init_state:any, func:fn(in_state:any, byte:@byte) [box out_state:any, @byte]) [box @byte_array, result_state:any]
+fn (container:(.core_map_with_state|@obj|@table|@array), init_state:any, func:fn(in_state:any, item:common) [box out_state:any, common]) [box !$container, result_state:any]
+
+error:
+:unpk_not_enough_items - если 'func' вернула @box, но с количеством элементов меньше двух.
+@#
+fn map_with_state(container, state, func) null
+
+#@
+Функция аналогична функции 'map_with_state', но 'func' принимает не только элемент, но и соответствующий ему ключ или индекс.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, idx:@int, char:@char) [box out_state:any, @char]) [box @string, result_state:any]
+fn (array:@byte_array, init_state:any, func:fn(in_state:any, idx:@int, byte:@byte) [box out_state:any, @byte]) [box @byte_array, result_state:any]
+fn (array:@array, init_state:any, func:fn(in_state:any, idx:@int, item:common) [box out_state:any, common]) [box @array, result_state:any]
+fn (container:(.core_map_kv_with_state|@table), init_state:any, func:fn(in_state:any, key:param(hash:arg), item:common) [box out_state:any, common]) [box !$container, result_state:any]
+fn (obj:@obj, init_state:any, func:fn(in_state:any, key:@token, item:common) [box out_state:any, common]) [box @obj, result_state:any]
+
+error:
+:unpk_not_enough_items - если 'func' вернула @box, но с количеством элементов меньше двух.
+@#
+fn map_kv_with_state(container, state, func) null
+
+#@
+Функция возвращает наибольший из своих аргументов, если аргументы равны - возвращает первый.
+Функция использует функцию 'cmp'.
+
+signature:
+fn (arg_1:param((<):left), arg_2:!$arg_1) !$arg_1
+
+error:
+:nan_cmp - если произошло сравнение двух констант типа 'float', но при этом одно из них является не числом (nan).
+@#
+fn max(arg_1, arg_2) null
+
+#@
+Функция возвращает наибольший возможное значение такого же типа как и 'arg'.
+
+signature:
+fn (@token) :zzzzzzzzzzzzzzzzzzzzzz?
+fn (@byte) 0bff
+fn (@int) 9223372036854775807
+fn (@float) inf
+fn (arg:(@time|.core_max_val)) !$arg
+@#
+fn max_val(arg) null
+
+#@
+Функция возвращает наименьший из своих аргументов, если аргументы равны - возвращает первый.
+Функция использует функцию 'cmp'.
+
+signature:
+fn (arg_1:param((<):left), arg_2:!$arg_1) !$arg_1
+
+error:
+:nan_cmp - если произошло сравнение двух констант типа 'float', но при этом одно из них является не числом (nan).
+@#
+fn min(arg_1, arg_2) null
+
+#@
+Функция возвращает наименьшее возможное значение такого же типа как и 'arg'.
+
+signature:
+fn (@token) :0
+fn (@byte) 0b00
+fn (@int) -9223372036854775808
+fn (@float) -inf
+fn (arg:(@time|.core_min_val)) !$arg
+@#
+fn min_val(arg) null
+
+#@
+Функция возвращает минуту в указанном времени.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - если (timezone < -86400) | (timezone > 86400)
+@#
+fn minute(time, timezone) null
+
+#@
+Функция возвращает месяц в указанном времени.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - если (timezone < -86400) | (timezone > 86400)
+@#
+fn month(time, timezone) null
+
+#@
+Функция перемещает элемент массива 'array', начиная с индекса 'from', в позицию с индесом 'to', в количестве 'len'.
+Функция не меняет элементы массива и их количество, а лишь их рассположение.
+Для непосредственно перемещения, функция гарантированно не алоцирует память на куче.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_move), from:@int, to:@int, len:@int) !$array
+
+error:
+:out_of_bounds - если
+     (from       < 0) || (from > len(array)) ||
+     (to         < 0) || (to   > len(array)) ||
+     (len        < 0)                        ||
+     (from + len > len(array))               ||
+     (to   + len > len(array))
+@#
+fn move(array, from, to, len) null
+
+#@
+Функция возвращает 'true', если 'num' является 'не числом', иначе 'false'.
+
+signature:
+fn (num:nan) true
+fn (num:@float) false
+fn (num:.core_nan?) @bool
+@#
+fn nan?(num) null
+
+#@
+Меняет знак числа на противоположный.
+
+signature:
+fn (num:nan) nan
+fn (num:(@int|@float|.core_neg)) !$num
+@#
+fn neg(num) null
+
+#@
+Меняет биты аргумента с 1 на 0, а с 0 на 1.
+
+signature:
+fn (arg:(@byte|@int|.core_neg_bits)) !$arg
+@#
+fn neg_bits(arg) null
+
+#@
+Функция возвращает 'true', если 'num' == -inf, иначе 'false'.
+
+signature:
+fn (num:-inf) true
+fn (num:@float) false
+fn (num:.core_inf?) @bool
+@#
+fn neg_inf?(num) null
+
+#@
+Функция возвращает 'true', если 'bool' == false, иначе 'false'.
+
+signature:
+fn (bool:true) false
+fn (bool:false) true
+@#
+fn not(bool) null
+
+#@
+Функция возвращает 'true', если 'arg' имеет тип 'null, иначе 'false'.
+
+signature:
+fn (arg:null) true
+fn (arg:any) false
+@#
+fn null?(arg) null
+
+#@
+Функция превращает объект в таблицу.
+Функция работает с методами как со значениями.
+
+signature:
+fn (obj:@obj) [table @token = common]
+@#
+fn obj_to_table(obj) null
+
+#@
+Функция возвращает 'true' если число нечётное, иначе 'false'.
+Функция использует функцию 'even?'.
+
+signature:
+fn (num:(@byte|@int|.core_even?)) @bool
+@#
+fn odd?(num) null
+
+#@
+Функция возвращает свой аргумент, если тот не является ошибкой, иначе выполняется выражение аналогичное выражению fail(arg.get_error_msg()).
+
+signature:
+fn (arg:any) $=arg
+fn (error:@error) !!!noreturn
+@#
+fn ok!(arg) null
+
+#@
+Функция принимает строку с числов записанном в системе счисления с основанием 'base' и возвращает это число.
+Используемые цифры для записи числа - 0-9, a-z, A-Z.
+Перед числом может стоять знак + или -.
+Функция возвращает :invalid_str_fmt если 'num' не содержит число в указанной системе счисления.
+Функция возвращает :64_bits_is_not_enough если для хранения полученного числа не достаточно 64 бит.
+     Положительные числа воспринимаются как беззнаковые, т.е. функция вернёт -1 если 'num' == "18446744073709551615" и 'base' == 10,
+     так как для хранения беззнакового числа 18446744073709551615, достаточно 64 бит.
+     А вот для чисел 18446744073709551616 или -9223372036854775809, 64 бит уже не достаточно.
+
+signature:
+fn (num:@string, base:@int) (:invalid_str_fmt|:64_bits_is_not_enough|@int)
+
+error:
+:out_of_bounds - если (base < 2) | (base > 36)
+@#
+fn parse_int(num, base) null
+
+#@
+Функция возвращает 'true', если в 'array' есть все элементы 'part' в той же последовательность, иначе 'false'.
+Функция возвращает 'true', если 'part' является пустым массивом.
+Функция использует функцию 'look_part_in'.
+
+signature:
+fn (part:!$array, array:(@string|@byte_array|@array|.core_look_part_in)) @bool
+@#
+fn part_of?(part, array) null
+
+#@
+Функция читает один элемент из канала.
+Если в канале нет элементов, функция приостанавливает текущий поток пока элемент не будет прочитан.
+
+signature:
+fn (channel:@channel) /(@breaker|null|@channel|@thread)
+
+error:
+:cant_read_from_channel - если 'channel' является входом канала, а не выходом.
+:no_writing_channel     - если в канале нет элементов и у канала больше не входом, а следовательно в нём уже и не появится элементы.
+@#
+fn pop(channel) null
+
+#@
+Функция возводит 'num' в степень 'power'.
+
+signature:
+fn (num:@int, power:0) 1
+fn (num:@int, power:(?power<0)@int) 0
+fn (num:@byte, power:0b00) 0b01
+fn (num:@float, power:(0.0|-0.0)) 1.0
+fn (num:1.0, power:@float) 1.0
+fn (num:nan, power:@float) nan
+fn (num:@float, power:nan) nan
+fn (num:(@int|@byte|@float|.core_power), power:!$num) @!$num
+@#
+fn power(num, power) null
+
+#@
+Функция возвращает 'true', если элементы 'prefix' равны первым элементам 'array' в той же последовательность, иначе 'false'.
+Функция возвращает 'true', если 'prefix' является пустым массивом.
+
+signature:
+fn (prefix:!$array, array:(@string|@byte_array|@array|.core_prefix_of?)) @bool
+@#
+fn prefix_of?(prefix, array) null
+
+#@
+Функция выводит значение константы 'arg' в интерфейс коммандной строки.
+Функция работает со строкой, не как с массивом из символов.
+Функция рассматривает 'null' как значение, а не как его отсутствие.
+
+signature:
+fn (arg:@sysstr|@null|@token|@bool|@byte|@char|@int|@time|@float|@byte_array|.core_print|[box $arg*]|[array $arg*]|[table $arg = $arg]|[obj $arg = $arg]|[set $arg]) null
+
+error:
+:print         - не удалось вывести значение константы в интерфейс коммандной строки (проблема на строоне коммандной строки).
+:text_recoding - не удалось преобразовать строку для вывода, из corsar в системную кодировку.
+@#
+fn print(arg) null
+
+#@
+Тоже что и 'print' но после вывода аргумента, выводит символ новой строки.
+
+signature:
+fn (arg:@sysstr|@null|@token|@bool|@byte|@char|@int|@time|@float|@byte_array|.core_print|[box $arg*]|[array $arg*]|[table $arg = $arg]|[obj $arg = $arg]|[set $arg]) null
+
+error:
+:print         - не удалось вывести значение константы в интерфейс коммандной строки (проблема на строоне коммандной строки).
+:text_recoding - не удалось преобразовать строку для вывода, из corsar в системную кодировку.
+@#
+fn println(arg) null
+
+#@
+Функция пишет один элемент в канал.
+
+signature:
+fn (channel:@channel, item:/(@breaker|null|@channel|@thread)) null
+
+error:
+:cant_write_to_channel - если 'channel' является выходом канала, а не входом.
+:share_invalid_type    - если 'item' равен 'null', является или содержит в себе тип, который нельзя передавать в канал.
+:no_reading_channel    - если у канала больше нет выходов, а следовательно записываемый элемент никогда не будет прочитан.
+@#
+fn push(channel, item) null
+
+#@
+Функция возвращает количество элементов 'container' равных 'item'.
+
+signature:
+fn (char:@char, string:@string) @int
+fn (byte:@byte, array:@byte_array) @int
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:(@array|@table|.core_qty|@obj)) @int
+@#
+fn qty(item, container) null
+
+#@
+Функция возвращает количество бит равных '0'.
+
+signature:
+fn (arg:(@byte|@int|.core_qty_0_bits)) @int
+@#
+fn qty_0_bits(arg) null
+
+#@
+Функция возвращает количество бит равных '1'.
+
+signature:
+fn (arg:(@byte|@int|.core_qty_1_bits)) @int
+@#
+fn qty_1_bits(arg) null
+
+#@
+Функция возвращает количество идущих подряд страших бит равных '0'.
+Если 'arg' полностью заполнен битами '0', функция возвращает количество таких бит.
+
+signature:
+fn (byte:0b00) 8
+fn (int:0) 64
+fn (arg:(@byte|@int|.core_qty_l0b)) @int
+@#
+fn qty_leading_0_bits(arg) null
+
+#@
+Функция возвращает количество идущих подряд страших бит равных '1'.
+Если 'arg' полностью заполнен битами '1', функция возвращает количество таких бит.
+
+signature:
+fn (byte:0bff) 8
+fn (int:-1) 64
+fn (arg:(@byte|@int|.core_qty_l1b)) @int
+@#
+fn qty_leading_1_bits(arg) null
+
+#@
+Функция возвращает количество идущих подряд младших бит равных '0'.
+Если 'arg' полностью заполнен битами '0', функция возвращает количество таких бит.
+
+signature:
+fn (byte:0b00) 8
+fn (int:0) 64
+fn (arg:(@byte|@int|.core_qty_t0b)) @int
+@#
+fn qty_trailing_0_bits(arg) null
+
+#@
+Функция возвращает количество идущих подряд младших бит равных '1'.
+Если 'arg' полностью заполнен битами '1', функция возвращает количество таких бит.
+
+signature:
+fn (byte:0bff) 8
+fn (int:-1) 64
+fn (arg:(@byte|@int|.core_qty_t1b)) @int
+@#
+fn qty_trailing_1_bits(arg) null
+
+#@
+Функция читает 'count' байт из области памяти, адрес которой указан в 'address' + 'offset'.
+В 'address' используются только первые 8 байт.
+
+signature:
+fn (address:(any|@error), offset:@int, count:@int) @byte_array
+
+error:
+:out_of_bounds - если count < 0 или если count > максимальный допустимый размер массива.
+@#
+fn read_from_mem!!!(address, offset, count) null
+
+#@
+Если элемент 'item' есть в множестве 'set', функция возвращает 'set' но без данного элемента, иначе функция возвращает 'set' без изменений.
+
+signature:
+fn (set:(@set|.core_remove), item:param(hash:arg)) !$set
+@#
+fn remove(set, item) null
+
+#@
+Функция создаёт массив, который является результатом соединения массива 'array' между собой 'count' раз.
+Функция возвращает пустой массив если 'count' равен 0.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_repeat), count:@int) !$array
+
+error:
+:out_of_bounds - если count < 0 или если размер нового массива превышает максимальный допустимый размер массива данного типа.
+@#
+fn repeat(array, count) null
+
+#@
+Функция заменяет все элементы 'container' равные 'old_item' на 'new_item'.
+
+signature:
+fn (string:@string, old_char:@char, new_char:@char) @string
+fn (array:@byte_array, old_byte:@byte,  new_byte:@byte) @byte_array
+fn (container:(.core_replace|@obj|@table|@array), old_item:/(null|@fn|@box|@breaker|@thread|@channel), new_item:common) !$container
+@#
+fn replace(container, old_item, new_item) null
+
+#@
+Функция заменяет элементы 'array' равные всем элементам 'old_part' и идущих в том же порядке, на элементы 'new_part'.
+Если 'old_part' является пустым массивом, то элементы 'new_part' вставляются в начало и в конец 'array', а также между элементами 'array'.
+Если 'old_part' является пустым массивом и 'array' является пустым массивом, то функция возвращает 'new_part.
+Поиск элементов осуществляется из начала в конец.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_replace_part), old_part:!$array, new_part:!$array) !$array
+@#
+fn replace_part(array, old_part, new_part) null
+
+#@
+Функция при необходимости резервирует место как минимум для еще 'items_qty' элементов.
+Если short_type?(container) возвращает true, то функция ничего не резервирует.
+
+signature:
+fn (container:(@string|@byte_array|@array|@table|@set|.core_reserve|@obj), items_qty:@int) !$container
+
+error:
+:out_of_bounds - если items_qty < 0 | len(container) + items_qty > максимальное число элементов для данного типа.
+@#
+fn reserve(container, cap) null
+
+#@
+Функция меняет порядок элементов массива на противоположный (элементы из начала становятся в конец, а те что были в конце, становятся в начало).
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_reverse)) !$array
+@#
+fn reverse(array) null
+
+#@
+Функция меняет порядок бит на противоположный (младшие биты становятся старшими, а старшие - младшими).
+
+signature:
+fn (arg:(@byte|@int|.core_reverse_bits)) !$arg
+@#
+fn reverse_bits(arg) null
+
+#@
+Функция меняет порядок байт на противоположный (младшие байты становятся старшими, а старшие - младшими).
+
+signature:
+fn (arg:(@int|.core_reverse_bytes)) !$arg
+@#
+fn reverse_bytes(arg) null
+
+#@
+Функция возвращает псевдо-случайное число.
+Генерация числа происходит при каждом запуске функции.
+При каждом запуске приложения, генерируемые числа могут отличаться.
+Число генерируется в диапазоне [-9223372036854775808, 9223372036854775807]
+
+signature:
+fn () @int
+@#
+fn rnd() null
+
+#@
+Циклический сдвиг в лево.
+
+signature:
+fn (num:(@int|@byte|.core_rotate_left), shifts:(@int|@byte)) !$num
+
+error:
+:bits_shift - если (shifts < 0) | (shifts > количество бит в 'num')
+@#
+fn rotate_left(num, shifts) null
+
+#@
+Циклический сдвиг в парво.
+
+signature:
+fn (num:(@int|@byte|.core_rotate_right), shifts:(@int|@byte)) !$num
+
+error:
+:bits_shift - если (shifts < 0) | (shifts > количество бит в 'num')
+@#
+fn rotate_right(num, shifts) null
+
+#@
+Округляет число до ближайшего целого.
+В случаях если есть два одинаково близких целых числа, выбирается то, модуль которого больше.
+
+signature:
+fn (num:nan) nan
+fn (num:(-0.0|0.0|inf|-inf)) $=num
+fn (num:(@float|.core_round)) !$num
+@#
+fn round(num) null
+
+#@
+Является оператором, а не функцией.
+Оператор возвращает свой аргумент, но без информации которая известна компилятору об аргументе.
+
+signature:
+fn (arg:(any|@error)) $=arg
+@#
+fn scarlet__erase_info(arg) null
+
+#@
+Является оператором, а не функцией.
+Оператор возвращает свой аргумент, но без информации о значении аргумента которая известна компилятору.
+
+signature:
+fn (arg:(any|@error)) $=arg
+@#
+fn scarlet__erase_value(arg) null
+
+#@
+В программе любая костанта храниться в виде двух 64-битных чисел,
+     данная функция принимает два аргумента и возвращает константу созданую из младших 64 битных чисел своих аргументов.
+Функция увеличивает на 1 счётчик ссылок (если он есть) результата.
+Функция является крайне небезопасной и пожет привести к крайне непредсказуемому поведению программы.
+Функция может принимать ошибку и при этом не вернуть её.
+
+signature:
+fn (low:(any|@error), high:(any|@error)) (any|@error)
+@#
+fn scarlet__join!!!(low, high) null
+
+#@
+Функция возвращает псевдо-случайное число.
+Генерация числа происходит при каждой компиляции приложения.
+Число генерируется в диапазоне [-9223372036854775808, 9223372036854775807]
+
+signature:
+fn () @int
+@#
+fn scarlet__rnd(num) null
+
+#@
+В программе любая костанта храниться в виде двух 64-битных чисел,
+     данная функция принимает константу и возвращает эти два числа.
+Функция может принимать ошибку и при этом не вернуть её.
+
+signature:
+fn (arg:(any|@error)) [box low:@int, high:@int]
+@#
+fn scarlet__split!!!(arg) null
+
+#@
+Функция узнаёт номер секунды в указанное время и в указанном часовом поясе.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - если (timezone < -86400) | (timezone > 86400)
+@#
+fn second(time, timezone) null
+
+#@
+Копирование элементов массива 'array' в количестве 'len' из позиции 'from' в позицию 'to'.
+Функция заменяет уже существующие элементы.
+Функция не изменяет количество элементов в массиве.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_self_copy), from:@int, to:@int, len:@int) !$array
+
+error:
+:out_of_bounds - если
+     (from       < 0) || (from > len(array)) ||
+     (to         < 0) || (to   > len(array)) ||
+     (len        < 0)                        ||
+     (from + len > len(array))               ||
+     (to   + len > len(array))
+@#
+fn self_copy(array, from, to, len) null
+
+#@
+Функция сериализует 'arg' записывая полученные данные в 'dst'.
+
+signature:
+fn (arg:(@string|@token|@bool|@byte|@char|@int|@time|@float|@byte_array|[obj $arg]|[table $arg = $arg]|[set $arg]|[array $arg*]), dst:@byte_array) !$dst
+@#
+fn serialize(arg, dst) null
+
+#@
+Функция устанавливает уровень, начиная с которого будут записываться сообщения в журнал сообщений.
+Чем выше установленный уровень, тем меньше сообщений будет писаться в журнал.
+Доступные уровни указаны в сигнатурре.
+Чем первее в сигнатуре указан уровень тем он ниже.
+
+signature:
+fn (level:(
+     @core.log_lvl__minimum               |
+     @core.log_lvl__hint                  |
+     @core.log_lvl__may_require_attention |
+     @core.log_lvl__require_attention     |
+     @core.log_lvl__important             |
+     @core.log_lvl__very_important        |
+     @core.log_lvl__maximum)
+) null
+
+error:
+:out_of_bounds - если level имеет тип int, но не является одним из значений указанных в сигнатуре.
+@#
+fn set_log_level(level) null
+
+#@
+Функция возвращает 'true' если память константы используется для хранения элементов,
+     'false' если память константы используется для хранения вспомогательных данных и указателя на элементы.
+
+signature:
+fn (array:(@string|@byte_array)) @bool
+@#
+fn short_type?(array) null
+
+#@
+Функция переставляет элементы 'box' в порядке указанном в 'idxes'.
+'idxes' хранит индексы элементов 'box' в том порядке, в каком они должны в результате распологаться.
+В 'idxes' каждый индекс должен указываться единожды и обязательно должен быть индекс каждого элемента 'box'.
+
+signature:
+fn (box:@box, idxes:[box @int{len(box)}]) @box
+
+error:
+:invalid_items_num - если len(box) /= len(idxes).
+:shuffle_dup       - если один и тот же индекс указан несколько раз.
+:out_of_bounds     - если хотя бы один индекс больше или равен len(box).
+@#
+fn shuffle_box(box, idxes) null
+
+#@
+Синус угла.
+Угол измеряется в радианах.
+
+signature:
+fn (angle:nan) nan
+fn (angle:(-inf|inf)) nan
+fn (angle:(-0.0|0.0)) $=angle
+fn (angle:(@float|.core_sin)) !$arg
+@#
+fn sin(angle) null
+
+#@
+Приостанавливает работу текущего потока, не менее чем на 'nano_sec' наносекунд.
+После окончания указанного времени, функция стремиться востановить работу потока как можно быстрее.
+
+signature:
+sleep(nano_sec:@int) null
+
+error:
+:out_of_bounds - если 'nano_sec' < 0.
+:insomnia      - если не удалось приостановить текущий поток.
+@#
+fn sleep(nano_sec) null
+
+#@
+Сортировка массива.
+Если 'is_asc_order' равен 'true', то массив сортируется по возрастанию, иначе по убыванию.
+Для сравнения элементов данная функция использует функцию cmp.
+
+signature:
+fn (array:(@string|@byte_array|.core_sort|[array !param(cmp:arg_1)*]), is_asc_order:@bool) !$array
+
+error:
+:nan_cmp  - если при сортировке сравнивались числа с плавающей точкой и хотя бы одно из них было nan.
+:cant_ord - если функция cmp вернула :not_equal.
+@#
+fn sort(array, is_asc_order) null
+
+#@
+Функция sort_fn аналогична функции sort, но вместо функции cmp используется функция 'cmp_fn'.
+Функция может использовать 'cmp_fn' только для вызова.
+Если функция 'cmp_fn' ведет себя как функция cmp, то массив будет отсортирован по возрастанию.
+
+signature:
+fn (string:@string, cmp_fn:fn(char_1:@char, char_2:@char) (:equal|:less|:great|:not_equal|:nan_cmp)) @string
+fn (array:@byte_array, cmp_fn:fn(byte_1:@byte, byte_2:@byte) (:equal|:less|:great|:not_equal|:nan_cmp)) @byte_array
+fn (array:[array item:!common*]), cmp_fn:fn(item_1:!$item, item_2:!$item) (:equal|:less|:great|:not_equal|:nan_cmp)) !$array
+fn (array:.core_sort_fn, cmp_fn:fn(item_1:any, item_2:any) (:equal|:less|:great|:not_equal|:nan_cmp)) !$array
+
+error:
+:nan_cmp             - если функция 'cmp_fn' вернёт :nan_cmp.
+:cant_ord            - если функция 'cmp_fn' вернёт :not_equal.
+:ret_incorrect_value - если функция 'cmp_fn' вернёт константу типа token, но она не равна одному из значений: :equal, :less, :great, :not_equal, :nan_cmp.
+@#
+fn sort_fn(array, cmp_fn) null
+
+#@
+Функция возвращает 'true', если символ при отображении занимает знакоместо, но при этом не имеет визуального отображения, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_space?)) @bool
+@#
+fn space?(char) null
+
+#@
+Функция разделяет массив на подмассивы, используя разделитель 'separator'.
+'separator' не добавляется в подмассивы.
+Если 'separator' является первым элементом 'array', то считается что перед ним есть пустой подмассив.
+Если 'separator' является последним элементом 'array', то считается что после него есть пустой подмассив.
+Если 'separator' встречается в элементах 'array' два раза подряд, то считается что между ними есть пустой подмассив.
+
+signature:
+fn (string:@string, separator:@char) [array @string+]
+fn (array:@byte_array, separator:@byte) [array @byte_array+]
+fn (array:@array, separator:/(null|@fn|@box|@breaker|@thread|@channel)) [array @array+]
+fn (array:.core_split, separator:/(null|@fn|@box|@breaker|@thread|@channel)) [array !$array+]
+@#
+fn split(array, separator) null
+
+#@
+Функция split_by_part аналогична функции split, но в качестве разделителя используется не один элемент, а несколько элементов идущих подряд.
+Если 'separator' является пустым массивом, то функция возвращает подмассивы состоящие из одного элемента 'array' с индексом как и элемент.
+Если 'separator' и 'array' являются пустым массивом, то функция возвращает пустой массив типа @core.array.
+Поиск элементов осуществляется из начала в конец.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_split_by_part), separator:!$array) [array !$array*]
+@#
+fn split_by_part(array, separator) null
+
+#@
+Возведение числа в квадрат.
+Функция использует функцию (*).
+
+signature:
+fn (num:nan) nan
+fn (num:(@byte|@int|@float|.core___mul__)) $num
+@#
+fn sqr(num) null
+
+#@
+Вычисление квадратного корня.
+
+signature:
+fn (num:nan) nan
+fn (num:(?num<-0.0)) nan
+fn (num:(-0.0|0.0|inf)) $=num
+fn (num:(@byte|@int|@float|.core_sqrt)) $num
+
+error:
+:sqrt_from_neg - если тип 'num' - @int и 'num' < 0.
+@#
+fn sqrt(num) null
+
+#@
+Стабильная сортировка массива.
+Если 'is_asc_order' равен 'true', то массив сортируется по возрастанию, иначе по убыванию.
+Для сравнения элементов данная функция использует функцию cmp.
+
+signature:
+fn (array:(@string|@byte_array|.core_stable_sort|[array !param(cmp:arg_1)*]), is_asc_order:@bool) !$array
+
+error:
+:nan_cmp  - если при сортировке сравнивались числа с плавающей точкой и хотя бы одно из них было nan.
+:cant_ord - если функция cmp вернула :not_equal.
+@#
+fn stable_sort(array, is_asc_order) null
+
+#@
+Функция stable_sort_fn аналогична функции stable_sort, но вместо функции cmp используется функция 'cmp_fn'.
+Функция может использовать 'cmp_fn' только для вызова.
+Если функция 'cmp_fn' ведет себя как функция cmp, то массив будет отсортирован по возрастанию.
+
+signature:
+fn (string:@string, cmp_fn:fn(char_1:@char, char_2:@char) (:equal|:less|:great|:not_equal|:nan_cmp)) @string
+fn (array:@byte_array, cmp_fn:fn(byte_1:@byte, byte_2:@byte) (:equal|:less|:great|:not_equal|:nan_cmp)) @byte_array
+fn (array:[array item:!common*]), cmp_fn:fn(item_1:!$item, item_2:!$item) (:equal|:less|:great|:not_equal|:nan_cmp)) !$array
+fn (array:.core_stable_sort_fn, cmp_fn:fn(item_1:any, item_2:any) (:equal|:less|:great|:not_equal|:nan_cmp)) !$array
+
+error:
+:nan_cmp             - если функция 'cmp_fn' вернёт :nan_cmp.
+:cant_ord            - если функция 'cmp_fn' вернёт :not_equal.
+:ret_incorrect_value - если функция 'cmp_fn' вернёт константу типа token, но она не равна одному из значений: :equal, :less, :great, :not_equal, :nan_cmp.
+@#
+fn stable_sort_fn(array, cmp_fn) null
+
+#@
+Функция возвращает токен созданный из символов строки.
+Функция возвращает null если в строке содержится некоректный набор символов.
+
+signature:
+fn (string:@string) (null|@token)
+@#
+fn str_to_tkn(string) null
+
+#@
+Функция возвращает массив из байтов представляющий из себя строку 'string' но в кодировке utf-8.
+Функция возвращает null если в 'string' были символы которых нет в юникоде.
+
+signature:
+fn (string:@string) (null|@ustring)
+@#
+fn str_to_ustr(string) null
+
+#@
+Функция возвращает 'true', если элементы 'suffix' равны последним элементам 'array' в той же последовательность, иначе 'false'.
+Функция возвращает 'true', если 'suffix' является пустым массивом.
+
+signature:
+fn (suffix:!$array, array:(@string|@byte_array|@array|.core_suffix_of?)) @bool
+@#
+fn suffix_of?(suffix, array) null
+
+#@
+Функция возвращает 'true', если символ при отображении занимает знакоместо и имеет визуальное отображение, но не является буквой или цифрой, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_symbol?)) @bool
+@#
+fn symbol?(char) null
+
+#@
+Функция превращает таблицу в объект.
+
+signature:
+fn (table:[table @token=common]) @obj
+@#
+fn table_to_obj(table) null
+
+#@
+Создание индексного массива из элементов 'array' с индексом < 'n'.
+Рассположение элементов сохраняется.
+
+signature:
+fn (array:(@string|@byte_array|.core_take|@array), n:@int) !$array
+
+error:
+:out_of_bounds - если (n > len(array)) | (n < 0)
+@#
+fn take(array, n) null
+
+#@
+Функция возвращает один элемент множества или ассоциативного массива.
+Функция возвращает null если 'container' пуст.
+
+signature:
+fn (container:(@table|@set|.core_take_one|@obj)) (common|null)
+@#
+fn take_one(container) null
+
+#@
+Функция возвращает один элемент и соответствующий ему ключ ассоциативного массива.
+Функция возвращает null если 'container' пуст.
+
+signature:
+fn (container:(@table|.core_take_one_kv|@obj)) ([box key:param(hash:arg), item:common]|null)
+@#
+fn take_one_kv(container) null
+
+#@
+Создание индексного массива из элементов 'array' с индексом < n, где n - индекс первого элемента, к которому применение функции 'func' вернуло 'false',
+     если таких элементов нет, то n = len(array)
+Очерёдность взятия элементов для применения функции 'func' - из начала в конец.
+Применение функции 'func' происходит до тех пор, пока она возвращает 'true'.
+Рассположение элементов сохраняется.
+Функция может использовать 'func' только для вызова.
+
+signature:
+fn (array:(@string|@byte_array|.core_take_while|@array), func:fn(item:common) @bool) !$array
+@#
+fn take_while(array, func) null
+
+#@
+Тангенс угла.
+Угол измеряется в радианах.
+
+signature:
+fn (angle:nan) nan
+fn (angle:(-inf|inf)) nan
+fn (angle:(-0.0|0.0)) $=angle
+fn (angle:(@float|.core_tan)) !$arg
+@#
+fn tan(angle) null
+
+#@
+Функция запускает выполнение функции 'func' в отдельном потоке, возвращая константу
+     с помощью которой можно получить значение которое вернёт 'func'.
+
+signature:
+fn (func:fn() (any|@error)) @thread
+
+error:
+:share_invalid_type - если 'func' использует константы из текущего потока, которые нельзя передать в другой поток.
+@#
+fn thread(func) null
+
+#@
+Функция возвращает текущее время.
+
+signature:
+fn () @time
+
+error:
+:get_time - если по каким либо причинам не удалось получить текущее время.
+@#
+fn time() null
+
+#@
+Функция аналогична функции pop, но с ограничением на максимальное время которое будет ожидаться элемент.
+Функция возвращает null если истекло указанное время, но элемент не был получен.
+В 'nano_sec' можно передать 0, что означает получение элемента если он есть, иначе сразу вернуть null.
+
+signature:
+fn (channel:@channel, nano_sec:@int) ((/(@breaker|@channel|@thread))|null)
+
+error:
+:out_of_bounds          - если 'nano_sec' < 0.
+:cant_read_from_channel - если 'channel' является входом канала, а не выходом.
+:no_writing_channel     - если в канале нет элементов и у канала больше не входом, а следовательно в нём уже и не появится элементы.
+@#
+fn time_limit_pop(channel, nano_sec) null
+
+#@
+Функция аналогична функции wait, но с ограничением на максимальное время которое будет ожидаться результат.
+В 'nano_sec' можно передать 0, что означает получение результата если он есть, иначе сразу вернуть значение,
+     которое в ином случает возвращается при истечении времени.
+Если поток завершился ошибкой, то функция возвращает эту ошибку.
+Если был получен результат, то функция возвращает - [box true, null, результат].
+Если время истекло, а результат не был получен, то функция возвращает - [box false, 'thread', null].
+
+signature:
+fn (thread:@thread, nano_sec:@int) [box @bool, ($=thread|null), (any|null)]
+
+error:
+:out_of_bounds - если 'nano_sec' < 0.
+@#
+fn time_limit_wait(thread, nano_sec) null
+
+#@
+Системное значение временной зоны.
+Используется для функций работающих с временем.
+
+signature:
+fn () @int
+@#
+fn timezone() null
+
+#@
+Функция преобразовывает контейнер с элементами в массив типа core.array с этими же элементами.
+Если 'container' является индекным массивом, то элементы в результате функции имеют такие же индексы как и в аргументе.
+
+signature:
+fn (array:@array) $=array
+fn (container:(@string|@byte_array|@box|@table|@set|.core_to_array|@obj)) @array
+@#
+fn to_array(container) null
+
+#@
+Функция преобразовывает некоторые значения которые могут быть восприняты как значения типа bool, в значения типа bool.
+Функция возвращает null если 'arg' имеет коректный тип, но не коректное значение.
+Список преобразовываемых значений:
+Значение                                                  |Результат
+----------------------------------------------------------+---------
+"false", "no", "off" (символы могут быть в любом регистре)|false
+"true", "yes", "on" (символы могут быть в любом регистре) |true
+false                                                     |false
+true                                                      |true
+0b00                                                      |false
+0b01                                                      |true
+:false, :no, :off                                         |false
+:true, :yes, :on                                          |true
+0                                                         |false
+1                                                         |true
+
+signature:
+fn (bool:@bool) $=bool
+fn (arg:(@string|@byte|@token|@int|.core_to_bool)) (null|@bool)
+@#
+fn to_bool(arg) null
+
+#@
+Функция преобразовывает контейнер с элементами в массив типа core.box с этими же элементами.
+Если 'container' является индекным массивом, то элементы в результате функции имеют такие же индексы как и в аргументе.
+
+signature:
+fn (box:@box) $=box
+fn (container:(@string|@byte_array|@array|@table|@set|.core_to_box|@obj)) @box
+
+error:
+:out_of_bounds - если len(container) > 16.
+@#
+fn to_box(container) null
+
+#@
+Функция преобразовывает некоторые значения которые могут быть восприняты как значения типа byte, в значения типа byte.
+Функция возвращает null если 'arg' имеет коректный тип, но не коректное значение.
+Правила преобразования:
+Тип       |Правила                                                                            |Пример
+----------+-----------------------------------------------------------------------------------+-------------------------
+string    |строка должна содержать byte как если бы он был в исходном коде, но без префикса 0b|"fe"              -> 0bfe
+byte      |преобразование не требуется                                                        |0bfe              -> 0bfe
+char      |возвращается код символа                                                           |'z'               -> 0b7a
+int       |возвращается указанное число, но уже с типом byte                                  |126               -> 0bfe
+float     |возвращается целая часть указанного числа, но уже с типом byte                     |126.7             -> 0bfe
+byte_array|массив должен быть из одного байта, который и будет результатом функции            |[byte_array 0bfe] -> 'f'
+
+signature:
+fn (byte:@byte) $=byte
+fn (arg:(@string|@char|@int|@float|.core_to_byte)) (null|@byte)
+@#
+fn to_byte(arg) null
+
+#@
+Функция преобразовывает некоторые значения, в значения типа char.
+Функция возвращает null если 'arg' имеет коректный тип, но не коректное значение.
+Правила преобразования:
+Тип   |Правила                                                                   |Пример
+------+--------------------------------------------------------------------------+--------------
+string|строка должена быть из одного символа, который и будет результатом функции|"f"   -> 'f'
+byte  |возвращает символ с указанным в кодом                                     |0b66  -> 'f'
+char  |преобразование не требуется                                               |'f'   -> 'f'
+int   |возвращает символ с указанным в кодом                                     |102   -> 'f'
+float |возвращает символ с в кодом из целой части числа                          |102.7 -> 'f'
+
+signature:
+fn (char:@char) $=char
+fn (arg:(@string|@byte|@int|@float|.core_to_char)) (null|@char)
+@#
+fn to_char(arg) null
+
+#@
+Функция преобразовывает некоторые значения, в значения типа float.
+Функция возвращает null если 'arg' имеет коректный тип, но не коректное значение.
+Правила преобразования:
+Тип   |Правила                                                                                                                 |Пример
+------+------------------------------------------------------------------------------------------------------------------------+------------------
+string|строка должна содержать текстовое представление вещественного числа в виде десятичной дроби или в експоненциальной форме|"10.5"   -> 10.5
+      |перед значениями допускаются символы + и -                                                                              |"1.0e-4" -> 0.0001
+      |допускает запись целых чисел (без вещественной части)                                                                   |"+12.5"  -> 12.5
+      |также могут быть указанны особые значения: "nan", "inf"                                                                 |"-12"    -> -12.0
+      |исключая особые значения допускаются только следующие символы:0-9 . e + -                                               |"NAn"    -> не число
+      |если символ в строке является буквой, то не имеет значения в каком она регистре                                         |"+1200"  -> 1200.0
+byte  |преобразование числа из типа byte в тип float                                                                           |0b0a     -> 10.0
+int   |преобразование числа из типа int в тип float                                                                            |-15      -> -15.0
+float |преобразование не требуется                                                                                             |102.25   -> 102.25
+
+signature:
+fn (float:@float) $=float
+fn (arg:(@string|@byte|@int|.core_to_float)) (null|@float)
+@#
+fn to_float(arg) null
+
+#@
+Функция преобразовывает некоторые значения, в значения типа int.
+Функция возвращает null если 'arg' имеет коректный тип, но не коректное значение.
+Правила преобразования:
+Тип   |Правила                                                                               |Пример
+------+--------------------------------------------------------------------------------------+--------------------------------------------------------
+string|строка должна содержать текстовое представление числа в десятиричной системе счисления|"10"                                      -> 10
+      |перед значениями допускаются символы + и -                                            |"-1"                                      -> -1
+byte  |преобразование числа из типа byte в тип int                                           |0b0a                                      -> 10
+char  |возвращается код символа                                                              |'z'                                       -> 122
+int   |преобразование не требуется                                                           |10                                        -> 10
+time  |возвращается количество секунд прошедших с 01.01.1970 00:00:00 +0.0                   |assemble_time(0, 2010, 8, 13, 23, 14, 57) -> 1281741297
+float |преобразование числа из типа float в тип int, отбрасывая вещественную часть           |102.79                                    -> 102
+
+signature:
+fn (int:@int) $=int
+fn (arg:(@string|@byte|@char|@time|@float|.core_to_int)) (null|@int)
+@#
+fn to_int(arg) null
+
+#@
+Функция преобразует все буквы в верхнем регистре, в соответствующие буквы в нижнем регистре.
+В некоторых языках изменение регистра одной буквы, приводит появлению новых символов,
+     поэтому если эта функция принимает один символ типа char, то результат будет иметь тип string,
+     так же поэтому длинна аргумента и результата, могут не совпадать.
+
+signature:
+fn (arg:(@string|@char)) @string
+fn (arg:.core_to_lower) common
+@#
+fn to_lower(arg) null
+
+#@
+Функция преобразует константу в её текстовое представление.
+Функция работает со строкой, не как с массивом из символов.
+Функция рассматривает 'null' как значение, а не как его отсутствие.
+Правила преобразования:
+Тип       |Результат                                                                                       |Пример
+----------+------------------------------------------------------------------------------------------------+------------------------------------------------------------------------
+string    |аргумент                                                                                        |"10"                                      -> "10"
+null      |как значение было бы написано в исходном коде                                                   |null                                      -> "null"
+token     |как значение было бы написано в исходном коде, но без :                                         |:123                                      -> "123"
+bool      |как значение было бы написано в исходном коде                                                   |false                                     -> "false"
+byte      |как значение было бы написано в исходном коде, но без 0b                                        |0bfe                                      -> "fe"
+char      |строка c указанным символом                                                                     |'z'                                       -> "z"
+int       |строка c указанным числом в десятичной системе счисления, без символа +                         |123                                       -> "123"
+byte_array|строка с по очери превращёнными байтами без разделителей                                        |[byte_array 0b00, 0b01, 0b02]             -> "000102"
+time      |dd.MM.yyyy hh.mm.ss timezone                                                                    |assemble_time(0, 2010, 8, 13, 23, 14, 57) -> "14.08.2010 02:14:57 +3.00"
+          |Где:                                                                                            |
+          |     d        - день                                                                            |
+          |     M        - месяц                                                                           |
+          |     y        - год                                                                             |
+          |     h        - час                                                                             |
+          |     m        - минута                                                                          |
+          |     s        - секунда                                                                         |
+          |     timezone - количество часов, которое добавлены к UTC,                                      |
+          |                     чтобы время в строке было локальным                                        |
+float     |строка c указанным числом в виде десятичной дроби, без символа +                                |1.0                                       -> "1.0"
+          |максимальное количество знаков после запятой - 15                                               |1.0/3.0                                   -> "0.333333333333333"
+          |особые значения: nan, inf, -inf                                                                 |
+box       |как значение было бы написано в исходном коде, но к элементам применена функция to_string       |[box 0b00, null]                          -> "[box 00, null]"
+array     |как значение было бы написано в исходном коде, но к элементам применена функция to_string       |[array 0b00, :12]                         -> "[array 00, 12]"
+obj       |как значение было бы написано в исходном коде, но к ключу и значению применена функция to_string|[obj :12 = 0bff]                          -> "[obj 12 = ff]"
+table     |как значение было бы написано в исходном коде, но к ключу и значению применена функция to_string|[table :12 = 0bff]                        -> "[table 12 = ff]"
+set       |как значение было бы написано в исходном коде, но к элементам применена функция to_string       |[set 0b00, :12]                           -> "[set 00, 12]"
+
+signature:
+fn (arg:(@string|null|@token|@bool|@byte|@char|@int|@byte_array|@time|@float|.core_to_string|[box $arg*]|[array $arg*]|[obj $arg]|[table $arg = $arg]|[set $arg])) @string
+@#
+fn to_string(arg) null
+
+#@
+Функция преобразует все буквы в нижнем регистре, в соответствующие буквы в верхнем регистре.
+В некоторых языках изменение регистра одной буквы, приводит появлению новых символов,
+     поэтому если эта функция принимает один символ типа char, то результат будет иметь тип string,
+     так же поэтому длинна аргумента и результата, могут не совпадать.
+
+signature:
+fn (arg:(@string|@char)) @string
+fn (arg:.core_to_upper) common
+@#
+fn to_upper(arg) null
+
+#@
+Функция удаляет с конца и с начала строки символы ' ', '\t', '\n'.
+
+signature:
+fn (string:(@string|.core_trim)) !$string
+@#
+fn trim(string) null
+
+#@
+Функция возвращает число без вещественной части.
+
+signature:
+fn (num:nan) nan
+fn (num:(-0.0|0.0|inf|-inf)) $=num
+fn (num:(@float|.core_trunc)) !$num
+@#
+fn trunc(num) null
+
+#@
+Функция возвращает имя типа в формате "имя_модуля.имя_типа".
+Если аргумент функции не является ошибкой, то функция не возвращает ошибку.
+
+signature:
+fn (arg:.core_type) @string
+fn (arg:any) @string
+@#
+fn type(arg) null
+
+#@
+Функция возвращает строку в кодирове utf-8 (тип byte_array) с одним символом код (юникод) которого передав в качестве аргумента.
+
+signature:
+fn (code:@int) @ustring
+
+error:
+:out_of_bounds - если (code < 1) | (code > 1'114'111)
+@#
+fn uchar_to_ustr(code) null
+
+#@
+Если 'arg' является ошибкой, то функция возвращает 'arg', иначе функция возвращает [box arg, null].
+Функция используется для проверки данных, которые должны быть в единственном экземпляре (box, thread, breaker), на ошибки.
+
+Ошибочный пример:
+...
+let thrd = thread(fn () "hello".println()))
+if thrd.error?() // ошибка, так как thrd используется далее в программе
+     fail("error")
+else null
+
+let result = thrd.wait()
+...
+
+Верный пример:
+...
+let thrd = thread(fn () "hello".println()))
+let [box thrd, error] = thrd.uncopyable_error?()
+if error.error?()
+     fail(error)
+else null
+
+let result = thrd.wait()
+...
+
+signature:
+fn (error:@error) $=error
+fn (arg:any) [box $=arg, null]
+@#
+fn uncopyable_error?(arg) null
+
+#@
+Если аргумент функции во внуреннем представлении не является массивом, а является слайсом, то функция создаёт из этого слайса массив.
+Так же функция (независимо от того являлся ли массив слайсом или нет), освобождает преалоцированную для новых элементов память.
+Функция предназначена для уменьшения потребления памяти и возвращает свой аргумент без изменений,
+     если вышеописанные действия не преводят к уменьшению размера потребляемой памяти.
+
+signature:
+fn (array:(@string|@byte_array|@array)) !$array
+@#
+fn unslice(array) null
+
+#@
+Функция возвращает 'true', если символ является буквой в верхнем регистре, иначе 'false'.
+
+signature:
+fn (char:(@char|.core_upper?)) @bool
+@#
+fn upper?(char) null
+
+#@
+Функция выводит строку в кодировке utf-8 в интерфейс коммандной строки.
+
+signature:
+fn (string:@ustring) null
+
+error:
+:print         - не удалось вывести строку в интерфейс коммандной строки (проблема на строоне коммандной строки).
+:text_recoding - не удалось преобразовать строку для вывода, из utf-8 в системную кодировку.
+:text_encoding - строка не является валидным текстом в кодировке utf-8.
+@#
+fn uprint(string) null
+
+#@
+Тоже что и 'uprint' но после вывода аргумента, выводит символ новой строки.
+
+signature:
+fn (string:@ustring) null
+
+error:
+:print         - не удалось вывести строку в интерфейс коммандной строки (проблема на строоне коммандной строки).
+:text_recoding - не удалось преобразовать строку для вывода, из utf-8 в системную кодировку.
+:text_encoding - строка не является валидным текстом в кодировке utf-8.
+@#
+fn uprintln(string) null
+
+#@
+Функция конвертирует строку в кодировке utf-8, в строку.
+Функция возвращает null если в 'ustring' были символы которых нет в corsar.
+
+signature:
+fn (ustring:@ustring) (null|@string)
+
+error:
+:text_encoding - строка не является валидным текстом в кодировке utf-8.
+@#
+fn ustr_to_str(ustring) null
+
+#@
+Функция дожидается окончания потока и возвращает те данные, которые вернула функция запущенная в указанном потоке.
+Если поток не был завершён к моменту вызова данной функции, то функция приостанавливает текущий поток пока результат не будет получен.
+Если поток завершился ошибкой, то функция возвращает эту ошибку.
+
+signature:
+fn (thread:@thread) (any|@error)
+@#
+fn wait(thread) null
+
+#@
+Функция записывает байты из 'bytes' в области памяти, адрес которой указан в 'address' + 'offset'.
+
+signature:
+fn (address:(any|@error), offset:@int, bytes:@byte_array) null
+@#
+fn write_to_mem!!!(address, offset, bytes) null
+
+#@
+Функция возвращает год в указанном времени.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - если (timezone < -86400) | (timezone > 86400)
+@#
+fn year(time, timezone) null
+
+#@
+Вызов данной функции указывает на то, что текущему потоку в данный момент не нужно процессорное время.
+
+signature:
+fn () null
+@#
+fn yield() null
+
+#@
+Функция соединяет два массива в один, посредством применения к их элементам функции 'func' и создания нового массива с результатами функции 'func'.
+Если один из аргументов является индексным массивом, то и второй должен быть индексным массивом.
+Если один из аргументов является ассоциативным массивом, то и второй должен быть ассоциативным массивом.
+Функция 'func' применяется к элементам с одинаковыми индексами или ключами.
+Если в одном массиве есть элемент с индексом или ключём, но в другом массиве нет элемента с таким же индексом или ключём,
+     то данный элемент игнорируется не оказывая влияния на результат.
+Тип результата зависит от типов аргументов:
+     - если оба массива индексные, то тип результата - @array
+     - если оба массива имеют тип @obj, то тип результата - @obj
+     - если оба массива ассоциативные, но при этом один из них имеет тип отличный от @obj, то тип результата - @table
+Функция может принимать в качестве аргументов множества, воспринимая их как ассоциативные массивы с одинаковм ключём и значением.
+Данная функция воспринимает методы, только как методы, поэтому считается что у аргументов типа @obj нет ключа :_.
+Функция может использовать 'func' только для вызова.
+
+signature:
+fn (array_1:.core_zip, array_2:common, func:fn(item_1:common, item_2:common) common) common
+fn (array_1:(@string|@byte_array|@array), array_2:$array_1, func:fn(item_1:common, item_2:common) common) @array
+fn (array_1:@obj, array_2:@obj, func:fn(item_1:common, item_2:common) common) @obj
+fn (array_1:(@obj|@table|@set), array_2:$array_1, func:fn(item_1:common, item_2:common) common) @table
+@#
+fn zip(array_1, array_2, func) null
+
+#@
+Функция аналогична функции zip, но для 2-х и более массивов.
+Если один из аргументов является индексным массивом, то и все остальные должны быть индексными массивами.
+Если один из аргументов является ассоциативным массивом, то и все остальные должны быть ассоциативными массивами.
+Функция 'func' применяется к элементам с одинаковыми индексами или ключами.
+Если в одном массиве есть элемент с индексом или ключём, но в другом массиве нет элемента с таким же индексом или ключём,
+     то данный элемент игнорируется не оказывая влияния на результат.
+Тип результата зависит от типов аргументов:
+     - если все массивы индексные, то тип результата - @array
+     - если все массива имеют тип @obj, то тип результата - @obj
+     - если все массива ассоциативные, но при этом один из них имеет тип отличный от @obj, то тип результата - @table
+Функция может принимать в качестве аргументов множества, воспринимая их как ассоциативные массивы с одинаковм ключём и значением.
+Данная функция воспринимает методы, только как методы, поэтому считается что у аргументов типа @obj нет ключа :_.
+Функция может использовать 'func' только для вызова.
+
+signature:
+fn (arrays:[box array_1:.core_zip_n, arrays:common{1,15}], func:fn(items:common{2,16}) common) common
+fn (arrays:[box (@string|@byte_array|@array){2,16}], func:fn(items:common{2,16}) common) @array
+fn (arrays:[box @obj{2,16}], func:fn(items:common{2,16}) common) @obj
+fn (arrays:[box (@obj|@table|@set){2,16}], func:fn(items:common{2,16}) common) @table
+
+error:
+:out_of_bounds - если len(arrays) < 2.
+@#
+fn zip_n(arrays, func) null

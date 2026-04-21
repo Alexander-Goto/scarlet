@@ -1,0 +1,134 @@
+let container__init = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_init      = fn (container, cap) to_container__init(container:value.init(cap))
+          :core___equal__ = fn (container_1, container_2) container_1:value === container_2:value
+          :core_cap       = fn (container) container:value.cap()
+     ]
+]
+
+fn to_container__init(arg) new (@main.container__init):value <= arg
+
+fn to_custom_container__init(arg) custom__create(
+     arg
+     [obj
+          :core_init      = fn (container, cap) to_custom_container__init(container.custom__get_data().init(cap))
+          :core___equal__ = fn (container_1, container_2) container_1.custom__get_data() === container_2.custom__get_data()
+          :core_cap       = fn (container) container.custom__get_data().cap()
+     ]
+)
+
+let broken_container__init = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_init = fn (_, _) _ ++ heap_string()
+     ]
+]
+
+fn to_broken_container__init(arg) new (@main.broken_container__init):value <= arg
+
+fn to_broken_custom_container__init(arg) custom__create(
+     arg
+     [obj
+          :core_init = fn (_, _) _ ++ heap_string()
+     ]
+)
+
+let error_container__init = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_init = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__init(arg) new (@main.error_container__init):value <= arg
+
+fn to_error_custom_container__init(arg) custom__create(
+     arg
+     [obj
+          :core_init = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__init() {
+     test([array].init(0) === [array])
+     test([array].init(0).cap() === 0)
+     test([array].init(1) === [array])
+     test([array].init(1).cap() === 1)
+     test([array].init(10) === [array])
+     test([array].init(10).cap() === 10)
+
+     test([array heap_string()].init(0) === [array])
+     test([array heap_string()].init(0).cap() === 0)
+     test([array heap_string()].init(1) === [array])
+     test([array heap_string()].init(1).cap() === 1)
+     test([array heap_string()].init(10) === [array])
+     test([array heap_string()].init(10).cap() === 10)
+
+     test([table].init(0) === [table])
+     test([table].init(1) === [table])
+     test([table].init(10) === [table])
+     test([table heap_string() = heap_string()].init(0) === [table])
+     test([table heap_string() = heap_string()].init(1) === [table])
+     test([table heap_string() = heap_string()].init(10) === [table])
+
+     test([set].init(0) === [set])
+     test([set].init(1) === [set])
+     test([set].init(10) === [set])
+     test([set heap_string()].init(0) === [set])
+     test([set heap_string()].init(1) === [set])
+     test([set heap_string()].init(10) === [set])
+
+     test([obj].init(0) === [obj])
+     test([obj].init(1) === [obj])
+     test([obj].init(10) === [obj])
+     test([obj :1 = heap_string()].init(0) === [obj])
+     test([obj :1 = heap_string()].init(1) === [obj])
+     test([obj :1 = heap_string()].init(10) === [obj])
+
+     test(to_container__init([array]).init(1) === to_container__init([array]))
+     test(to_container__init([array]).init(1).cap() === 1)
+     test(to_container__init([array]).init(10) === to_container__init([array]))
+     test(to_container__init([array]).init(10).cap() === 10)
+
+     test(to_custom_container__init([array]).init(1) === to_custom_container__init([array]))
+     test(to_custom_container__init([array]).init(1).cap() === 1)
+     test(to_custom_container__init([array]).init(10) === to_custom_container__init([array]))
+     test(to_custom_container__init([array]).init(10).cap() === 10)
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.init(10).get_error_id() === :1)
+     test(heap_table().init(error_1).get_error_id() === :1)
+     test(error_1.init(error_2).get_error_id() === :1)
+     test(error_2.init(error_1).get_error_id() === :2)
+     test((_ ++ heap_string()).scarlet__erase_info().init(10).get_error_id() === :invalid_type)
+     test(heap_string().init(heap_string()).get_error_id() === :invalid_type)
+     test((_ ++ heap_string()).scarlet__erase_info().init(heap_string()).get_error_id() === :invalid_type)
+
+     test([obj].init(0x80'0000'0001.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([obj].init(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([obj].init(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([obj].init(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([set].init(0x80'0000'0001.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([set].init(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([set].init(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([set].init(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([table].init(0x80'0000'0001.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([table].init(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([table].init(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([table].init(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array].init(0x1000'0000'0000.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array].init(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array].init(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test([array].init(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test(to_broken_container__init(heap_table()).init(10).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__init(heap_table()).init(10).get_error_id() === :invalid_type)
+     test(to_error_container__init(heap_table()).init(10).get_error_id() === :3)
+     test(to_error_custom_container__init(heap_table()).init(10).get_error_id() === :4)
+}

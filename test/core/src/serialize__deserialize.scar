@@ -1,0 +1,1213 @@
+fn serialize_tkn(token) {
+     let array = token.to_string().str_to_ustr()
+     new (array)[array.len() - 1] => _ | 0b80
+}
+
+`noinline`
+fn test__serialize__deserialize() {
+     test(0.serialize([byte_array]) === [byte_array 0b00, 0b00])
+     test(1.serialize([byte_array]) === [byte_array 0b00, 0b01])
+     test(10.serialize([byte_array]) === [byte_array 0b00, 0b0a])
+     test(0xff.serialize([byte_array]) === [byte_array 0b00, 0bff])
+
+     test([byte_array 0b00, 0b00].deserialize() === [box 0, [byte_array]])
+     test([byte_array 0b00, 0b01].deserialize() === [box 1, [byte_array]])
+     test([byte_array 0b00, 0b0a].deserialize() === [box 10, [byte_array]])
+     test([byte_array 0b00, 0bff].deserialize() === [box 0xff, [byte_array]])
+
+     test(0.serialize([byte_array 0bff]) === [byte_array 0bff, 0b00, 0b00])
+     test(1.serialize([byte_array 0bff]) === [byte_array 0bff, 0b00, 0b01])
+     test(10.serialize([byte_array 0bff]) === [byte_array 0bff, 0b00, 0b0a])
+     test(0xff.serialize([byte_array 0bff]) === [byte_array 0bff, 0b00, 0bff])
+
+     test([byte_array 0b00, 0b00, 0bff].deserialize() === [box 0, [byte_array 0bff]])
+     test([byte_array 0b00, 0b01, 0bff].deserialize() === [box 1, [byte_array 0bff]])
+     test([byte_array 0b00, 0b0a, 0bff].deserialize() === [box 10, [byte_array 0bff]])
+     test([byte_array 0b00, 0bff, 0bff].deserialize() === [box 0xff, [byte_array 0bff]])
+
+     test(0x100.serialize([byte_array]) === [byte_array 0b01, 0b00, 0b00])
+     test(0x101.serialize([byte_array]) === [byte_array 0b01, 0b01, 0b00])
+     test(0x200.serialize([byte_array]) === [byte_array 0b01, 0b00, 0b01])
+     test(0x1'00ff.serialize([byte_array]) === [byte_array 0b01, 0bff, 0bff])
+
+     test([byte_array 0b01, 0b00, 0b00].deserialize() === [box 0x100, [byte_array]])
+     test([byte_array 0b01, 0b01, 0b00].deserialize() === [box 0x101, [byte_array]])
+     test([byte_array 0b01, 0b00, 0b01].deserialize() === [box 0x200, [byte_array]])
+     test([byte_array 0b01, 0bff, 0bff].deserialize() === [box 0x1'00ff, [byte_array]])
+
+     test(0x100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b01, 0b00, 0b00])
+     test(0x101.serialize([byte_array 0bff]) === [byte_array 0bff, 0b01, 0b01, 0b00])
+     test(0x200.serialize([byte_array 0bff]) === [byte_array 0bff, 0b01, 0b00, 0b01])
+     test(0x1'00ff.serialize([byte_array 0bff]) === [byte_array 0bff, 0b01, 0bff, 0bff])
+
+     test([byte_array 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x100, [byte_array 0bff]])
+     test([byte_array 0b01, 0b01, 0b00, 0bff].deserialize() === [box 0x101, [byte_array 0bff]])
+     test([byte_array 0b01, 0b00, 0b01, 0bff].deserialize() === [box 0x200, [byte_array 0bff]])
+     test([byte_array 0b01, 0bff, 0bff, 0bff].deserialize() === [box 0x1'00ff, [byte_array 0bff]])
+
+     test(0x1'0100.serialize([byte_array]) === [byte_array 0b02, 0b00, 0b00, 0b00])
+     test(0x1'0101.serialize([byte_array]) === [byte_array 0b02, 0b01, 0b00, 0b00])
+     test(0x1'0200.serialize([byte_array]) === [byte_array 0b02, 0b00, 0b01, 0b00])
+     test(0x2'0100.serialize([byte_array]) === [byte_array 0b02, 0b00, 0b00, 0b01])
+     test(0x101'00ff.serialize([byte_array]) === [byte_array 0b02, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b02, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0100, [byte_array]])
+     test([byte_array 0b02, 0b01, 0b00, 0b00].deserialize() === [box 0x1'0101, [byte_array]])
+     test([byte_array 0b02, 0b00, 0b01, 0b00].deserialize() === [box 0x1'0200, [byte_array]])
+     test([byte_array 0b02, 0b00, 0b00, 0b01].deserialize() === [box 0x2'0100, [byte_array]])
+     test([byte_array 0b02, 0bff, 0bff, 0bff].deserialize() === [box 0x101'00ff, [byte_array]])
+
+     test(0x1'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b02, 0b00, 0b00, 0b00])
+     test(0x1'0101.serialize([byte_array 0bff]) === [byte_array 0bff, 0b02, 0b01, 0b00, 0b00])
+     test(0x1'0200.serialize([byte_array 0bff]) === [byte_array 0bff, 0b02, 0b00, 0b01, 0b00])
+     test(0x2'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b02, 0b00, 0b00, 0b01])
+     test(0x101'00ff.serialize([byte_array 0bff]) === [byte_array 0bff, 0b02, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b02, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0100, [byte_array 0bff]])
+     test([byte_array 0b02, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101, [byte_array 0bff]])
+     test([byte_array 0b02, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x1'0200, [byte_array 0bff]])
+     test([byte_array 0b02, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x2'0100, [byte_array 0bff]])
+     test([byte_array 0b02, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'00ff, [byte_array 0bff]])
+
+     test(0x101'0100.serialize([byte_array]) === [byte_array 0b03, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101.serialize([byte_array]) === [byte_array 0b03, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0200.serialize([byte_array]) === [byte_array 0b03, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0100.serialize([byte_array]) === [byte_array 0b03, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0100.serialize([byte_array]) === [byte_array 0b03, 0b00, 0b00, 0b00, 0b01])
+     test(0x1'0101'00ff.serialize([byte_array]) === [byte_array 0b03, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b03, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0100, [byte_array]])
+     test([byte_array 0b03, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101, [byte_array]])
+     test([byte_array 0b03, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x101'0200, [byte_array]])
+     test([byte_array 0b03, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x102'0100, [byte_array]])
+     test([byte_array 0b03, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x201'0100, [byte_array]])
+     test([byte_array 0b03, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x1'0101'00ff, [byte_array]])
+
+     test(0x101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b03, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101.serialize([byte_array 0bff]) === [byte_array 0bff, 0b03, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0200.serialize([byte_array 0bff]) === [byte_array 0bff, 0b03, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b03, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b03, 0b00, 0b00, 0b00, 0b01])
+     test(0x1'0101'00ff.serialize([byte_array 0bff]) === [byte_array 0bff, 0b03, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b03, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0100, [byte_array 0bff]])
+     test([byte_array 0b03, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101, [byte_array 0bff]])
+     test([byte_array 0b03, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0200, [byte_array 0bff]])
+     test([byte_array 0b03, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x102'0100, [byte_array 0bff]])
+     test([byte_array 0b03, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x201'0100, [byte_array 0bff]])
+     test([byte_array 0b03, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x1'0101'00ff, [byte_array 0bff]])
+
+     test(0x1'0101'0100.serialize([byte_array]) === [byte_array 0b04, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101.serialize([byte_array]) === [byte_array 0b04, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0200.serialize([byte_array]) === [byte_array 0b04, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x1'0102'0100.serialize([byte_array]) === [byte_array 0b04, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x1'0201'0100.serialize([byte_array]) === [byte_array 0b04, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x2'0101'0100.serialize([byte_array]) === [byte_array 0b04, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x101'0101'00ff.serialize([byte_array]) === [byte_array 0b04, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b04, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0100, [byte_array]])
+     test([byte_array 0b04, 0b01, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0101, [byte_array]])
+     test([byte_array 0b04, 0b00, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0200, [byte_array]])
+     test([byte_array 0b04, 0b00, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x1'0102'0100, [byte_array]])
+     test([byte_array 0b04, 0b00, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x1'0201'0100, [byte_array]])
+     test([byte_array 0b04, 0b00, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x2'0101'0100, [byte_array]])
+     test([byte_array 0b04, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0101'00ff, [byte_array]])
+
+     test(0x1'0101'0100.serialize([byte_array]) === [byte_array 0b04, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101.serialize([byte_array]) === [byte_array 0b04, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0200.serialize([byte_array]) === [byte_array 0b04, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x1'0102'0100.serialize([byte_array]) === [byte_array 0b04, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x1'0201'0100.serialize([byte_array]) === [byte_array 0b04, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x2'0101'0100.serialize([byte_array]) === [byte_array 0b04, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x101'0101'00ff.serialize([byte_array]) === [byte_array 0b04, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b04, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0100, [byte_array]])
+     test([byte_array 0b04, 0b01, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0101, [byte_array]])
+     test([byte_array 0b04, 0b00, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0200, [byte_array]])
+     test([byte_array 0b04, 0b00, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x1'0102'0100, [byte_array]])
+     test([byte_array 0b04, 0b00, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x1'0201'0100, [byte_array]])
+     test([byte_array 0b04, 0b00, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x2'0101'0100, [byte_array]])
+     test([byte_array 0b04, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0101'00ff, [byte_array]])
+
+     test(0x1'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b04, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101.serialize([byte_array 0bff]) === [byte_array 0bff, 0b04, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0200.serialize([byte_array 0bff]) === [byte_array 0bff, 0b04, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x1'0102'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b04, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x1'0201'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b04, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x2'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b04, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x101'0101'00ff.serialize([byte_array 0bff]) === [byte_array 0bff, 0b04, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b04, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b04, 0b01, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0101, [byte_array 0bff]])
+     test([byte_array 0b04, 0b00, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0200, [byte_array 0bff]])
+     test([byte_array 0b04, 0b00, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0102'0100, [byte_array 0bff]])
+     test([byte_array 0b04, 0b00, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x1'0201'0100, [byte_array 0bff]])
+     test([byte_array 0b04, 0b00, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x2'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b04, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0101'00ff, [byte_array 0bff]])
+
+     test(0x101'0101'0100.serialize([byte_array]) === [byte_array 0b05, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0101.serialize([byte_array]) === [byte_array 0b05, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0200.serialize([byte_array]) === [byte_array 0b05, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0102'0100.serialize([byte_array]) === [byte_array 0b05, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0201'0100.serialize([byte_array]) === [byte_array 0b05, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0101'0100.serialize([byte_array]) === [byte_array 0b05, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0101'0100.serialize([byte_array]) === [byte_array 0b05, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x1'0101'0101'00ff.serialize([byte_array]) === [byte_array 0b05, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b05, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0100, [byte_array]])
+     test([byte_array 0b05, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0101, [byte_array]])
+     test([byte_array 0b05, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0200, [byte_array]])
+     test([byte_array 0b05, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0102'0100, [byte_array]])
+     test([byte_array 0b05, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x101'0201'0100, [byte_array]])
+     test([byte_array 0b05, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x102'0101'0100, [byte_array]])
+     test([byte_array 0b05, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x201'0101'0100, [byte_array]])
+     test([byte_array 0b05, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x1'0101'0101'00ff, [byte_array]])
+
+     test(0x101'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b05, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0101.serialize([byte_array 0bff]) === [byte_array 0bff, 0b05, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0200.serialize([byte_array 0bff]) === [byte_array 0bff, 0b05, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0102'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b05, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0201'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b05, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b05, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b05, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x1'0101'0101'00ff.serialize([byte_array 0bff]) === [byte_array 0bff, 0b05, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b05, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b05, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0101, [byte_array 0bff]])
+     test([byte_array 0b05, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0200, [byte_array 0bff]])
+     test([byte_array 0b05, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0102'0100, [byte_array 0bff]])
+     test([byte_array 0b05, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0201'0100, [byte_array 0bff]])
+     test([byte_array 0b05, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x102'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b05, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x201'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b05, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x1'0101'0101'00ff, [byte_array 0bff]])
+
+     test(0x1'0101'0101'0100.serialize([byte_array]) === [byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101'0101.serialize([byte_array]) === [byte_array 0b06, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101'0200.serialize([byte_array]) === [byte_array 0b06, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0102'0100.serialize([byte_array]) === [byte_array 0b06, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0201'0100.serialize([byte_array]) === [byte_array 0b06, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x1'0102'0101'0100.serialize([byte_array]) === [byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x1'0201'0101'0100.serialize([byte_array]) === [byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x2'0101'0101'0100.serialize([byte_array]) === [byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x101'0101'0101'00ff.serialize([byte_array]) === [byte_array 0b06, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0101'0100, [byte_array]])
+     test([byte_array 0b06, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0101'0101, [byte_array]])
+     test([byte_array 0b06, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0101'0200, [byte_array]])
+     test([byte_array 0b06, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0102'0100, [byte_array]])
+     test([byte_array 0b06, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0201'0100, [byte_array]])
+     test([byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x1'0102'0101'0100, [byte_array]])
+     test([byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x1'0201'0101'0100, [byte_array]])
+     test([byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x2'0101'0101'0100, [byte_array]])
+     test([byte_array 0b06, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0101'0101'00ff, [byte_array]])
+
+     test(0x1'0101'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101'0101.serialize([byte_array 0bff]) === [byte_array 0bff, 0b06, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101'0200.serialize([byte_array 0bff]) === [byte_array 0bff, 0b06, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0102'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b06, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0201'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b06, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x1'0102'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b06, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x1'0201'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x2'0101'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x101'0101'0101'00ff.serialize([byte_array 0bff]) === [byte_array 0bff, 0b06, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b06, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0101'0101, [byte_array 0bff]])
+     test([byte_array 0b06, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0101'0200, [byte_array 0bff]])
+     test([byte_array 0b06, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0102'0100, [byte_array 0bff]])
+     test([byte_array 0b06, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0201'0100, [byte_array 0bff]])
+     test([byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0102'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x1'0201'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b06, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x2'0101'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b06, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0101'0101'00ff, [byte_array 0bff]])
+
+     test(0x101'0101'0101'0100.serialize([byte_array]) === [byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0101'0101.serialize([byte_array]) === [byte_array 0b07, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0101'0200.serialize([byte_array]) === [byte_array 0b07, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0102'0100.serialize([byte_array]) === [byte_array 0b07, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0201'0100.serialize([byte_array]) === [byte_array 0b07, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0102'0101'0100.serialize([byte_array]) === [byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0201'0101'0100.serialize([byte_array]) === [byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0101'0101'0100.serialize([byte_array]) === [byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0101'0101'0100.serialize([byte_array]) === [byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x7fff'ffff'ffff'ffff.serialize([byte_array]) === [byte_array 0b07, 0bff, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0b7e])
+
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0101'0100, [byte_array]])
+     test([byte_array 0b07, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0101'0101, [byte_array]])
+     test([byte_array 0b07, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0101'0200, [byte_array]])
+     test([byte_array 0b07, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0102'0100, [byte_array]])
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0201'0100, [byte_array]])
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0102'0101'0100, [byte_array]])
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x101'0201'0101'0100, [byte_array]])
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x102'0101'0101'0100, [byte_array]])
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x201'0101'0101'0100, [byte_array]])
+     test([byte_array 0b07, 0bff, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0b7e].deserialize() === [box 0x7fff'ffff'ffff'ffff, [byte_array]])
+
+     test(0x101'0101'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0101'0101.serialize([byte_array 0bff]) === [byte_array 0bff, 0b07, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0101'0200.serialize([byte_array 0bff]) === [byte_array 0bff, 0b07, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0102'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b07, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0201'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b07, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0102'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b07, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0201'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0101'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0101'0101'0100.serialize([byte_array 0bff]) === [byte_array 0bff, 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x7fff'ffff'ffff'ffff.serialize([byte_array 0bff]) === [byte_array 0bff, 0b07, 0bff, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0b7e])
+
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b07, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0101'0101, [byte_array 0bff]])
+     test([byte_array 0b07, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0101'0200, [byte_array 0bff]])
+     test([byte_array 0b07, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0102'0100, [byte_array 0bff]])
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0201'0100, [byte_array 0bff]])
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0102'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0201'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x102'0101'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b07, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x201'0101'0101'0100, [byte_array 0bff]])
+     test([byte_array 0b07, 0bff, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0b7e, 0bff].deserialize() === [box 0x7fff'ffff'ffff'ffff, [byte_array 0bff]])
+
+     test(-1.serialize([byte_array]) === [byte_array 0b08, 0b00])
+     test(-2.serialize([byte_array]) === [byte_array 0b08, 0b01])
+     test(-10.serialize([byte_array]) === [byte_array 0b08, 0b09])
+     test(0x100.neg().serialize([byte_array]) === [byte_array 0b08, 0bff])
+
+     test([byte_array 0b08, 0b00].deserialize() === [box -1, [byte_array]])
+     test([byte_array 0b08, 0b01].deserialize() === [box -2, [byte_array]])
+     test([byte_array 0b08, 0b09].deserialize() === [box -10, [byte_array]])
+     test([byte_array 0b08, 0bff].deserialize() === [box 0x100.neg(), [byte_array]])
+
+     test(-1.serialize([byte_array 0bff]) === [byte_array 0bff, 0b08, 0b00])
+     test(-2.serialize([byte_array 0bff]) === [byte_array 0bff, 0b08, 0b01])
+     test(-10.serialize([byte_array 0bff]) === [byte_array 0bff, 0b08, 0b09])
+     test(0x100.neg().serialize([byte_array 0bff]) === [byte_array  0bff, 0b08, 0bff])
+
+     test([byte_array 0b08, 0b00, 0bff].deserialize() === [box -1, [byte_array 0bff]])
+     test([byte_array 0b08, 0b01, 0bff].deserialize() === [box -2, [byte_array 0bff]])
+     test([byte_array 0b08, 0b09, 0bff].deserialize() === [box -10, [byte_array 0bff]])
+     test([byte_array 0b08, 0bff, 0bff].deserialize() === [box 0x100.neg(), [byte_array 0bff]])
+
+     test(0x101.neg().serialize([byte_array]) === [byte_array 0b09, 0b00, 0b00])
+     test(0x102.neg().serialize([byte_array]) === [byte_array 0b09, 0b01, 0b00])
+     test(0x201.neg().serialize([byte_array]) === [byte_array 0b09, 0b00, 0b01])
+     test(0x1'0100.neg().serialize([byte_array]) === [byte_array 0b09, 0bff, 0bff])
+
+     test([byte_array 0b09, 0b00, 0b00].deserialize() === [box 0x101.neg(), [byte_array]])
+     test([byte_array 0b09, 0b01, 0b00].deserialize() === [box 0x102.neg(), [byte_array]])
+     test([byte_array 0b09, 0b00, 0b01].deserialize() === [box 0x201.neg(), [byte_array]])
+     test([byte_array 0b09, 0bff, 0bff].deserialize() === [box 0x1'0100.neg(), [byte_array]])
+
+     test(0x101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b09, 0b00, 0b00])
+     test(0x102.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b09, 0b01, 0b00])
+     test(0x201.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b09, 0b00, 0b01])
+     test(0x1'0100.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b09, 0bff, 0bff])
+
+     test([byte_array 0b09, 0b00, 0b00, 0bff].deserialize() === [box 0x101.neg(), [byte_array 0bff]])
+     test([byte_array 0b09, 0b01, 0b00, 0bff].deserialize() === [box 0x102.neg(), [byte_array 0bff]])
+     test([byte_array 0b09, 0b00, 0b01, 0bff].deserialize() === [box 0x201.neg(), [byte_array 0bff]])
+     test([byte_array 0b09, 0bff, 0bff, 0bff].deserialize() === [box 0x1'0100.neg(), [byte_array 0bff]])
+
+     test(0x1'0101.neg().serialize([byte_array]) === [byte_array 0b0a, 0b00, 0b00, 0b00])
+     test(0x1'0102.neg().serialize([byte_array]) === [byte_array 0b0a, 0b01, 0b00, 0b00])
+     test(0x1'0201.neg().serialize([byte_array]) === [byte_array 0b0a, 0b00, 0b01, 0b00])
+     test(0x2'0101.neg().serialize([byte_array]) === [byte_array 0b0a, 0b00, 0b00, 0b01])
+     test(0x101'0100.neg().serialize([byte_array]) === [byte_array 0b0a, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b0a, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101.neg(), [byte_array]])
+     test([byte_array 0b0a, 0b01, 0b00, 0b00].deserialize() === [box 0x1'0102.neg(), [byte_array]])
+     test([byte_array 0b0a, 0b00, 0b01, 0b00].deserialize() === [box 0x1'0201.neg(), [byte_array]])
+     test([byte_array 0b0a, 0b00, 0b00, 0b01].deserialize() === [box 0x2'0101.neg(), [byte_array]])
+     test([byte_array 0b0a, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0100.neg(), [byte_array]])
+
+     test(0x1'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0a, 0b00, 0b00, 0b00])
+     test(0x1'0102.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0a, 0b01, 0b00, 0b00])
+     test(0x1'0201.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0a, 0b00, 0b01, 0b00])
+     test(0x2'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0a, 0b00, 0b00, 0b01])
+     test(0x101'0100.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0a, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b0a, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0a, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0102.neg(), [byte_array 0bff]])
+     test([byte_array 0b0a, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x1'0201.neg(), [byte_array 0bff]])
+     test([byte_array 0b0a, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x2'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0a, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0100.neg(), [byte_array 0bff]])
+
+     test(0x101'0101.neg().serialize([byte_array]) === [byte_array 0b0b, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0102.neg().serialize([byte_array]) === [byte_array 0b0b, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0201.neg().serialize([byte_array]) === [byte_array 0b0b, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0101.neg().serialize([byte_array]) === [byte_array 0b0b, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0101.neg().serialize([byte_array]) === [byte_array 0b0b, 0b00, 0b00, 0b00, 0b01])
+     test(0x1'0101'0100.neg().serialize([byte_array]) === [byte_array 0b0b, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b0b, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101.neg(), [byte_array]])
+     test([byte_array 0b0b, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0102.neg(), [byte_array]])
+     test([byte_array 0b0b, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x101'0201.neg(), [byte_array]])
+     test([byte_array 0b0b, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x102'0101.neg(), [byte_array]])
+     test([byte_array 0b0b, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x201'0101.neg(), [byte_array]])
+     test([byte_array 0b0b, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x1'0101'0100.neg(), [byte_array]])
+
+     test(0x101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0b, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0102.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0b, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0201.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0b, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0b, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0b, 0b00, 0b00, 0b00, 0b01])
+     test(0x1'0101'0100.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0b, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b0b, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0b, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0102.neg(), [byte_array 0bff]])
+     test([byte_array 0b0b, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0201.neg(), [byte_array 0bff]])
+     test([byte_array 0b0b, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x102'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0b, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x201'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0b, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x1'0101'0100.neg(), [byte_array 0bff]])
+
+     test(0x1'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0c, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0102.neg().serialize([byte_array]) === [byte_array 0b0c, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0201.neg().serialize([byte_array]) === [byte_array 0b0c, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x1'0102'0101.neg().serialize([byte_array]) === [byte_array 0b0c, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x1'0201'0101.neg().serialize([byte_array]) === [byte_array 0b0c, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x2'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0c, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x101'0101'0100.neg().serialize([byte_array]) === [byte_array 0b0c, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b0c, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0c, 0b01, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0102.neg(), [byte_array]])
+     test([byte_array 0b0c, 0b00, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0201.neg(), [byte_array]])
+     test([byte_array 0b0c, 0b00, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x1'0102'0101.neg(), [byte_array]])
+     test([byte_array 0b0c, 0b00, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x1'0201'0101.neg(), [byte_array]])
+     test([byte_array 0b0c, 0b00, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x2'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0c, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0101'0100.neg(), [byte_array]])
+
+     test(0x1'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0c, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0102.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0c, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0201.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0c, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x1'0102'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0c, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x1'0201'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0c, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x2'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0c, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x101'0101'0100.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0c, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b0c, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0c, 0b01, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0102.neg(), [byte_array 0bff]])
+     test([byte_array 0b0c, 0b00, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0201.neg(), [byte_array 0bff]])
+     test([byte_array 0b0c, 0b00, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0102'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0c, 0b00, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x1'0201'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0c, 0b00, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x2'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0c, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0101'0100.neg(), [byte_array 0bff]])
+
+     test(0x101'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0d, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0102.neg().serialize([byte_array]) === [byte_array 0b0d, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0201.neg().serialize([byte_array]) === [byte_array 0b0d, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0102'0101.neg().serialize([byte_array]) === [byte_array 0b0d, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0201'0101.neg().serialize([byte_array]) === [byte_array 0b0d, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0d, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0d, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x1'0101'0101'0100.neg().serialize([byte_array]) === [byte_array 0b0d, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b0d, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0d, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0102.neg(), [byte_array]])
+     test([byte_array 0b0d, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0201.neg(), [byte_array]])
+     test([byte_array 0b0d, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0102'0101.neg(), [byte_array]])
+     test([byte_array 0b0d, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x101'0201'0101.neg(), [byte_array]])
+     test([byte_array 0b0d, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x102'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0d, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x201'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0d, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x1'0101'0101'0100.neg(), [byte_array]])
+
+     test(0x101'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0d, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0102.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0d, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0201.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0d, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0102'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0d, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0201'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0d, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0d, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0d, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x1'0101'0101'0100.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0d, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b0d, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0d, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0102.neg(), [byte_array 0bff]])
+     test([byte_array 0b0d, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0201.neg(), [byte_array 0bff]])
+     test([byte_array 0b0d, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0102'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0d, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0201'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0d, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x102'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0d, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x201'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0d, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x1'0101'0101'0100.neg(), [byte_array 0bff]])
+
+     test(0x1'0101'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101'0102.neg().serialize([byte_array]) === [byte_array 0b0e, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101'0201.neg().serialize([byte_array]) === [byte_array 0b0e, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0102'0101.neg().serialize([byte_array]) === [byte_array 0b0e, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0201'0101.neg().serialize([byte_array]) === [byte_array 0b0e, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x1'0102'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x1'0201'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x2'0101'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x101'0101'0101'0100.neg().serialize([byte_array]) === [byte_array 0b0e, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0e, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0101'0102.neg(), [byte_array]])
+     test([byte_array 0b0e, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0101'0201.neg(), [byte_array]])
+     test([byte_array 0b0e, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0102'0101.neg(), [byte_array]])
+     test([byte_array 0b0e, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x1'0101'0201'0101.neg(), [byte_array]])
+     test([byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x1'0102'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x1'0201'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x2'0101'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0e, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0101'0101'0100.neg(), [byte_array]])
+
+     test(0x1'0101'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101'0102.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0e, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0101'0201.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0e, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0102'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0e, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x1'0101'0201'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0e, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x1'0102'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0e, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x1'0201'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x2'0101'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x101'0101'0101'0100.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0e, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0e, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0101'0102.neg(), [byte_array 0bff]])
+     test([byte_array 0b0e, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0101'0201.neg(), [byte_array 0bff]])
+     test([byte_array 0b0e, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0102'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0e, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0101'0201'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x1'0102'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x1'0201'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x2'0101'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0e, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box 0x101'0101'0101'0100.neg(), [byte_array 0bff]])
+
+     test(0x101'0101'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0101'0102.neg().serialize([byte_array]) === [byte_array 0b0f, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0101'0201.neg().serialize([byte_array]) === [byte_array 0b0f, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0102'0101.neg().serialize([byte_array]) === [byte_array 0b0f, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0201'0101.neg().serialize([byte_array]) === [byte_array 0b0f, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0102'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0201'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0101'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0101'0101'0101.neg().serialize([byte_array]) === [byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x8000'0000'0000'0000.neg().serialize([byte_array]) === [byte_array 0b0f, 0bff, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0b7e])
+
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0f, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0101'0102.neg(), [byte_array]])
+     test([byte_array 0b0f, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0101'0201.neg(), [byte_array]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0102'0101.neg(), [byte_array]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0101'0201'0101.neg(), [byte_array]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00].deserialize() === [box 0x101'0102'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00].deserialize() === [box 0x101'0201'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00].deserialize() === [box 0x102'0101'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01].deserialize() === [box 0x201'0101'0101'0101.neg(), [byte_array]])
+     test([byte_array 0b0f, 0bff, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0b7e].deserialize() === [box 0x8000'0000'0000'0000.neg(), [byte_array]])
+
+     test(0x101'0101'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0101'0102.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0f, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0101'0201.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0f, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0102'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0f, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0101'0201'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0f, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(0x101'0102'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0f, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00])
+     test(0x101'0201'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(0x102'0101'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(0x201'0101'0101'0101.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(0x8000'0000'0000'0000.neg().serialize([byte_array 0bff]) === [byte_array 0bff, 0b0f, 0bff, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0b7e])
+
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0f, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0101'0102.neg(), [byte_array 0bff]])
+     test([byte_array 0b0f, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0101'0201.neg(), [byte_array 0bff]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0102'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0101'0201'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0102'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box 0x101'0201'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box 0x102'0101'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box 0x201'0101'0101'0101.neg(), [byte_array 0bff]])
+     test([byte_array 0b0f, 0bff, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0b7e, 0bff].deserialize() === [box 0x8000'0000'0000'0000.neg(), [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 1023) + 1).map(fn (_) rnd())
+     let bytes = array.foldl(u"", fn (bytes, int) int.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() >= array.len() * 2)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box int, bytes] = bytes.deserialize()
+          let expected         = expected.append(int)
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     test("".serialize([byte_array]) === uz"\000010")
+     test("a".serialize([byte_array]) === uz"\000010a")
+     test("0123456789abcde".serialize([byte_array]) === uz"\0000100123456789abcde")
+     test("0123456789abcdef".serialize([byte_array]) === uz"\0000100123456789abcdef")
+     test("\000090\0000b2\0000aa\0000a3\0000a6\0000b4".serialize([byte_array]) === [byte_array 0b10, 0b82, 0bd0, 0b82, 0bf2, 0b82, 0bea, 0b82, 0be3, 0b82, 0be6, 0b82, 0bf4, 0b00])
+     test("\000090\0000b2\0000aa\0000a3\0000a6\0000b4!!!!".serialize([byte_array]) === [byte_array 0b10, 0b82, 0bd0, 0b82, 0bf2, 0b82, 0bea, 0b82, 0be3, 0b82, 0be6, 0b82, 0bf4, 0b21, 0b21, 0b21, 0b21, 0b00])
+
+     test(uz"\000010".deserialize() === [box "", [byte_array]])
+     test(uz"\000010a".deserialize() === [box "a", [byte_array]])
+     test(uz"\0000100123456789abcde".deserialize() === [box "0123456789abcde", [byte_array]])
+     test(uz"\0000100123456789abcdef".deserialize() === [box "0123456789abcdef", [byte_array]])
+     test([byte_array 0b10, 0b82, 0bd0, 0b82, 0bf2, 0b82, 0bea, 0b82, 0be3, 0b82, 0be6, 0b82, 0bf4, 0b00].deserialize() === [box "\000090\0000b2\0000aa\0000a3\0000a6\0000b4", [byte_array]])
+     test([byte_array 0b10, 0b82, 0bd0, 0b82, 0bf2, 0b82, 0bea, 0b82, 0be3, 0b82, 0be6, 0b82, 0bf4, 0b21, 0b21, 0b21, 0b21, 0b00].deserialize() === [box "\000090\0000b2\0000aa\0000a3\0000a6\0000b4!!!!", [byte_array]])
+
+     test("".serialize([byte_array 0bff]) === [byte_array 0bff, 0b10, 0b00])
+     test("a".serialize([byte_array 0bff]) === [byte_array 0bff, 0b10, 0b61, 0b00])
+     test("0123456789abcde".serialize([byte_array 0bff]) === [byte_array 0bff, 0b10, 0b30, 0b31, 0b32, 0b33, 0b34, 0b35, 0b36, 0b37, 0b38, 0b39, 0b61, 0b62, 0b63, 0b64, 0b65, 0b00])
+     test("0123456789abcdef".serialize([byte_array 0bff]) === [byte_array 0bff, 0b10, 0b30, 0b31, 0b32, 0b33, 0b34, 0b35, 0b36, 0b37, 0b38, 0b39, 0b61, 0b62, 0b63, 0b64, 0b65, 0b66, 0b00])
+     test("\000090\0000b2\0000aa\0000a3\0000a6\0000b4".serialize([byte_array 0bff]) === [byte_array 0bff, 0b10, 0b82, 0bd0, 0b82, 0bf2, 0b82, 0bea, 0b82, 0be3, 0b82, 0be6, 0b82, 0bf4, 0b00])
+     test("\000090\0000b2\0000aa\0000a3\0000a6\0000b4!!!!".serialize([byte_array 0bff]) === [byte_array 0bff, 0b10, 0b82, 0bd0, 0b82, 0bf2, 0b82, 0bea, 0b82, 0be3, 0b82, 0be6, 0b82, 0bf4, 0b21, 0b21, 0b21, 0b21, 0b00])
+
+     test([byte_array 0b10, 0b00, 0bff].deserialize() === [box "", [byte_array 0bff]])
+     test([byte_array 0b10, 0b61, 0b00, 0bff].deserialize() === [box "a", [byte_array 0bff]])
+     test([byte_array 0b10, 0b30, 0b31, 0b32, 0b33, 0b34, 0b35, 0b36, 0b37, 0b38, 0b39, 0b61, 0b62, 0b63, 0b64, 0b65, 0b00, 0bff].deserialize() === [box "0123456789abcde", [byte_array 0bff]])
+     test([byte_array 0b10, 0b30, 0b31, 0b32, 0b33, 0b34, 0b35, 0b36, 0b37, 0b38, 0b39, 0b61, 0b62, 0b63, 0b64, 0b65, 0b66, 0b00, 0bff].deserialize() === [box "0123456789abcdef", [byte_array 0bff]])
+     test([byte_array 0b10, 0b82, 0bd0, 0b82, 0bf2, 0b82, 0bea, 0b82, 0be3, 0b82, 0be6, 0b82, 0bf4, 0b00, 0bff].deserialize() === [box "\000090\0000b2\0000aa\0000a3\0000a6\0000b4", [byte_array 0bff]])
+     test([byte_array 0b10, 0b82, 0bd0, 0b82, 0bf2, 0b82, 0bea, 0b82, 0be3, 0b82, 0be6, 0b82, 0bf4, 0b21, 0b21, 0b21, 0b21, 0b00, 0bff].deserialize() === [box "\000090\0000b2\0000aa\0000a3\0000a6\0000b4!!!!", [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 15) + 1).map(fn (_) rnd_string())
+     let bytes = array.foldl(u"", fn (bytes, string) string.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() >= array.len() * 2)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box string, bytes] = bytes.deserialize()
+          let expected            = expected.append(string)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     test(:0.serialize([byte_array]) === [byte_array 0b11] ++ :0.serialize_tkn())
+     test(:9.serialize([byte_array]) === [byte_array 0b11] ++ :9.serialize_tkn())
+     test(:_.serialize([byte_array]) === [byte_array 0b11] ++ :_.serialize_tkn())
+     test(:z.serialize([byte_array]) === [byte_array 0b11] ++ :z.serialize_tkn())
+     test(:0000000000000000000000.serialize([byte_array]) === [byte_array 0b11] ++ :0000000000000000000000.serialize_tkn())
+     test(:9999999999999999999999.serialize([byte_array]) === [byte_array 0b11] ++ :9999999999999999999999.serialize_tkn())
+     test(:______________________.serialize([byte_array]) === [byte_array 0b11] ++ :______________________.serialize_tkn())
+     test(:zzzzzzzzzzzzzzzzzzzzzz.serialize([byte_array]) === [byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz.serialize_tkn())
+
+     test(([byte_array 0b11] ++ :0.serialize_tkn()).deserialize() === [box :0, [byte_array]])
+     test(([byte_array 0b11] ++ :9.serialize_tkn()).deserialize() === [box :9, [byte_array]])
+     test(([byte_array 0b11] ++ :_.serialize_tkn()).deserialize() === [box :_, [byte_array]])
+     test(([byte_array 0b11] ++ :z.serialize_tkn()).deserialize() === [box :z, [byte_array]])
+     test(([byte_array 0b11] ++ :0000000000000000000000.serialize_tkn()).deserialize() === [box :0000000000000000000000, [byte_array]])
+     test(([byte_array 0b11] ++ :9999999999999999999999.serialize_tkn()).deserialize() === [box :9999999999999999999999, [byte_array]])
+     test(([byte_array 0b11] ++ :______________________.serialize_tkn()).deserialize() === [box :______________________, [byte_array]])
+     test(([byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz.serialize_tkn()).deserialize() === [box :zzzzzzzzzzzzzzzzzzzzzz, [byte_array]])
+
+     test(:0.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :0.serialize_tkn())
+     test(:9.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :9.serialize_tkn())
+     test(:_.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :_.serialize_tkn())
+     test(:z.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :z.serialize_tkn())
+     test(:0000000000000000000000.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :0000000000000000000000.serialize_tkn())
+     test(:9999999999999999999999.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :9999999999999999999999.serialize_tkn())
+     test(:______________________.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :______________________.serialize_tkn())
+     test(:zzzzzzzzzzzzzzzzzzzzzz.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz.serialize_tkn())
+
+     test(([byte_array 0b11] ++ :0.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :0, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :9.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :9, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :_.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :_, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :z.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :z, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :0000000000000000000000.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :0000000000000000000000, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :9999999999999999999999.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :9999999999999999999999, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :______________________.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :______________________, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :zzzzzzzzzzzzzzzzzzzzzz, [byte_array 0bff]])
+
+     test(:0!.serialize([byte_array]) === [byte_array 0b11] ++ :0!.serialize_tkn())
+     test(:9!.serialize([byte_array]) === [byte_array 0b11] ++ :9!.serialize_tkn())
+     test(:_!.serialize([byte_array]) === [byte_array 0b11] ++ :_!.serialize_tkn())
+     test(:z!.serialize([byte_array]) === [byte_array 0b11] ++ :z!.serialize_tkn())
+     test(:0000000000000000000000!.serialize([byte_array]) === [byte_array 0b11] ++ :0000000000000000000000!.serialize_tkn())
+     test(:9999999999999999999999!.serialize([byte_array]) === [byte_array 0b11] ++ :9999999999999999999999!.serialize_tkn())
+     test(:______________________!.serialize([byte_array]) === [byte_array 0b11] ++ :______________________!.serialize_tkn())
+     test(:zzzzzzzzzzzzzzzzzzzzzz!.serialize([byte_array]) === [byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz!.serialize_tkn())
+
+     test(([byte_array 0b11] ++ :0!.serialize_tkn()).deserialize() === [box :0!, [byte_array]])
+     test(([byte_array 0b11] ++ :9!.serialize_tkn()).deserialize() === [box :9!, [byte_array]])
+     test(([byte_array 0b11] ++ :_!.serialize_tkn()).deserialize() === [box :_!, [byte_array]])
+     test(([byte_array 0b11] ++ :z!.serialize_tkn()).deserialize() === [box :z!, [byte_array]])
+     test(([byte_array 0b11] ++ :0000000000000000000000!.serialize_tkn()).deserialize() === [box :0000000000000000000000!, [byte_array]])
+     test(([byte_array 0b11] ++ :9999999999999999999999!.serialize_tkn()).deserialize() === [box :9999999999999999999999!, [byte_array]])
+     test(([byte_array 0b11] ++ :______________________!.serialize_tkn()).deserialize() === [box :______________________!, [byte_array]])
+     test(([byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz!.serialize_tkn()).deserialize() === [box :zzzzzzzzzzzzzzzzzzzzzz!, [byte_array]])
+
+     test(:0!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :0!.serialize_tkn())
+     test(:9!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :9!.serialize_tkn())
+     test(:_!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :_!.serialize_tkn())
+     test(:z!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :z!.serialize_tkn())
+     test(:0000000000000000000000!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :0000000000000000000000!.serialize_tkn())
+     test(:9999999999999999999999!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :9999999999999999999999!.serialize_tkn())
+     test(:______________________!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :______________________!.serialize_tkn())
+     test(:zzzzzzzzzzzzzzzzzzzzzz!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz!.serialize_tkn())
+
+     test(([byte_array 0b11] ++ :0.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :0, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :9.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :9, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :_.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :_, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :z.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :z, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :0000000000000000000000.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :0000000000000000000000, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :9999999999999999999999.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :9999999999999999999999, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :______________________.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :______________________, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :zzzzzzzzzzzzzzzzzzzzzz, [byte_array 0bff]])
+
+     test(:0!!!.serialize([byte_array]) === [byte_array 0b11] ++ :0!!!.serialize_tkn())
+     test(:9!!!.serialize([byte_array]) === [byte_array 0b11] ++ :9!!!.serialize_tkn())
+     test(:_!!!.serialize([byte_array]) === [byte_array 0b11] ++ :_!!!.serialize_tkn())
+     test(:z!!!.serialize([byte_array]) === [byte_array 0b11] ++ :z!!!.serialize_tkn())
+     test(:0000000000000000000000!!!.serialize([byte_array]) === [byte_array 0b11] ++ :0000000000000000000000!!!.serialize_tkn())
+     test(:9999999999999999999999!!!.serialize([byte_array]) === [byte_array 0b11] ++ :9999999999999999999999!!!.serialize_tkn())
+     test(:______________________!!!.serialize([byte_array]) === [byte_array 0b11] ++ :______________________!!!.serialize_tkn())
+     test(:zzzzzzzzzzzzzzzzzzzzzz!!!.serialize([byte_array]) === [byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz!!!.serialize_tkn())
+
+     test(([byte_array 0b11] ++ :0!!!.serialize_tkn()).deserialize() === [box :0!!!, [byte_array]])
+     test(([byte_array 0b11] ++ :9!!!.serialize_tkn()).deserialize() === [box :9!!!, [byte_array]])
+     test(([byte_array 0b11] ++ :_!!!.serialize_tkn()).deserialize() === [box :_!!!, [byte_array]])
+     test(([byte_array 0b11] ++ :z!!!.serialize_tkn()).deserialize() === [box :z!!!, [byte_array]])
+     test(([byte_array 0b11] ++ :0000000000000000000000!!!.serialize_tkn()).deserialize() === [box :0000000000000000000000!!!, [byte_array]])
+     test(([byte_array 0b11] ++ :9999999999999999999999!!!.serialize_tkn()).deserialize() === [box :9999999999999999999999!!!, [byte_array]])
+     test(([byte_array 0b11] ++ :______________________!!!.serialize_tkn()).deserialize() === [box :______________________!!!, [byte_array]])
+     test(([byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz!!!.serialize_tkn()).deserialize() === [box :zzzzzzzzzzzzzzzzzzzzzz!!!, [byte_array]])
+
+     test(:0!!!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :0!!!.serialize_tkn())
+     test(:9!!!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :9!!!.serialize_tkn())
+     test(:_!!!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :_!!!.serialize_tkn())
+     test(:z!!!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :z!!!.serialize_tkn())
+     test(:0000000000000000000000!!!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :0000000000000000000000!!!.serialize_tkn())
+     test(:9999999999999999999999!!!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :9999999999999999999999!!!.serialize_tkn())
+     test(:______________________!!!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :______________________!!!.serialize_tkn())
+     test(:zzzzzzzzzzzzzzzzzzzzzz!!!.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz!!!.serialize_tkn())
+
+     test(([byte_array 0b11] ++ :0!!!.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :0!!!, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :9!!!.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :9!!!, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :_!!!.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :_!!!, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :z!!!.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :z!!!, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :0000000000000000000000!!!.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :0000000000000000000000!!!, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :9999999999999999999999!!!.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :9999999999999999999999!!!, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :______________________!!!.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :______________________!!!, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz!!!.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :zzzzzzzzzzzzzzzzzzzzzz!!!, [byte_array 0bff]])
+
+     test(:0?.serialize([byte_array]) === [byte_array 0b11] ++ :0?.serialize_tkn())
+     test(:9?.serialize([byte_array]) === [byte_array 0b11] ++ :9?.serialize_tkn())
+     test(:_?.serialize([byte_array]) === [byte_array 0b11] ++ :_?.serialize_tkn())
+     test(:z?.serialize([byte_array]) === [byte_array 0b11] ++ :z?.serialize_tkn())
+     test(:0000000000000000000000?.serialize([byte_array]) === [byte_array 0b11] ++ :0000000000000000000000?.serialize_tkn())
+     test(:9999999999999999999999?.serialize([byte_array]) === [byte_array 0b11] ++ :9999999999999999999999?.serialize_tkn())
+     test(:______________________?.serialize([byte_array]) === [byte_array 0b11] ++ :______________________?.serialize_tkn())
+     test(:zzzzzzzzzzzzzzzzzzzzzz?.serialize([byte_array]) === [byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz?.serialize_tkn())
+
+     test(([byte_array 0b11] ++ :0?.serialize_tkn()).deserialize() === [box :0?, [byte_array]])
+     test(([byte_array 0b11] ++ :9?.serialize_tkn()).deserialize() === [box :9?, [byte_array]])
+     test(([byte_array 0b11] ++ :_?.serialize_tkn()).deserialize() === [box :_?, [byte_array]])
+     test(([byte_array 0b11] ++ :z?.serialize_tkn()).deserialize() === [box :z?, [byte_array]])
+     test(([byte_array 0b11] ++ :0000000000000000000000?.serialize_tkn()).deserialize() === [box :0000000000000000000000?, [byte_array]])
+     test(([byte_array 0b11] ++ :9999999999999999999999?.serialize_tkn()).deserialize() === [box :9999999999999999999999?, [byte_array]])
+     test(([byte_array 0b11] ++ :______________________?.serialize_tkn()).deserialize() === [box :______________________?, [byte_array]])
+     test(([byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz?.serialize_tkn()).deserialize() === [box :zzzzzzzzzzzzzzzzzzzzzz?, [byte_array]])
+
+     test(:0?.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :0?.serialize_tkn())
+     test(:9?.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :9?.serialize_tkn())
+     test(:_?.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :_?.serialize_tkn())
+     test(:z?.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :z?.serialize_tkn())
+     test(:0000000000000000000000?.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :0000000000000000000000?.serialize_tkn())
+     test(:9999999999999999999999?.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :9999999999999999999999?.serialize_tkn())
+     test(:______________________?.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :______________________?.serialize_tkn())
+     test(:zzzzzzzzzzzzzzzzzzzzzz?.serialize([byte_array 0bff]) === [byte_array 0bff, 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz?.serialize_tkn())
+
+     test(([byte_array 0b11] ++ :0?.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :0?, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :9?.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :9?, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :_?.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :_?, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :z?.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :z?, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :0000000000000000000000?.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :0000000000000000000000?, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :9999999999999999999999?.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :9999999999999999999999?, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :______________________?.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :______________________?, [byte_array 0bff]])
+     test(([byte_array 0b11] ++ :zzzzzzzzzzzzzzzzzzzzzz?.serialize_tkn() ++ [byte_array 0bff]).deserialize() === [box :zzzzzzzzzzzzzzzzzzzzzz?, [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 1023) + 1).map(fn (_) rnd_token())
+     let bytes = array.foldl(u"", fn (bytes, token) token.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() >= array.len() * 2)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box token, bytes] = bytes.deserialize()
+          let expected           = expected.append(token)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     test(false.serialize([byte_array]) === [byte_array 0b12])
+     test(true.serialize([byte_array]) === [byte_array 0b13])
+     test(false.serialize([byte_array 0bff]) === [byte_array 0bff, 0b12])
+     test(true.serialize([byte_array 0bff]) === [byte_array 0bff, 0b13])
+
+     test([byte_array 0b12].deserialize() === [box false, [byte_array]])
+     test([byte_array 0b13].deserialize() === [box true, [byte_array]])
+     test([byte_array 0b12, 0bff].deserialize() === [box false, [byte_array 0bff]])
+     test([byte_array 0b13, 0bff].deserialize() === [box true, [byte_array 0bff]])
+
+     test(0b00.serialize([byte_array]) === [byte_array 0b14, 0b00])
+     test(0bff.serialize([byte_array]) === [byte_array 0b14, 0bff])
+     test(0b1a.serialize([byte_array]) === [byte_array 0b14, 0b1a])
+     test(0ba1.serialize([byte_array]) === [byte_array 0b14, 0ba1])
+
+     test([byte_array 0b14, 0b00].deserialize() === [box 0b00, [byte_array]])
+     test([byte_array 0b14, 0bff].deserialize() === [box 0bff, [byte_array]])
+     test([byte_array 0b14, 0b1a].deserialize() === [box 0b1a, [byte_array]])
+     test([byte_array 0b14, 0ba1].deserialize() === [box 0ba1, [byte_array]])
+
+     test(0b00.serialize([byte_array 0bff]) === [byte_array 0bff, 0b14, 0b00])
+     test(0bff.serialize([byte_array 0bff]) === [byte_array 0bff, 0b14, 0bff])
+     test(0b1a.serialize([byte_array 0bff]) === [byte_array 0bff, 0b14, 0b1a])
+     test(0ba1.serialize([byte_array 0bff]) === [byte_array 0bff, 0b14, 0ba1])
+
+     test([byte_array 0b14, 0b00, 0bff].deserialize() === [box 0b00, [byte_array 0bff]])
+     test([byte_array 0b14, 0bff, 0bff].deserialize() === [box 0bff, [byte_array 0bff]])
+     test([byte_array 0b14, 0b1a, 0bff].deserialize() === [box 0b1a, [byte_array 0bff]])
+     test([byte_array 0b14, 0ba1, 0bff].deserialize() === [box 0ba1, [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 1023) + 1).map(fn (_) rnd_byte())
+     let bytes = array.foldl(u"", fn (bytes, byte) byte.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() === array.len() * 2)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box byte, bytes] = bytes.deserialize()
+          let expected          = expected.append(byte)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     test('\000001'.serialize([byte_array]) === [byte_array 0b15, 0b00])
+     test('\0000ff'.serialize([byte_array]) === [byte_array 0b15, 0bfe])
+     test('\000100'.serialize([byte_array]) === [byte_array 0b15, 0bff])
+     test('\000101'.serialize([byte_array]) === [byte_array 0b16, 0b00, 0b00])
+
+     test([byte_array 0b15, 0b00].deserialize() === [box '\000001', [byte_array]])
+     test([byte_array 0b15, 0bfe].deserialize() === [box '\0000ff', [byte_array]])
+     test([byte_array 0b15, 0bff].deserialize() === [box '\000100', [byte_array]])
+     test([byte_array 0b16, 0b00, 0b00].deserialize() === [box '\000101', [byte_array]])
+
+     test('\000001'.serialize([byte_array 0bff]) === [byte_array 0bff, 0b15, 0b00])
+     test('\0000ff'.serialize([byte_array 0bff]) === [byte_array 0bff, 0b15, 0bfe])
+     test('\000100'.serialize([byte_array 0bff]) === [byte_array 0bff, 0b15, 0bff])
+     test('\000101'.serialize([byte_array 0bff]) === [byte_array 0bff, 0b16, 0b00, 0b00])
+
+     test([byte_array 0b15, 0b00, 0bff].deserialize() === [box '\000001', [byte_array 0bff]])
+     test([byte_array 0b15, 0bfe, 0bff].deserialize() === [box '\0000ff', [byte_array 0bff]])
+     test([byte_array 0b15, 0bff, 0bff].deserialize() === [box '\000100', [byte_array 0bff]])
+     test([byte_array 0b16, 0b00, 0b00, 0bff].deserialize() === [box '\000101', [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 1023) + 1).map(fn (_) rnd_char())
+     let bytes = array.foldl(u"", fn (bytes, char) char.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() >= array.len() * 2)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box char, bytes] = bytes.deserialize()
+          let expected          = expected.append(char)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     test(assemble_time(0, 2030, 1, 1, 0, 0, 0).serialize([byte_array]) === [byte_array 0b18, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 2030, 1, 1, 0, 0, 1).serialize([byte_array]) === [byte_array 0b18, 0b01, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 2030, 1, 1, 0, 4, 16).serialize([byte_array]) === [byte_array 0b18, 0b00, 0b01, 0b00, 0b00])
+     test(assemble_time(0, 2030, 1, 1, 18, 12, 16).serialize([byte_array]) === [byte_array 0b18, 0b00, 0b00, 0b01, 0b00])
+     test(assemble_time(0, 2030, 7, 14, 4, 20, 16).serialize([byte_array]) === [byte_array 0b18, 0b00, 0b00, 0b00, 0b01])
+     test(assemble_time(0, 2166, 2, 7, 6, 28, 15).serialize([byte_array]) === [byte_array 0b18, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b18, 0b00, 0b00, 0b00, 0b00].deserialize() === [box assemble_time(0, 2030, 1, 1, 0, 0, 0), [byte_array]])
+     test([byte_array 0b18, 0b01, 0b00, 0b00, 0b00].deserialize() === [box assemble_time(0, 2030, 1, 1, 0, 0, 1), [byte_array]])
+     test([byte_array 0b18, 0b00, 0b01, 0b00, 0b00].deserialize() === [box assemble_time(0, 2030, 1, 1, 0, 4, 16), [byte_array]])
+     test([byte_array 0b18, 0b00, 0b00, 0b01, 0b00].deserialize() === [box assemble_time(0, 2030, 1, 1, 18, 12, 16), [byte_array]])
+     test([byte_array 0b18, 0b00, 0b00, 0b00, 0b01].deserialize() === [box assemble_time(0, 2030, 7, 14, 4, 20, 16), [byte_array]])
+     test([byte_array 0b18, 0bff, 0bff, 0bff, 0bff].deserialize() === [box assemble_time(0, 2166, 2, 7, 6, 28, 15), [byte_array]])
+
+     test(assemble_time(0, 2030, 1, 1, 0, 0, 0).serialize([byte_array 0bff]) === [byte_array 0bff, 0b18, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 2030, 1, 1, 0, 0, 1).serialize([byte_array 0bff]) === [byte_array 0bff, 0b18, 0b01, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 2030, 1, 1, 0, 4, 16).serialize([byte_array 0bff]) === [byte_array 0bff, 0b18, 0b00, 0b01, 0b00, 0b00])
+     test(assemble_time(0, 2030, 1, 1, 18, 12, 16).serialize([byte_array 0bff]) === [byte_array 0bff, 0b18, 0b00, 0b00, 0b01, 0b00])
+     test(assemble_time(0, 2030, 7, 14, 4, 20, 16).serialize([byte_array 0bff]) === [byte_array 0bff, 0b18, 0b00, 0b00, 0b00, 0b01])
+     test(assemble_time(0, 2166, 2, 7, 6, 28, 15).serialize([byte_array 0bff]) === [byte_array 0bff, 0b18, 0bff, 0bff, 0bff, 0bff])
+
+     test([byte_array 0b18, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box assemble_time(0, 2030, 1, 1, 0, 0, 0), [byte_array 0bff]])
+     test([byte_array 0b18, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box assemble_time(0, 2030, 1, 1, 0, 0, 1), [byte_array 0bff]])
+     test([byte_array 0b18, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box assemble_time(0, 2030, 1, 1, 0, 4, 16), [byte_array 0bff]])
+     test([byte_array 0b18, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box assemble_time(0, 2030, 1, 1, 18, 12, 16), [byte_array 0bff]])
+     test([byte_array 0b18, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box assemble_time(0, 2030, 7, 14, 4, 20, 16), [byte_array 0bff]])
+     test([byte_array 0b18, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize() === [box assemble_time(0, 2166, 2, 7, 6, 28, 15), [byte_array 0bff]])
+
+     test(assemble_time(0, 1970, 1, 1, 0, 0, 0).serialize([byte_array]) === [byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 1970, 1, 1, 0, 0, 1).serialize([byte_array]) === [byte_array 0b19, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 1970, 1, 1, 0, 4, 16).serialize([byte_array]) === [byte_array 0b19, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 1970, 1, 1, 18, 12, 16).serialize([byte_array]) === [byte_array 0b19, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 1970, 7, 14, 4, 20, 16).serialize([byte_array]) === [byte_array 0b19, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 2167, 2, 1, 0, 0, 0).serialize([byte_array]) === [byte_array 0b19, 0b00, 0bc8, 0bb4, 0b72, 0b01, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 36812, 2, 20, 0, 36, 16).serialize([byte_array]) === [byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(assemble_time(0, 8921556, 12, 7, 10, 44, 16).serialize([byte_array]) === [byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(assemble_time(0, 2283416224, 11, 24, 12, 52, 16).serialize([byte_array]) === [byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(9223372036825516799.int_to_time().serialize([byte_array]) === [byte_array 0b19, 0bff, 0b8a, 0b41, 0bfe, 0bff, 0bff, 0bff, 0b7f])
+
+     test([byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box assemble_time(0, 1970, 1, 1, 0, 0, 0), [byte_array]])
+     test([byte_array 0b19, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box assemble_time(0, 1970, 1, 1, 0, 0, 1), [byte_array]])
+     test([byte_array 0b19, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box assemble_time(0, 1970, 1, 1, 0, 4, 16), [byte_array]])
+     test([byte_array 0b19, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box assemble_time(0, 1970, 1, 1, 18, 12, 16), [byte_array]])
+     test([byte_array 0b19, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00].deserialize() === [box assemble_time(0, 1970, 7, 14, 4, 20, 16), [byte_array]])
+     test([byte_array 0b19, 0b00, 0bc8, 0bb4, 0b72, 0b01, 0b00, 0b00, 0b00].deserialize() === [box assemble_time(0, 2167, 2, 1, 0, 0, 0), [byte_array]])
+     test([byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00].deserialize() === [box assemble_time(0, 36812, 2, 20, 0, 36, 16), [byte_array]])
+     test([byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00].deserialize() === [box assemble_time(0, 8921556, 12, 7, 10, 44, 16), [byte_array]])
+     test([byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01].deserialize() === [box assemble_time(0, 2283416224, 11, 24, 12, 52, 16), [byte_array]])
+     test([byte_array 0b19, 0bff, 0b8a, 0b41, 0bfe, 0bff, 0bff, 0bff, 0b7f].deserialize() === [box 9223372036825516799.int_to_time(), [byte_array]])
+
+     test(assemble_time(0, 1970, 1, 1, 0, 0, 0).serialize([byte_array 0bff]) === [byte_array 0bff, 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 1970, 1, 1, 0, 0, 1).serialize([byte_array 0bff]) === [byte_array 0bff, 0b19, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 1970, 1, 1, 0, 4, 16).serialize([byte_array 0bff]) === [byte_array 0bff, 0b19, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 1970, 1, 1, 18, 12, 16).serialize([byte_array 0bff]) === [byte_array 0bff, 0b19, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 1970, 7, 14, 4, 20, 16).serialize([byte_array 0bff]) === [byte_array 0bff, 0b19, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 2167, 2, 1, 0, 0, 0).serialize([byte_array 0bff]) === [byte_array 0bff, 0b19, 0b00, 0bc8, 0bb4, 0b72, 0b01, 0b00, 0b00, 0b00])
+     test(assemble_time(0, 36812, 2, 20, 0, 36, 16).serialize([byte_array 0bff]) === [byte_array 0bff, 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00])
+     test(assemble_time(0, 8921556, 12, 7, 10, 44, 16).serialize([byte_array 0bff]) === [byte_array 0bff, 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00])
+     test(assemble_time(0, 2283416224, 11, 24, 12, 52, 16).serialize([byte_array 0bff]) === [byte_array 0bff, 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01])
+     test(9223372036825516799.int_to_time().serialize([byte_array 0bff]) === [byte_array 0bff, 0b19, 0bff, 0b8a, 0b41, 0bfe, 0bff, 0bff, 0bff, 0b7f])
+
+     test([byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box assemble_time(0, 1970, 1, 1, 0, 0, 0), [byte_array 0bff]])
+     test([byte_array 0b19, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box assemble_time(0, 1970, 1, 1, 0, 0, 1), [byte_array 0bff]])
+     test([byte_array 0b19, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box assemble_time(0, 1970, 1, 1, 0, 4, 16), [byte_array 0bff]])
+     test([byte_array 0b19, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box assemble_time(0, 1970, 1, 1, 18, 12, 16), [byte_array 0bff]])
+     test([byte_array 0b19, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box assemble_time(0, 1970, 7, 14, 4, 20, 16), [byte_array 0bff]])
+     test([byte_array 0b19, 0b00, 0bc8, 0bb4, 0b72, 0b01, 0b00, 0b00, 0b00, 0bff].deserialize() === [box assemble_time(0, 2167, 2, 1, 0, 0, 0), [byte_array 0bff]])
+     test([byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0b00, 0bff].deserialize() === [box assemble_time(0, 36812, 2, 20, 0, 36, 16), [byte_array 0bff]])
+     test([byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0b00, 0bff].deserialize() === [box assemble_time(0, 8921556, 12, 7, 10, 44, 16), [byte_array 0bff]])
+     test([byte_array 0b19, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b01, 0bff].deserialize() === [box assemble_time(0, 2283416224, 11, 24, 12, 52, 16), [byte_array 0bff]])
+     test([byte_array 0b19, 0bff, 0b8a, 0b41, 0bfe, 0bff, 0bff, 0bff, 0b7f, 0bff].deserialize() === [box 9223372036825516799.int_to_time(), [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 1023) + 1).map(fn (_) (rnd() >> 2).int_to_time())
+     let bytes = array.foldl(u"", fn (bytes, time) time.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() >= array.len() * 5)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box time, bytes] = bytes.deserialize()
+          let expected          = expected.append(time)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     test(0.0.serialize([byte_array]) === [byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(-0.0.serialize([byte_array]) === [byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b80])
+     test(1.5.serialize([byte_array]) === [byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf8, 0b3f])
+     test(-1.5.serialize([byte_array]) === [byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf8, 0bbf])
+     test(inf().serialize([byte_array]) === [byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf0, 0b7f])
+     test(neg_inf().serialize([byte_array]) === [byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf0, 0bff])
+     test(nan().serialize([byte_array])[0] === 0b1a)
+     test(nan().serialize([byte_array]).len() === 9)
+     test((nan().serialize([byte_array]).drop(1).scarlet__split!!!()[0] & 0xf'ffff'ffff'ffff) =/= 0)
+     test(((nan().serialize([byte_array]).drop(1).scarlet__split!!!()[0] >> 52) & 0x7ff) === 0x7ff)
+
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize() === [box 0.0, [byte_array]])
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b80].deserialize() === [box -0.0, [byte_array]])
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf8, 0b3f].deserialize() === [box 1.5, [byte_array]])
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf8, 0bbf].deserialize() === [box -1.5, [byte_array]])
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf0, 0b7f].deserialize() === [box inf(), [byte_array]])
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf0, 0bff].deserialize() === [box neg_inf(), [byte_array]])
+     let nan_bytes = [byte_array 0b1a] ++ scarlet__join!!!(nan().scarlet__split!!!()[0], u"01234567".scarlet__split!!!()[1])
+     test(nan_bytes.deserialize()[0].nan?())
+     test(nan_bytes.deserialize()[1] === [byte_array])
+
+     test(0.0.serialize([byte_array 0bff]) === [byte_array 0bff, 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00])
+     test(-0.0.serialize([byte_array 0bff]) === [byte_array 0bff, 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b80])
+     test(1.5.serialize([byte_array 0bff]) === [byte_array 0bff, 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf8, 0b3f])
+     test(-1.5.serialize([byte_array 0bff]) === [byte_array 0bff, 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf8, 0bbf])
+     test(inf().serialize([byte_array 0bff]) === [byte_array 0bff, 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf0, 0b7f])
+     test(neg_inf().serialize([byte_array 0bff]) === [byte_array 0bff, 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf0, 0bff])
+     test(nan().serialize([byte_array 0bff]).take(2) === [byte_array 0bff, 0b1a])
+     test(nan().serialize([byte_array 0bff]).len() === 10)
+     test((nan().serialize([byte_array 0bff]).drop(2).scarlet__split!!!()[0] & 0xf'ffff'ffff'ffff) =/= 0)
+     test(((nan().serialize([byte_array 0bff]).drop(2).scarlet__split!!!()[0] >> 52) & 0x7ff) === 0x7ff)
+
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bff].deserialize() === [box 0.0, [byte_array 0bff]])
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b80, 0bff].deserialize() === [box -0.0, [byte_array 0bff]])
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf8, 0b3f, 0bff].deserialize() === [box 1.5, [byte_array 0bff]])
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf8, 0bbf, 0bff].deserialize() === [box -1.5, [byte_array 0bff]])
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf0, 0b7f, 0bff].deserialize() === [box inf(), [byte_array 0bff]])
+     test([byte_array 0b1a, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0bf0, 0bff, 0bff].deserialize() === [box neg_inf(), [byte_array 0bff]])
+     let nan_bytes = [byte_array 0b1a] ++ scarlet__join!!!(nan().scarlet__split!!!()[0], u"01234567".scarlet__split!!!()[1]) ++ [byte_array 0bff]
+     test(nan_bytes.deserialize()[0].nan?())
+     test(nan_bytes.deserialize()[1] === [byte_array 0bff])
+
+     let array = [array 0].repeat((rnd() & 1023) + 1).map(fn (_) rnd_float())
+     let bytes = array.foldl(u"", fn (bytes, float) float.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() === array.len() * 9)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box float, bytes] = bytes.deserialize()
+          let expected           = expected.append(float)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     test([byte_array].serialize([byte_array]) === [byte_array 0b1b, 0b80])
+     test([byte_array 0bfe].serialize([byte_array]) === [byte_array 0b1b, 0b81, 0bfe])
+     test([byte_array 0b00, 0bff].serialize([byte_array]) === [byte_array 0b1b, 0b82, 0b00, 0bff])
+     test([byte_array 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd].serialize([byte_array]) === [byte_array 0b1b, 0b8e, 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd])
+     test([byte_array 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd, 0bee].serialize([byte_array]) === [byte_array 0b1b, 0b8f, 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd, 0bee])
+
+     test([byte_array 0b1b, 0b80].deserialize() === [box [byte_array], [byte_array]])
+     test([byte_array 0b1b, 0b81, 0bfe].deserialize() === [box [byte_array 0bfe], [byte_array]])
+     test([byte_array 0b1b, 0b82, 0b00, 0bff].deserialize() === [box [byte_array 0b00, 0bff], [byte_array]])
+     test([byte_array 0b1b, 0b8e, 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd].deserialize() === [box [byte_array 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd], [byte_array]])
+     test([byte_array 0b1b, 0b8f, 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd, 0bee].deserialize() === [box [byte_array 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd, 0bee], [byte_array]])
+
+     test([byte_array].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1b, 0b80])
+     test([byte_array 0bfe].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1b, 0b81, 0bfe])
+     test([byte_array 0b00, 0bff].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1b, 0b82, 0b00, 0bff])
+     test([byte_array 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1b, 0b8e, 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd])
+     test([byte_array 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd, 0bee].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1b, 0b8f, 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd, 0bee])
+
+     test([byte_array 0b1b, 0b80, 0bff].deserialize() === [box [byte_array], [byte_array 0bff]])
+     test([byte_array 0b1b, 0b81, 0bfe, 0bff].deserialize() === [box [byte_array 0bfe], [byte_array 0bff]])
+     test([byte_array 0b1b, 0b82, 0b00, 0bff, 0bff].deserialize() === [box [byte_array 0b00, 0bff], [byte_array 0bff]])
+     test([byte_array 0b1b, 0b8e, 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd, 0bff].deserialize() === [box [byte_array 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd], [byte_array 0bff]])
+     test([byte_array 0b1b, 0b8f, 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd, 0bee, 0bff].deserialize() === [box [byte_array 0b00, 0b11, 0b22, 0b33, 0b44, 0b55, 0b66, 0b77, 0b88, 0b99, 0baa, 0bbb, 0bcc, 0bdd, 0bee], [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 15) + 1).map(fn (_) rnd_byte_array())
+     let bytes = array.foldl(u"", fn (bytes, byte_array) byte_array.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() >= array.len() * 2)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box byte_array, bytes] = bytes.deserialize()
+          let expected                = expected.append(byte_array)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+
+     test(expected === array)
+
+     test([obj].serialize([byte_array]) === [byte_array 0b1c, 0b80])
+     test([obj :_ = [obj :1 = heap_string()]].serialize([byte_array]) === [byte_array 0b1c, 0b80])
+
+     test([byte_array 0b1c, 0b80].deserialize() === [box [obj], [byte_array]])
+     test(([byte_array 0b1c, 0b81] ++ :0.serialize_tkn() ++ uz"\000010").deserialize() === [box [obj :0 = ""], [byte_array]])
+
+     test([obj].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1c, 0b80])
+     test([obj :_ = [obj :1 = heap_string()]].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1c, 0b80])
+
+     if (read_from_mem!!!([obj :0 = 1], 7, 1).first() >> 1) == 0b78 {
+          test([obj :0 = ""].serialize([byte_array]) === [byte_array 0b1c, 0b81] ++ :0.serialize_tkn() ++ uz"\000010")
+          test([obj :0 = "", :_ = [obj :1 = heap_string()]].serialize([byte_array]) === [byte_array 0b1c, 0b81] ++ :0.serialize_tkn() ++ uz"\000010")
+          test([obj :0 = ""].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1c, 0b81] ++ :0.serialize_tkn() ++ uz"\000010")
+          test([obj :0 = "", :_ = [obj :1 = heap_string()]].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1c, 0b81] ++ :0.serialize_tkn() ++ uz"\000010")
+     } else {
+          test([obj :0 = ""].serialize([byte_array]) === [byte_array 0b20, 0b00, 0b00, 0b81, 0bb0, 0b10, 0b00])
+          test([obj :0 = "", :_ = [obj :1 = heap_string()]].serialize([byte_array]) === [byte_array 0b20, 0b00, 0b00, 0b81, 0bb0, 0b10, 0b00])
+          test([obj :0 = ""].serialize([byte_array 0bff]) === [byte_array 0bff, 0b20, 0b00, 0b00, 0b81, 0bb0, 0b10, 0b00])
+          test([obj :0 = "", :_ = [obj :1 = heap_string()]].serialize([byte_array 0bff]) === [byte_array 0bff, 0b20, 0b00, 0b00, 0b81, 0bb0, 0b10, 0b00])
+          test([obj :1 = null].serialize([byte_array 0bff]) === [byte_array 0bff, 0b20, 0b00, 0b00, 0b81, 0b31, 0b80])
+          test([obj :1 = null, :_ = [obj :1 = heap_string()]].serialize([byte_array 0bff]) === [byte_array 0bff, 0b20, 0b00, 0b00, 0b81, 0b31, 0b80])
+     }
+
+     test([byte_array 0b1c, 0b80, 0bff].deserialize() === [box [obj], [byte_array 0bff]])
+     test(([byte_array 0b1c, 0b81] ++ :0.serialize_tkn() ++ [byte_array 0b10, 0b00, 0bff]).deserialize() === [box [obj :0 = ""], [byte_array 0bff]])
+
+     test([byte_array 0b20, 0b00, 0b00, 0b81, 0bb0, 0b10, 0b00].deserialize() === [box [obj :0 = ""], [byte_array]])
+     test([byte_array 0b20, 0b00, 0b00, 0b81, 0b31, 0b80].deserialize() === [box [obj], [byte_array]])
+     test([byte_array 0b20, 0b00, 0b00, 0b81, 0bb0, 0b10, 0b00, 0bff].deserialize() === [box [obj :0 = ""], [byte_array 0bff]])
+     test([byte_array 0b20, 0b00, 0b00, 0b81, 0b31, 0b80, 0bff].deserialize() === [box [obj], [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 15) + 1).map(fn (_) rnd_string_obj())
+     let bytes = array.foldl(u"", fn (bytes, obj) obj.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() >= array.len() * 2)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box obj, bytes] = bytes.deserialize()
+          let expected         = expected.append(obj)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     test([table].serialize([byte_array]) === [byte_array 0b1d, 0b80])
+     test([table "a" = ""].serialize([byte_array]) === [byte_array 0b1d, 0b81, 0b10, 0b61, 0b00, 0b10, 0b00])
+
+     test([byte_array 0b1d, 0b80].deserialize() === [box [table], [byte_array]])
+     test([byte_array 0b1d, 0b81, 0b10, 0b61, 0b00, 0b10, 0b00].deserialize() === [box [table "a" = ""], [byte_array]])
+
+     test([table].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1d, 0b80])
+     test([table "a" = ""].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1d, 0b81, 0b10, 0b61, 0b00, 0b10, 0b00])
+
+     test([byte_array 0b1d, 0b80, 0bff].deserialize() === [box [table], [byte_array 0bff]])
+     test([byte_array 0b1d, 0b81, 0b10, 0b61, 0b00, 0b10, 0b00, 0bff].deserialize() === [box [table "a" = ""], [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 15) + 1).map(fn (_) rnd_string_table())
+     let bytes = array.foldl(u"", fn (bytes, table) table.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() >= array.len() * 2)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box table, bytes] = bytes.deserialize()
+          let expected           = expected.append(table)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     test([set].serialize([byte_array]) === [byte_array 0b1e, 0b80])
+     test([set ""].serialize([byte_array]) === [byte_array 0b1e, 0b81, 0b10, 0b00])
+
+     test([byte_array 0b1e, 0b80].deserialize() === [box [set], [byte_array]])
+     test([byte_array 0b1e, 0b81, 0b10, 0b00].deserialize() === [box [set ""], [byte_array]])
+
+     test([set].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1e, 0b80])
+     test([set ""].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1e, 0b81, 0b10, 0b00])
+
+     test([byte_array 0b1e, 0b80, 0bff].deserialize() === [box [set], [byte_array 0bff]])
+     test([byte_array 0b1e, 0b81, 0b10, 0b00, 0bff].deserialize() === [box [set ""], [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 15) + 1).map(fn (_) rnd_string_set())
+     let bytes = array.foldl(u"", fn (bytes, set) set.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() >= array.len() * 2)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box set, bytes] = bytes.deserialize()
+          let expected         = expected.append(set)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     test([array].serialize([byte_array]) === [byte_array 0b1f, 0b80])
+     test([array ""].serialize([byte_array]) === [byte_array 0b1f, 0b81, 0b10, 0b00])
+     test([array "", 0].serialize([byte_array]) === [byte_array 0b1f, 0b82, 0b10, 0b00, 0b00, 0b00])
+     test([array "", 0, [array]].serialize([byte_array]) === [byte_array 0b1f, 0b83, 0b10, 0b00, 0b00, 0b00, 0b1f, 0b80])
+
+     test([byte_array 0b1f, 0b80].deserialize() === [box [array], [byte_array]])
+     test([byte_array 0b1f, 0b81, 0b10, 0b00].deserialize() === [box [array ""], [byte_array]])
+     test([byte_array 0b1f, 0b82, 0b10, 0b00, 0b00, 0b00].deserialize() === [box [array "", 0], [byte_array]])
+     test([byte_array 0b1f, 0b83, 0b10, 0b00, 0b00, 0b00, 0b1f, 0b80].deserialize() === [box [array "", 0, [array]], [byte_array]])
+
+     test([array].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1f, 0b80])
+     test([array ""].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1f, 0b81, 0b10, 0b00])
+     test([array "", 0].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1f, 0b82, 0b10, 0b00, 0b00, 0b00])
+     test([array "", 0, [array]].serialize([byte_array 0bff]) === [byte_array 0bff, 0b1f, 0b83, 0b10, 0b00, 0b00, 0b00, 0b1f, 0b80])
+
+     test([byte_array 0b1f, 0b80, 0bff].deserialize() === [box [array], [byte_array 0bff]])
+     test([byte_array 0b1f, 0b81, 0b10, 0b00, 0bff].deserialize() === [box [array ""], [byte_array 0bff]])
+     test([byte_array 0b1f, 0b82, 0b10, 0b00, 0b00, 0b00, 0bff].deserialize() === [box [array "", 0], [byte_array 0bff]])
+     test([byte_array 0b1f, 0b83, 0b10, 0b00, 0b00, 0b00, 0b1f, 0b80, 0bff].deserialize() === [box [array "", 0, [array]], [byte_array 0bff]])
+
+     let array = [array 0].repeat((rnd() & 15) + 1).map(fn (_) rnd_string_array())
+     let bytes = array.foldl(u"", fn (bytes, string_array) string_array.serialize(bytes))
+     test(bytes.type() === "core.byte_array")
+     test(bytes.len() >= array.len() * 2)
+     let expected = loop([box [array].init(len(array)), bytes], fn (state) {
+          let [box expected, bytes] = state
+
+          let [box string_array, bytes] = bytes.deserialize()
+          let expected                  = expected.append(string_array)
+
+          if len(expected) === len(array) {
+               test(bytes.empty?())
+
+               [breaker expected]
+          } else [box expected, bytes]
+     })
+     test(expected === array)
+
+     let item = rnd_serializable(0)
+     test(item.serialize([byte_array]).deserialize() == [box item, [byte_array]])
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.serialize(heap_byte_array()).get_error_id() === :1)
+     test(heap_byte_array().serialize(error_1).get_error_id() === :1)
+     test(error_1.serialize(error_2).get_error_id() === :1)
+     test(error_2.serialize(error_1).get_error_id() === :2)
+     test(error_1.deserialize().get_error_id() === :1)
+     test(error_1.serialize(heap_string()).get_error_id() === :1)
+     test([box heap_string()].scarlet__erase_info().serialize(error_1).get_error_id() === :1)
+
+     test([box heap_string()].scarlet__erase_info().serialize(heap_byte_array()).get_error_id() === :invalid_type)
+     test(heap_string().serialize(heap_string()).get_error_id() === :invalid_type)
+     test([box heap_string()].scarlet__erase_info().serialize(heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().deserialize().get_error_id() === :invalid_type)
+
+     test([byte_array 0b21].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0bff].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b07, 0b00, 0bff, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0b7e].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b07, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b0f, 0b00, 0bff, 0bfe, 0bfe, 0bfe, 0bfe, 0bfe, 0b7e].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b0f, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff, 0bff].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b10, 0b80, 0b00].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b10, 0ba0, 0b00, 0b00].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b10, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b80, 0b00].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b11, 0b0e, 0b00, 0b00, 0b06, 0b8e, 0be2, 0b73, 0be0, 0b1b, 0b1e, 0baf, 0b7c, 0b8f, 0b9d, 0b04].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b11, 0b0f, 0bff, 0bff, 0b05, 0b8e, 0be2, 0b73, 0be0, 0b1b, 0b1e, 0baf, 0b7c, 0b8f, 0b9d, 0b04].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b11, 0bfe, 0bff, 0bff, 0be3, 0b14, 0ba1, 0b33, 0b51, 0b23, 0b78, 0bfe, 0b81, 0b4c, 0b63, 0baf].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b11, 0b00, 0b00, 0b00, 0be4, 0b14, 0ba1, 0b33, 0b51, 0b23, 0b78, 0bfe, 0b81, 0b4c, 0b63, 0baf].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b17, 0b00, 0b00, 0b00].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b19, 0b00, 0b8b, 0b41, 0bfe, 0bff, 0bff, 0bff, 0b7f].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b19, 0bff, 0b74, 0bbe, 0b01, 0b00, 0b00, 0b00, 0b80].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b1b, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b1c, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b1d, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b1e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize().get_error_id() === :incorrect_data)
+     test([byte_array 0b1f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize().get_error_id() === :incorrect_data)
+
+     test([byte_array].deserialize().get_error_id() === :out_of_bounds)
+     test([byte_array 0b10, 0b10].deserialize().get_error_id() === :out_of_bounds)
+     test([byte_array 0b10, 0b80].deserialize().get_error_id() === :out_of_bounds)
+     test([byte_array 0b10, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b10].deserialize().get_error_id() === :out_of_bounds)
+     test([byte_array 0b10, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b80].deserialize().get_error_id() === :out_of_bounds)
+     test([byte_array 0b10, 0ba0, 0bc0].deserialize().get_error_id() === :out_of_bounds)
+     test([byte_array 0b10, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0b20, 0ba0, 0bc0].deserialize().get_error_id() === :out_of_bounds)
+     test([byte_array 0b1b, 0b81].deserialize().get_error_id() === :out_of_bounds)
+     test([byte_array 0b1b, 0b8e, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize().get_error_id() === :out_of_bounds)
+     test([byte_array 0b1b, 0b8f, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].deserialize().get_error_id() === :out_of_bounds)
+}

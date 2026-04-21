@@ -1,0 +1,93 @@
+let char__symbol = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_symbol? = fn (char) char:value.symbol?()
+     ]
+]
+
+fn to_char__symbol?(arg) new (@main.char__symbol):value <= arg
+
+fn to_custom_char__symbol?(arg) custom__create(
+     arg
+     [obj
+          :core_symbol? = fn (char) char.custom__get_data().symbol?()
+     ]
+)
+
+let broken_char__symbol = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_symbol? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_char__symbol?(arg) new (@main.broken_char__symbol):value <= arg
+
+fn to_broken_custom_char__symbol?(arg) custom__create(
+     arg
+     [obj
+          :core_symbol? = fn (_) heap_string()
+     ]
+)
+
+let error_char__symbol = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_symbol? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__symbol?(arg) new (@main.error_char__symbol):value <= arg
+
+fn to_error_custom_char__symbol?(arg) custom__create(
+     arg
+     [obj
+          :core_symbol? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__symbol?() {
+     test(not '\000001'.symbol?())
+     test(not '\000008'.symbol?())
+     test(not '\00000a'.symbol?())
+     test(not '\00001f'.symbol?())
+     test(not '\00007f'.symbol?())
+     test(not '\000009'.symbol?())
+     test(not '\t'.symbol?())
+     test(not '\000020'.symbol?())
+     test(not ' '.symbol?())
+     test('\00007e'.symbol?())
+     test(not 'a'.symbol?())
+     test(not 'z'.symbol?())
+     test(not 'A'.symbol?())
+     test(not 'Z'.symbol?())
+     test(not '\00008b'.symbol?())
+     test(not '\0000ac'.symbol?())
+     test(not '0'.symbol?())
+     test(not '9'.symbol?())
+     test('!'.symbol?())
+     test('?'.symbol?())
+     test('~'.symbol?())
+
+     let string = rnd_string()
+     test(string.filter(fn (char) char.in_range?('!', '0') || char.in_range?(':', 'A') || char.in_range?('[', 'a') || char.in_range?('{', '\00007f')) === string.filter(symbol?(_)))
+
+     test(to_char__symbol?('!').symbol?())
+     test(not to_char__symbol?('a').symbol?())
+
+     test(to_custom_char__symbol?('!').symbol?())
+     test(not to_custom_char__symbol?('a').symbol?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.symbol?().get_error_id() === :1)
+     test(heap_table().symbol?().get_error_id() === :invalid_type)
+
+     test(to_broken_char__symbol?('a').symbol?().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__symbol?('a').symbol?().get_error_id() === :invalid_type)
+     test(to_error_char__symbol?('a').symbol?().get_error_id() === :3)
+     test(to_error_custom_char__symbol?('a').symbol?().get_error_id() === :4)
+}

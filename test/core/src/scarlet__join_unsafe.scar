@@ -1,0 +1,2 @@
+`noinline`
+fn test__scarlet__join!!!() test(scarlet__join!!!(0x3736'3534'3332'3130, 0x65'6463'6261'3938) === "0123456789abcde")

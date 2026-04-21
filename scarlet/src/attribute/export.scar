@@ -1,0 +1,4 @@
+let t_export_attr = [obj
+     :scar_type = "t_export_attr"
+     :code      = @main.t_token
+]

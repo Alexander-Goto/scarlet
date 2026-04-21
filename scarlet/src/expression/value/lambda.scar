@@ -1,0 +1,93 @@
+let t_lambda_in_exp = [obj
+     :scar_type = "t_lambda_in_exp"
+
+     :keyword = @main.t_token
+     :params  = [array] # [array @i_expression*]
+     :body    = :i_expression
+]
+
+fn lambda_independent?(lambda, independent_consts) {
+     let independent_consts = lambda:params.foldl(independent_consts, fn (independent_consts, param)
+          if param:text == "_"
+               independent_consts
+          else independent_consts.append(param:text)
+     )
+
+     lambda:body.independent?(independent_consts)
+}
+
+fn analyze_lambda(lambda, owner_last_use_info, owner_lambdas_data, owner_contexts, owner_name_ids, def_ids) {
+     let [box body_name_ids, def_ids] = lambda:params.foldl([box owner_name_ids, def_ids], fn (state, param) {
+          let [box body_name_ids, def_ids] = state
+
+          if param:text == "_"
+               [box body_name_ids, def_ids]
+          else {
+               let name_id       = param.get_token_id()
+               let body_name_ids = new (body_name_ids)[param:text] <= name_id
+               let def_ids       = def_ids.append(name_id)
+
+               [box body_name_ids, def_ids]
+          }
+     })
+
+     let [box body_last_use_info, body_lambdas_data, def_ids] = lambda:body.analyze(@main.t_last_use_info, @main.t_lambdas_data, [set], body_name_ids, def_ids)
+
+     let lambda_id       = lambda:keyword.get_token_id()
+     let lambda_contexts = owner_contexts.append("lfn:" ++ format_int(lambda_id, 32, false))
+
+     let [box borrowed, owner_last_use_info] = owner_name_ids.foldl_kv([box [set], owner_last_use_info], fn (state, name, id) {
+          let [box borrowed, owner_last_use_info] = state
+
+          if id.key_of?(body_last_use_info) {
+               let borrowed            = borrowed.append(name)
+               let owner_last_use_info = new (owner_last_use_info)[id] <= [table lambda_id = lambda_contexts]
+
+               [box borrowed, owner_last_use_info]
+          } else [box borrowed, owner_last_use_info]
+     })
+
+     if borrowed.len() > 65535
+          error__too_many_borrowed(lambda:keyword)
+     else null
+
+     let [box body_last_use_ids, body_contexts, def_ids] = body_last_use_info.foldl_kv([box [set], [table], def_ids], fn (state, def_id, usage_data) {
+          let [box body_last_use_ids, body_contexts, def_ids] = state
+
+          let def_ids = def_ids.remove(def_id)
+
+          let [box body_last_use_ids, body_contexts] = usage_data.foldl_kv([box body_last_use_ids, body_contexts], fn (state, last_use_id, last_use_contexts) {
+               let [box body_last_use_ids, body_contexts] = state
+
+               let body_last_use_ids = body_last_use_ids.append(last_use_id)
+               let body_contexts     = last_use_contexts.foldl(body_contexts, fn (body_contexts, context)
+                    new (body_contexts)[context] => fn (use_ids) if use_ids.null?(); [set def_id] else use_ids.append(def_id)
+               )
+
+               [box body_last_use_ids, body_contexts]
+          })
+
+          [box body_last_use_ids, body_contexts, def_ids]
+     })
+
+     let owner_lambdas_data = new (owner_lambdas_data)[lambda_id] <= new (@main.t_lambda_data) {
+          :last_use_ids     <= body_last_use_ids
+          :contexts         <= body_contexts
+          :sub_lambdas_data <= body_lambdas_data
+          :borrowed         <= borrowed
+     }
+
+     [box owner_last_use_info, owner_lambdas_data, def_ids]
+}
+
+fn lambda_to_operand(lambda, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let lambda_id   = lambda:keyword.get_token_id()
+     let lambda_data = lambdas_data[lambda_id]
+
+     if lambda_data:borrowed.empty?()
+          ir__lambda(lambda, exp_data, lambda_data:last_use_ids, lambda_data:contexts, lambda_data:sub_lambdas_data, unused_def_ids, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     else {
+          let borrowed_last_use_def_ids = contexts["lfn:" ++ format_int(lambda_id, 32, false)] <? [set]
+          ir__closure(lambda, exp_data, lambda_data:last_use_ids, lambda_data:contexts, lambda_data:sub_lambdas_data, lambda_data:borrowed, borrowed_last_use_def_ids, unused_def_ids, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     }
+}

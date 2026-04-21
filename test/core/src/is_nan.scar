@@ -1,0 +1,77 @@
+let num__nan = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_nan? = fn (num) num:value.nan?()
+     ]
+]
+
+fn to_num__nan?(arg) new (@main.num__nan):value <= arg
+
+fn to_custom_num__nan?(arg) custom__create(
+     arg
+     [obj
+          :core_nan? = fn (num) num.custom__get_data().nan?()
+     ]
+)
+
+let broken_num__nan = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_nan? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__nan?(arg) new (@main.broken_num__nan):value <= arg
+
+fn to_broken_custom_num__nan?(arg) custom__create(
+     arg
+     [obj
+          :core_nan? = fn (_) heap_string()
+     ]
+)
+
+let error_num__nan = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_nan? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__nan?(arg) new (@main.error_num__nan):value <= arg
+
+fn to_error_custom_num__nan?(arg) custom__create(
+     arg
+     [obj
+          :core_nan? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__nan?() {
+     test((0.0/0.0.scarlet__erase_info()).nan?())
+     let nan = loop(null, fn (_) {
+          let fraction = rnd() & 0xf'ffff'ffff'ffff
+          break(fraction =/= 0, scarlet__join!!!(fraction | (0x7ff << 52) | ((rnd() & 1) << 63), 0.0.scarlet__split!!!()[1]))
+     })
+     test(nan.nan?())
+     test(not rnd_float().nan?())
+
+     test(nan().to_num__nan?().nan?())
+     test(nan.to_num__nan?().nan?())
+     test(not rnd_float().to_num__nan?().nan?())
+     test(nan().to_custom_num__nan?().nan?())
+     test(nan.to_custom_num__nan?().nan?())
+     test(not rnd_float().to_custom_num__nan?().nan?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.nan?().get_error_id() === :1)
+     test(heap_table().nan?().get_error_id() === :invalid_type)
+
+     test(to_broken_num__nan?(1.0).nan?().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__nan?(1.0).nan?().get_error_id() === :invalid_type)
+     test(to_error_num__nan?(1.0).nan?().get_error_id() === :3)
+     test(to_error_custom_num__nan?(1.0).nan?().get_error_id() === :4)
+}

@@ -1,0 +1,9 @@
+let comptime_null_val = new (@main.t_comptime_val):type <= "null"
+
+fn comptime_null(code)
+     new (@main.t_operand) {
+          :code           <= code
+          :ir             <= "null"
+          :possible_types <= [set "null"]
+          :comptime_val   <= @main.comptime_null_val
+     }

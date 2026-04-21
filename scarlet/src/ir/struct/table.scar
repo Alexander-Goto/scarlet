@@ -1,0 +1,50 @@
+fn ir__table(kvs, code, exp_data, ir, final_data, dependencies, src_gconsts, is_table, is_last) {
+     let [box kvs, state] = kvs.map_with_state([box final_data, dependencies], fn (state, kv) {
+          let [box final_data, dependencies] = state
+
+          let [box kv, key]   = new (kv):key <<= :holder
+          let [box kv, value] = new (kv):value <<= :holder
+
+          let [box key, final_data, dependencies]   = key.has_ir!(final_data, dependencies)
+          let [box value, final_data, dependencies] = value.has_ir!(final_data, dependencies)
+
+          let kv = new (kv) {
+               :key   <= key
+               :value <= value
+          }
+
+          [box [box final_data, dependencies], kv]
+     })
+     let [box final_data, dependencies] = state
+
+     let [box table_reg, exp_data] = exp_data.new_reg()
+
+     let add_ir_part    = table_reg ++ (if is_table; "=table__builtin_unsafe_add_kv__own(thrd_data," else "=table__builtin_add_kv__own(thrd_data,") ++ table_reg ++ ","
+     let owner_name_arg = "," ++ exp_data:owner_name_ir_const ++ ");\n"
+     let ir             = kvs.foldl(
+          ir ++ "t_any " ++ table_reg ++ "=table__init(thrd_data," ++ kvs.len().to_ir_num() ++ owner_name_arg
+
+          fn (ir, kv) {
+               let [obj key = :key, value = :value] = kv
+
+               ir ++ add_ir_part ++ key:ir ++ "," ++ value:ir ++ owner_name_arg
+          }
+     )
+
+     let type = if is_table; [set "table"] else [set "table", "error"]
+     let ir   = ir__assume_type(table_reg, type, ir)
+
+     let ir = if is_last
+          ir__raw_return(ir, table_reg)
+     else ir
+
+     [box
+          new (@main.t_operand) {
+               :code           <= code
+               :ir             <= table_reg
+               :possible_types <= type
+          }
+
+          exp_data, ir, final_data, dependencies, src_gconsts
+     ]
+}

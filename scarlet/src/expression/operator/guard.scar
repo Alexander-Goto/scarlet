@@ -1,0 +1,19 @@
+let t_guard = [obj
+     :scar_type = "t_guard"
+
+     :keyword = @main.t_token
+     :exp     = :i_expression
+]
+
+fn guard_independent?(guard_exp, independent_consts) guard_exp:exp.independent?(independent_consts)
+
+fn analyze_guard(guard_exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     guard_exp:exp.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+fn guard_to_operand(guard_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box guarded_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          guard_exp:exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (guard_exp:keyword):text <= "guard(" ++ guarded_operand:code:text ++ ")"
+     ir__guard(guarded_operand, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

@@ -1,0 +1,7 @@
+let t_lambdas_data = [table] # [table lambda_id:@int = @t_lambda_data]
+let t_lambda_data  = [obj
+     :last_use_ids     = [set]   # [set @int]
+     :contexts         = [table] # [table context:@string = [set def_id:@int]]
+     :sub_lambdas_data = @main.t_lambdas_data
+     :borrowed         = [set]   # [set name:@string]
+]

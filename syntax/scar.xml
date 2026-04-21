@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<language
+    name="Scar"
+    section="Sources"
+    extensions="*.scar"
+    version="1"
+    kateversion="5.0"
+    author="Sadursky Alexander scarred.developer@gmail.com"
+    license="MIT"
+>
+
+<highlighting>
+    <contexts>
+        <context name="TopLevel" attribute="Normal">
+            <IncludeRules context="General"/>
+
+            <WordDetect String="fn" attribute="TopLevelID" context="Function"/>
+            <WordDetect String="let" attribute="TopLevelID" context="GlobalConstant"/>
+            <DetectChar char="`" attribute="Attribute" context="Attribute"/>
+
+            <WordDetect String="module" attribute="Error"/>
+        </context>
+
+        <context name="General">
+            <Detect2Chars char="#" char1="@" attribute="DocComment" context="DocComment" beginRegion="DocComment"/>
+            <Detect2Chars char="#" char1="*" attribute="Comment" context="Comment" beginRegion="Comment"/>
+            <RegExpr String="#.*$" attribute="Comment"/>
+            <RegExpr String="\\$" attribute="Normal" context="LineContinue"/>
+        </context>
+
+        <context name="DocComment" attribute="DocComment">
+            <Detect2Chars char="@" char1="#" attribute="DocComment" context="#pop" endRegion="DocComment"/>
+        </context>
+
+        <context name="Comment" attribute="Comment">
+            <Detect2Chars char="*" char1="#" attribute="Comment" context="#pop" endRegion="Comment"/>
+        </context>
+
+        <context name="LineContinue">
+            <Detect2Chars char="#" char1="@" attribute="DocComment" context="DocComment" beginRegion="DocComment"/>
+            <Detect2Chars char="#" char1="*" attribute="Comment" context="Comment" beginRegion="Comment"/>
+            <RegExpr String="#.*$" attribute="Comment"/>
+            <RegExpr String="[^\s;]" context="#pop" lookAhead="true"/>
+        </context>
+
+        <context name="Attribute" attribute="Attribute">
+            <DetectChar char="`" attribute="Attribute" context="#pop"/>
+        </context>
+
+        <context name="Function" attribute="Normal">
+            <IncludeRules context="General"/>
+
+            <DetectChar char=")" attribute="Normal" context="#pop!SkipSpacesAndGoToExpression"/>
+            <DetectChar char="`" attribute="Attribute" context="Attribute"/>
+        </context>
+
+        <context name="GlobalConstant" attribute="Normal">
+            <IncludeRules context="General"/>
+
+            <DetectChar char="=" attribute="Normal" context="#pop!SkipSpacesAndGoToExpression"/>
+            <DetectChar char="`" attribute="Attribute" context="Attribute"/>
+        </context>
+
+        <context name="SkipSpacesAndGoToExpression" attribute="Normal">
+            <Detect2Chars char="#" char1="@" attribute="DocComment" context="DocComment" beginRegion="DocComment"/>
+            <Detect2Chars char="#" char1="*" attribute="Comment" context="Comment" beginRegion="Comment"/>
+            <RegExpr String="#.*$" attribute="Comment"/>
+            <RegExpr String="[^\s;]" context="#pop!Expression" lookAhead="true"/>
+        </context>
+
+        <context name="Expression" attribute="Normal" lineEndContext="#pop">
+            <IncludeRules context="General"/>
+
+            <RegExpr String="\.[a-z_]+[a-z0-9_]*" attribute="Normal"/>
+
+            <RegExpr String="(?&lt;=\-&gt;)[a-z\d_]{23,}" attribute="Error"/>
+            <RegExpr String=":[a-z\d_]{23,}" attribute="Error"/>
+
+            <RegExpr String="[a-z_]+[a-z0-9_]*(\!{3}|\?|\!)?(?=\()" attribute="Normal"/>
+            <RegExpr String="(&lt;\|&gt;)|(&gt;&gt;&gt;)(/=)|(==)|(\|\|)|(\.\?)|(\+\+)|(&lt;\?)|(\-&gt;)|(\|&gt;)|(&lt;=)|(&gt;=)|(&amp;&amp;)|(&lt;&lt;)|(&gt;&gt;)|[=/%\*\+\-\^\|\.&lt;&gt;&amp;]" attribute="Normal" context="#pop!SkipSpacesAndGoToExpression"/>
+            <RegExpr String=":[a-z\d_]+(\!{3}|\?|\!)?" attribute="Token"/>
+            <RegExpr String="\b((else)|(default))\b" context="#pop" lookAhead="true"/>
+            <AnyChar String="{([" attribute="Normal" context="Code" beginRegion="Code"/>
+            <WordDetect String="null" attribute="Null"/>
+            <WordDetect String="fn" attribute="Keyword" context="#pop!Lambda"/>
+            <RegExpr String="\b((let)|(new)|(case))\b" attribute="Keyword"/>
+            <RegExpr String="([\-\+])?\b[0-9']+\.[0-9']+(e[\-\+]?[0-9']+)?\b" attribute="Float"/>
+            <RegExpr String="[\-\+]?\b[0-9']+\b" attribute="Int"/>
+            <RegExpr String="((uz)|u)?&quot;" attribute="String" context="String"/>
+            <RegExpr String="(?&lt;!\.)\bnot\b((?=[^\?\!])|$)" attribute="Keyword" context="#pop!SkipSpacesAndGoToExpression"/>
+            <WordDetect String="if" attribute="Keyword" context="#pop!If"/>
+            <WordDetect String="switch" attribute="Keyword" context="#pop!Switch"/>
+            <RegExpr String="(?&lt;=\[)((obj)|(table)|(byte_array)|(array)|(set)|(box)|(breaker)|(error))\b" attribute="Keyword"/>
+            <RegExpr String="\b0x[0-9'a-f]+\b"  attribute="Hex"/>
+            <RegExpr String="\b((true)|(false))\b" attribute="Bool"/>
+            <DetectChar char="'" attribute="Char" context="Char"/>
+            <RegExpr String="0b[\da-f]{2}" attribute="Byte"/>
+            <RegExpr String="@[a-z][a-z\d_]*" attribute="ModuleName"/>
+            <DetectChar char="`" attribute="Attribute" context="Attribute"/>
+            <RegExpr String="r((uz)|u)?&quot;[^&quot;]*&quot;" attribute="String"/>
+            <RegExpr String="ru?'[^']*'" attribute="Char"/>
+
+            <AnyChar String="])}" context="#pop" lookAhead="true"/>
+            <DetectChar char=";" attribute="Normal" context="#pop"/>
+        </context>
+
+        <context name="Lambda" attribute="Normal">
+            <IncludeRules context="General"/>
+
+            <DetectChar char=")" attribute="Normal" context="#pop!SkipSpacesAndGoToExpression"/>
+            <DetectChar char="`" attribute="Attribute" context="Attribute"/>
+        </context>
+
+        <context name="Code" attribute="Normal" fallthroughContext="Expression">
+            <AnyChar String="])}" attribute="Normal" context="#pop" endRegion="Code"/>
+        </context>
+
+        <context name="If" attribute="Normal" fallthroughContext="Expression">
+            <WordDetect String="else" attribute="Keyword" context="#pop!SkipSpacesAndGoToExpression"/>
+        </context>
+
+        <context name="Switch" attribute="Normal" fallthroughContext="Expression">
+            <WordDetect String="default" attribute="Keyword" context="#pop!SkipSpacesAndGoToExpression"/>
+        </context>
+
+        <context name="String" attribute="String">
+            <DetectChar char="&quot;" attribute="String" context="#pop"/>
+            <RegExpr String="\\(n|t|&quot;|'|\\|[\da-fA-F]{6})" attribute="SpecialChar"/>
+        </context>
+
+        <context name="Char" attribute="Char">
+            <DetectChar char="'" attribute="Char" context="#pop"/>
+            <RegExpr String="\\(n|t|&quot;|'|\\|[\da-fA-F]{6})" attribute="SpecialChar"/>
+        </context>
+    </contexts>
+
+    <itemDatas>
+        <itemData name="Attribute"   defStyleNum="dsAttribute"     spellChecking="false"/>
+        <itemData name="Bool"        defStyleNum="dsConstant"      spellChecking="false"/>
+        <itemData name="Byte"        defStyleNum="dsBaseN"         spellChecking="false"/>
+        <itemData name="Char"        defStyleNum="dsChar"          spellChecking="false"/>
+        <itemData name="Comment"     defStyleNum="dsComment"       spellChecking="true" />
+        <itemData name="DocComment"  defStyleNum="dsDocumentation" spellChecking="true"/>
+        <itemData name="Error"       defStyleNum="dsError"         spellChecking="false"/>
+        <itemData name="Float"       defStyleNum="dsFloat"         spellChecking="false"/>
+        <itemData name="Hex"         defStyleNum="dsBaseN"         spellChecking="false"/>
+        <itemData name="Int"         defStyleNum="dsDecVal"        spellChecking="false"/>
+        <itemData name="Keyword"     defStyleNum="dsControlFlow"   spellChecking="false"/>
+        <itemData name="ModuleName"  defStyleNum="dsImport"        spellChecking="false"/>
+        <itemData name="Normal"      defStyleNum="dsNormal"        spellChecking="false"/>
+        <itemData name="Null"        defStyleNum="dsBuiltIn"       spellChecking="false"/>
+        <itemData name="SpecialChar" defStyleNum="dsSpecialChar"   spellChecking="false"/>
+        <itemData name="String"      defStyleNum="dsString"        spellChecking="false"/>
+        <itemData name="Token"       defStyleNum="dsDataType"      spellChecking="false"/>
+        <itemData name="TopLevelID"  defStyleNum="dsKeyword"       spellChecking="false"/>
+    </itemDatas>
+</highlighting>
+
+<general>
+    <comments>
+        <comment name="singleLine" start="#"/>
+        <comment name="multiLine" start="#*" end="*#" region="Comment"/>
+    </comments>
+</general>
+
+</language>

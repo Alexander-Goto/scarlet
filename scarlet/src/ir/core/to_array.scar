@@ -1,0 +1,55 @@
+fn ir__core_fn_to_array(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     arg.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "box", "table", "set", "array", "obj", "custom"])
+
+     if arg.has_type?("array") {
+          let operand = new (arg):code <= code
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     } else if arg:comptime_val.null?() || arg:comptime_val:type.in?([array "box", "custom"]) ||
+               arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_][:core_to_array].null?()
+          ir__fn_call(
+               "McoreFNto_array", [array arg], code
+
+               if arg.has_type?([set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array"])
+                    [set "array"]
+               else [set "array", "error"]
+
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     else {
+          let arg_type = arg:comptime_val:type
+          let operand  = new (arg) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:type  <= "array"
+               :comptime_val:value => fn (arg)
+                    switch arg_type
+                    case "string":
+                         arg.foldl([array].init(arg.len()), fn (array, char) array.append(new (@main.t_comptime_val) {:type <= "char"; :value <= char}))
+                    case "byte_array":
+                         arg.foldl([array].init(arg.len()), fn (array, byte) array.append(new (@main.t_comptime_val) {:type <= "byte"; :value <= byte}))
+                    case "table", "set":
+                         arg.to_array()
+                    case "obj":
+                         (new (arg)[:_] <= null).to_array()
+                    default:
+                         unreachable()
+               :possible_types <= [set "array"]
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

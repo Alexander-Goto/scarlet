@@ -1,0 +1,413 @@
+let array__get_item = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core___get_item__ = fn (container, key) container:value[key]
+     ]
+]
+
+fn to_array__get_item(arg) new (@main.array__get_item):value <= arg
+
+fn to_custom_array__get_item(container) custom__create(
+     container
+     [obj
+          :core___get_item__ = fn (container, key) container.custom__get_data()[key]
+     ]
+)
+
+let broken_array__get_item = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core___get_item__ = fn (_, _) [box heap_string()]
+     ]
+]
+
+fn to_broken_array__get_item(arg) new (@main.broken_array__get_item):value <= arg
+
+fn to_broken_custom_array__get_item(container) custom__create(
+     container
+     [obj
+          :core___get_item__ = fn (_, _) [box heap_string()]
+     ]
+)
+
+let error_array__get_item = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core___get_item__ = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__get_item(arg) new (@main.error_array__get_item):value <= arg
+
+fn to_error_custom_array__get_item(container) custom__create(
+     container
+     [obj
+          :core___get_item__ = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test____get_item__() {
+     test("1"[0] === '1')
+     test("12"[0] === '1')
+     test("12"[1] === '2')
+     test("0123456789abcde"[0] === '0')
+     test("0123456789abcde"[1] === '1')
+     test("0123456789abcde"[2] === '2')
+     test("0123456789abcde"[3] === '3')
+     test("0123456789abcde"[4] === '4')
+     test("0123456789abcde"[5] === '5')
+     test("0123456789abcde"[6] === '6')
+     test("0123456789abcde"[7] === '7')
+     test("0123456789abcde"[8] === '8')
+     test("0123456789abcde"[9] === '9')
+     test("0123456789abcde"[10] === 'a')
+     test("0123456789abcde"[11] === 'b')
+     test("0123456789abcde"[12] === 'c')
+     test("0123456789abcde"[13] === 'd')
+     test("0123456789abcde"[14] === 'e')
+     test("\00008b"[0] === '\00008b')
+     test("\00008b\0000b2"[0] === '\00008b')
+     test("\00008b\0000b2"[1] === '\0000b2')
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!"[0] === '\000091')
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!"[1] === '\0000b3')
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!"[2] === '\0000ab')
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!"[3] === '\0000a4')
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!"[4] === '\0000a7')
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!"[5] === '\0000b5')
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!"[6] === '!')
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5!!"[7] === '!')
+     test(("0123456789abcde" ++ "f")[0] === '0')
+     test(("0123456789abcde" ++ "f")[1] === '1')
+     test(("0123456789abcde" ++ "f")[2] === '2')
+     test(("0123456789abcde" ++ "f")[3] === '3')
+     test(("0123456789abcde" ++ "f")[4] === '4')
+     test(("0123456789abcde" ++ "f")[5] === '5')
+     test(("0123456789abcde" ++ "f")[6] === '6')
+     test(("0123456789abcde" ++ "f")[7] === '7')
+     test(("0123456789abcde" ++ "f")[8] === '8')
+     test(("0123456789abcde" ++ "f")[9] === '9')
+     test(("0123456789abcde" ++ "f")[10] === 'a')
+     test(("0123456789abcde" ++ "f")[11] === 'b')
+     test(("0123456789abcde" ++ "f")[12] === 'c')
+     test(("0123456789abcde" ++ "f")[13] === 'd')
+     test(("0123456789abcde" ++ "f")[14] === 'e')
+     test(("0123456789abcde" ++ "f")[15] === 'f')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " \0000af\0000ab\0000b3")[0] === '\000091')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " \0000af\0000ab\0000b3")[1] === '\0000b3')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " \0000af\0000ab\0000b3")[2] === '\0000ab')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " \0000af\0000ab\0000b3")[3] === '\0000a4')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " \0000af\0000ab\0000b3")[4] === '\0000a7')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " \0000af\0000ab\0000b3")[5] === '\0000b5')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " \0000af\0000ab\0000b3")[6] === ' ')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " \0000af\0000ab\0000b3")[7] === '\0000af')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " \0000af\0000ab\0000b3")[8] === '\0000ab')
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5" ++ " \0000af\0000ab\0000b3")[9] === '\0000b3')
+
+     let rnd_chars             = rnd_chars()
+     let string_from_rnd_chars = chars_to_str(rnd_chars)
+     test(foldl_kv(string_from_rnd_chars, true, fn (result, idx, char) result && char === rnd_chars[idx]))
+
+     test(null[""].null?())
+     test(null[1].null?())
+     test(null[1.0].null?())
+
+     test(u"1"[0] === 0b31)
+     test(u"12"[0] === 0b31)
+     test(u"12"[1] === 0b32)
+     test(u"0123456789abcd"[0] === 0b30)
+     test(u"0123456789abcd"[1] === 0b31)
+     test(u"0123456789abcd"[2] === 0b32)
+     test(u"0123456789abcd"[3] === 0b33)
+     test(u"0123456789abcd"[4] === 0b34)
+     test(u"0123456789abcd"[5] === 0b35)
+     test(u"0123456789abcd"[6] === 0b36)
+     test(u"0123456789abcd"[7] === 0b37)
+     test(u"0123456789abcd"[8] === 0b38)
+     test(u"0123456789abcd"[9] === 0b39)
+     test(u"0123456789abcd"[10] === 0b61)
+     test(u"0123456789abcd"[11] === 0b62)
+     test(u"0123456789abcd"[12] === 0b63)
+     test(u"0123456789abcd"[13] === 0b64)
+
+     test([box 1][0] === 1)
+     test([box 1, 2][0] === 1)
+     test([box 1, 2][1] === 2)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][0] === "0123456789abcdef")
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][1] === 2)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][2] === 3)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][3] === 4)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][4] === 5)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][5] === 6)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][6] === 7)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][7] === 8)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][8] === 9)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][9] === 10)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][10] === 11)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][11] === 12)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][12] === 13)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][13] === 14)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][14] === 15)
+     test([box "0123456789abcde" ++ "f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "1123456789abcde" ++ "f"][15] === "1123456789abcdef")
+
+     test([obj :1 = 2][:1] === 2)
+     test([obj :1 = 2][:0].null?())
+     test([obj :1 = 2][:_].null?())
+     test([obj :1 = 2, :2 = 10][:1] === 2)
+     test([obj :1 = 2, :2 = 10][:2] === 10)
+     test([obj :1 = 2, :2 = 10][:0].null?())
+     test([obj :1 = 2, :2 = 10][:3].null?())
+     test([obj :1 = 2, :2 = 10][:_].null?())
+     test([obj :1 = 2, :2 = 10, :_ = [obj :1 = 11]][:1] === 2)
+     test([obj :1 = 2, :2 = 10, :_ = [obj :1 = 11]][:2] === 10)
+     test([obj :1 = 2, :2 = 10, :_ = [obj :1 = 11]][:_] === [obj :1 = 11])
+     test([obj :1 = 2, :2 = 10, :_ = [obj :1 = 11]][:0].null?())
+     test([obj :1 = 2, :2 = 10, :_ = [obj :1 = 11]][:3].null?())
+     test([obj :1 = "0123456789abcde" ++ "f", :2 = "1123456789abcde" ++ "f", :_ = [obj :1 = "1123456789abcde" ++ "0"]][:1] === "0123456789abcdef")
+     test([obj :1 = "0123456789abcde" ++ "f", :2 = "1123456789abcde" ++ "f", :_ = [obj :1 = "1123456789abcde" ++ "0"]][:2] === "1123456789abcdef")
+     test([obj :1 = "0123456789abcde" ++ "f", :2 = "1123456789abcde" ++ "f", :_ = [obj :1 = "1123456789abcde" ++ "0"]][:_] === [obj :1 = "1123456789abcde0"])
+     test([obj :1 = "0123456789abcde" ++ "f", :2 = "1123456789abcde" ++ "f", :_ = [obj :1 = "1123456789abcde" ++ "0"]][:0].null?())
+     test([obj :1 = "0123456789abcde" ++ "f", :2 = "1123456789abcde" ++ "f", :_ = [obj :1 = "1123456789abcde" ++ "0"]][:3].null?())
+
+     let len  = (rnd() & 1023) + 1
+     let keys = loop([array], fn (keys) {
+          let key = rnd_token()
+          if key =/= :_ {
+               let keys = append(keys, key)
+               break(len(keys) === len, keys)
+          } else keys
+     })
+     let unexisted_keys = loop([array], fn (unexisted_keys) {
+          let key = rnd_token()
+          if key.look_in(keys).null?() {
+               let unexisted_keys = append(unexisted_keys, key)
+               break(len(unexisted_keys) === len, unexisted_keys)
+          } else unexisted_keys
+     })
+     let obj = keys.foldl([obj].init(len(keys)), fn (obj, key) new (obj)[key] <= key.to_string())
+     test(keys.foldl(true, fn (result, key) result && obj[key] === key.to_string()))
+     test(unexisted_keys.foldl(true, fn (result, key) result && obj[key].null?()))
+
+     test([table 1 = 2][1] === 2)
+     test([table 1 = 2][0].null?())
+     test([table 1 = 2, 2 = 10][1] === 2)
+     test([table 1 = 2, 2 = 10][2] === 10)
+     test([table 1 = 2, 2 = 10][0].null?())
+     test([table 1 = 2, 2 = 10][3].null?())
+     test([table "k123456789abcde" ++ "f" = "0123456789abcde" ++ "f", "k023456789abcde" ++ "f" = "1123456789abcde" ++ "f"]["k123456789abcdef"] === "0123456789abcdef")
+     test([table "k123456789abcde" ++ "f" = "0123456789abcde" ++ "f", "k023456789abcde" ++ "f" = "1123456789abcde" ++ "f"]["k023456789abcdef"] === "1123456789abcdef")
+     test([table "k123456789abcde" ++ "f" = "0123456789abcde" ++ "f", "k023456789abcde" ++ "f" = "1123456789abcde" ++ "f"][1].null?())
+     test([table "k123456789abcde" ++ "f" = "0123456789abcde" ++ "f", "k023456789abcde" ++ "f" = "1123456789abcde" ++ "f"][""].null?())
+
+     let len  = (rnd() & 1023) + 1
+     let keys = loop([array], fn (keys) {
+          let keys = append(keys, rnd_string())
+          break(len(keys) === len, keys)
+     })
+     let unexisted_keys = loop([array], fn (unexisted_keys) {
+          let key = rnd_string()
+          if key.look_in(keys).null?() {
+               let unexisted_keys = append(unexisted_keys, key)
+               break(len(unexisted_keys) === len, unexisted_keys)
+          } else unexisted_keys
+     })
+     let table = keys.foldl([table].init(len(keys)), fn (table, key) new (table)[key] <= key ++ "123")
+     test(keys.foldl(true, fn (result, key) result && table[key] === (key ++ "123")))
+     test(unexisted_keys.foldl(true, fn (result, key) result && table[key].null?()))
+
+     test([set 1][1] === 1)
+     test([set 1][0].null?())
+     test([set 1, 2][1] === 1)
+     test([set 1, 2][2] === 2)
+     test([set 1, 2][0].null?())
+     test([set 1, 2][3].null?())
+     let key_1 = "0123456789abcde" ++ "f"
+     let key_2 = "1123456789abcde" ++ "f"
+     test([set key_1, key_2]["0123456789abcdef"] === "0123456789abcdef")
+     test([set key_1, key_2]["0123456789abcdef"].scarlet__split!!!()[0] === key_1.scarlet__split!!!()[0])
+     test([set key_1, key_2]["1123456789abcdef"] === "1123456789abcdef")
+     test([set key_1, key_2]["1123456789abcdef"].scarlet__split!!!()[0] === key_2.scarlet__split!!!()[0])
+     test([set "k123456789abcde" ++ "f", "k023456789abcde" ++ "f"][1].null?())
+     test([set "k123456789abcde" ++ "f", "k023456789abcde" ++ "f"][""].null?())
+
+     let len  = (rnd() & 1023) + 1
+     let keys = loop([array], fn (keys) {
+          let keys = append(keys, rnd_string())
+          break(len(keys) === len, keys)
+     })
+     let unexisted_keys = loop([array], fn (unexisted_keys) {
+          let key = rnd_string()
+          if key.look_in(keys).null?() {
+               let unexisted_keys = append(unexisted_keys, key)
+               break(len(unexisted_keys) === len, unexisted_keys)
+          } else unexisted_keys
+     })
+     let set = keys.foldl([set].init(len(keys)), fn (set, key) set.append(key))
+     test(keys.foldl(true, fn (result, key) result && set[key] === key))
+     test(unexisted_keys.foldl(true, fn (result, key) result && set[key].null?()))
+
+     test([array 1][0] === 1)
+     test([array 1, 10][0] === 1)
+     test([array 1, 10][1] === 10)
+     test([array "k123456789abcde" ++ "f", "k023456789abcde" ++ "f", 20][0] === "k123456789abcdef")
+     test([array "k123456789abcde" ++ "f", "k023456789abcde" ++ "f", 20][1] === "k023456789abcdef")
+     test([array "k123456789abcde" ++ "f", "k023456789abcde" ++ "f", 20][2] === 20)
+
+     test([array 1].to_custom_array__get_item()[0] === 1)
+     test([array 1, 10].to_custom_array__get_item()[0] === 1)
+     test([array 1, 10].to_custom_array__get_item()[1] === 10)
+     test([array "k123456789abcde" ++ "f", "k023456789abcde" ++ "f", 20].to_custom_array__get_item()[0] === "k123456789abcdef")
+     test([array "k123456789abcde" ++ "f", "k023456789abcde" ++ "f", 20].to_custom_array__get_item()[1] === "k023456789abcdef")
+     test([array "k123456789abcde" ++ "f", "k023456789abcde" ++ "f", 20].to_custom_array__get_item()[2] === 20)
+
+     test([array 1].to_array__get_item()[0] === 1)
+     test([array 1, 10].to_array__get_item()[0] === 1)
+     test([array 1, 10].to_array__get_item()[1] === 10)
+     test([array "k123456789abcde" ++ "f", "k023456789abcde" ++ "f", 20].to_array__get_item()[0] === "k123456789abcdef")
+     test([array "k123456789abcde" ++ "f", "k023456789abcde" ++ "f", 20].to_array__get_item()[1] === "k023456789abcdef")
+     test([array "k123456789abcde" ++ "f", "k023456789abcde" ++ "f", 20].to_array__get_item()[2] === 20)
+
+     let error_1    = expected_error(:1, heap_string(), heap_string())
+     let error_2    = expected_error(:2, heap_string(), heap_string())
+     let heap_table = heap_table()
+     test(error_1[0].get_error_id() === :1)
+     test(""[error_1].get_error_id() === :1)
+     test(error_1[error_2].get_error_id() === :1)
+     test(error_2[error_1].get_error_id() === :2)
+     test(error_1[heap_table].get_error_id() === :1)
+     test((fn () heap_table).scarlet__erase_info()[error_1].get_error_id() === :1)
+     test(error_1[null.scarlet__erase_info()].get_error_id() === :1)
+     test(null[error_1].get_error_id() === :1)
+
+     test(""[0.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(""[1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(""[9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(""[-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(""[-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(""[rnd().scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(""[:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(""[0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(""[0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test("1"[1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test("1"[9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test("1"[-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test("1"[-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test("1"[rnd() | 1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test("1"[:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test("1"[0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test("1"[0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test("0123456789abcde"[15.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test("0123456789abcde"[9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test("0123456789abcde"[-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test("0123456789abcde"[-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test("0123456789abcde"[rnd() | 15.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test("0123456789abcde"[:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test("0123456789abcde"[0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test("0123456789abcde"[0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(("0123456789abcde" ++ "f")[16.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(("0123456789abcde" ++ "f")[9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(("0123456789abcde" ++ "f")[-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(("0123456789abcde" ++ "f")[-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(("0123456789abcde" ++ "f")[rnd() | 16.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(("0123456789abcde" ++ "f")[:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(("0123456789abcde" ++ "f")[0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(("0123456789abcde" ++ "f")[0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+
+     test(u""[0.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u""[1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u""[9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u""[-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u""[-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u""[rnd().scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u""[:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(u""[0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(u""[0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(u"1"[1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u"1"[9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u"1"[-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u"1"[-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u"1"[rnd() | 1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u"1"[:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(u"1"[0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(u"1"[0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(u"0123456789abcd"[14.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd"[9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd"[-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd"[-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd"[rnd() | 14.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test(u"0123456789abcd"[:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(u"0123456789abcd"[0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test(u"0123456789abcd"[0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test((u"0123456789abcd" ++ u"f")[15.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test((u"0123456789abcd" ++ u"f")[9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test((u"0123456789abcd" ++ u"f")[-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test((u"0123456789abcd" ++ u"f")[-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test((u"0123456789abcd" ++ u"f")[rnd() | 15.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test((u"0123456789abcd" ++ u"f")[:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test((u"0123456789abcd" ++ u"f")[0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test((u"0123456789abcd" ++ u"f")[0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+
+     test([box][0.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box][1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box][9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box][-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box][-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box][rnd().scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box][:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([box][0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([box][0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([box u"0123456789abcd" ++ u"f"][1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box u"0123456789abcd" ++ u"f"][9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box u"0123456789abcd" ++ u"f"][-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box u"0123456789abcd" ++ u"f"][-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box u"0123456789abcd" ++ u"f"][rnd() | 1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box u"0123456789abcd" ++ u"f"][:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([box u"0123456789abcd" ++ u"f"][0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([box u"0123456789abcd" ++ u"f"][0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([box u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][16.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][rnd() | 16.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([box u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([box u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([box u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+
+     test([obj][1.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([table][1.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([set][1.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+
+     test([array][0.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array][1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array][9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array][-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array][-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array][rnd().scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array][:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([array][0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([array][0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([array  u"0123456789abcd" ++ u"f"][1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array  u"0123456789abcd" ++ u"f"][9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array  u"0123456789abcd" ++ u"f"][-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array  u"0123456789abcd" ++ u"f"][-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array  u"0123456789abcd" ++ u"f"][rnd() | 1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array  u"0123456789abcd" ++ u"f"][:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([array  u"0123456789abcd" ++ u"f"][0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([array  u"0123456789abcd" ++ u"f"][0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([array  u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][16.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array  u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][9223372036854775807.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array  u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][-1.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array  u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][-9223372036854775808.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array  u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][rnd() | 16.scarlet__erase_info()].get_error_id() === :out_of_bounds)
+     test([array  u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][:0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([array  u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][0.0.scarlet__erase_info()].get_error_id() === :invalid_type)
+     test([array  u"0123456789abcd" ++ u"f", 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, u"0123456789abcd" ++ u"0"][0b00.scarlet__erase_info()].get_error_id() === :invalid_type)
+
+     test(to_broken_array__get_item(heap_table())[heap_string()].get_error_id() === :invalid_type)
+     test(to_broken_custom_array__get_item(heap_table())[heap_string()].get_error_id() === :invalid_type)
+     test(to_error_array__get_item(heap_table())[heap_string()].get_error_id() === :3)
+     test(to_error_custom_array__get_item(heap_table())[heap_string()].get_error_id() === :4)
+}

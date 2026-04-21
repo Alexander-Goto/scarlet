@@ -1,0 +1,106 @@
+fn ir__core_fn___and_or_xor__(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain) {
+     let [box exp, exp_data, ir, final_data, dependencies, src_gconsts] = if is_first_in_chain
+          num_chain_items_to_operands(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+
+     if is_first_in_chain && exp:scar_type == "t_operand"
+          [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+     else {
+          let [box left, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:left.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, false, false, false, false)
+          let [box right, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:right.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, args_ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+          let code = new (left:code):text => _ ++ (" " ++ exp:operator:text ++ " " ++ right:code:text)
+
+          if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.bit_types) {
+               if left:comptime_val:type === "obj" {
+                    let [box token, mtd_type] = switch fn_ir_name
+                    case "McoreFN__and__": [box :core___and__, ".core___and__"]
+                    case "McoreFN__or__":  [box :core___or__, ".core___or__"]
+                    case "McoreFN__xor__": [box :core___xor__, ".core___xor__"]
+                    default:               unreachable()
+
+                    if left:comptime_val:value[:_][token].null?()
+                         error__invalid_type(left:code, mtd_type, "obj")
+                    else null
+               } else null
+
+               let left_possible_types  = left:possible_types
+               let right_possible_types = right:possible_types
+
+               let result_possible_types = if left_possible_types.null?()
+                    @main.bit_types__mtd
+               else {
+                    let new_left_possible_types = left_possible_types.filter(_.in?(@main.bit_types__mtd))
+                    if new_left_possible_types.empty?()
+                         error__invalid_type(left:code, @main.bit_types__mtd, left_possible_types)
+                    else new_left_possible_types
+               }
+
+               let result_possible_types = if right_possible_types.null?()
+                    result_possible_types
+               else {
+                    let new_right_possible_types = right_possible_types.filter(_.in?(result_possible_types))
+                    if new_right_possible_types.empty?()
+                         error__invalid_type(right:code, result_possible_types, right_possible_types)
+                    else new_right_possible_types
+               }
+
+               let maybe_error = left_possible_types.null?() || right_possible_types.null?() ||
+                    left_possible_types.len() /= 1 || not left_possible_types.take_one().in?(@main.bit_types) ||
+                    left_possible_types /= right_possible_types
+               let need_chain = (exp:left:scar_type /= "t_operand" || exp:right:scar_type /= "t_operand") &&
+                    is_first_in_chain && result_possible_types.any(true, _.in?(@main.bit_types))
+
+               let result_possible_types = if maybe_error; result_possible_types.append("error") else result_possible_types
+
+               let [box not_chain_operand, exp_data, not_chain_ir, final_data, dependencies, src_gconsts] = if maybe_error || not need_chain
+                    ir__fn_call(fn_ir_name, [array left, right], code, result_possible_types, exp_data, args_ir, final_data, dependencies, src_gconsts, is_last)
+               else [box null, exp_data, args_ir, final_data, dependencies, src_gconsts]
+
+               if not need_chain
+                    [box not_chain_operand, exp_data, ir ++ not_chain_ir, final_data, dependencies, src_gconsts]
+               else {
+                    let maybe_byte    = "byte".in?(result_possible_types)
+                    let maybe_int     = "int".in?(result_possible_types)
+                    let chain_type_ir = if maybe_int && maybe_byte
+                         null
+                    else if maybe_int
+                         "tid__int"
+                    else "tid__byte"
+
+                    let [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir] =
+                         num_chain_creation_prepare(exp, maybe_byte, maybe_int, false, "", chain_type_ir)
+
+                    num_chain_create(
+                         chain_predicate_ir, chain_type_ir
+                         byte_chain_ir, int_chain_ir, ""
+                         [box maybe_byte, maybe_int, false]
+                         result_possible_types, code, not_chain_ir, not_chain_operand:ir
+                         exp_data, ir, final_data, dependencies, src_gconsts, is_last
+                    )
+               }
+          } else {
+               right.maybe_has_type!(left:comptime_val:type)
+
+               let operand = new (left) {
+                    :ir                 <= null
+                    :code               <= code
+                    :comptime_val:value =>
+                         switch fn_ir_name[9]
+                         case 'a': _ & right:comptime_val:value
+                         case 'o': _ | right:comptime_val:value
+                         case 'x': _ ^ right:comptime_val:value
+                         default:  unreachable()
+               }
+               let ir = ir ++ args_ir
+
+               if is_last {
+                    let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+                    [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+               } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+          }
+     }
+}

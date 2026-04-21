@@ -1,0 +1,46 @@
+fn ir__core_fn_inherits_from(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box child, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+     let [box parent, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ child:code:text ++ ", " ++ parent:code:text ++ ")")
+
+     child.maybe_has_type!("obj")
+     parent.maybe_has_type!([set "obj", "array"])
+
+     if child:comptime_val.null?() || parent:comptime_val.null?()
+          ir__fn_call(
+               "McoreFNinherits_from", [array child, parent], code
+               if child.has_type?("obj") && parent.has_type?("obj"); [set "obj"] else [set "obj", "error"]
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     else {
+          let new_child = if parent:comptime_val:type == "obj"
+               comptime_inherits_from(child:comptime_val:value, parent:comptime_val:value)
+          else parent.foldl(child:comptime_val:value, fn (new_child, one_parent)
+               if one_parent:type == "obj"
+                    comptime_inherits_from(new_child, one_parent:comptime_val:value)
+               else error__invalid_item_type(parent:code, "obj", one_parent:type)
+          )
+
+          let operand = new (child) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:value <= new_child
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}
+
+fn comptime_inherits_from(child, parent)
+     parent.foldl_kv(child, fn (child, field_name, field)
+          if field_name == :_
+               comptime_implement(child, field)
+          else new (child)[field_name] => fn (existed_field) if existed_field.null?() || existed_field:type === "null"; field else existed_field
+     )

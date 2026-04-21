@@ -1,0 +1,97 @@
+let num__trunc = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_trunc     = fn (num) to_num__trunc(num:value.trunc())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__trunc(arg) new (@main.num__trunc):value <= arg
+
+fn to_custom_num__trunc(arg) custom__create(
+     arg
+     [obj
+          :core_trunc     = fn (num) to_custom_num__trunc(num.custom__get_data().trunc())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__trunc = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_trunc = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__trunc(arg) new (@main.broken_num__trunc):value <= arg
+
+fn to_broken_custom_num__trunc(arg) custom__create(
+     arg
+     [obj
+          :core_trunc = fn (_) heap_string()
+     ]
+)
+
+let error_num__trunc = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_trunc = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__trunc(arg) new (@main.error_num__trunc):value <= arg
+
+fn to_error_custom_num__trunc(arg) custom__create(
+     arg
+     [obj
+          :core_trunc = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__trunc() {
+     let inf     = inf()
+     let neg_inf = neg_inf()
+     test(0.0.trunc().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(-0.0.trunc().scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test(0.1.trunc().in_range?(-0.01, 0.01))
+     test(-0.1.trunc().in_range?(-0.01, 0.01))
+     test(1.0.trunc().in_range?(0.99, 1.01))
+     test(-1.0.trunc().in_range?(-1.01, -0.99))
+     test(1.01.trunc().in_range?(0.99, 1.01))
+     test(-1.01.trunc().in_range?(-1.01, -0.99))
+     test(1.99.trunc().in_range?(0.99, 1.01))
+     test(-1.99.trunc().in_range?(-1.01, -0.99))
+     test(0.5.trunc().in_range?(-0.01, 0.01))
+     test(-0.5.trunc().in_range?(-0.01, 0.01))
+     test(0.49.trunc().in_range?(-0.01, 0.01))
+     test(-0.49.trunc().in_range?(-0.01, 0.01))
+     test(0.51.trunc().in_range?(-0.01, 0.01))
+     test(-0.51.trunc().in_range?(-0.01, 0.01))
+
+     test(inf.trunc().scarlet__split!!!()[0] === inf.scarlet__split!!!()[0])
+     test(neg_inf.trunc().scarlet__split!!!()[0] === neg_inf.scarlet__split!!!()[0])
+     test(nan().trunc().nan?())
+
+     let float = rnd_float()
+     test((float - float.trunc()).abs() < 1.0)
+
+     test(to_num__trunc(-0.49).trunc():value.in_range?(-0.01, 0.01))
+     test(to_num__trunc(-0.51).trunc():value.in_range?(-0.01, 0.01))
+     test(to_num__trunc(-1.51).trunc():value.in_range?(-1.01, -0.99))
+
+     test(to_custom_num__trunc(-0.49).trunc().custom__get_data().in_range?(-0.01, 0.01))
+     test(to_custom_num__trunc(-0.51).trunc().custom__get_data().in_range?(-0.01, 0.01))
+     test(to_custom_num__trunc(-1.51).trunc().custom__get_data().in_range?(-1.01, -0.99))
+
+     test(expected_error(:1, heap_string(), heap_string()).trunc().get_error_id() === :1)
+     test(heap_string().trunc().get_error_id() === :invalid_type)
+
+     test(to_broken_num__trunc(1.0).trunc().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__trunc(1.0).trunc().get_error_id() === :invalid_type)
+     test(to_error_num__trunc(1.0).trunc().get_error_id() === :3)
+     test(to_error_custom_num__trunc(1.0).trunc().get_error_id() === :4)
+}

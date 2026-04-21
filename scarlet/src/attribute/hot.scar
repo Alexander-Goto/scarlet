@@ -1,0 +1,4 @@
+let t_hot_attr = [obj
+     :scar_type = "t_hot_attr"
+     :code      = @main.t_token
+]

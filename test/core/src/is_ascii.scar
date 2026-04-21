@@ -1,0 +1,127 @@
+let const__ascii = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii? = fn (const) const:value.ascii?()
+     ]
+]
+
+fn to_const__ascii?(arg) new (@main.const__ascii):value <= arg
+
+fn to_custom_const__ascii?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii? = fn (const) const.custom__get_data().ascii?()
+     ]
+)
+
+let broken_const__ascii = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii? = fn (_) heap_table()
+     ]
+]
+
+fn to_broken_const__ascii?(arg) new (@main.broken_const__ascii):value <= arg
+
+fn to_broken_custom_const__ascii?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii? = fn (_) heap_table()
+     ]
+)
+
+let error_const__ascii = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__ascii?(arg) new (@main.error_const__ascii):value <= arg
+
+fn to_error_custom_const__ascii?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__ascii?() {
+     test('\000001'.ascii?())
+     test('\00007f'.ascii?())
+     test(not '\000080'.ascii?())
+     test('a'.ascii?())
+     test('z'.ascii?())
+     test(not '\0000a3'.ascii?())
+     test(not '\0000c2'.ascii?())
+
+     test("\000001".ascii?())
+     test("\000001\00007f".ascii?())
+     test("\00007f\000001".ascii?())
+     test("Hello world azZ".ascii?())
+     test(not "\000080".ascii?())
+     test(not "\000001\000080".ascii?())
+     test(not "\000080\000001".ascii?())
+     test(not "\00008b".ascii?())
+     test(not "\000091\0000b3\0000ab\0000a4\0000a7\0000b5".ascii?())
+     test(not "!\000091\0000b3\0000ab\0000a4\0000a7\0000b5".ascii?())
+     test(not "\000091\0000b3\0000ab\0000a4\0000a7\0000b5!".ascii?())
+     test(not "\000091\0000b3\0000ab!\0000a4\0000a7\0000b5".ascii?())
+
+     test("\000001\00007f\000001\00007f\000001\00007f\000001\00007f\000001\00007f\000001\00007f\000001\00007f\000001".ascii?())
+     test("\00007f\000001\00007f\000001\00007f\000001\00007f\000001\00007f\000001\00007f\000001\00007f\000001\00007f".ascii?())
+     test("Hello world azZaaa".ascii?())
+     test(not "\000080\000080\000080\000080\000080\000080\000080\000080\000080\000080\000080\000080\000080\000080\000080\000080".ascii?())
+     test(not "\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000080".ascii?())
+     test(not "\000080\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001\000001".ascii?())
+     test(not "\000091\0000b3\0000ab\0000a4\0000a7\0000b5\00008e\0000ab\0000b3".ascii?())
+     test(not "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \00008e\0000ab\0000b3".ascii?())
+     test(not "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \00008e\0000ab\0000b3!".ascii?())
+     test(not "!\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \00008e\0000ab\0000b3".ascii?())
+
+     let string = rnd_string()
+     test(loop([box string, 0], fn (state) {
+          let [box string, idx] = state
+          if idx === len(string)
+               [breaker true]
+          else {
+               let char          = string[idx]
+               if char.to_int() < 128
+                    [box string, idx + 1]
+               else [breaker false]
+          }
+     }) === string.ascii?())
+     test(loop([box string, 0], fn (state) {
+          let [box string, idx] = state
+          if idx === len(string)
+               [breaker true]
+          else {
+               let char          = string[idx]
+               if char.ascii?()
+                    [box string, idx + 1]
+               else [breaker false]
+          }
+     }) === string.ascii?())
+     test(string.filter(fn (char) char.to_int() < 128) === string.filter(ascii?(_)))
+
+     test(to_const__ascii?('a').ascii?())
+     test(not to_const__ascii?('\00008b').ascii?())
+     test(not to_const__ascii?('\0000ac').ascii?())
+
+     test(to_custom_const__ascii?('a').ascii?())
+     test(not to_custom_const__ascii?('\00008b').ascii?())
+     test(not to_custom_const__ascii?('\0000ac').ascii?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.ascii?().get_error_id() === :1)
+     test(heap_table().ascii?().get_error_id() === :invalid_type)
+
+     test(to_broken_const__ascii?("").ascii?().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__ascii?("").ascii?().get_error_id() === :invalid_type)
+     test(to_error_const__ascii?("").ascii?().get_error_id() === :3)
+     test(to_error_custom_const__ascii?("").ascii?().get_error_id() === :4)
+}

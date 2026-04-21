@@ -1,0 +1,83 @@
+let num__asin = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_asin      = fn (num) to_num__asin(num:value.asin())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__asin(arg) new (@main.num__asin):value <= arg
+
+fn to_custom_num__asin(arg) custom__create(
+     arg
+     [obj
+          :core_asin      = fn (num) to_custom_num__asin(num.custom__get_data().asin())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__asin = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_asin = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__asin(arg) new (@main.broken_num__asin):value <= arg
+
+fn to_broken_custom_num__asin(arg) custom__create(
+     arg
+     [obj
+          :core_asin = fn (_) heap_string()
+     ]
+)
+
+let error_num__asin = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_asin = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__asin(arg) new (@main.error_num__asin):value <= arg
+
+fn to_error_custom_num__asin(arg) custom__create(
+     arg
+     [obj
+          :core_asin = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__asin() {
+     test(0.0.asin().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(-0.0.asin().scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test(0.1.asin().in_range?(0.10, 0.11))
+     test(-0.1.asin().in_range?(-0.11, -0.10))
+     test(1.0.asin().in_range?(1.57, 1.58))
+     test(-1.0.asin().in_range?(-1.58, -1.57))
+     test(1.01.asin().nan?())
+     test(-1.01.asin().nan?())
+     test(inf().asin().nan?())
+     test(neg_inf().asin().nan?())
+     test(nan().asin().nan?())
+
+     test(to_num__asin(0.0).asin():value.in_range?(-0.01, 0.01))
+     test(to_num__asin(-1.0).asin():value.in_range?(-1.58, -1.57))
+
+     test(to_custom_num__asin(0.0).asin().custom__get_data().in_range?(-0.01, 0.01))
+     test(to_custom_num__asin(-1.0).asin().custom__get_data().in_range?(-1.58, -1.57))
+
+     let error  = expected_error(:1, heap_string(), heap_string())
+     let string = heap_string()
+     test(error.asin().get_error_id() === :1)
+     test(string.asin().get_error_id() === :invalid_type)
+
+     test(to_broken_num__asin(1.0).asin().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__asin(1.0).asin().get_error_id() === :invalid_type)
+     test(to_error_num__asin(1.0).asin().get_error_id() === :3)
+     test(to_error_custom_num__asin(1.0).asin().get_error_id() === :4)
+}

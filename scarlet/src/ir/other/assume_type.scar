@@ -1,0 +1,12 @@
+fn ir__assume_type(ir_operand, possible_types, ir) {
+     if possible_types.null?()
+          ir
+     else if possible_types.len() > 8
+          if "error".in?(possible_types)
+               ir
+          else ir ++ "assume(" ++ ir_operand ++ ".bytes[15]!=tid__error);\n"
+     else {
+          let ir = possible_types.foldl(ir ++ "assume(", fn (ir, variant) ir ++ ir_operand ++ ".bytes[15]==tid__" ++ variant ++ "||")
+          ir.take(ir.len() - 2) ++ ");\n"
+     }
+}

@@ -1,0 +1,26 @@
+`noinline`
+fn test__table_to_obj() {
+     test([table].table_to_obj() === [obj])
+     test([table].init(10).table_to_obj() === [obj])
+     test([table :1 = heap_string()].table_to_obj() === [obj :1 = heap_string()])
+     test([table :1 = heap_string(), :_ = [obj :2 = heap_string()]].table_to_obj() === [obj :1 = heap_string()])
+     test([table :1 = heap_string(), :_ = [obj :2 = heap_string()]].table_to_obj():_ === [obj :2 = heap_string()])
+     test([table :1 = heap_string(), :3 = 12, :4 = heap_byte_array(), :_ = [obj :2 = heap_string()]].table_to_obj() === [obj :1 = heap_string(), :3 = 12, :4 = heap_byte_array()])
+     test([table :1 = heap_string(), :3 = 12, :4 = heap_byte_array(), :_ = [obj :2 = heap_string()]].table_to_obj():_ === [obj :2 = heap_string()])
+
+     let len   = (rnd() & 1023) + 1
+     let table = loop([table].init(len), fn (table) {
+          let key = loop(null, fn (_) {
+               let key = rnd_token()
+               break(key =/= :_, key)
+          })
+          let table = new (table)[key] <= rnd_string()
+          break(len(table) === len, table)
+     })
+     let expected_obj = table.foldl_kv([obj], fn(obj, key, value) new (obj)[key] <= value)
+     test(expected_obj === table.table_to_obj())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.table_to_obj().get_error_id() === :1)
+     test(heap_string().table_to_obj().get_error_id() === :invalid_type)
+}

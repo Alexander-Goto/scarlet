@@ -1,0 +1,30 @@
+fn ir__call_from_exp(func, args, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let is_partial_application = args.any(false, _.has_type?("holder"))
+     func.maybe_has_type!(@main.fn_types)
+
+     if is_partial_application
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.copyable_not_error_types__holder))
+     else null
+
+     let [box func, final_data, dependencies] = func.has_ir!(final_data, dependencies)
+     let [box args, final_data, dependencies] = operands_have_ir!(args, final_data, dependencies)
+
+     let [box prepared_args_ir, ir, final_data, dependencies] = ir__prepare_args_to_fn_call(args, ir, final_data, dependencies, is_last)
+     let [box result_reg, exp_data]                           = exp_data.new_reg()
+
+     let ir = ir ++ "t_any const " ++ result_reg ++ (if is_partial_application; "=common_fn__partial_app__own(thrd_data," else "=common_fn__call__own(thrd_data,") ++
+          func:ir ++ "," ++ prepared_args_ir ++ "," ++ args.len().to_ir_num() ++ "," ++ exp_data:owner_name_ir_const ++ ");\n"
+
+     let ir = if is_last
+          ir__raw_return(ir, result_reg)
+     else ir
+
+     [box
+          new (@main.t_operand) {
+               :ir   <= result_reg
+               :code <= code
+          }
+
+          exp_data, ir, final_data, dependencies, src_gconsts
+     ]
+}

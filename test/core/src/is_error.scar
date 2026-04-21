@@ -1,0 +1,8 @@
+`noinline`
+fn test__error?() {
+     test(not null.error?())
+     test(not "".error?())
+     test(not 0.error?())
+     test(not heap_string().error?())
+     test(expected_error(:1, heap_string(), heap_string()).error?())
+}

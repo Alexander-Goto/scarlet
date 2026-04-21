@@ -1,0 +1,4 @@
+fn ir__core_fn_yield(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let code = new (exp:name):text => _ ++ "()"
+     ir__fn_call("McoreFNyield", [array], code, [set "null"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

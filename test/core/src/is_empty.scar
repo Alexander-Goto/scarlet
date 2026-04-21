@@ -1,0 +1,112 @@
+let container__empty = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_empty? = fn (container) container:value.empty?()
+     ]
+]
+
+fn to_container__empty?(arg) new (@main.container__empty):value <= arg
+
+fn to_custom_container__empty?(arg) custom__create(
+     arg
+     [obj
+          :core_empty? = fn (container) container.custom__get_data().empty?()
+     ]
+)
+
+let broken_container__empty = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_empty? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_container__empty?(arg) new (@main.broken_container__empty):value <= arg
+
+fn to_broken_custom_container__empty?(arg) custom__create(
+     arg
+     [obj
+          :core_empty? = fn (_) heap_string()
+     ]
+)
+
+let error_container__empty = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_empty? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__empty?(arg) new (@main.error_container__empty):value <= arg
+
+fn to_error_custom_container__empty?(arg) custom__create(
+     arg
+     [obj
+          :core_empty? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__empty?() {
+     test("".empty?())
+     test(not "1".empty?())
+     test(not "0".empty?())
+     test(not "0123456789abcde".empty?())
+     test(not "0123456789abcdef".empty?())
+     test(not "0123456789abcde".append('f').empty?())
+
+     test(u"".empty?())
+     test([byte_array].empty?())
+     test(not [byte_array 0b00].empty?())
+     test(not u"1".empty?())
+     test(not u"0123456789abcd".empty?())
+     test(not u"0123456789abcde".empty?())
+     test(not u"0123456789abcd".append(0b00).empty?())
+
+     test([box].empty?())
+     test(not [box 1].empty?())
+     test(not [box 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].empty?())
+     test(not [box heap_string()].empty?())
+     test(not [box heap_string(), 2, 3, 4, 5, 6, heap_string(), 8, 9, 10, 11, heap_string(), 13, 14, 15, heap_string()].empty?())
+
+     test([obj].empty?())
+     test([obj].init(10).empty?())
+     test([obj :_ = [obj]].empty?())
+     test([obj :_ = [obj :1 = heap_string()]].empty?())
+     test(not [obj :1 = heap_string()].empty?())
+     test(not [obj :1 = heap_string(), :_ = [obj]].empty?())
+     test(not [obj :1 = heap_string(), :_ = [obj :1 = heap_string()]].empty?())
+
+     test([table].empty?())
+     test([table].init(10).empty?())
+     test(not [table heap_string() = heap_string()].empty?())
+     test(not [table heap_string() = heap_string(), 1 = 2].empty?())
+
+     test([set].empty?())
+     test([set].init(10).empty?())
+     test(not [set heap_string()].empty?())
+     test(not [set heap_string(), 1].empty?())
+
+     test([array].empty?())
+     test([array].init(10).empty?())
+     test(not [array heap_string()].empty?())
+     test(not [array heap_string(), 1].empty?())
+
+     test(to_container__empty?("").empty?())
+     test(not to_container__empty?("1").empty?())
+
+     test(to_custom_container__empty?("").empty?())
+     test(not to_custom_container__empty?("1").empty?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.empty?().get_error_id() === :1)
+     test((_ ++ heap_string()).scarlet__erase_info().empty?().get_error_id() === :invalid_type)
+
+     test(to_broken_container__empty?("").empty?().get_error_id() === :invalid_type)
+     test(to_broken_custom_container__empty?("").empty?().get_error_id() === :invalid_type)
+     test(to_error_container__empty?("").empty?().get_error_id() === :3)
+     test(to_error_custom_container__empty?("").empty?().get_error_id() === :4)
+}

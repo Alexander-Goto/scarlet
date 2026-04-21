@@ -1,0 +1,4 @@
+fn to_ir_num(int)
+     if int == -9223372036854775808
+          "-9223372036854775808wb"
+     else format_int(int, 10, true) ++ if int.in_range?(-32768, 32768); "" else "ll"

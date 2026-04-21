@@ -1,0 +1,13 @@
+fn ir__core_fn_foldl1_foldr1(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box container, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box func, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, true, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ container:code:text ++ ", " ++ func:code:text ++ ")")
+
+     container.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom"])
+     func.maybe_has_type!(@main.fn_types)
+
+     ir__fn_call(fn_ir_name, [array container, func], code, null, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

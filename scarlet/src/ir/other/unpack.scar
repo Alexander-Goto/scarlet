@@ -1,0 +1,81 @@
+fn ir__unpack(unpacking_type, names, unpacking_operand, exp_data, ir, final_data, dependencies) {
+     if unpacking_operand.has_type?("null")
+          [box
+               names.map(fn (name) if name:text == "_"; :holder else comptime_null(name))
+               exp_data, ir, final_data, dependencies
+          ]
+     else {
+          unpacking_operand.maybe_has_type!(if unpacking_type == "byte_array"; @main.byte_array_types else unpacking_type)
+          if not unpacking_operand:comptime_val.null?() {
+               if names.len() > unpacking_operand:comptime_val:value.len()
+                    error__to_many_unpack_names(names[unpacking_operand:comptime_val:value.len()])
+               else null
+
+               [box
+                    names.map_kv(fn (idx, name)
+                         if name:text == "_"
+                              :holder
+                         else {
+                              let comptime_val = unpacking_operand:comptime_val:value[idx]
+                              let comptime_val = if unpacking_type /= "byte_array"
+                                   comptime_val
+                              else new (@main.t_comptime_val) {
+                                   :type  <= "byte"
+                                   :value <= comptime_val
+                              }
+
+                              new (@main.t_operand) {
+                                   :code           <= name
+                                   :comptime_val   <= comptime_val
+                                   :possible_types <= comptime_val.get_type_for_operand()
+                              }
+                         }
+                    )
+
+                    exp_data, ir, final_data, dependencies
+               ]
+          } else {
+               let [box consts_reg, exp_data]                        = exp_data.new_reg()
+               let [box unpacking_operand, final_data, dependencies] = unpacking_operand.has_ir!(final_data, dependencies)
+
+               let maybe_null           = unpacking_operand.maybe_has_type?("null")
+               let items_possible_types = switch unpacking_type
+               case "box":        null
+               case "array":      if maybe_null; @main.common_types__null_error else @main.common_types__error
+               case "byte_array": if maybe_null; [set "byte", "error", "null"] else [set "byte", "error"]
+               case "error":      [array [set "token", "error"], @main.string_types__error, @main.common_types__null_error]
+               default: unreachable()
+
+               let [box unpacked_consts, state] = names.map_kv_with_state([box "", 0, ""], fn (state, idx, name) {
+                    let [box idxes_list_ir, items_len, assume_ir] = state
+
+                    if name:text == "_"
+                         [box [box idxes_list_ir, items_len, assume_ir], :holder]
+                    else {
+                         let unpacked_consts_type = if unpacking_type == "error"; items_possible_types[idx] else items_possible_types
+                         let unpacked_consts_ir   = consts_reg ++ "[" ++ items_len.to_ir_num() ++ "]"
+                         let assume_ir            = ir__assume_type(unpacked_consts_ir, unpacked_consts_type, assume_ir)
+
+                         [box
+                              [box idxes_list_ir ++ "{.qwords={" ++ idx.to_ir_num() ++ "}},", items_len + 1, assume_ir]
+
+                              new (@main.t_operand) {
+                                   :code           <= name
+                                   :ir             <= unpacked_consts_ir
+                                   :possible_types <= unpacked_consts_type
+                              }
+                         ]
+                    }
+               })
+               let [box idxes_list_ir, items_len, assume_ir] = state
+
+               let items_len_ir_str = items_len.to_ir_num()
+               let ir = ir ++ "t_any " ++ consts_reg ++ "[" ++ items_len_ir_str ++ "]={" ++ idxes_list_ir.take(idxes_list_ir.len() - 1) ++ "};\n" ++
+                    unpacking_type ++ "__unpack__own(thrd_data," ++ unpacking_operand:ir ++ "," ++ items_len_ir_str ++ "," ++ unpacked_consts.len().to_ir_num() ++ "," ++ consts_reg ++ "," ++
+                    exp_data:owner_name_ir_const ++ ");\n" ++
+                    assume_ir
+
+               [box unpacked_consts, exp_data, ir, final_data, dependencies]
+          }
+     }
+}

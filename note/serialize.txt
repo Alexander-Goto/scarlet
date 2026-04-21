@@ -1,0 +1,109 @@
+len!
+     end_byte |= 128
+     1 byte = 7 bits
+     2 byte = 14 bits
+     3 byte = 21 bits
+     4 byte = 28 bits
+     5 byte = 35 bits
+     6 byte = 42 bits
+     7 byte = 49 bits
+     8 byte = 56 bits
+
+non-negative number 0..0xff (1 byte)
+0 u8, number u8
+
+non-negative number 0x100..0x1'00ff (2 byte)
+1 u8, number u16
+
+non-negative number 0x1'0100..0x101'00ff (3 byte)
+2 u8, number u24
+
+non-negative number 0x101'0100..0x1'0101'00ff (4 byte)
+3 u8, number u32
+
+non-negative number 0x1'0101'0100..0x101'0101'00ff (5 byte)
+4 u8, number u40
+
+non-negative number 0x101'0101'0100..0x1'0101'0101'00ff (6 byte)
+5 u8, number u48
+
+non-negative number 0x1'0101'0101'0100..0x101'0101'0101'00ff (7 byte)
+6 u8, number u56
+
+non-negative number 0x101'0101'0101'0100..0x7fff'ffff'ffff'ffff (8 byte)
+7 u8, number u64
+
+negative number 1..0x100 (1 byte)
+8 u8, number u8
+
+negative number 0x101..0x1'0100 (2 byte)
+9 u8, number u16
+
+negative number 0x1'0101..0x101'0100 (3 byte)
+10 u8, number u24
+
+negative number 0x101'0101..0x1'0101'0100 (4 byte)
+11 u8, number u32
+
+negative number 0x1'0101'0101..0x101'0101'0100 (5 byte)
+12 u8, number u40
+
+negative number 0x101'0101'0101..0x1'0101'0101'0100 (6 byte)
+13 u8, number u48
+
+negative number 0x1'0101'0101'0101..0x101'0101'0101'0100 (7 byte)
+14 u8, number u56
+
+negative number 0x101'0101'0101'0101..0x8000'0000'0000'0000 (8 byte)
+15 u8, number u64
+
+string
+16 u8, ctf8_chars [...]u8, 0 u8
+
+token
+17 u8, ctf8_chars [...25]u8 // end_char |= 128
+
+bool false
+18 u8
+
+bool true
+19 u8
+
+byte
+20 u8, byte u8
+
+char 1..0x100
+21 u8, char u8
+
+char 0x101..0x1'0100
+22 u8, char u16
+
+char 0x1'0101..0x3f'ffff
+23 u8, char u24
+
+short time
+24 u8, sec_from_00_00_00_01_01_2030 u32
+
+full time
+25 u8, sec_from_00_00_00_01_01_0001 i64
+
+float
+26 u8, float_bits u64
+
+byte_array
+27 u8, length len!, bytes [length]u8
+
+obj
+28 u8, length len!, fields [length](field ctf8_chars [...25]u8, value any) // field like token
+
+table
+29 u8, length len!, kvs [length](key any, value any)
+
+set
+30 u8, length len!, item [length]any
+
+array
+31 u8, length len!, item [length]any
+
+fix_obj
+32 u8, fix_idx_offset u8, fix_idx_size u8, length len!, fields [length](field ctf8_chars [...26]u8, value any) // field like token, if last == 128 then deleted and no value

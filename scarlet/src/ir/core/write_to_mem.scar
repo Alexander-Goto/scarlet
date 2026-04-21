@@ -1,0 +1,23 @@
+fn ir__core_fn_write_to_mem(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box address, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box offset, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box bytes, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ address:code:text ++ ", " ++ offset:code:text ++ ", " ++ bytes:code:text ++ ")")
+
+     offset.maybe_has_type!("int")
+     bytes.maybe_has_type!(@main.byte_array_types)
+
+     ir__fn_call(
+          "McoreFNwrite_to_memAAA", [array address, offset, bytes], code
+
+          if offset.has_type?("int") && bytes.has_type?(@main.byte_array_types)
+               [set "null"]
+          else [set "null", "error"]
+
+          exp_data, ir, final_data, dependencies, src_gconsts, is_last
+     )
+}

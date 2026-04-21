@@ -1,0 +1,253 @@
+let container__map = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_map       = fn (container, func) to_container__map(container:value.map(func))
+          :core___equal__ = fn (container_1, container_2) container_1:value === container_2:value
+     ]
+]
+
+fn to_container__map(arg) new (@main.container__map):value <= arg
+
+fn to_custom_container__map(arg) custom__create(
+     arg
+     [obj
+          :core_map       = fn (container, func) to_custom_container__map(custom__get_data(container).map(func))
+          :core___equal__ = fn (container_1, container_2) container_1.custom__get_data() === container_2.custom__get_data()
+     ]
+)
+
+let broken_container__map = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_map = fn (_, _) _ ++ heap_table()
+     ]
+]
+
+fn to_broken_container__map(arg) new (@main.broken_container__map):value <= arg
+
+fn to_broken_custom_container__map(arg) custom__create(
+     arg
+     [obj
+          :core_map = fn (_, _) _ ++ heap_table()
+     ]
+)
+
+let error_container__map = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_map = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__map(arg) new (@main.error_container__map):value <= arg
+
+fn to_error_custom_container__map(arg) custom__create(
+     arg
+     [obj
+          :core_map = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__map() {
+     let items = "3".to_array()
+     test("".map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "")
+     test("1".map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "0")
+     test("122333444455555".map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "011222555566666")
+
+     let items = "\000093".to_array()
+     test("\000091".map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "\000090")
+     test("\0000912\000092\000093\000093\000093\000094\000094".map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "\0000901\000091\000092\000092\000092\000095\000095")
+
+     let items  = "3".to_array()
+     let string = "011012375611135" ++ "f"
+     test("011012375611135f".map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "/00/01286700026g")
+     test(string.map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "/00/01286700026g")
+     test(string.map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "/00/01286700026g")
+
+     let items  = "\000093".to_array()
+     let string = "\000090\000091\000091\000090\000091\000092\000093\000097\000095\000096\000091\000091\000091\000093\000095" ++ "\00009f"
+     test("\000090\000091\000091\000090\000091\000092\000093\000097\000095\000096\000091\000091\000091\000093\000095\00009f".map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "\00008f\000090\000090\00008f\000090\000091\000092\000098\000096\000097\000090\000090\000090\000092\000096\0000a0")
+     test(string.map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "\00008f\000090\000090\00008f\000090\000091\000092\000098\000096\000097\000090\000090\000090\000092\000096\0000a0")
+     test(string.map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "\00008f\000090\000090\00008f\000090\000091\000092\000098\000096\000097\000090\000090\000090\000092\000096\0000a0")
+
+     let items  = "3".to_array()
+     let string = ("0011012375611135f" ++ "0")[1, 17]
+     test("0011012375611135f0"[1, 17].map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "/00/01286700026g")
+     test(string.map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "/00/01286700026g")
+     test(string.map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "/00/01286700026g")
+
+     let items  = "\000093".to_array()
+     let string = ("0\000090\000091\000091\000090\000091\000092\000093\000097\000095\000096\000091\000091\000091\000093\000095\00009f" ++ "0")[1, 17]
+     test("0\000090\000091\000091\000090\000091\000092\000093\000097\000095\000096\000091\000091\000091\000093\000095\00009f0"[1, 17].map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "\00008f\000090\000090\00008f\000090\000091\000092\000098\000096\000097\000090\000090\000090\000092\000096\0000a0")
+     test(string.map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "\00008f\000090\000090\00008f\000090\000091\000092\000098\000096\000097\000090\000090\000090\000092\000096\0000a0")
+     test(string.map(fn (char) (char.to_int() + if char > items[0]; 1 else -1).to_char()) === "\00008f\000090\000090\00008f\000090\000091\000092\000098\000096\000097\000090\000090\000090\000092\000096\0000a0")
+
+     let string_1        = rnd_string()
+     let string_2        = if rnd_bool(); string_1 else null
+     let expected_string = string_1.foldl("", fn (string, char)
+          if char === '\000001' || char === @main.last_corsar_code.to_char()
+               string.append(char)
+          else string.append((char.to_int() + if char.to_int().even?(); 1 else -1).to_char())
+     )
+     let have_string = string_1.map(fn (char)
+          if char === '\000001' || char === @main.last_corsar_code.to_char()
+               char
+          else (char.to_int() + if char.to_int().even?(); 1 else -1).to_char()
+     )
+     test(expected_string === have_string)
+     string_2.ignore()
+
+     let items = u"3".to_array()
+     test(u"".map(fn (byte) byte + if byte > items[0]; 0b01 else 0bff) === u"")
+     test(u"1".map(fn (byte) byte + if byte > items[0]; 0b01 else 0bff) === u"0")
+     test(u"12233344445555".map(fn (byte) byte + if byte > items[0]; 0b01 else 0bff) === u"01122255556666")
+
+     let items  = u"3".to_array()
+     let array = u"011012375611135" ++ u"f"
+     test(u"011012375611135f".map(fn (byte) byte + if byte > items[0]; 0b01 else 0bff) === u"/00/01286700026g")
+     test(array.map(fn (byte) byte + if byte > items[0]; 0b01 else 0bff) === u"/00/01286700026g")
+     test(array.map(fn (byte) byte + if byte > items[0]; 0b01 else 0bff) === u"/00/01286700026g")
+
+     let items  = u"3".to_array()
+     let array = (u"0011012375611135f" ++ u"0")[1, 17]
+     test(u"0011012375611135f0"[1, 17].map(fn (byte) byte + if byte > items[0]; 0b01 else 0bff) === u"/00/01286700026g")
+     test(array.map(fn (byte) byte + if byte > items[0]; 0b01 else 0bff) === u"/00/01286700026g")
+     test(array.map(fn (byte) byte + if byte > items[0]; 0b01 else 0bff) === u"/00/01286700026g")
+
+     let array_1        = rnd_byte_array()
+     let array_2        = if rnd_bool(); array_1 else null
+     let expected_array = array_1.foldl(u"", fn (array, byte) array.append(byte + if byte.even?(); 0b01 else 0bff))
+     let have_array = array_1.map(fn (byte) byte + if byte.even?(); 0b01 else 0bff)
+     test(expected_array === have_array)
+     array_2.ignore()
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([array].map(_ ++ string_1) === [array])
+     test([array].init(10).map(_ ++ string_1) === [array])
+     test([array string_1].map(_ ++ string_1) === [array string_1 ++ string_1])
+     test([array "1", "2", "3"].map(_ ++ string_1) === [array "1" ++ string_1, "2" ++ string_1, "3" ++ string_1])
+     test([array "0", "1", "2", "3", "0"][1, 4].map(_ ++ string_1) === [array "1" ++ string_1, "2" ++ string_1, "3" ++ string_1])
+
+     let array = [array string_1, string_2, string_3]
+     test(array.map(_ ++ string_1) === [array string_1 ++ string_1, string_2 ++ string_1, string_3 ++ string_1])
+     test(array.map(_ ++ string_1) === [array string_1 ++ string_1, string_2 ++ string_1, string_3 ++ string_1])
+
+     let array = [array string_3, string_1, string_2, string_3, string_1][1, 4]
+     test(array.map(_ ++ string_1) === [array string_1 ++ string_1, string_2 ++ string_1, string_3 ++ string_1])
+     test(array.map(_ ++ string_1) === [array string_1 ++ string_1, string_2 ++ string_1, string_3 ++ string_1])
+
+     test([array 1, 2, 3, 4].map(_.even?()) === [array false, true, false, true])
+
+     let array_1        = rnd_string_array()
+     let array_2        = if rnd_bool(); array_1 else null
+     let expected_array = array_1.foldl([array], fn (array, string) array.append(string ++ string))
+     let have_array     = array_1.map(fn (string) string ++ string)
+     test(expected_array === have_array)
+     array_2.ignore()
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([table].map(_ ++ string_1) === [table])
+     test([table].init(10).map(_ ++ string_1) === [table])
+     test([table string_3 = string_1].map(_ ++ string_1) === [table string_3 = string_1 ++ string_1])
+     test([table "0" = "1", "1" = "2", "2" = "3"].map(_ ++ string_1) === [table "0" = "1" ++ string_1, "1" = "2" ++ string_1, "2" = "3" ++ string_1])
+
+     let table = [table string_3 = string_1, string_1 = string_2, string_2 = string_3]
+     test(table.map(_ ++ string_1) === [table string_3 = string_1 ++ string_1, string_1 = string_2 ++ string_1, string_2 = string_3 ++ string_1])
+     test(table.map(_ ++ string_1) === [table string_3 = string_1 ++ string_1, string_1 = string_2 ++ string_1, string_2 = string_3 ++ string_1])
+
+     test([table 0 = 1, 1 = 2, 2 = 3, 3 = 4].map(_.even?()) === [table 0 = false, 1 = true, 2 = false, 3 = true])
+
+     let table_1        = rnd_string_table()
+     let table_2        = if rnd_bool(); table_1 else null
+     let expected_table = table_1.foldl_kv([table], fn (table, key, string) new (table)[key] <= string ++ string)
+     let have_table     = table_1.map(fn (string) string ++ string)
+     test(expected_table === have_table)
+     table_2.ignore()
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([obj].map(_ ++ string_1) === [obj])
+     test([obj :_ = [obj :1 = 2]].map(_ ++ string_1) === [obj])
+     test([obj :_ = [obj :1 = 2]].map(_ ++ string_1):_ === [obj :1 = 2])
+     test([obj].init(10).map(_ ++ string_1) === [obj])
+     test([obj :3 = string_1].map(_ ++ string_1) === [obj :3 = string_1 ++ string_1])
+     test([obj :3 = string_1, :_ = [obj :1 = 2]].map(_ ++ string_1) === [obj :3 = string_1 ++ string_1])
+     test([obj :3 = string_1, :_ = [obj :1 = 2]].map(_ ++ string_1):_ === [obj :1 = 2])
+     test([obj :0 = "1", :1 = "2", :2 = "3"].map(_ ++ string_1) === [obj :0 = "1" ++ string_1, :1 = "2" ++ string_1, :2 = "3" ++ string_1])
+     test([obj :0 = "1", :1 = "2", :2 = "3", :_ = [obj :1 = 2]].map(_ ++ string_1) === [obj :0 = "1" ++ string_1, :1 = "2" ++ string_1, :2 = "3" ++ string_1])
+     test([obj :0 = "1", :1 = "2", :2 = "3", :_ = [obj :1 = 2]].map(_ ++ string_1):_ === [obj :1 = 2])
+
+     let obj = [obj :3 = string_1, :1 = string_2, :2 = string_3]
+     test(obj.map(_ ++ string_1) === [obj :3 = string_1 ++ string_1, :1 = string_2 ++ string_1, :2 = string_3 ++ string_1])
+     test(obj.map(_ ++ string_1) === [obj :3 = string_1 ++ string_1, :1 = string_2 ++ string_1, :2 = string_3 ++ string_1])
+
+     let obj = [obj :3 = string_1, :1 = string_2, :2 = string_3, :_ = [obj :1 = 2]]
+     test(obj.map(_ ++ string_1) === [obj :3 = string_1 ++ string_1, :1 = string_2 ++ string_1, :2 = string_3 ++ string_1])
+     test(obj.map(_ ++ string_1) === [obj :3 = string_1 ++ string_1, :1 = string_2 ++ string_1, :2 = string_3 ++ string_1])
+
+     let obj = [obj :3 = string_1, :1 = string_2, :2 = string_3, :_ = [obj :1 = 2]]
+     test(obj.map(_ ++ string_1):_ === [obj :1 = 2])
+     test(obj.map(_ ++ string_1):_ === [obj :1 = 2])
+
+     test([obj :0 = 1, :1 = 2, :2 = 3, :3 = 4].map(_.even?()) === [obj :0 = false, :1 = true, :2 = false, :3 = true])
+
+     let obj_1        = rnd_string_obj()
+     let obj_2        = if rnd_bool(); obj_1 else null
+     let expected_obj = obj_1.foldl_kv([obj], fn (obj, key, string) new (obj)[key] <= string ++ string)
+     let have_obj     = obj_1.map(fn (string) string ++ string)
+     test(expected_obj === have_obj)
+     obj_2.ignore()
+
+     test(to_container__map("aBcD").map(_.ascii_to_lower()) === to_container__map("abcd"))
+     test(to_container__map("aBcD").map(_.ascii_to_upper()) === to_container__map("ABCD"))
+     test(to_custom_container__map("aBcD").map(_.ascii_to_lower()) === to_custom_container__map("abcd"))
+     test(to_custom_container__map("aBcD").map(_.ascii_to_upper()) === to_custom_container__map("ABCD"))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.map(_ === heap_string()).get_error_id() === :1)
+     test(heap_string().map(error_1).get_error_id() === :1)
+     test(error_1.map(error_2).get_error_id() === :1)
+     test(error_2.map(error_1).get_error_id() === :2)
+     test(error_1.map(heap_string()).get_error_id() === :1)
+     test((_ === heap_string()).scarlet__erase_info().map(error_1).get_error_id() === :1)
+
+     test((_ === heap_string()).scarlet__erase_info().map(_ === heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().map(heap_table()).get_error_id() === :invalid_type)
+     test((_ === heap_string()).scarlet__erase_info().map(heap_table()).get_error_id() === :invalid_type)
+
+     test(to_broken_container__map("").map(_ === heap_string()).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__map("").map(_ === heap_string()).get_error_id() === :invalid_type)
+     test(to_error_container__map("").map(_ === heap_string()).get_error_id() === :3)
+     test(to_error_custom_container__map("").map(_ === heap_string()).get_error_id() === :4)
+
+     test("".map(fn (_, _) string_1) === "")
+     test(u"".map(fn (_, _) string_1) === u"")
+     test([array].map(fn (_, _) string_1) === [array])
+     test([table].map(fn (_, _) string_1) === [table])
+     test([obj].map(fn (_, _) string_1) === [obj])
+     test([obj :_ = [obj]].map(fn (_, _) string_1) === [obj])
+     test([obj :_ = [obj]].map(fn (_, _) string_1):_ === [obj])
+
+     test("1".map(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().map(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"1".map(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().map(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array heap_string()].map(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table heap_string() = heap_string()].map(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :1 = heap_string()].map(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test("1".map(fn (_) string_1).get_error_id() === :invalid_type)
+     test(heap_string().map(fn (_) string_1).get_error_id() === :invalid_type)
+     test(u"1".map(fn (_) string_1).get_error_id() === :invalid_type)
+     test(heap_byte_array().map(fn (_) string_1).get_error_id() === :invalid_type)
+}

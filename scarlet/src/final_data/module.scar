@@ -1,0 +1,121 @@
+let compiled_module_name = @main.user_cmd:module_name
+
+let module_signature        = u"(scar|0|scarlet|0.1)"
+let module_signature_prefix = u"(scar|0|"
+
+fn create_module(final_data) {
+     let gconsts = final_data:gconsts.foldl_kv([array].init(final_data:gconsts.len() / 2), fn (gconsts, _, gconsts_with_one_name) {
+          let gconst = gconsts_with_one_name[@main.compiled_module_name]
+          if gconst.null?()
+               gconsts
+          else gconsts.append(gconst)
+     })
+
+     let fns = final_data:fns.foldl_kv([array].init(final_data:fns.len() / 2), fn (fns, _, fns_with_one_name) {
+          let func = fns_with_one_name[@main.compiled_module_name]
+          if func.null?()
+               fns
+          else fns.append(func)
+     })
+
+     let module = @main.module_signature.reserve(1'048'560 - @main.module_signature.len())
+     let module = @main.compiled_module_name.serialize(module)
+     let module = gconsts.len().serialize(module)
+     let module = gconsts.foldl(module, fn (module, gconst) gconst.serialize_gconst(module))
+     let module = fns.len().serialize(module)
+     let module = fns.foldl(module, fn (module, func) func.serialize_fn(module))
+     let module = final_data:ir_splited_consts.serialize(module)
+
+     let file = open_file(fs_path(@main.user_cmd:out), @std.fom__write | @std.fom__new)->write(module)->flush()
+     if file.error?() || file.type() /= "std.file"
+          error__cant_save_to_file(@main.user_cmd:out)
+     else null
+}
+
+fn load_modules(file_names)
+     file_names.foldl(@main.t_final_data, fn (final_data, file_name) {
+          let [box file, module] = open_file(fs_path(file_name), @std.fom__read | @std.fom__begin)->read_tail()
+          if file.error?() || file.type() /= "std.file"
+               error__cant_load_file(file_name)
+          else null
+
+          let signature_end_idx = u')'.to_byte().look_in(module)
+          if not @main.module_signature_prefix.prefix_of?(module) || signature_end_idx.null?()
+               error__incorrect_module_file(file_name)
+          else null
+
+          let [box module_name, module] = deserialize(module.drop(signature_end_idx + 1))
+          if module_name.in?(final_data:modules_names)
+               error__two_modules_with_same_name(module_name)
+          else null
+
+          if module_name == @main.compiled_module_name
+               error__src_module_in_bin_modules(module_name)
+          else null
+
+          let ir_prefix_len = module_name.len() + 3
+
+          let [box gconsts_len, module] = deserialize(module)
+          let [box final_data, module]  = loop([box final_data, module, gconsts_len], fn (state) {
+               let [box final_data, module, remain_qty] = state
+
+               if remain_qty == 0
+                    [breaker [box final_data, module]]
+               else {
+                    let [box gconst, module] = deserialize_gconst(module)
+
+                    [box
+                         new (final_data):gconsts[gconst:ir_name.drop(ir_prefix_len)][module_name] <= gconst
+                         module, remain_qty - 1
+                    ]
+               }
+          })
+
+          let [box fns_len, module]    = deserialize(module)
+          let [box final_data, module] = loop([box final_data, module, fns_len], fn (state) {
+               let [box final_data, module, remain_qty] = state
+
+               if remain_qty == 0
+                    [breaker [box final_data, module]]
+               else {
+                    let [box func, module] = deserialize_fn(module)
+
+                    let func_name = func:ir_name.drop(ir_prefix_len)
+                    let last_char = func_name.last()
+                    let func_name = if not last_char.ascii_upper?()
+                         func_name
+                    else if last_char == 'B'
+                         new (func_name)[func_name.len() - 1] <= '?'
+                    else if "AAA".suffix_of?(func_name)
+                         copy(func_name, func_name.len() - 3, "!!!")
+                    else new (func_name)[func_name.len() - 1] <= '!'
+
+                    [box
+                         new (final_data):fns[func_name][module_name] <= func
+                         module, remain_qty - 1
+                    ]
+               }
+          })
+
+          let final_data = if @main.compiled_module_name == "main" {
+               let [box module_splited_consts] = deserialize(module)
+
+               module_splited_consts.foldl_kv(final_data, fn (final_data, suffix, consts)
+                    consts.foldl_kv(final_data, fn (final_data, prefix, ir_name) {
+                         let existed_ir_name = final_data:ir_splited_consts[suffix][prefix]
+                         if existed_ir_name.null?()
+                              new (final_data) {
+                                   :ir_splited_consts[suffix][prefix] <= ir_name
+                                   :ir_consts[ir_name]                <= prefix ++ ir_name ++ suffix
+                              }
+                         else new (final_data):ir_consts[ir_name] <= "#define " ++ ir_name ++ " " ++ existed_ir_name ++ "\n"
+                    })
+               )
+          } else final_data
+
+          if final_data.error?()
+               error__incorrect_module_file(file_name)
+          else null
+
+          final_data
+     })

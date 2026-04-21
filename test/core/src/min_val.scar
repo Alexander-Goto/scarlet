@@ -1,0 +1,76 @@
+let const__min_val = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_min_val   = fn (const) const:value.min_val().to_const__min_val()
+          :core___equal__ = fn (const_1, const_2) const_1:value === const_2:value
+     ]
+]
+
+fn to_const__min_val(arg) new (@main.const__min_val):value <= arg
+
+fn to_custom_const__min_val(arg) custom__create(
+     arg
+     [obj
+          :core_min_val   = fn (const) const.custom__get_data().min_val().to_custom_const__min_val()
+          :core___equal__ = fn (const_1, const_2) const_1.custom__get_data() === const_2.custom__get_data()
+     ]
+)
+
+let broken_const__min_val = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_min_val = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_const__min_val(arg) new (@main.broken_const__min_val):value <= arg
+
+fn to_broken_custom_const__min_val(arg) custom__create(
+     arg
+     [obj
+          :core_min_val = fn (_) heap_string()
+     ]
+)
+
+let error_const__min_val = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_min_val = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__min_val(arg) new (@main.error_const__min_val):value <= arg
+
+fn to_error_custom_const__min_val(arg) custom__create(
+     arg
+     [obj
+          :core_min_val = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__min_val() {
+     test(rnd_token().min_val() === :0)
+     test(rnd_byte().min_val() === 0b00)
+     test(rnd().min_val() === -9223372036854775808)
+     test((rnd() >> 2).int_to_time().min_val() === 0.int_to_time())
+     test(rnd_float().min_val().neg_inf?())
+     test(nan().min_val().neg_inf?())
+     test(inf().min_val().neg_inf?())
+     test(neg_inf().min_val().neg_inf?())
+
+     test(rnd().to_const__min_val().min_val() === -9223372036854775808.to_const__min_val())
+     test(rnd().to_custom_const__min_val().min_val() === -9223372036854775808.to_custom_const__min_val())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(min_val(error).get_error_id() === :1)
+     test(min_val(heap_string()).get_error_id() === :invalid_type)
+
+     test(to_broken_const__min_val(0).min_val().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__min_val(0).min_val().get_error_id() === :invalid_type)
+     test(to_error_const__min_val(0).min_val().get_error_id() === :3)
+     test(to_error_custom_const__min_val(0).min_val().get_error_id() === :4)
+}

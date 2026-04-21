@@ -1,0 +1,95 @@
+let char__ascii_graphic = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_graphic? = fn (char) char:value.ascii_graphic?()
+     ]
+]
+
+fn to_char__ascii_graphic?(arg) new (@main.char__ascii_graphic):value <= arg
+
+fn to_custom_char__ascii_graphic?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_graphic? = fn (char) char.custom__get_data().ascii_graphic?()
+     ]
+)
+
+let broken_char__ascii_graphic = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_graphic? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_char__ascii_graphic?(arg) new (@main.broken_char__ascii_graphic):value <= arg
+
+fn to_broken_custom_char__ascii_graphic?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_graphic? = fn (_) heap_string()
+     ]
+)
+
+let error_char__ascii_graphic = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_graphic? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__ascii_graphic?(arg) new (@main.error_char__ascii_graphic):value <= arg
+
+fn to_error_custom_char__ascii_graphic?(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_graphic? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__ascii_graphic?() {
+     test(not '\000001'.ascii_graphic?())
+     test(not '\000008'.ascii_graphic?())
+     test(not '\00000a'.ascii_graphic?())
+     test(not '\00001f'.ascii_graphic?())
+     test(not '\00007f'.ascii_graphic?())
+     test('\000009'.ascii_graphic?())
+     test('\t'.ascii_graphic?())
+     test('\000020'.ascii_graphic?())
+     test('\00007e'.ascii_graphic?())
+     test(' '.ascii_graphic?())
+     test('a'.ascii_graphic?())
+     test('z'.ascii_graphic?())
+     test(not '\00008b'.ascii_graphic?())
+     test('0'.ascii_graphic?())
+     test('9'.ascii_graphic?())
+
+     let string = rnd_string()
+     test(string.filter(fn (char) char.in_range?(' ', '\00007f') || char === '\t') === string.filter(ascii_graphic?(_)))
+
+     test(to_char__ascii_graphic?('8').ascii_graphic?())
+     test(to_char__ascii_graphic?('a').ascii_graphic?())
+     test(to_char__ascii_graphic?('z').ascii_graphic?())
+     test(to_char__ascii_graphic?('A').ascii_graphic?())
+     test(to_char__ascii_graphic?('Z').ascii_graphic?())
+     test(not to_char__ascii_graphic?('\000008').ascii_graphic?())
+
+     test(to_custom_char__ascii_graphic?('8').ascii_graphic?())
+     test(to_custom_char__ascii_graphic?('a').ascii_graphic?())
+     test(to_custom_char__ascii_graphic?('z').ascii_graphic?())
+     test(to_custom_char__ascii_graphic?('A').ascii_graphic?())
+     test(to_custom_char__ascii_graphic?('Z').ascii_graphic?())
+     test(not to_custom_char__ascii_graphic?('\000008').ascii_graphic?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.ascii_graphic?().get_error_id() === :1)
+     test(heap_table().ascii_graphic?().get_error_id() === :invalid_type)
+
+     test(to_broken_char__ascii_graphic?('a').ascii_graphic?().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__ascii_graphic?('a').ascii_graphic?().get_error_id() === :invalid_type)
+     test(to_error_char__ascii_graphic?('a').ascii_graphic?().get_error_id() === :3)
+     test(to_error_custom_char__ascii_graphic?('a').ascii_graphic?().get_error_id() === :4)
+}

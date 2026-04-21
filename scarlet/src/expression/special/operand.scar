@@ -1,0 +1,59 @@
+let t_operand = [obj
+     :scar_type = "t_operand"
+
+     :code           = @main.t_token
+     :ir             = null # (string|null)
+     :comptime_val   = null # (@t_comptime_val|null)
+     :possible_types = null # ([set @string]|null)
+     :is_gconst      = false
+]
+
+fn has_ir!(operand, final_data, dependencies)
+     if not operand:ir.null?()
+          [box operand, final_data, dependencies]
+     else {
+          let [box ir, final_data, dependencies] = comptime_val_to_ir(operand:comptime_val, true, final_data, dependencies)
+          [box new (operand):ir <= ir, final_data, dependencies]
+     }
+
+fn has_type?(operand, type)
+     if operand:possible_types.null?()
+          false
+     else if type.type() == "core.string"
+          operand:possible_types.len() == 1 && type.in?(operand:possible_types)
+     else operand:possible_types.all(true, _.in?(type))
+
+fn maybe_has_type?(operand, type)
+     if operand:possible_types.null?()
+          true
+     else if type.type() == "core.string"
+          type.in?(operand:possible_types)
+     else operand:possible_types.any(true, _.in?(type))
+
+fn maybe_has_type!(operand, type)
+     if not operand.maybe_has_type?(type)
+          error__invalid_type(operand:code, type, operand:possible_types)
+     else null
+
+fn inc_ref_cnt(operand, owner_name_ir_const, ir)
+     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:is_gconst || operand.has_type?(@main.without_managed_mem_types)) {
+          if operand.has_type?(@main.not_copyable_types)
+               error__reuse(operand:code, operand:possible_types)
+          else null
+
+          ir__raw_ref_cnt__inc(operand:ir, owner_name_ir_const, ir)
+     } else ir
+
+fn dec_ref_cnt(operand, ir)
+     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:is_gconst || operand.has_type?(@main.without_managed_mem_types)) {
+          ir__raw_ref_cnt__dec(operand:ir, ir)
+     } else ir
+
+fn operand_independent?(operand) not operand:comptime_val.null?() || operand:is_gconst
+
+fn operand_to_operand(operand, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     if is_last {
+          let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+          [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+     } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]

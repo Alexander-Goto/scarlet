@@ -1,0 +1,69 @@
+fn ir__core_fn_copy(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box dst, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box idx, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box src, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ dst:code:text ++ ", " ++ idx:code:text ++ ", " ++ src:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+     dst.maybe_has_type!(valid_types)
+
+     if idx:comptime_val:type =/= "int"
+          idx.maybe_has_type!("int")
+     else if not (dst:comptime_val.null?() || dst:comptime_val:type == "obj" || idx:comptime_val:value.in_range?(0, dst:comptime_val:value.len() + 1))
+          error__out_of_bounds(idx:code)
+     else null
+
+     if dst:comptime_val.null?() || idx:comptime_val.null?() || src:comptime_val.null?() || dst:comptime_val:type == "obj" {
+          if dst:comptime_val:type === "obj" && dst:comptime_val:value[:_][:core_copy].null?()
+               error__invalid_type(dst:code, ".core_copy", "obj")
+          else null
+
+          let result_possible_types = if dst:possible_types.null?()
+               valid_types
+          else dst:possible_types.filter(_.in?(valid_types)).prepare_types_for_cmp()
+
+          let result_possible_types = if src:possible_types.null?()
+               result_possible_types
+          else {
+               let new_src_possible_types = src:possible_types.filter(_.in?(result_possible_types)).prepare_types_for_cmp()
+               if new_src_possible_types.empty?()
+                    error__invalid_type(src:code, result_possible_types, src:possible_types)
+               else new_src_possible_types
+          }
+
+          if not (dst:comptime_val.null?() || src:comptime_val.null?()) && dst:comptime_val:type /= "obj" && dst:comptime_val:value.len() < src:comptime_val:value.len()
+               error__out_of_bounds(src:code)
+          else null
+
+          let result_possible_types = result_possible_types.append("error")
+
+          ir__fn_call("McoreFNcopy", [array dst, idx, src], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          src.maybe_has_type!(dst:possible_types.prepare_types_for_cmp())
+
+          if idx:comptime_val:value + src:comptime_val:value.len() > dst:comptime_val:value.len()
+               error__out_of_bounds((if src:comptime_val:value.len() > dst:comptime_val:value.len(); src else idx):code)
+          else null
+
+          let comptime_val = new (@main.t_comptime_val) {
+               :type  <= dst:comptime_val:type
+               :value <= copy(dst:comptime_val:value, idx:comptime_val:value, src:comptime_val:value)
+          }
+          let operand = new (dst) {
+               :ir             <= null
+               :code           <= code
+               :comptime_val   <= comptime_val
+               :possible_types <= comptime_val.get_type_for_operand()
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

@@ -1,0 +1,42 @@
+`noinline`
+fn test__time_limit_wait() {
+     let string = heap_string()
+
+     let thread                       = thread(fn () string)
+     let [box is_end, thread, result] = thread.time_limit_wait(1'000'000'000)
+     test(is_end)
+     test(thread.null?())
+     test(result === string)
+
+     let thread = thread(fn () {
+          sleep(1'000'000'000)
+          string
+     })
+     let [box is_end, thread, result] = thread.time_limit_wait(0)
+     test(not is_end)
+     test(result.null?())
+     let [box is_end, thread, result] = thread.time_limit_wait(2'000'000'000)
+     test(is_end)
+     test(thread.null?())
+     test(result === string)
+
+     let error_1 = expected_error(:1, string, string)
+     let error_2 = expected_error(:2, string, string)
+     test(time_limit_wait(error_1, rnd() >> 1).get_error_id() === :1)
+     test(time_limit_wait(thread(fn () null), error_1).get_error_id() === :1)
+     test(time_limit_wait(error_1, error_2).get_error_id() === :1)
+     test(time_limit_wait(error_2, error_1).get_error_id() === :2)
+     test(time_limit_wait(error_1, string).get_error_id() === :1)
+     test(time_limit_wait(thread(fn () null), error_1).get_error_id() === :1)
+     test(time_limit_wait(error_1, -1.scarlet__erase_info()).get_error_id() === :1)
+     test(time_limit_wait(error_1, -9223372036854775808.scarlet__erase_info()).get_error_id() === :1)
+
+     test(time_limit_wait(string, rnd() >> 1).get_error_id() === :invalid_type)
+     test(time_limit_wait(thread(fn () null), string).get_error_id() === :invalid_type)
+     test(time_limit_wait(string, string).get_error_id() === :invalid_type)
+
+     test(time_limit_wait(thread(fn () null), -1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(time_limit_wait(thread(fn () null), -9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test(time_limit_wait(thread(fn () expected_error(:3, string, string)), 1'000'000'000).get_error_id() === :3)
+}

@@ -1,0 +1,85 @@
+let char__lower = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_lower? = fn (char) char:value.lower?()
+     ]
+]
+
+fn to_char__lower?(arg) new (@main.char__lower):value <= arg
+
+fn to_custom_char__lower?(arg) custom__create(
+     arg
+     [obj
+          :core_lower? = fn (char) char.custom__get_data().lower?()
+     ]
+)
+
+let broken_char__lower = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_lower? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_char__lower?(arg) new (@main.broken_char__lower):value <= arg
+
+fn to_broken_custom_char__lower?(arg) custom__create(
+     arg
+     [obj
+          :core_lower? = fn (_) heap_string()
+     ]
+)
+
+let error_char__lower = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_lower? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__lower?(arg) new (@main.error_char__lower):value <= arg
+
+fn to_error_custom_char__lower?(arg) custom__create(
+     arg
+     [obj
+          :core_lower? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__lower?() {
+     test(not '\000001'.lower?())
+     test(not '\000009'.lower?())
+     test(not '\000020'.lower?())
+     test(not '0'.lower?())
+     test(not '9'.lower?())
+     test('a'.lower?())
+     test('z'.lower?())
+     test(not 'A'.lower?())
+     test(not 'Z'.lower?())
+     test(not '\000081'.lower?())
+     test('\000101'.lower?())
+
+     let string = rnd_string()
+     test(string.filter(fn (char) char >= 'a' && char <= 'z' || char >='\0000a1' && char <= '\0000c1' || char >='\0000e2' && char <= '\000101') === string.filter(lower?(_)))
+
+     test(to_char__lower?('a').lower?())
+     test(not to_char__lower?('\000009').lower?())
+     test(not to_char__lower?('A').lower?())
+
+     test(to_custom_char__lower?('a').lower?())
+     test(not to_custom_char__lower?('\000009').lower?())
+     test(not to_custom_char__lower?('A').lower?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.lower?().get_error_id() === :1)
+     test(heap_table().lower?().get_error_id() === :invalid_type)
+
+     test(to_broken_char__lower?('a').lower?().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__lower?('a').lower?().get_error_id() === :invalid_type)
+     test(to_error_char__lower?('a').lower?().get_error_id() === :3)
+     test(to_error_custom_char__lower?('a').lower?().get_error_id() === :4)
+}

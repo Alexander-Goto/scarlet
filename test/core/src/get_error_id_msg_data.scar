@@ -1,0 +1,12 @@
+`noinline`
+fn test__get_error_id_msg_data() {
+     test(expected_error(:1, "0123456789abcdef", 123).get_error_id() === :1)
+     test(expected_error(:1, "0123456789abcdef", 123).get_error_msg() === "0123456789abcdef")
+     test(expected_error(:1, "0123456789abcdef", 123).get_error_data() === 123)
+     test(expected_error(:2, heap_string(), heap_byte_array()).get_error_id() === :2)
+     test(expected_error(:2, heap_string(), heap_byte_array()).get_error_msg() === heap_string())
+     test(expected_error(:2, heap_string(), heap_byte_array()).get_error_data() === heap_byte_array())
+     test(heap_string().get_error_id().get_error_id() === :invalid_type)
+     test(heap_string().get_error_msg().get_error_id() === :invalid_type)
+     test(heap_string().get_error_data().get_error_id() === :invalid_type)
+}

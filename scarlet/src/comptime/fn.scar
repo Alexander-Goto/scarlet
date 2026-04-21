@@ -1,0 +1,13 @@
+fn comptime_fn(name, args, borrowed_items, is_short, code)
+     new (@main.t_operand) {
+          :code         <= code
+          :comptime_val <= new (@main.t_comptime_val) {
+               :type  <= "fn"
+               :value <= [obj
+                    :ir_name        = name
+                    :args           = args
+                    :borrowed_items = borrowed_items
+               ]
+          }
+          :possible_types <= if is_short; [set "short_fn"] else [set "fn"]
+     }

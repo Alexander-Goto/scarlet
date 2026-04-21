@@ -1,0 +1,12 @@
+fn ir__test(tested_operand, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     tested_operand.maybe_has_type!("bool")
+     let [box file_name__ir_const, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ code:file ++ "\";\n", final_data, dependencies)
+
+     let ir = ir ++ "Otest(thrd_data," ++
+          tested_operand:ir ++ "," ++
+          file_name__ir_const ++ "," ++
+          to_ir_num(code:line) ++ "," ++
+          to_ir_num(code:row) ++ ");\n"
+
+     [box comptime_null(code), exp_data, if is_last; ir__raw_return(ir, "null") else ir, final_data, dependencies, src_gconsts]
+}

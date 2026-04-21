@@ -1,0 +1,22 @@
+fn ir__core_fn_is_short_type(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     if arg.has_type?([set "string", "byte_array"]) {
+          let ir = dec_ref_cnt(arg, ir)
+          [box comptime_bool(false, code), exp_data, if is_last; ir__raw_return(ir, "bool__false") else ir, final_data, dependencies, src_gconsts]
+     } else if arg.has_type?([set "short_string", "short_byte_array"])
+          [box comptime_bool(true, code), exp_data, if is_last; ir__raw_return(ir, "bool__true") else ir, final_data, dependencies, src_gconsts]
+     else {
+          let valid_types = [set "short_string", "string", "short_byte_array", "byte_array"]
+          arg.maybe_has_type!(valid_types)
+
+          ir__fn_call(
+               "McoreFNshort_typeB", [array arg], code
+               if arg.has_type?(valid_types); [set "bool"] else [set "bool", "error"]
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     }
+}

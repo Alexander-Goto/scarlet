@@ -1,0 +1,38 @@
+fn gconst_attributes!(attributes)
+     attributes.foldl(null, fn (_, attribute)
+          if not gconst_attribute?(attribute)
+               error__invalid_attribute(attribute, "global constant")
+          else null
+     )
+
+fn fn_attributes!(attributes) {
+     attributes.foldl(null, fn (_, attribute)
+          if not fn_attribute?(attribute)
+               error__invalid_attribute(attribute, "function")
+          else null
+     )
+
+     if "cold".key_of?(attributes) && "hot".key_of?(attributes)
+          error__incompatible_attributes(get_attribute_code(attributes["cold"]), "hot")
+     else null
+}
+
+fn gconst_attribute?(attribute) attribute:scar_type == "t_export_attr"
+fn fn_attribute?(attribute) attribute:scar_type.in?([set "t_cold_attr", "t_export_attr", "t_external_attr", "t_hot_attr", "t_noinline_attr"])
+fn get_attribute_code(attribute) attribute:code
+
+fn get_attribute_id(attribute)
+     switch attribute:scar_type
+     case "t_cold_attr":     "cold"
+     case "t_export_attr":   "export"
+     case "t_external_attr": "external"
+     case "t_hot_attr":      "hot"
+     case "t_noinline_attr": "noinline"
+     default:                unreachable()
+
+fn attribute_to_final(attribute)
+     switch attribute:scar_type
+     case "t_cold_attr", "t_export_attr", "t_external_attr", "t_hot_attr", "t_noinline_attr":
+          :no_final_data
+     default:
+          unreachable()

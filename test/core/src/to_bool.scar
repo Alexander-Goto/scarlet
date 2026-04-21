@@ -1,0 +1,133 @@
+let const__to_bool = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_bool = fn (const) const:value.to_bool()
+     ]
+]
+
+fn to_const__to_bool(arg) new (@main.const__to_bool):value <= arg
+
+fn to_custom_const__to_bool(arg) custom__create(
+     arg
+     [obj
+          :core_to_bool = fn (const) custom__get_data(const).to_bool()
+     ]
+)
+
+let broken_const__to_bool = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_bool = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_const__to_bool(arg) new (@main.broken_const__to_bool):value <= arg
+
+fn to_broken_custom_const__to_bool(arg) custom__create(
+     arg
+     [obj
+          :core_to_bool = fn (_) heap_string()
+     ]
+)
+
+let error_const__to_bool = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_bool = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__to_bool(arg) new (@main.error_const__to_bool):value <= arg
+
+fn to_error_custom_const__to_bool(arg) custom__create(
+     arg
+     [obj
+          :core_to_bool = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__to_bool() {
+     test(not "false".to_bool())
+     test(not "no".to_bool())
+     test(not "off".to_bool())
+     test(not "False".to_bool())
+     test(not "No".to_bool())
+     test(not "Off".to_bool())
+     test(not "falsE".to_bool())
+     test(not "nO".to_bool())
+     test(not "ofF".to_bool())
+     test(not "FALSE".to_bool())
+     test(not "NO".to_bool())
+     test(not "OFF".to_bool())
+     test("true".to_bool())
+     test("yes".to_bool())
+     test("on".to_bool())
+     test("True".to_bool())
+     test("Yes".to_bool())
+     test("On".to_bool())
+     test("truE".to_bool())
+     test("yeS".to_bool())
+     test("oN".to_bool())
+     test("TRUE".to_bool())
+     test("YES".to_bool())
+     test("ON".to_bool())
+
+     let string = rnd_string()
+     switch string.ascii_to_lower()
+     case "false", "no", "off": test(not string.to_bool())
+     case "true", "yes", "on":  test(string.to_bool())
+     default:                   test(string.to_bool().null?())
+
+     test(not false.to_bool())
+     test(true.to_bool())
+
+     test(not 0b00.to_bool())
+     test(0b01.to_bool())
+
+     let byte = rnd_byte()
+     switch byte
+     case 0b00: test(not byte.to_bool())
+     case 0b01: test(byte.to_bool())
+     default:   test(byte.to_bool().null?())
+
+     test(not :false.to_bool())
+     test(not :no.to_bool())
+     test(not :off.to_bool())
+     test(:true.to_bool())
+     test(:yes.to_bool())
+     test(:on.to_bool())
+
+     let token = rnd_token()
+     switch token
+     case :false, :no, :off: test(not token.to_bool())
+     case :true, :yes, :on:  test(token.to_bool())
+     default:                test(token.to_bool().null?())
+
+     test(not 0.to_bool())
+     test(1.to_bool())
+
+     let int = rnd()
+     switch int
+     case 0:  test(not int.to_bool())
+     case 1:  test(int.to_bool())
+     default: test(int.to_bool().null?())
+
+     test(not :false.to_const__to_bool().to_bool())
+     test(:true.to_const__to_bool().to_bool())
+
+     test(not :false.to_custom_const__to_bool().to_bool())
+     test(:true.to_custom_const__to_bool().to_bool())
+
+     test(expected_error(:1, heap_string(), heap_string()).to_bool().get_error_id() === :1)
+
+     test(heap_table().to_bool().get_error_id() === :invalid_type)
+
+     test(to_broken_const__to_bool("").to_bool().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__to_bool("").to_bool().get_error_id() === :invalid_type)
+     test(to_error_const__to_bool("").to_bool().get_error_id() === :3)
+     test(to_error_custom_const__to_bool("").to_bool().get_error_id() === :4)
+}

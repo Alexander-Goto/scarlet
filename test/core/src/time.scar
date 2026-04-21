@@ -1,0 +1,2 @@
+`noinline`
+fn test__time() test(time().type() === "core.time")

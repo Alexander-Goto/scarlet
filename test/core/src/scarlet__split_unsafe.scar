@@ -1,0 +1,9 @@
+`noinline`
+fn test__scarlet__split!!!() {
+     test(scarlet__split!!!("0123456789abcde") === [box 0x3736'3534'3332'3130, 0x65'6463'6261'3938])
+     let string = rnd_string()
+     let [box low, high] = scarlet__split!!!(string)
+     test(low.type() === "core.int")
+     test(high.type() === "core.int")
+     test(scarlet__join!!!(low, high) === string)
+}

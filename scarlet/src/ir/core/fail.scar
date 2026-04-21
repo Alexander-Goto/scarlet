@@ -1,0 +1,10 @@
+fn ir__core_fn_fail(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box msg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ msg:code:text ++ ")")
+
+     msg.maybe_has_type!(@main.string_types__error)
+
+     ir__fn_call("McoreFNfail", [array msg], code, null, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

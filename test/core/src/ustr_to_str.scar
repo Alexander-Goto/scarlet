@@ -1,0 +1,67 @@
+`noinline`
+fn test__ustr_to_str() {
+     test(u"".ustr_to_str() === "")
+     test(u"0".ustr_to_str() === "0")
+     test(u"01".ustr_to_str() === "01")
+     test(u"012".ustr_to_str() === "012")
+     test(u"0123".ustr_to_str() === "0123")
+     test(u"01234".ustr_to_str() === "01234")
+     test(u"012345".ustr_to_str() === "012345")
+     test(u"0123456".ustr_to_str() === "0123456")
+     test(u"01234567".ustr_to_str() === "01234567")
+     test(u"012345678".ustr_to_str() === "012345678")
+     test(u"0123456789".ustr_to_str() === "0123456789")
+     test(u"0123456789a".ustr_to_str() === "0123456789a")
+     test(u"0123456789ab".ustr_to_str() === "0123456789ab")
+     test(u"0123456789abc".ustr_to_str() === "0123456789abc")
+     test(u"0123456789abcd".ustr_to_str() === "0123456789abcd")
+     test(u"0123456789abcde".ustr_to_str() === "0123456789abcde")
+     test((u"00123456789abcde" ++ u"0")[1, 16].ustr_to_str() === "0123456789abcde")
+
+     test([byte_array
+          0bd0, 0b9f, 0bd1, 0b80, 0bd0
+          0bb8, 0bd0, 0bb2, 0bd0, 0bb5
+          0bd1, 0b82, 0b21, 0b21, 0b21
+     ].ustr_to_str() === "\000090\0000b2\0000aa\0000a3\0000a6\0000b4\000021\000021\000021")
+
+     test([byte_array
+          0bd0, 0b9f, 0bd1, 0b80, 0bd0
+          0bb8, 0bd0, 0bb2, 0bd0, 0bb5
+          0bd1, 0b82, 0b20, 0bd0, 0bbc
+          0bd0, 0bb8, 0bd1, 0b80, 0b21
+          0b21, 0b21
+     ].ustr_to_str() === "\000090\0000b2\0000aa\0000a3\0000a6\0000b4\000020\0000ae\0000aa\0000b2\000021\000021\000021")
+
+     let smile = [byte_array 0bf0, 0b9f, 0b98, 0b80]
+     test(smile.ustr_to_str().null?())
+     test((u"abcd" ++ smile ++ u"000").ustr_to_str().null?())
+     test((u"0123456" ++ smile ++ u"a").ustr_to_str().null?())
+     test((u"0123456" ++ smile ++ u"ab").ustr_to_str().null?())
+     test((u"0123456" ++ smile ++ u"abcdef").ustr_to_str().null?())
+
+     test("Hello world!".str_to_ustr().ustr_to_str() == "Hello world!")
+     test("\000090\0000b2\0000aa\0000a3\0000a6\0000b4\000020\0000ae\0000aa\0000b2\000021\000021\000021".str_to_ustr().ustr_to_str() == "\000090\0000b2\0000aa\0000a3\0000a6\0000b4\000020\0000ae\0000aa\0000b2\000021\000021\000021")
+
+     test(expected_error(:1, heap_string(), heap_string()).ustr_to_str().get_error_id() === :1)
+     test(heap_string().ustr_to_str().get_error_id() === :invalid_type)
+
+     test([byte_array 0b00].scarlet__erase_info().ustr_to_str().get_error_id() === :text_encoding)
+     test(u"0".append(0b00).scarlet__erase_info().ustr_to_str().get_error_id() === :text_encoding)
+     test(([byte_array 0b00].scarlet__erase_info() ++ u"0").ustr_to_str().get_error_id() === :text_encoding)
+     test(([byte_array 0b00].scarlet__erase_info() ++ u"0").append(0b00).ustr_to_str().get_error_id() === :text_encoding)
+     test(([byte_array 0b00].scarlet__erase_info() ++ (u"00123456789abcde" ++ u"0")[1, 16]).append(0b00).ustr_to_str().get_error_id() === :text_encoding)
+     test(u"0123456789abcd".scarlet__erase_info().append(0b00).ustr_to_str().get_error_id() === :text_encoding)
+     test((u"0123456789".append(0b00).scarlet__erase_info() ++ u"abcd").ustr_to_str().get_error_id() === :text_encoding)
+     test((u"0123456789".append(0b00).scarlet__erase_info() ++ u"abcd").append(0b00).ustr_to_str().get_error_id() === :text_encoding)
+     test(u"0123456789abcde".scarlet__erase_info().append(0b00).ustr_to_str().get_error_id() === :text_encoding)
+     test((u"0123456789".scarlet__erase_info().append(0b00) ++ u"abcde").ustr_to_str().get_error_id() === :text_encoding)
+     test((u"0123456789".scarlet__erase_info().append(0b00) ++ u"abcde").append(0b00).ustr_to_str().get_error_id() === :text_encoding)
+     test(u"0123456789abcdef".scarlet__erase_info().append(0b00).ustr_to_str().get_error_id() === :text_encoding)
+     test((u"01234567890123456789".scarlet__erase_info().append(0b00) ++ u"abcde").ustr_to_str().get_error_id() === :text_encoding)
+     test((u"01234567890123456789".scarlet__erase_info().append(0b00) ++ u"abcde").append(0b00).ustr_to_str().get_error_id() === :text_encoding)
+
+     test([byte_array 0b80].scarlet__erase_info().ustr_to_str().get_error_id() === :text_encoding)
+     test([byte_array 0bff].scarlet__erase_info().ustr_to_str().get_error_id() === :text_encoding)
+     test([byte_array 0b20, 0b80].scarlet__erase_info().ustr_to_str().get_error_id() === :text_encoding)
+     test([byte_array 0b20, 0bff].scarlet__erase_info().ustr_to_str().get_error_id() === :text_encoding)
+}

@@ -1,0 +1,41 @@
+fn ir__core_fn_ascii_to_lower_ascii_to_upper(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code          = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+     let short_fn_name = fn_ir_name.drop(7)
+
+     if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@main.string_types__char) {
+          if arg:comptime_val:type =/= "obj"
+               arg.maybe_has_type!(@main.string_types__char_mtd)
+          else {
+               let [box token, mtd_type] = if short_fn_name == "ascii_to_lower"
+                    [box :core_ascii_to_lower, ".core_ascii_to_lower"]
+               else [box :core_ascii_to_upper, ".core_ascii_to_upper"]
+
+               if arg:comptime_val:value[:_][token].null?()
+                    error__invalid_type(arg:code, mtd_type, "obj")
+               else null
+          }
+
+          let result_possible_types = if arg:possible_types.null?()
+               @main.string_types__char_mtd_error
+          else if arg.has_type?(@main.string_types__char)
+               arg:possible_types
+          else arg:possible_types.filter(_.in?(@main.string_types__char_mtd)).append("error")
+
+          ir__fn_call(fn_ir_name, [array arg], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let operand = new (arg) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:value => if short_fn_name == "ascii_to_lower"; ascii_to_lower(_) else ascii_to_upper(_)
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

@@ -1,0 +1,19 @@
+fn ir__grouped_exps(last_operand, code, exp_data, exps_ir, ir, final_data, dependencies, is_last) {
+     if not last_operand:comptime_val.null?() || is_last
+          [box new (last_operand):code <= code, exp_data, ir ++ exps_ir, final_data, dependencies]
+     else {
+          let [box result_reg, exp_data] = exp_data.new_reg()
+
+          let ir = ir ++ "t_any " ++ result_reg ++ ";\n" ++ exps_ir ++ result_reg ++ "=" ++ last_operand:ir ++ ";\n"
+          let ir = ir__assume_type(result_reg, last_operand:possible_types, ir)
+
+          [box
+               new (last_operand) {
+                    :code <= code
+                    :ir   <= result_reg
+               }
+
+               exp_data, ir, final_data, dependencies
+          ]
+     }
+}

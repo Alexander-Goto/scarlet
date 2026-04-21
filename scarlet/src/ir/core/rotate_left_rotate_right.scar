@@ -1,0 +1,88 @@
+fn ir__core_fn_rotate_left_rotate_right(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain) {
+     let [box exp, exp_data, ir, final_data, dependencies, src_gconsts] = if is_first_in_chain
+          num_chain_items_to_operands(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+
+     if is_first_in_chain && exp:scar_type == "t_operand"
+          [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+     else {
+          let [box bits, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, false, false, false, false)
+          let [box shifts, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, args_ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+          let code = new (bits:code):text => _ ++ (" " ++ exp:name:text ++ " " ++ shifts:code:text)
+
+          bits.maybe_has_type!(@main.bit_types__mtd)
+          shifts.maybe_has_type!([set "byte", "int"])
+
+          let shifts_comptime_val = shifts:comptime_val
+          if not shifts_comptime_val.null?() && bits.has_type?(@main.bit_types) {
+               let int_shifts = shifts_comptime_val:value.to_int()
+               if int_shifts > 64 || bits.has_type?("byte") && int_shifts > 8
+                    error__out_of_bounds(exp:operator)
+               else null
+          } else null
+
+          if bits:comptime_val.null?() || shifts:comptime_val.null?() || not bits:comptime_val:type.in?(@main.bit_types) {
+               if bits:comptime_val:type === "obj" && bits:comptime_val:value[:_][if fn_ir_name[14] == 'l'; :core_rotate_left else :core_rotate_right].null?()
+                    error__invalid_type(bits:code, if fn_ir_name[14] == 'l'; ".core_rotate_left" else ".core_rotate_right", "obj")
+               else null
+
+               let [box result_possible_types, maybe_chain, maybe_error] = if bits:possible_types.null?()
+                    [box @main.bit_types__mtd_error, true, true]
+               else if (bits.has_type?("int") || bits.has_type?("byte")) && not shifts:comptime_val.null?()
+                    [box bits:possible_types, true, false]
+               else {
+                    let new_bits_possible_types = bits:possible_types.filter(_.in?(@main.bit_types__mtd)).append("error")
+                    [box new_bits_possible_types, new_bits_possible_types.any(true, _.in?(@main.bit_types)), true]
+               }
+
+               let result_possible_types = if "byte".in?(result_possible_types) && not shifts_comptime_val.null?() && shifts_comptime_val:value.to_int() > 8
+                    result_possible_types.remove("byte")
+               else result_possible_types
+
+               let need_chain = (exp:args.first():scar_type /= "t_operand" || exp:args[1]:scar_type /= "t_operand") && is_first_in_chain && maybe_chain
+
+               let [box not_chain_operand, exp_data, not_chain_ir, final_data, dependencies, src_gconsts] = if maybe_error || not need_chain
+                    ir__fn_call(fn_ir_name, [array bits, shifts], code, result_possible_types, exp_data, args_ir, final_data, dependencies, src_gconsts, is_last)
+               else [box null, exp_data, args_ir, final_data, dependencies, src_gconsts]
+
+               if not need_chain
+                    [box not_chain_operand, exp_data, ir ++ not_chain_ir, final_data, dependencies, src_gconsts]
+               else {
+                    let maybe_byte    = "byte".in?(result_possible_types)
+                    let maybe_int     = "int".in?(result_possible_types)
+                    let chain_type_ir = if maybe_int && maybe_byte
+                         null
+                    else if maybe_int
+                         "tid__int"
+                    else "tid__byte"
+
+                    let [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir] =
+                         num_chain_creation_prepare(exp, maybe_byte, maybe_int, false, "", chain_type_ir)
+
+                    num_chain_create(
+                         chain_predicate_ir, chain_type_ir
+                         byte_chain_ir, int_chain_ir, ""
+                         [box maybe_byte, maybe_int, false]
+                         result_possible_types, code, not_chain_ir, not_chain_operand:ir
+                         exp_data, ir, final_data, dependencies, src_gconsts, is_last
+                    )
+               }
+          } else {
+               let operand = new (bits) {
+                    :ir                 <= null
+                    :code               <= code
+                    :comptime_val:value => if fn_ir_name[14] == 'l'; rotate_left(_, shifts:comptime_val:value) else rotate_right(_, shifts:comptime_val:value)
+               }
+               let ir = ir ++ args_ir
+
+               if is_last {
+                    let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+                    [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+               } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+          }
+     }
+}

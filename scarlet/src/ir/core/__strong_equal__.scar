@@ -1,0 +1,85 @@
+fn ir__core_fn___strong_equal__(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box left, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:left.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box right, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:right.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (left:code):text => _ ++ (" == " ++ right:code:text)
+
+     if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.comptime_eq_types) {
+          if left:comptime_val:type === "obj" && left:comptime_val:value[:_][:core___strong_equal__].null?()
+               error__invalid_type(left:code, ".core___strong_equal__", "obj")
+          else null
+
+          let [box left, final_data, dependencies]  = left.has_ir!(final_data, dependencies)
+          let [box right, final_data, dependencies] = right.has_ir!(final_data, dependencies)
+
+          let left_ir  = left:ir
+          let right_ir = right:ir
+
+          let left_possible_types  = left:possible_types
+          let right_possible_types = right:possible_types
+          let right_expected_types = if left_possible_types.null?()
+               @main.eq_types
+          else {
+               let new_left_possible_types = left_possible_types.filter(_.in?(@main.eq_types)).prepare_types_for_cmp()
+               if new_left_possible_types.empty?()
+                    error__invalid_type(left:code, @main.eq_types, left_possible_types)
+               else new_left_possible_types
+          }
+          right.maybe_has_type!(right_expected_types)
+
+          let maybe_error = left_possible_types.null?() || right_possible_types.null?() ||
+               not (
+                    left_possible_types.len() == 1 && left_possible_types == right_possible_types ||
+                    left_possible_types.all(true, _.in?(@main.string_types)) && right_possible_types.all(true, _.in?(@main.string_types)) ||
+                    left_possible_types.all(true, _.in?(@main.byte_array_types)) && right_possible_types.all(true, _.in?(@main.byte_array_types))
+               )
+
+          let has_known_types = left_possible_types === right_possible_types && left_possible_types.len() == 1
+          if not (has_known_types || maybe_error) && left_possible_types.all(true, _.in?(@main.simple_eq_types)) && right_possible_types.all(true, _.in?(@main.simple_eq_types)) {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+
+               let ir = ir ++ "t_any const " ++ result_reg ++ "={.bytes={" ++ left_ir ++ ".raw_bits==" ++ right_ir ++ ".raw_bits,[15]=tid__bool}};\n"
+
+               let operand = new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= [set "bool"]
+               }
+
+               [box operand, exp_data, if is_last; ir__raw_return(ir, result_reg) else ir, final_data, dependencies, src_gconsts]
+          } else if not maybe_error && has_known_types && left_possible_types /= right_possible_types {
+               let ir = dec_ref_cnt(right, dec_ref_cnt(left, ir))
+               [box comptime_bool(false, code), exp_data, if is_last; ir__raw_return(ir, "bool__false") else ir, final_data, dependencies, src_gconsts]
+          } else if not maybe_error && has_known_types && left_possible_types.take_one().in?(@main.simple_eq_types__float) {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+
+               let ir = ir ++ "t_any const " ++ result_reg ++ "={.structure={.value=" ++
+                    switch left:possible_types.take_one()
+                    case "short_string", "token", "short_byte_array":
+                         left_ir ++ ".raw_bits==" ++ right_ir ++ ".raw_bits,.type=tid__bool}};\n"
+                    case "bool", "byte":
+                         left_ir ++ ".bytes[0]==" ++ right_ir ++ ".bytes[0],.type=tid__bool}};\n"
+                    case "char", "int", "time":
+                         left_ir ++ ".qwords[0]==" ++ right_ir ++ ".qwords[0],.type=tid__bool}};\n"
+                    case "float":
+                         left_ir ++ ".floats[0]==" ++ right_ir ++ ".floats[0],.type=tid__bool}};\n"
+                    default:
+                         unreachable()
+
+               let operand = new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= [set "bool"]
+               }
+
+               [box operand, exp_data, if is_last; ir__raw_return(ir, result_reg) else ir, final_data, dependencies, src_gconsts]
+          } else ir__fn_call("McoreFN__strong_equal__", [array left, right], code, [set "bool", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          right.maybe_has_type!(left:possible_types.prepare_types_for_cmp())
+
+          let operand = comptime_bool(left:comptime_val:value == right:comptime_val:value, code)
+          [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+     }
+}

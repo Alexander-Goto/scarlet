@@ -1,0 +1,235 @@
+let container__foldr_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_foldr_kv = fn (container, state, func) container:value.foldr_kv(state, func)
+     ]
+]
+
+fn to_container__foldr_kv(arg) new (@main.container__foldr_kv):value <= arg
+
+fn to_custom_container__foldr_kv(arg) custom__create(
+     arg
+     [obj
+          :core_foldr_kv = fn (container, state, func) custom__get_data(container).foldr_kv(state, func)
+     ]
+)
+
+let error_container__foldr_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_foldr_kv = fn (_, _, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__foldr_kv(arg) new (@main.error_container__foldr_kv):value <= arg
+
+fn to_error_custom_container__foldr_kv(arg) custom__create(
+     arg
+     [obj
+          :core_foldr_kv = fn (_, _, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__foldr_kv() {
+     let items = ",".to_array()
+     let state = heap_string()
+     test("".foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state)
+     test("1".foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state ++ "1,")
+     test("0123456789abcde".foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state ++ "e,dc,ba,98,76,54,32,10,")
+
+     test("\000091".foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state ++ "\000091,")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state ++ "\0000b5,\0000a7\0000a4,!!,!\0000ab,\0000b3\000091,")
+
+     let string = ("0011012375611135f" ++ "g0")[1, 18]
+     test(string.foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state ++ "g,f5,31,11,65,73,21,01,10,")
+     string.ignore()
+
+     test(("0011012375611135f" ++ "g0")[1, 18].foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state ++ "g,f5,31,11,65,73,21,01,10,")
+     test(("011012375611135f" ++ "g").foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state ++ "g,f5,31,11,65,73,21,01,10,")
+
+     let string = ("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11]
+     test(string.foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state ++ "\0000b7\0000ae,\0000af ,\0000b5\0000a7,\0000a4\0000ab,\0000b3\000091,")
+     string.ignore()
+
+     test(("0\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7" ++ "0")[1, 11].foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state ++ "\0000b7\0000ae,\0000af ,\0000b5\0000a7,\0000a4\0000ab,\0000b3\000091,")
+     test(("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae" ++ "\0000b7").foldr_kv(state, fn (state, idx, char) if idx.even?(); state.append(char).append(items[0]) else state.append(char)) === state ++ "\0000b7\0000ae,\0000af ,\0000b5\0000a7,\0000a4\0000ab,\0000b3\000091,")
+
+     test("0123456789abcde".foldr_kv(null, fn (_, _, char) if char < 'a'; [breaker char] else null) === '9')
+     test("0123456789abcdef".foldr_kv(null, fn (_, _, char) if char < 'a'; [breaker char] else null) === '9')
+
+     let string_1        = rnd_string()
+     let string_2        = if rnd_bool(); string_1 else null
+     let expected_string = loop("", fn (expected_string)
+          if len(expected_string) === len(string_1)
+               [breaker expected_string]
+          else expected_string.append(if (len(string_1) - len(expected_string) - 1).even?(); string_1[len(string_1) - len(expected_string) - 1].ascii_to_lower() else string_1[len(string_1) - len(expected_string) - 1].ascii_to_upper())
+     )
+     test(string_1.foldr_kv("", fn (state, idx, char) state.append(if idx.even?(); char.ascii_to_lower() else char.ascii_to_upper())) === expected_string)
+     string_2.ignore()
+
+     let items = u",".to_array()
+     let state = heap_byte_array()
+     test(u"".foldr_kv(state, fn (state, idx, byte) if idx.even?(); state.append(byte).append(items[0]) else state.append(byte)) === state)
+     test(u"1".foldr_kv(state, fn (state, idx, byte) if idx.even?(); state.append(byte).append(items[0]) else state.append(byte)) === state ++ u"1,")
+     test(u"0123456789abcd".foldr_kv(state, fn (state, idx, byte) if idx.even?(); state.append(byte).append(items[0]) else state.append(byte)) === state ++ u"dc,ba,98,76,54,32,10,")
+
+     let string = (u"0011012375611135f" ++ u"g0")[1, 18]
+     test(string.foldr_kv(state, fn (state, idx, byte) if idx.even?(); state.append(byte).append(items[0]) else state.append(byte)) === state ++ u"g,f5,31,11,65,73,21,01,10,")
+     string.ignore()
+
+     test((u"0011012375611135f" ++ u"g0")[1, 18].foldr_kv(state, fn (state, idx, byte) if idx.even?(); state.append(byte).append(items[0]) else state.append(byte)) === state ++ u"g,f5,31,11,65,73,21,01,10,")
+     test((u"011012375611135f" ++ u"g").foldr_kv(state, fn (state, idx, byte) if idx.even?(); state.append(byte).append(items[0]) else state.append(byte)) === state ++ u"g,f5,31,11,65,73,21,01,10,")
+
+     test(u"0123456789abcd".foldr_kv(null, fn (_, _, byte) if byte < u"a"[0]; [breaker byte] else null) === u"9"[0])
+     test(u"0123456789abcde".foldr_kv(null, fn (_, _, byte) if byte < u"a"[0]; [breaker byte] else null) === u"9"[0])
+
+     let array_1        = rnd_byte_array()
+     let array_2        = if rnd_bool(); array_1 else null
+     let expected_array = array_1.map_kv(fn (idx, byte) if idx.even?(); byte + 0b01 else byte - 0b01).reverse()
+     test(array_1.foldr_kv(u"", fn (state, idx, byte) state.append(if idx.even?(); byte + 0b01 else byte - 0b01)) === expected_array)
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test([array].foldr_kv([array], fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array])
+     test([array].init(10).foldr_kv([array].init(10), fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array])
+     let array = [array].init(10)
+     test(array.foldr_kv([array].init(10), fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array])
+     test(array.foldr_kv(array, fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array])
+     test(array.foldr_kv(array, fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array])
+
+     let array = [array string_0, string_1, string_0][1, 2]
+     test(array.foldr_kv([array].init(10), fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array string_1, string_0])
+     test(array.foldr_kv(array, fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array string_1, string_1, string_0])
+     test(array.foldr_kv(array, fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array string_1, string_1, string_0])
+     test([array string_0, string_1, string_0][1, 2].foldr_kv([array].init(10), fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array string_1, string_0])
+     test([array string_1].foldr_kv([array].init(10), fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array string_1, string_0])
+
+     let array = [array string_0, string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_0][1, 11]
+     test(array.foldr_kv([array], fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array string_5, string_5, string_0, string_4, string_3, string_0, string_3, string_3, string_0, string_2, string_2, string_0, string_1, string_0, string_0])
+     test(array.foldr_kv(array, fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_5, string_5, string_0, string_4, string_3, string_0, string_3, string_3, string_0, string_2, string_2, string_0, string_1, string_0, string_0])
+     test(array.foldr_kv(array, fn (state, idx, item) if idx.even?(); state.append(item).append(string_0) else state.append(item)) === [array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_5, string_5, string_5, string_5, string_0, string_4, string_3, string_0, string_3, string_3, string_0, string_2, string_2, string_0, string_1, string_0, string_0])
+
+     test([array 0, 1, 2, 3, 4].foldr_kv(null, fn (_, _, item) if item =/= 2; [breaker item] else null) === 4)
+
+     let array_1 = rnd_string_array()
+     let array_2 = if (rnd() & 1) === 0; array_1 else null
+     test(array_1.foldr_kv([array], fn (state, idx, item) state.append(if idx.even?(); item.to_lower() else item.to_upper())) === array_1.map_kv(fn (idx, item) if idx.even?(); item.to_lower() else item.to_upper()).reverse())
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test([table].foldr_kv([table], fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table])
+     test([table].init(10).foldr_kv([table].init(10), fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table])
+
+     let table = [table].init(10)
+     test(table.foldr_kv([table].init(10), fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table])
+     test(table.foldr_kv(table, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table])
+     test(table.foldr_kv(table, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table])
+
+     let table = [table string_1 = string_2]
+     test(table.foldr_kv([table].init(10), fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table string_1 = string_2.to_upper() ++ string_0])
+     test(table.foldr_kv(table, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table string_1 = string_2.to_upper() ++ string_0])
+     test(table.foldr_kv(table, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table string_1 = string_2.to_upper() ++ string_0])
+     test([table string_1 = string_2].foldr_kv([table].init(10), fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table string_1 = string_2.to_upper() ++ string_0])
+
+     let table = [table string_0 = string_1, string_2 = string_3, string_4 = string_5]
+     test(table.foldr_kv([table], fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table string_0 = string_1.to_upper() ++ string_0, string_2 = string_3.to_upper() ++ string_0, string_4 = string_5.to_upper() ++ string_0])
+     test(table.foldr_kv(table, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table string_0 = string_1.to_upper() ++ string_0, string_2 = string_3.to_upper() ++ string_0, string_4 = string_5.to_upper() ++ string_0])
+     test(table.foldr_kv(table, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table string_0 = string_1.to_upper() ++ string_0, string_2 = string_3.to_upper() ++ string_0, string_4 = string_5.to_upper() ++ string_0])
+     test([table string_0 = string_1, string_2 = string_3, string_4 = string_5].foldr_kv([table], fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [table string_0 = string_1.to_upper() ++ string_0, string_2 = string_3.to_upper() ++ string_0, string_4 = string_5.to_upper() ++ string_0])
+
+     test([table 0 = 10, 1 = 11, 2 = 12].foldr_kv(null, fn (_, key, value) if key === 1; [breaker value] else null) === 11)
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_5 = string_0 ++ "5"
+     test([obj].foldr_kv([obj], fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj])
+     test([obj].init(10).foldr_kv([obj].init(10), fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj])
+     test([obj :_ = [obj :1 = string_0]].foldr_kv([obj], fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj])
+
+     let obj = [obj :_ = [obj :1 = string_0]].init(10)
+     test(obj.foldr_kv([obj].init(10), fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj])
+     test(obj.foldr_kv(obj, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj])
+     test(obj.foldr_kv(obj, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj])
+
+     let obj = [obj].init(10)
+     test(obj.foldr_kv([obj].init(10), fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj])
+     test(obj.foldr_kv(obj, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj])
+     test(obj.foldr_kv(obj, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj])
+
+     let obj = [obj :1 = string_2, :_ = [obj :1 = string_0]]
+     test(obj.foldr_kv([obj].init(10), fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj :1 = string_2.to_upper() ++ string_0])
+     test(obj.foldr_kv(obj, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj :1 = string_2.to_upper() ++ string_0])
+     test(obj.foldr_kv(obj, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj :1 = string_2.to_upper() ++ string_0])
+     test([obj :1 = string_2].foldr_kv([obj].init(10), fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj :1 = string_2.to_upper() ++ string_0])
+
+     let obj = [obj :0 = string_1, :2 = string_3, :4 = string_5, :_ = [obj :1 = string_0]]
+     test(obj.foldr_kv([obj], fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj :0 = string_1.to_upper() ++ string_0, :2 = string_3.to_upper() ++ string_0, :4 = string_5.to_upper() ++ string_0])
+     test(obj.foldr_kv(obj, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj :0 = string_1.to_upper() ++ string_0, :2 = string_3.to_upper() ++ string_0, :4 = string_5.to_upper() ++ string_0])
+     test(obj.foldr_kv(obj, fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj :0 = string_1.to_upper() ++ string_0, :2 = string_3.to_upper() ++ string_0, :4 = string_5.to_upper() ++ string_0])
+     test([obj :0 = string_1, :2 = string_3, :4 = string_5, :_ = [obj :1 = string_0]].foldr_kv([obj], fn (state, key, value) new (state)[key] <= value.to_upper() ++ string_0) === [obj :0 = string_1.to_upper() ++ string_0, :2 = string_3.to_upper() ++ string_0, :4 = string_5.to_upper() ++ string_0])
+
+     test([obj :0 = 10, :1 = 11, :2 = 12].foldr_kv(null, fn (_, key, value) if key === :1; [breaker value] else null) === 11)
+
+     test(to_container__foldr_kv([array 1, 2, 3]).foldr_kv([array], fn (state, idx, item) state.append(idx).append(item)) === [array 2, 3, 1, 2, 0, 1])
+     test(to_custom_container__foldr_kv([array 1, 2, 3]).foldr_kv([array], fn (state, idx, item) state.append(idx).append(item)) === [array 2, 3, 1, 2, 0, 1])
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let error_3 = expected_error(:3, heap_string(), heap_string())
+     test(error_1.foldr_kv(heap_string(), _ === heap_string()).get_error_id() === :1)
+     test(heap_string().foldr_kv(error_1, _ === heap_string()).get_error_id() === :1)
+     test(heap_string().foldr_kv(heap_string(), error_1).get_error_id() === :1)
+     test(error_1.foldr_kv(heap_string(), error_2).get_error_id() === :1)
+     test(error_2.foldr_kv(heap_string(), error_1).get_error_id() === :2)
+     test(error_1.foldr_kv(error_2, error_3).get_error_id() === :1)
+     test(error_3.foldr_kv(error_2, error_1).get_error_id() === :3)
+
+     test((_ === heap_string()).scarlet__erase_info().foldr_kv(heap_string(), _ === heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().foldr_kv(heap_string(), heap_string()).get_error_id() === :invalid_type)
+
+     test("".foldr_kv("", fn (_, _, _, _) string_1) === "")
+     test(u"".foldr_kv(u"", fn (_, _, _, _) string_1) === u"")
+     test([array].foldr_kv([array], fn (_, _, _, _) string_1) === [array])
+     test([table].foldr_kv([table], fn (_, _, _, _) string_1) === [table])
+     test([obj].foldr_kv([obj], fn (_, _, _, _) string_1) === [obj])
+
+     test("".foldr_kv("", fn (_, _) string_1) === "")
+     test(u"".foldr_kv(u"", fn (_, _) string_1) === u"")
+     test([array].foldr_kv([array], fn (_, _) string_1) === [array])
+     test([table].foldr_kv([table], fn (_, _) string_1) === [table])
+     test([obj].foldr_kv([obj], fn (_, _) string_1) === [obj])
+
+     test("1".foldr_kv(heap_string(), fn (_, _, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().foldr_kv(heap_string(), fn (_, _, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"1".foldr_kv(heap_string(), fn (_, _, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().foldr_kv(heap_string(), fn (_, _, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array heap_string()].foldr_kv(heap_string(), fn (_, _, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table heap_string() = heap_string()].foldr_kv(heap_string(), fn (_, _, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :1 = heap_string()].foldr_kv(heap_string(), fn (_, _, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test("1".foldr_kv(heap_string(), fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().foldr_kv(heap_string(), fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"1".foldr_kv(heap_string(), fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().foldr_kv(heap_string(), fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array heap_string()].foldr_kv(heap_string(), fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table heap_string() = heap_string()].foldr_kv(heap_string(), fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :1 = heap_string()].foldr_kv(heap_string(), fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test(to_error_container__foldr_kv([array].init(10)).foldr_kv(string_0, fn (_, _, _) string_1).get_error_id() == :3)
+     test(to_error_custom_container__foldr_kv([array].init(10)).foldr_kv(string_0, fn (_, _, _) string_1).get_error_id() == :4)
+}

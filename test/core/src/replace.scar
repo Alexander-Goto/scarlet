@@ -1,0 +1,430 @@
+let container__replace = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_replace   = fn (container, old_item, new_item) to_container__replace(container:value.replace(old_item, new_item))
+          :core___equal__ = fn (container_1, container_2) container_1:value === container_2:value
+     ]
+]
+
+fn to_container__replace(arg) new (@main.container__replace):value <= arg
+
+fn to_custom_container__replace(arg) custom__create(
+     arg
+     [obj
+          :core_replace   = fn (container, old_item, new_item) to_custom_container__replace(custom__get_data(container).replace(old_item, new_item))
+          :core___equal__ = fn (container_1, container_2) container_1.custom__get_data() === container_2.custom__get_data()
+     ]
+)
+
+let broken_container__replace = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_replace = fn (_, _, _) _ ++ heap_table()
+     ]
+]
+
+fn to_broken_container__replace(arg) new (@main.broken_container__replace):value <= arg
+
+fn to_broken_custom_container__replace(arg) custom__create(
+     arg
+     [obj
+          :core_replace = fn (_, _, _) _ ++ heap_table()
+     ]
+)
+
+let error_container__replace = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_replace = fn (_, _, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__replace(arg) new (@main.error_container__replace):value <= arg
+
+fn to_error_custom_container__replace(arg) custom__create(
+     arg
+     [obj
+          :core_replace = fn (_, _, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__replace() {
+     test("".replace('a', 'c') === "")
+     test("1".replace('2', '3') === "1")
+     test("2".replace('2', '3') === "3")
+     test("0123456789abcde".replace('g', '0') === "0123456789abcde")
+     test("0123456789abcde".replace('0', 'g') === "g123456789abcde")
+     test("0123456789abcde".replace('1', 'g') === "0g23456789abcde")
+     test("0123456789abcde".replace('2', 'g') === "01g3456789abcde")
+     test("0123456789abcde".replace('3', 'g') === "012g456789abcde")
+     test("0123456789abcde".replace('4', 'g') === "0123g56789abcde")
+     test("0123456789abcde".replace('5', 'g') === "01234g6789abcde")
+     test("0123456789abcde".replace('6', 'g') === "012345g789abcde")
+     test("0123456789abcde".replace('7', 'g') === "0123456g89abcde")
+     test("0123456789abcde".replace('8', 'g') === "01234567g9abcde")
+     test("0123456789abcde".replace('9', 'g') === "012345678gabcde")
+     test("0123456789abcde".replace('a', 'g') === "0123456789gbcde")
+     test("0123456789abcde".replace('b', 'g') === "0123456789agcde")
+     test("0123456789abcde".replace('c', 'g') === "0123456789abgde")
+     test("0123456789abcde".replace('d', 'g') === "0123456789abcge")
+     test("0123456789abcde".replace('e', 'g') === "0123456789abcdg")
+     test("000111220111220".replace('0', 'g') === "ggg11122g11122g")
+
+     test("0\00009000\000090\00009002".replace('0', '\000091') === "\000091\000090\000091\000091\000090\000090\0000912")
+     test("0\00009000\000090\00009002".replace('\000090', '1') === "01001102")
+     test("0\00009000\000090\00009002".replace('2', '\000089') === "0\00009000\000090\0000900\000089")
+     test("0\00009000\000090\0000900200".replace('0', '\000091') === "\000091\000090\000091\000091\000090\000090\0000912\000091\000091")
+
+     test("0123456789abcdef".replace('g', '0') === "0123456789abcdef")
+     test("0123456789abcdef".replace('0', 'g') === "g123456789abcdef")
+     test("0123456789abcdef".replace('1', 'g') === "0g23456789abcdef")
+     test("0123456789abcdef".replace('2', 'g') === "01g3456789abcdef")
+     test("0123456789abcdef".replace('3', 'g') === "012g456789abcdef")
+     test("0123456789abcdef".replace('4', 'g') === "0123g56789abcdef")
+     test("0123456789abcdef".replace('5', 'g') === "01234g6789abcdef")
+     test("0123456789abcdef".replace('6', 'g') === "012345g789abcdef")
+     test("0123456789abcdef".replace('7', 'g') === "0123456g89abcdef")
+     test("0123456789abcdef".replace('8', 'g') === "01234567g9abcdef")
+     test("0123456789abcdef".replace('9', 'g') === "012345678gabcdef")
+     test("0123456789abcdef".replace('a', 'g') === "0123456789gbcdef")
+     test("0123456789abcdef".replace('b', 'g') === "0123456789agcdef")
+     test("0123456789abcdef".replace('c', 'g') === "0123456789abgdef")
+     test("0123456789abcdef".replace('d', 'g') === "0123456789abcgef")
+     test("0123456789abcdef".replace('e', 'g') === "0123456789abcdgf")
+     test("0123456789abcdef".replace('f', 'g') === "0123456789abcdeg")
+     test("0001112201112200".replace('0', 'g') === "ggg11122g11122gg")
+
+     test("0\00009000\000090\00009000002\00009000\000090\000090".replace('0', '\000091') === "\000091\000090\000091\000091\000090\000090\000091\000091\000091\0000912\000090\000091\000091\000090\000090")
+     test("0\00009000\000090\00009000002\00009000\000090\000090".replace('\000090', '1') === "0100110000210011")
+     test("0\00009000\000090\00009000002\00009000\000090\000090".replace('2', '\000089') === "0\00009000\000090\0000900000\000089\00009000\000090\000090")
+
+     let string = ("00123456789abcdef" ++ "0")[1, 17]
+     test(string.replace('g', '0') === "0123456789abcdef")
+     test(string.replace('0', 'g') === "g123456789abcdef")
+     test(string.replace('1', 'g') === "0g23456789abcdef")
+     test(string.replace('2', 'g') === "01g3456789abcdef")
+     test(string.replace('3', 'g') === "012g456789abcdef")
+     test(string.replace('4', 'g') === "0123g56789abcdef")
+     test(string.replace('5', 'g') === "01234g6789abcdef")
+     test(string.replace('6', 'g') === "012345g789abcdef")
+     test(string.replace('7', 'g') === "0123456g89abcdef")
+     test(string.replace('8', 'g') === "01234567g9abcdef")
+     test(string.replace('9', 'g') === "012345678gabcdef")
+     test(string.replace('a', 'g') === "0123456789gbcdef")
+     test(string.replace('b', 'g') === "0123456789agcdef")
+     test(string.replace('c', 'g') === "0123456789abgdef")
+     test(string.replace('d', 'g') === "0123456789abcgef")
+     test(string.replace('e', 'g') === "0123456789abcdgf")
+     test(string.replace('f', 'g') === "0123456789abcdeg")
+     string.ignore()
+
+     let string = ("00\00009000\000090\00009000002\00009000\000090\000090" ++ "0")[1, 17]
+     test(string.replace('0', '\000091') === "\000091\000090\000091\000091\000090\000090\000091\000091\000091\0000912\000090\000091\000091\000090\000090")
+     test(string.replace('\000090', '1') === "0100110000210011")
+     test(string.replace('2', '\000089') === "0\00009000\000090\0000900000\000089\00009000\000090\000090")
+     string.ignore()
+
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('g', '0') === "0123456789abcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('0', 'g') === "g123456789abcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('1', 'g') === "0g23456789abcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('2', 'g') === "01g3456789abcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('3', 'g') === "012g456789abcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('4', 'g') === "0123g56789abcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('5', 'g') === "01234g6789abcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('6', 'g') === "012345g789abcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('7', 'g') === "0123456g89abcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('8', 'g') === "01234567g9abcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('9', 'g') === "012345678gabcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('a', 'g') === "0123456789gbcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('b', 'g') === "0123456789agcdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('c', 'g') === "0123456789abgdef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('d', 'g') === "0123456789abcgef")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('e', 'g') === "0123456789abcdgf")
+     test(("00123456789abcdef" ++ "0")[1, 17].replace('f', 'g') === "0123456789abcdeg")
+
+     test(("00\00009000\000090\00009000002\00009000\000090\000090" ++ "0")[1, 17].replace('0', '\000091') === "\000091\000090\000091\000091\000090\000090\000091\000091\000091\0000912\000090\000091\000091\000090\000090")
+     test(("00\00009000\000090\00009000002\00009000\000090\000090" ++ "0")[1, 17].replace('\000090', '1') === "0100110000210011")
+     test(("00\00009000\000090\00009000002\00009000\000090\000090" ++ "0")[1, 17].replace('2', '\000089') === "0\00009000\000090\0000900000\000089\00009000\000090\000090")
+
+     let string   = rnd_string()
+     let old_char = if rnd_bool(); string[(rnd() & 0xffff'ffff) % len(string)] else rnd_char()
+     let new_char = rnd_char()
+     test(string.replace(old_char, new_char) === string.map(fn (char) if char === old_char; new_char else char))
+
+     test(u"".replace(u"a"[0], u"c"[0]) === u"")
+     test(u"1".replace(u"2"[0], u"3"[0]) === u"1")
+     test(u"2".replace(u"2"[0], u"3"[0]) === u"3")
+     test(u"0123456789abcd".replace(u"g"[0], u"0"[0]) === u"0123456789abcd")
+     test(u"0123456789abcd".replace(u"0"[0], u"g"[0]) === u"g123456789abcd")
+     test(u"0123456789abcd".replace(u"1"[0], u"g"[0]) === u"0g23456789abcd")
+     test(u"0123456789abcd".replace(u"2"[0], u"g"[0]) === u"01g3456789abcd")
+     test(u"0123456789abcd".replace(u"3"[0], u"g"[0]) === u"012g456789abcd")
+     test(u"0123456789abcd".replace(u"4"[0], u"g"[0]) === u"0123g56789abcd")
+     test(u"0123456789abcd".replace(u"5"[0], u"g"[0]) === u"01234g6789abcd")
+     test(u"0123456789abcd".replace(u"6"[0], u"g"[0]) === u"012345g789abcd")
+     test(u"0123456789abcd".replace(u"7"[0], u"g"[0]) === u"0123456g89abcd")
+     test(u"0123456789abcd".replace(u"8"[0], u"g"[0]) === u"01234567g9abcd")
+     test(u"0123456789abcd".replace(u"9"[0], u"g"[0]) === u"012345678gabcd")
+     test(u"0123456789abcd".replace(u"a"[0], u"g"[0]) === u"0123456789gbcd")
+     test(u"0123456789abcd".replace(u"b"[0], u"g"[0]) === u"0123456789agcd")
+     test(u"0123456789abcd".replace(u"c"[0], u"g"[0]) === u"0123456789abgd")
+     test(u"0123456789abcd".replace(u"d"[0], u"g"[0]) === u"0123456789abcg")
+     test(u"00011122011120".replace(u"0"[0], u"g"[0]) === u"ggg11122g1112g")
+
+     test(u"0123456789abcdef".replace(u"g"[0], u"0"[0]) === u"0123456789abcdef")
+     test(u"0123456789abcdef".replace(u"0"[0], u"g"[0]) === u"g123456789abcdef")
+     test(u"0123456789abcdef".replace(u"1"[0], u"g"[0]) === u"0g23456789abcdef")
+     test(u"0123456789abcdef".replace(u"2"[0], u"g"[0]) === u"01g3456789abcdef")
+     test(u"0123456789abcdef".replace(u"3"[0], u"g"[0]) === u"012g456789abcdef")
+     test(u"0123456789abcdef".replace(u"4"[0], u"g"[0]) === u"0123g56789abcdef")
+     test(u"0123456789abcdef".replace(u"5"[0], u"g"[0]) === u"01234g6789abcdef")
+     test(u"0123456789abcdef".replace(u"6"[0], u"g"[0]) === u"012345g789abcdef")
+     test(u"0123456789abcdef".replace(u"7"[0], u"g"[0]) === u"0123456g89abcdef")
+     test(u"0123456789abcdef".replace(u"8"[0], u"g"[0]) === u"01234567g9abcdef")
+     test(u"0123456789abcdef".replace(u"9"[0], u"g"[0]) === u"012345678gabcdef")
+     test(u"0123456789abcdef".replace(u"a"[0], u"g"[0]) === u"0123456789gbcdef")
+     test(u"0123456789abcdef".replace(u"b"[0], u"g"[0]) === u"0123456789agcdef")
+     test(u"0123456789abcdef".replace(u"c"[0], u"g"[0]) === u"0123456789abgdef")
+     test(u"0123456789abcdef".replace(u"d"[0], u"g"[0]) === u"0123456789abcgef")
+     test(u"0123456789abcdef".replace(u"e"[0], u"g"[0]) === u"0123456789abcdgf")
+     test(u"0123456789abcdef".replace(u"f"[0], u"g"[0]) === u"0123456789abcdeg")
+     test(u"0001112201112200".replace(u"0"[0], u"g"[0]) === u"ggg11122g11122gg")
+
+     let array = (u"00123456789abcdef" ++ u"0")[1, 17]
+     test(array.replace(u"g"[0], u"0"[0]) === u"0123456789abcdef")
+     test(array.replace(u"0"[0], u"g"[0]) === u"g123456789abcdef")
+     test(array.replace(u"1"[0], u"g"[0]) === u"0g23456789abcdef")
+     test(array.replace(u"2"[0], u"g"[0]) === u"01g3456789abcdef")
+     test(array.replace(u"3"[0], u"g"[0]) === u"012g456789abcdef")
+     test(array.replace(u"4"[0], u"g"[0]) === u"0123g56789abcdef")
+     test(array.replace(u"5"[0], u"g"[0]) === u"01234g6789abcdef")
+     test(array.replace(u"6"[0], u"g"[0]) === u"012345g789abcdef")
+     test(array.replace(u"7"[0], u"g"[0]) === u"0123456g89abcdef")
+     test(array.replace(u"8"[0], u"g"[0]) === u"01234567g9abcdef")
+     test(array.replace(u"9"[0], u"g"[0]) === u"012345678gabcdef")
+     test(array.replace(u"a"[0], u"g"[0]) === u"0123456789gbcdef")
+     test(array.replace(u"b"[0], u"g"[0]) === u"0123456789agcdef")
+     test(array.replace(u"c"[0], u"g"[0]) === u"0123456789abgdef")
+     test(array.replace(u"d"[0], u"g"[0]) === u"0123456789abcgef")
+     test(array.replace(u"e"[0], u"g"[0]) === u"0123456789abcdgf")
+     test(array.replace(u"f"[0], u"g"[0]) === u"0123456789abcdeg")
+     array.ignore()
+
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"g"[0], u"0"[0]) === u"0123456789abcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"0"[0], u"g"[0]) === u"g123456789abcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"1"[0], u"g"[0]) === u"0g23456789abcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"2"[0], u"g"[0]) === u"01g3456789abcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"3"[0], u"g"[0]) === u"012g456789abcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"4"[0], u"g"[0]) === u"0123g56789abcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"5"[0], u"g"[0]) === u"01234g6789abcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"6"[0], u"g"[0]) === u"012345g789abcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"7"[0], u"g"[0]) === u"0123456g89abcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"8"[0], u"g"[0]) === u"01234567g9abcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"9"[0], u"g"[0]) === u"012345678gabcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"a"[0], u"g"[0]) === u"0123456789gbcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"b"[0], u"g"[0]) === u"0123456789agcdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"c"[0], u"g"[0]) === u"0123456789abgdef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"d"[0], u"g"[0]) === u"0123456789abcgef")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"e"[0], u"g"[0]) === u"0123456789abcdgf")
+     test((u"00123456789abcdef" ++ u"0")[1, 17].replace(u"f"[0], u"g"[0]) === u"0123456789abcdeg")
+
+     let array    = rnd_byte_array()
+     let old_byte = if rnd_bool(); array[(rnd() & 0xffff'ffff) % len(array)] else rnd_byte()
+     let new_byte = rnd_byte()
+     test(array.replace(old_byte, new_byte) === array.map(fn (byte) if byte === old_byte; new_byte else byte))
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     let string_4 = string_1 ++ "4"
+     test([array].replace(1, 4) === [array])
+     test([array].init(10).replace(1, 4) === [array])
+     test([array 1, 2, 3].replace(1, 4) === [array 4, 2, 3])
+     test([array 1, 2, 3].replace(2, 4) === [array 1, 4, 3])
+     test([array 1, 2, 3].replace(3, 4) === [array 1, 2, 4])
+     test([array 1, 1, 1].replace(1, 4) === [array 4, 4, 4])
+     test([array 1, 2, 3].replace(3, "Hello") === [array 1, 2, "Hello"])
+
+     let array = [array string_1, string_1, string_2, string_3, string_1][1, 4]
+     test(array.replace(string_1, string_4) === [array string_4, string_2, string_3])
+     test(array.replace(string_2, string_4) === [array string_1, string_4, string_3])
+     test(array.replace(string_3, string_4) === [array string_1, string_2, string_4])
+     array.ignore()
+
+     let array = [array string_1, string_1, string_1, string_1, string_1][1, 4]
+     test(array.replace(string_1, string_4) === [array string_4, string_4, string_4])
+     array.ignore()
+
+     test([array string_1, string_1, string_2, string_3, string_1][1, 4].replace(string_1, string_4) === [array string_4, string_2, string_3])
+     test([array string_1, string_1, string_2, string_3, string_1][1, 4].replace(string_2, string_4) === [array string_1, string_4, string_3])
+     test([array string_1, string_1, string_2, string_3, string_1][1, 4].replace(string_3, string_4) === [array string_1, string_2, string_4])
+     test([array string_1, string_1, string_1, string_1, string_1][1, 4].replace(string_1, string_4) === [array string_4, string_4, string_4])
+
+     let array      = rnd_string_array()
+     let old_string = if rnd_bool(); array[(rnd() & 0xffff'ffff) % len(array)] else rnd_string()
+     let new_string = rnd_string()
+     test(array.replace(old_string, new_string) === array.map(fn (string) if string === old_string; new_string else string))
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     let string_4 = string_1 ++ "4"
+     let string_5 = string_1 ++ "5"
+     test([table].replace(1, 4) === [table])
+     test([table].init(10).replace(1, 4) === [table])
+     test([table 1 = 2, 2 = 3, 3 = 4].replace(2, 5) === [table 1 = 5, 2 = 3, 3 = 4])
+     test([table 1 = 2, 2 = 3, 3 = 4].replace(3, 5) === [table 1 = 2, 2 = 5, 3 = 4])
+     test([table 1 = 2, 2 = 3, 3 = 4].replace(4, 5) === [table 1 = 2, 2 = 3, 3 = 5])
+     test([table 1 = 2, 2 = 3, 3 = 4].replace(4, "Hello") === [table 1 = 2, 2 = 3, 3 = "Hello"])
+     test([table 1 = 2, 2 = 2, 3 = 2].replace(2, "Hello") === [table 1 = "Hello", 2 = "Hello", 3 = "Hello"])
+
+     let table = [table string_1 = string_2, string_2 = string_3, string_3 = string_4]
+     test(table.replace(string_2, string_5) === [table string_1 = string_5, string_2 = string_3, string_3 = string_4])
+     test(table.replace(string_3, string_5) === [table string_1 = string_2, string_2 = string_5, string_3 = string_4])
+     test(table.replace(string_4, string_5) === [table string_1 = string_2, string_2 = string_3, string_3 = string_5])
+     table.ignore()
+
+     let table = [table string_1 = string_2, string_2 = string_2, string_3 = string_2]
+     test(table.replace(string_2, string_5) === [table string_1 = string_5, string_2 = string_5, string_3 = string_5])
+     table.ignore()
+
+     test([table string_1 = string_2, string_2 = string_3, string_3 = string_4].replace(string_2, string_5) === [table string_1 = string_5, string_2 = string_3, string_3 = string_4])
+     test([table string_1 = string_2, string_2 = string_3, string_3 = string_4].replace(string_3, string_5) === [table string_1 = string_2, string_2 = string_5, string_3 = string_4])
+     test([table string_1 = string_2, string_2 = string_3, string_3 = string_4].replace(string_4, string_5) === [table string_1 = string_2, string_2 = string_3, string_3 = string_5])
+     test([table string_1 = string_2, string_2 = string_2, string_3 = string_2].replace(string_2, string_5) === [table string_1 = string_5, string_2 = string_5, string_3 = string_5])
+
+     let array      = rnd_string_array()
+     let table      = loop([table], fn (table) {
+          let table = new (table)[rnd_string()] <= array[len(table)]
+          break(len(array) === len(table), table)
+     })
+     let old_string = if rnd_bool(); array[(rnd() & 0xffff'ffff) % len(array)] else rnd_string()
+     let new_string = rnd_string()
+     test(table.replace(old_string, new_string) === table.map(fn (string) if string === old_string; new_string else string))
+
+     test([obj].replace(1, 4) === [obj])
+     test([obj :_ = [obj :1 = 2]].replace(1, 4) === [obj])
+     test([obj :_ = [obj :1 = 2]].replace(1, 4) === [obj])
+     test([obj :_ = [obj :1 = 2]].replace(1, 4):_ === [obj :1 = 2])
+     test([obj].init(10).replace(1, 4) === [obj])
+     test([obj :1 = 2, :2 = 3, :3 = 4].replace(2, 5) === [obj :1 = 5, :2 = 3, :3 = 4])
+     test([obj :1 = 2, :2 = 3, :3 = 4].replace(3, 5) === [obj :1 = 2, :2 = 5, :3 = 4])
+     test([obj :1 = 2, :2 = 3, :3 = 4].replace(4, 5) === [obj :1 = 2, :2 = 3, :3 = 5])
+     test([obj :1 = 2, :2 = 3, :3 = 4].replace(4, "Hello") === [obj :1 = 2, :2 = 3, :3 = "Hello"])
+     test([obj :1 = 2, :2 = 2, :3 = 2].replace(2, "Hello") === [obj :1 = "Hello", :2 = "Hello", :3 = "Hello"])
+     test([obj :1 = 2, :2 = 3, :3 = 4, :_ = [obj :1 = 2]].replace(2, 5) === [obj :1 = 5, :2 = 3, :3 = 4])
+     test([obj :1 = 2, :2 = 3, :3 = 4, :_ = [obj :1 = 2]].replace(2, 5):_ === [obj :1 = 2])
+     test([obj :1 = 2, :2 = 3, :3 = 4, :_ = [obj :1 = 2]].replace(3, 5) === [obj :1 = 2, :2 = 5, :3 = 4])
+     test([obj :1 = 2, :2 = 3, :3 = 4, :_ = [obj :1 = 2]].replace(3, 5):_ === [obj :1 = 2])
+     test([obj :1 = 2, :2 = 3, :3 = 4, :_ = [obj :1 = 2]].replace(4, 5) === [obj :1 = 2, :2 = 3, :3 = 5])
+     test([obj :1 = 2, :2 = 3, :3 = 4, :_ = [obj :1 = 2]].replace(4, 5):_ === [obj :1 = 2])
+     test([obj :1 = 2, :2 = 3, :3 = 4, :_ = [obj :1 = 2]].replace(4, "Hello") === [obj :1 = 2, :2 = 3, :3 = "Hello"])
+     test([obj :1 = 2, :2 = 3, :3 = 4, :_ = [obj :1 = 2]].replace(4, "Hello"):_ === [obj :1 = 2])
+     test([obj :1 = 2, :2 = 2, :3 = 2, :_ = [obj :1 = 2]].replace(2, "Hello") === [obj :1 = "Hello", :2 = "Hello", :3 = "Hello"])
+     test([obj :1 = 2, :2 = 2, :3 = 2, :_ = [obj :1 = 2]].replace(2, "Hello"):_ === [obj :1 = 2])
+
+     let obj = [obj :1 = string_2, :2 = string_3, :3 = string_4]
+     test(obj.replace(string_2, string_5) === [obj :1 = string_5, :2 = string_3, :3 = string_4])
+     test(obj.replace(string_3, string_5) === [obj :1 = string_2, :2 = string_5, :3 = string_4])
+     test(obj.replace(string_4, string_5) === [obj :1 = string_2, :2 = string_3, :3 = string_5])
+     obj.ignore()
+
+     let obj = [obj :1 = string_2, :2 = string_3, :3 = string_4, :_ = [obj :1 = 2]]
+     test(obj.replace(string_2, string_5) === [obj :1 = string_5, :2 = string_3, :3 = string_4])
+     test(obj.replace(string_2, string_5):_ === [obj :1 = 2])
+     test(obj.replace(string_3, string_5) === [obj :1 = string_2, :2 = string_5, :3 = string_4])
+     test(obj.replace(string_3, string_5):_ === [obj :1 = 2])
+     test(obj.replace(string_4, string_5) === [obj :1 = string_2, :2 = string_3, :3 = string_5])
+     test(obj.replace(string_4, string_5):_ === [obj :1 = 2])
+     obj.ignore()
+
+     let obj = [obj :1 = string_2, :2 = string_2, :3 = string_2]
+     test(obj.replace(string_2, string_5) === [obj :1 = string_5, :2 = string_5, :3 = string_5])
+     obj.ignore()
+
+     let obj = [obj :1 = string_2, :2 = string_2, :3 = string_2, :_ = [obj :1 = 2]]
+     test(obj.replace(string_2, string_5) === [obj :1 = string_5, :2 = string_5, :3 = string_5])
+     test(obj.replace(string_2, string_5):_ === [obj :1 = 2])
+     obj.ignore()
+
+     test([obj :1 = string_2, :2 = string_3, :3 = string_4].replace(string_2, string_5) === [obj :1 = string_5, :2 = string_3, :3 = string_4])
+     test([obj :1 = string_2, :2 = string_3, :3 = string_4].replace(string_3, string_5) === [obj :1 = string_2, :2 = string_5, :3 = string_4])
+     test([obj :1 = string_2, :2 = string_3, :3 = string_4].replace(string_4, string_5) === [obj :1 = string_2, :2 = string_3, :3 = string_5])
+     test([obj :1 = string_2, :2 = string_2, :3 = string_2].replace(string_2, string_5) === [obj :1 = string_5, :2 = string_5, :3 = string_5])
+     test([obj :1 = string_2, :2 = string_3, :3 = string_4, :_ = [obj :1 = 2]].replace(string_2, string_5) === [obj :1 = string_5, :2 = string_3, :3 = string_4])
+     test([obj :1 = string_2, :2 = string_3, :3 = string_4, :_ = [obj :1 = 2]].replace(string_3, string_5) === [obj :1 = string_2, :2 = string_5, :3 = string_4])
+     test([obj :1 = string_2, :2 = string_3, :3 = string_4, :_ = [obj :1 = 2]].replace(string_4, string_5) === [obj :1 = string_2, :2 = string_3, :3 = string_5])
+     test([obj :1 = string_2, :2 = string_2, :3 = string_2, :_ = [obj :1 = 2]].replace(string_2, string_5) === [obj :1 = string_5, :2 = string_5, :3 = string_5])
+     test([obj :1 = string_2, :2 = string_3, :3 = string_4, :_ = [obj :1 = 2]].replace(string_2, string_5):_ === [obj :1 = 2])
+     test([obj :1 = string_2, :2 = string_3, :3 = string_4, :_ = [obj :1 = 2]].replace(string_3, string_5):_ === [obj :1 = 2])
+     test([obj :1 = string_2, :2 = string_3, :3 = string_4, :_ = [obj :1 = 2]].replace(string_4, string_5):_ === [obj :1 = 2])
+     test([obj :1 = string_2, :2 = string_2, :3 = string_2, :_ = [obj :1 = 2]].replace(string_2, string_5):_ === [obj :1 = 2])
+
+     let array    = rnd_string_array()
+     let obj      = loop([obj], fn (obj) {
+          let key = loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+          let obj = new (obj)[key] <= array[len(obj)]
+          break(len(array) === len(obj), obj)
+     })
+     let old_string = if rnd_bool(); array[(rnd() & 0xffff'ffff) % len(array)] else rnd_string()
+     let new_string = rnd_string()
+     test(obj.replace(old_string, new_string) === obj.map(fn (string) if string === old_string; new_string else string))
+
+     test(to_container__replace("aBcD").replace('a', 'C') === to_container__replace("CBcD"))
+     test(to_container__replace("aBcD").replace('D', 'a') === to_container__replace("aBca"))
+     test(to_custom_container__replace("aBcD").replace('a', 'C') === to_custom_container__replace("CBcD"))
+     test(to_custom_container__replace("aBcD").replace('D', 'a') === to_custom_container__replace("aBca"))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let error_3 = expected_error(:3, heap_string(), heap_string())
+     test(error_1.replace(heap_string(), heap_string()).get_error_id() === :1)
+     test([array heap_string()].replace(error_1, heap_string()).get_error_id() === :1)
+     test([array heap_string()].replace(heap_string(), error_1).get_error_id() === :1)
+     test(error_1.replace(error_2, error_3).get_error_id() === :1)
+     test(error_3.replace(error_2, error_1).get_error_id() === :3)
+     test(error_1.replace([box heap_string()].scarlet__erase_info(), [box heap_string()].scarlet__erase_info()).get_error_id() === :1)
+     test(heap_string().replace(error_1, heap_string()).get_error_id() === :1)
+     test(heap_string().replace(heap_string(), error_1).get_error_id() === :1)
+
+     test(heap_string().replace(heap_string(), 'a').get_error_id() === :invalid_type)
+     test(heap_string().replace('a', heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().replace(heap_string(), heap_string()).get_error_id() === :invalid_type)
+     test("".replace(heap_string(), 'a').get_error_id() === :invalid_type)
+     test("".replace('a', heap_string()).get_error_id() === :invalid_type)
+     test("".replace(heap_string(), heap_string()).get_error_id() === :invalid_type)
+     test(heap_byte_array().replace(heap_string(), 0b00).get_error_id() === :invalid_type)
+     test(heap_byte_array().replace(0b00, heap_string()).get_error_id() === :invalid_type)
+     test(heap_byte_array().replace(heap_string(), heap_string()).get_error_id() === :invalid_type)
+     test(u"".replace(heap_string(), 0b00).get_error_id() === :invalid_type)
+     test(u"".replace(0b00, heap_string()).get_error_id() === :invalid_type)
+     test(u"".replace(heap_string(), heap_string()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace([box heap_string()].scarlet__erase_info(), heap_string()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(heap_string(), [box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace([box heap_string()].scarlet__erase_info(), [box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(null.scarlet__erase_info(), heap_string()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(heap_string(), null.scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(null.scarlet__erase_info(), null.scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace((_ ++ _).scarlet__erase_info(), heap_string()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace((_ ++ _).scarlet__erase_info(), (_ ++ _).scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace((_ ++ heap_string()).scarlet__erase_info(), heap_string()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace((_ ++ heap_string()).scarlet__erase_info(), (_ ++ heap_string()).scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace([breaker heap_string()].scarlet__erase_info(), heap_string()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(heap_string(), [breaker heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace([breaker heap_string()].scarlet__erase_info(), [breaker heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(thread(fn() null).scarlet__erase_info(), heap_string()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(thread(fn() null).scarlet__erase_info(), thread(fn() null).scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(make_channel()[0], heap_string()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(make_channel()[0], make_channel()[0]).get_error_id() === :invalid_type)
+     test([box heap_string()].scarlet__erase_info().replace([box heap_string()].scarlet__erase_info(), [box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([box heap_string()].scarlet__erase_info().replace([box heap_string()].scarlet__erase_info(), [box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+
+     test(to_broken_container__replace([array heap_string()]).replace(heap_string(), heap_string()).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__replace([array heap_string()]).replace(heap_string(), heap_string()).get_error_id() === :invalid_type)
+     test(to_error_container__replace([array heap_string()]).replace(heap_string(), heap_string()).get_error_id() === :3)
+     test(to_error_custom_container__replace([array heap_string()]).replace(heap_string(), heap_string()).get_error_id() === :4)
+}

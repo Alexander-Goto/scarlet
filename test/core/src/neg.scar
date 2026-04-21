@@ -1,0 +1,92 @@
+let num__neg = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_neg       = fn (num) to_num__neg(num:value.neg())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__neg(arg) new (@main.num__neg):value <= arg
+
+fn to_custom_num__neg(arg) custom__create(
+     arg
+     [obj
+          :core_neg       = fn (num) to_custom_num__neg(num.custom__get_data().neg())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__neg = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_neg = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__neg(arg) new (@main.broken_num__neg):value <= arg
+
+fn to_broken_custom_num__neg(arg) custom__create(
+     arg
+     [obj
+          :core_neg = fn (_) heap_string()
+     ]
+)
+
+let error_num__neg = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_neg = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__neg(arg) new (@main.error_num__neg):value <= arg
+
+fn to_error_custom_num__neg(arg) custom__create(
+     arg
+     [obj
+          :core_neg = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__neg() {
+     test(0.neg() === 0)
+     test(1.neg() === -1)
+     test(-1.neg() === 1)
+     test(-708044971986000615.neg() === 708044971986000615)
+     test(-1964724193136850828.neg() === 1964724193136850828)
+     test(-9223372036854775808.neg() === -9223372036854775808)
+     test(-9223372036854775807.neg() === 9223372036854775807)
+     test(9223372036854775807.neg() === -9223372036854775807)
+
+     test(0.0.neg().scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test(-0.0.neg().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(0.1.neg().scarlet__split!!!()[0] === -0.1.scarlet__split!!!()[0])
+     test(-0.1.neg().scarlet__split!!!()[0] === 0.1.scarlet__split!!!()[0])
+     test(inf().neg().scarlet__split!!!()[0] === neg_inf().scarlet__split!!!()[0])
+     test(neg_inf().neg().scarlet__split!!!()[0] === inf().scarlet__split!!!()[0])
+     test(11122.3.neg().scarlet__split!!!()[0] === -11122.3.scarlet__split!!!()[0])
+     test(-11122.3.neg().scarlet__split!!!()[0] === 11122.3.scarlet__split!!!()[0])
+     test(nan().neg().nan?())
+
+     test(to_num__neg(0).neg() === to_num__neg(0))
+     test(to_num__neg(-708044971986000615).neg() === to_num__neg(708044971986000615))
+     test(to_num__neg(708044971986000615).neg() === to_num__neg(-708044971986000615))
+
+     test(to_custom_num__neg(0).neg() === to_custom_num__neg(0))
+     test(to_custom_num__neg(-708044971986000615).neg() === to_custom_num__neg(708044971986000615))
+     test(to_custom_num__neg(708044971986000615).neg() === to_custom_num__neg(-708044971986000615))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     let string  = heap_string()
+     test(error.neg().get_error_id() === :1)
+     test(string.neg().get_error_id() === :invalid_type)
+
+     test(to_broken_num__neg(1).neg().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__neg(1).neg().get_error_id() === :invalid_type)
+     test(to_error_num__neg(1).neg().get_error_id() === :3)
+     test(to_error_custom_num__neg(1).neg().get_error_id() === :4)
+}

@@ -1,0 +1,6 @@
+`noinline`
+fn test__make_channel() {
+     let [box in, out] = make_channel()
+     test(in.type() === "core.channel")
+     test(out.type() === "core.channel")
+}

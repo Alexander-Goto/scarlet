@@ -1,0 +1,85 @@
+let char__letter = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_letter? = fn (char) char:value.letter?()
+     ]
+]
+
+fn to_char__letter?(arg) new (@main.char__letter):value <= arg
+
+fn to_custom_char__letter?(arg) custom__create(
+     arg
+     [obj
+          :core_letter? = fn (char) char.custom__get_data().letter?()
+     ]
+)
+
+let broken_char__letter = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_letter? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_char__letter?(arg) new (@main.broken_char__letter):value <= arg
+
+fn to_broken_custom_char__letter?(arg) custom__create(
+     arg
+     [obj
+          :core_letter? = fn (_) heap_string()
+     ]
+)
+
+let error_char__letter = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_letter? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__letter?(arg) new (@main.error_char__letter):value <= arg
+
+fn to_error_custom_char__letter?(arg) custom__create(
+     arg
+     [obj
+          :core_letter? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__letter?() {
+     test(not '\000001'.letter?())
+     test(not '\000009'.letter?())
+     test(not '\000020'.letter?())
+     test(not '0'.letter?())
+     test(not '9'.letter?())
+     test('a'.letter?())
+     test('z'.letter?())
+     test('A'.letter?())
+     test('Z'.letter?())
+     test('\000081'.letter?())
+     test('\000101'.letter?())
+
+     let string = rnd_string()
+     test(string.filter(fn (char) char >= 'a' && char <= 'z' || char >= 'A' && char <= 'Z' || char >='\000080' && char <= '\000101') === string.filter(letter?(_)))
+
+     test(to_char__letter?('a').letter?())
+     test(not to_char__letter?('\000009').letter?())
+     test(not to_char__letter?('0').letter?())
+
+     test(to_custom_char__letter?('a').letter?())
+     test(not to_custom_char__letter?('\000009').letter?())
+     test(not to_custom_char__letter?('0').letter?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.letter?().get_error_id() === :1)
+     test(heap_table().letter?().get_error_id() === :invalid_type)
+
+     test(to_broken_char__letter?('a').letter?().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__letter?('a').letter?().get_error_id() === :invalid_type)
+     test(to_error_char__letter?('a').letter?().get_error_id() === :3)
+     test(to_error_custom_char__letter?('a').letter?().get_error_id() === :4)
+}

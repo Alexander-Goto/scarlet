@@ -1,0 +1,69 @@
+fn exp_array__to_tree(exp_array) loop([box exp_array, 10, exp_array.len() - 1], fn (state) {
+     let [box exp_array, priority, exp_idx] = state
+
+     if exp_array.len() == 1
+          [breaker exp_array.first()]
+     else if exp_idx == -1
+          [box exp_array, priority - 1, exp_array.len() - 1]
+     else {
+          let exp = exp_array[exp_idx]
+          if exp:scar_type == "t_token" && priority == operator__get_priority(exp:text)
+               if exp:text == "not" {
+                    let not_exp = new (@main.t_not) {
+                         :operator <= exp
+                         :exp      <= exp_array__to_tree(exp_array.drop(exp_idx + 1))
+                    }
+                    let exp_array = exp_array.take(exp_idx).append(not_exp)
+
+                    [box exp_array, priority, exp_idx - 1]
+               } else {
+                    let left  = exp_array__to_tree(exp_array.take(exp_idx))
+                    let right = exp_array__to_tree(exp_array.drop(exp_idx + 1))
+                    let type  = switch exp:text
+                    case "<?":  @main.t_default_val
+                    case "*":   @main.t_mul
+                    case "/":   @main.t_div
+                    case "%":   @main.t_mod
+                    case "+":   @main.t_add
+                    case "++":  @main.t_concat
+                    case "-":   @main.t_sub
+                    case "<<":  @main.t_shl
+                    case ">>":  @main.t_lshr
+                    case ">>>": @main.t_ashr
+                    case "<":   @main.t_less
+                    case ">":   @main.t_great
+                    case "<=":  @main.t_less_or_eq
+                    case ">=":  @main.t_great_or_eq
+                    case "==":  @main.t_strong_equal
+                    case "/=":  @main.t_strong_not_equal
+                    case "===": @main.t_equal
+                    case "=/=": @main.t_not_equal
+                    case "&":   @main.t_and
+                    case "&&":  @main.t_lazy_and
+                    case "^":   @main.t_xor
+                    case "|":   @main.t_or
+                    case "||":  @main.t_lazy_or
+                    default: unreachable()
+
+                    [breaker new (type) {
+                         :operator <= exp
+                         :left     <= left
+                         :right    <= right
+                    }]
+               }
+          else [box exp_array, priority, exp_idx - 1]
+     }
+})
+
+fn operator__get_priority(operator) switch operator
+     case "<?":                     1
+     case "not":                    2
+     case "*", "/", "%":            3
+     case "+", "++", "-":           4
+     case "<<", ">>", ">>>":        5
+     case "<", ">", "<=", ">=":     6
+     case "==", "/=", "===", "=/=": 7
+     case "&", "&&":                8
+     case "^":                      9
+     case "|", "||":                10
+     default: unreachable()

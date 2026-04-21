@@ -1,0 +1,16 @@
+let t_nested_exp = [obj
+     :scar_type = "t_nested_exp"
+
+     :open_char = @main.t_token
+     :exp       = :i_expression
+]
+
+fn nested_exp_independent?(exp, independent_consts) exp:exp.independent?(independent_consts)
+fn analyze_nested_exp(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids) exp:exp.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+fn nested_exp_to_operand(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain) {
+     let [box operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, false, is_first_in_chain)
+
+     [box new (operand):code <= new (exp:open_char):text <= "(" ++ operand:code:text ++ ")", exp_data, ir, final_data, dependencies, src_gconsts]
+}

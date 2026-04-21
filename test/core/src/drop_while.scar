@@ -1,0 +1,331 @@
+let array__drop_while = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_drop_while = fn (arr, func) to_array__drop_while(arr:value.drop_while(func))
+          :core___equal__  = fn (array_1, array_2) array_1:value === array_2:value
+     ]
+]
+
+fn to_array__drop_while(arg) new (@main.array__drop_while):value <= arg
+
+fn to_custom_array__drop_while(arg) custom__create(
+     arg
+     [obj
+          :core_drop_while = fn (arr, func) to_custom_array__drop_while(custom__get_data(arr).drop_while(func))
+          :core___equal__  = fn (array_1, array_2) array_1.custom__get_data() === array_2.custom__get_data()
+     ]
+)
+
+let broken_array__drop_while = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_drop_while = fn (_, _) heap_table()
+     ]
+]
+
+fn to_broken_array__drop_while(arg) new (@main.broken_array__drop_while):value <= arg
+
+fn to_broken_custom_array__drop_while(arg) custom__create(
+     arg
+     [obj
+          :core_drop_while = fn (_, _) heap_table()
+     ]
+)
+
+let error_array__drop_while = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_drop_while = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__drop_while(arg) new (@main.error_array__drop_while):value <= arg
+
+fn to_error_custom_array__drop_while(arg) custom__create(
+     arg
+     [obj
+          :core_drop_while = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__drop_while() {
+     let items = "0123456789abcdef".to_array()
+     test("".drop_while(fn (char) char =/= items[0]) === "")
+     test("1".drop_while(fn (char) char =/= items[1]) === "1")
+     test("1".drop_while(fn (char) char === items[1]) === "")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[0]) === "0123456789abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[1]) === "123456789abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[2]) === "23456789abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[3]) === "3456789abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[4]) === "456789abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[5]) === "56789abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[6]) === "6789abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[7]) === "789abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[8]) === "89abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[9]) === "9abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[10]) === "abcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[11]) === "bcde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[12]) === "cde")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[13]) === "de")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[14]) === "e")
+     test("0123456789abcde".drop_while(fn (char) char =/= items[15]) === "")
+
+     let items = "\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5f".to_array()
+     test("\000091".drop_while(fn (char) char =/= items[0]) === "\000091")
+     test("\000091".drop_while(fn (char) char === items[0]) === "")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop_while(fn (char) char =/= items[0]) === "\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop_while(fn (char) char =/= items[1]) === "\0000b3\0000ab!!!\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop_while(fn (char) char =/= items[2]) === "\0000ab!!!\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop_while(fn (char) char =/= items[3]) === "!!!\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop_while(fn (char) char =/= items[6]) === "\0000a4\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop_while(fn (char) char =/= items[7]) === "\0000a7\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop_while(fn (char) char =/= items[8]) === "\0000b5")
+     test("\000091\0000b3\0000ab!!!\0000a4\0000a7\0000b5".drop_while(fn (char) char =/= items[9]) === "")
+
+     let items = "0123456789abcdefg".to_array()
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[0]) === "0123456789abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[1]) === "123456789abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[2]) === "23456789abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[3]) === "3456789abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[4]) === "456789abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[5]) === "56789abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[6]) === "6789abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[7]) === "789abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[8]) === "89abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[9]) === "9abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[10]) === "abcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[11]) === "bcdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[12]) === "cdef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[13]) === "def")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[14]) === "ef")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[15]) === "f")
+     test("0123456789abcdef".drop_while(fn (char) char =/= items[16]) === "")
+
+     let items = "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7g".to_array()
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[0]) === "\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[1]) === "\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[2]) === "\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[3]) === "\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[4]) === "\0000a7\0000b5 \0000af\0000ae\0000b7")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[5]) === "\0000b5 \0000af\0000ae\0000b7")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[6]) === " \0000af\0000ae\0000b7")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[7]) === "\0000af\0000ae\0000b7")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[8]) === "\0000ae\0000b7")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[9]) === "\0000b7")
+     test("\000091\0000b3\0000ab\0000a4\0000a7\0000b5 \0000af\0000ae\0000b7".drop_while(fn (char) char =/= items[10]) === "")
+
+     test("110000000000000".drop_while(_ === '0') === "110000000000000")
+     test("011000000000000".drop_while(_ === '0') === "11000000000000")
+     test("000000000000011".drop_while(_ === '0') === "11")
+     test("1100000000000000".drop_while(_ === '0') === "1100000000000000")
+     test("0110000000000000".drop_while(_ === '0') === "110000000000000")
+     test("0000000000000011".drop_while(_ === '0') === "11")
+
+     let [box string_1, string_2] = if (rnd() & 1) === 0 {
+          let string_1 = rnd_string()
+          let string_2 = if (rnd() & 1) === 0; string_1 else null
+          [box string_1, string_2]
+     } else [box "Constant String \000093\0000ae\0000b6\0000ba\0000a2\0000ac\0000b0\0000a2\0000c2 \000093\0000b5\0000b3\0000b1\0000ad\0000a2", null]
+     let len             = len(string_1)
+     let n               = (rnd() >> 1) % len
+     let n_char          = string_1[n]
+     let expected_string = string_1[n_char.look_in(string_1), len].unslice()
+     test(string_1.drop_while(_ =/= n_char) === expected_string)
+     string_2.ignore()
+
+     let [box string_1, string_2] = if (rnd() & 1) === 0 {
+          let string_1 = rnd_string()
+          let string_2 = if (rnd() & 1) === 0; string_1 else null
+          [box string_1, string_2]
+     } else [box "Constant String \000093\0000ae\0000b6\0000ba\0000a2\0000ac\0000b0\0000a2\0000c2 \000093\0000b5\0000b3\0000b1\0000ad\0000a2", null]
+     let len             = len(string_1)
+     let n               = (rnd() >> 1) % len
+     let n_char          = string_1[n]
+     let expected_string = string_1[n_char.look_in(string_1), len].unslice()
+     test(string_1.drop_while(fn (char) string_1 === 17 || char =/= n_char) === expected_string)
+     string_2.ignore()
+
+     let items = u"0123456789abcde".to_array()
+     test(u"".drop_while(fn (byte) byte =/= items[0]) === u"")
+     test(u"1".drop_while(fn (byte) byte =/= items[1]) === u"1")
+     test(u"1".drop_while(fn (byte) byte === items[1]) === u"")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[0]) === u"0123456789abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[1]) === u"123456789abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[2]) === u"23456789abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[3]) === u"3456789abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[4]) === u"456789abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[5]) === u"56789abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[6]) === u"6789abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[7]) === u"789abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[8]) === u"89abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[9]) === u"9abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[10]) === u"abcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[11]) === u"bcd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[12]) === u"cd")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[13]) === u"d")
+     test(u"0123456789abcd".drop_while(fn (byte) byte =/= items[14]) === u"")
+
+     let items = u"0123456789abcdef".to_array()
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[0]) === u"0123456789abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[1]) === u"123456789abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[2]) === u"23456789abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[3]) === u"3456789abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[4]) === u"456789abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[5]) === u"56789abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[6]) === u"6789abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[7]) === u"789abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[8]) === u"89abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[9]) === u"9abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[10]) === u"abcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[11]) === u"bcde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[12]) === u"cde")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[13]) === u"de")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[14]) === u"e")
+     test(u"0123456789abcde".drop_while(fn (byte) byte =/= items[15]) === u"")
+
+     test(u"11000000000000".drop_while(_ === u"0"[0]) === u"11000000000000")
+     test(u"01100000000000".drop_while(_ === u"0"[0]) === u"1100000000000")
+     test(u"00000000000011".drop_while(_ === u"0"[0]) === u"11")
+     test(u"110000000000000".drop_while(_ === u"0"[0]) === u"110000000000000")
+     test(u"011000000000000".drop_while(_ === u"0"[0]) === u"11000000000000")
+     test(u"000000000000011".drop_while(_ === u"0"[0]) === u"11")
+
+     let [box array_1, array_2] = if (rnd() & 1) === 0 {
+          let array_1 = rnd_byte_array()
+          let array_2 = if (rnd() & 1) === 0; array_1 else null
+          [box array_1, array_2]
+     } else [box u"Constant String \000093\0000ae\0000b6\0000ba\0000a2\0000ac\0000b0\0000a2\0000c2 \000093\0000b5\0000b3\0000b1\0000ad\0000a2", null]
+     let len            = len(array_1)
+     let n              = (rnd() >> 1) % len
+     let n_byte         = array_1[n]
+     let expected_array = array_1[n_byte.look_in(array_1), len].unslice()
+     test(array_1.drop_while(_ =/= n_byte) === expected_array)
+     array_2.ignore()
+
+     let [box array_1, array_2] = if (rnd() & 1) === 0 {
+          let array_1 = rnd_byte_array()
+          let array_2 = if (rnd() & 1) === 0; array_1 else null
+          [box array_1, array_2]
+     } else [box u"Constant String \000093\0000ae\0000b6\0000ba\0000a2\0000ac\0000b0\0000a2\0000c2 \000093\0000b5\0000b3\0000b1\0000ad\0000a2", null]
+     let len            = len(array_1)
+     let n              = (rnd() >> 1) % len
+     let n_byte         = array_1[n]
+     let expected_array = array_1[n_byte.look_in(array_1), len].unslice()
+     test(array_1.drop_while(fn (byte) array_1 === 17 || byte =/= n_byte) === expected_array)
+     array_2.ignore()
+
+     let items = [array 1.scarlet__erase_info(), 2, 3, 4, 5, 6]
+     test([array].drop_while(fn (item) item =/= items[0]) === [array])
+     test([array].init(10).drop_while(fn (item) item =/= items[0]) === [array])
+     test([array 1].drop_while(fn (item) item =/= items[0]) === [array 1])
+     test([array 1].drop_while(fn (item) item === items[0]) === [array])
+     test([array 1, 2, 3, 4, 5].drop_while(fn (item) item =/= items[0]) === [array 1, 2, 3, 4, 5])
+     test([array 1, 2, 3, 4, 5].drop_while(fn (item) item =/= items[1]) === [array 2, 3, 4, 5])
+     test([array 1, 2, 3, 4, 5].drop_while(fn (item) item =/= items[2]) === [array 3, 4, 5])
+     test([array 1, 2, 3, 4, 5].drop_while(fn (item) item =/= items[3]) === [array 4, 5])
+     test([array 1, 2, 3, 4, 5].drop_while(fn (item) item =/= items[4]) === [array 5])
+     test([array 1, 2, 3, 4, 5].drop_while(fn (item) item =/= items[5]) === [array])
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     let string_4 = string_1 ++ "4"
+     let string_5 = string_1 ++ "5"
+     let items = [array string_1, string_2, string_3, string_4, string_5, 6]
+     test([array string_1].drop_while(fn (item) item =/= items[0]) === [array string_1])
+     test([array string_1].drop_while(fn (item) item === items[0]) === [array])
+     test([array string_1, string_2, string_3, string_4, string_5].drop_while(fn (item) item =/= items[0]) === [array string_1, string_2, string_3, string_4, string_5])
+     test([array string_1, string_2, string_3, string_4, string_5].drop_while(fn (item) item =/= items[1]) === [array string_2, string_3, string_4, string_5])
+     test([array string_1, string_2, string_3, string_4, string_5].drop_while(fn (item) item =/= items[2]) === [array string_3, string_4, string_5])
+     test([array string_1, string_2, string_3, string_4, string_5].drop_while(fn (item) item =/= items[3]) === [array string_4, string_5])
+     test([array string_1, string_2, string_3, string_4, string_5].drop_while(fn (item) item =/= items[4]) === [array string_5])
+     test([array string_1, string_2, string_3, string_4, string_5].drop_while(fn (item) item =/= items[5]) === [array])
+
+     let [box array_1, array_2] = if (rnd() & 1) === 0 {
+          let array_1 = rnd_string_array()
+          let array_2 = if (rnd() & 1) === 0; array_1 else null
+          [box array_1, array_2]
+     } else [box [array 7, 2, 4, 1, "dfsdf", 0, -14, [table]], null]
+     let len            = len(array_1)
+     let n              = (rnd() >> 1) % len
+     let n_item         = array_1[n]
+     let expected_array = array_1[n_item.look_in(array_1), len].unslice()
+     test(array_1.drop_while(_ =/= n_item) === expected_array)
+     array_2.ignore()
+
+     let [box array_1, array_2] = if (rnd() & 1) === 0 {
+          let array_1 = rnd_string_array()
+          let array_2 = if (rnd() & 1) === 0; array_1 else null
+          [box array_1, array_2]
+     } else [box [array 7, 2, 4, 1, "dfsdf", 0, -14, [table]], null]
+     let len            = len(array_1)
+     let n              = (rnd() >> 1) % len
+     let n_item         = array_1[n]
+     let expected_array = array_1[n_item.look_in(array_1), len].unslice()
+     test(array_1.drop_while(fn (item) array_1 === 17 || item =/= n_item) === expected_array)
+     array_2.ignore()
+
+     let items = [array 1.scarlet__erase_info(), 2, 3, 4, 5, 6]
+     test([array].to_array__drop_while().drop_while(fn (item) item =/= items[0]) === [array].to_array__drop_while())
+     test([array].init(10).to_array__drop_while().drop_while(fn (item) item =/= items[0]) === [array].to_array__drop_while())
+     test([array 1].to_array__drop_while().drop_while(fn (item) item =/= items[0]) === [array 1].to_array__drop_while())
+     test([array 1].to_array__drop_while().drop_while(fn (item) item === items[0]) === [array].to_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_array__drop_while().drop_while(fn (item) item =/= items[0]) === [array 1, 2, 3, 4, 5].to_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_array__drop_while().drop_while(fn (item) item =/= items[1]) === [array 2, 3, 4, 5].to_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_array__drop_while().drop_while(fn (item) item =/= items[2]) === [array 3, 4, 5].to_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_array__drop_while().drop_while(fn (item) item =/= items[3]) === [array 4, 5].to_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_array__drop_while().drop_while(fn (item) item =/= items[4]) === [array 5].to_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_array__drop_while().drop_while(fn (item) item =/= items[5]) === [array].to_array__drop_while())
+
+     let items = [array 1.scarlet__erase_info(), 2, 3, 4, 5, 6]
+     test([array].to_custom_array__drop_while().drop_while(fn (item) item =/= items[0]) === [array].to_custom_array__drop_while())
+     test([array].init(10).to_custom_array__drop_while().drop_while(fn (item) item =/= items[0]) === [array].to_custom_array__drop_while())
+     test([array 1].to_custom_array__drop_while().drop_while(fn (item) item =/= items[0]) === [array 1].to_custom_array__drop_while())
+     test([array 1].to_custom_array__drop_while().drop_while(fn (item) item === items[0]) === [array].to_custom_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop_while().drop_while(fn (item) item =/= items[0]) === [array 1, 2, 3, 4, 5].to_custom_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop_while().drop_while(fn (item) item =/= items[1]) === [array 2, 3, 4, 5].to_custom_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop_while().drop_while(fn (item) item =/= items[2]) === [array 3, 4, 5].to_custom_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop_while().drop_while(fn (item) item =/= items[3]) === [array 4, 5].to_custom_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop_while().drop_while(fn (item) item =/= items[4]) === [array 5].to_custom_array__drop_while())
+     test([array 1, 2, 3, 4, 5].to_custom_array__drop_while().drop_while(fn (item) item =/= items[5]) === [array].to_custom_array__drop_while())
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.drop_while(_ ++ heap_string()).get_error_id() === :1)
+     test(heap_string().drop_while(error_1).get_error_id() === :1)
+     test(error_1.drop_while(error_2).get_error_id() === :1)
+     test(error_2.drop_while(error_1).get_error_id() === :2)
+     test(error_1.drop_while(heap_string()).get_error_id() === :1)
+     test(heap_table().drop_while(error_1).get_error_id() === :1)
+
+     test(heap_table().drop_while(_ ++ heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().drop_while(heap_table()).get_error_id() === :invalid_type)
+     test(heap_table().drop_while(heap_table()).get_error_id() === :invalid_type)
+
+     test(to_broken_array__drop_while("").drop_while(_ ++ heap_string()).get_error_id() === :invalid_type)
+     test(to_broken_custom_array__drop_while("").drop_while(_ ++ heap_string()).get_error_id() === :invalid_type)
+     test(to_error_array__drop_while("").drop_while(_ ++ heap_string()).get_error_id() === :3)
+     test(to_error_custom_array__drop_while("").drop_while(_ ++ heap_string()).get_error_id() === :4)
+
+     test("".drop_while(fn (_, _) string_1) === "")
+     test(u"".drop_while(fn (_, _) string_1) === u"")
+     test([array].drop_while(fn (_, _) string_1) === [array])
+
+     test("".drop_while(fn (_) string_1) === "")
+     test(u"".drop_while(fn (_) string_1) === u"")
+     test([array].drop_while(fn (_) string_1) === [array])
+
+     test("1".drop_while(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().drop_while(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"1".drop_while(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().drop_while(fn (_, _) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test("1".drop_while(fn (_) string_1).get_error_id() === :invalid_type)
+     test(heap_string().drop_while(fn (_) string_1).get_error_id() === :invalid_type)
+     test(u"1".drop_while(fn (_) string_1).get_error_id() === :invalid_type)
+     test(heap_byte_array().drop_while(fn (_) string_1).get_error_id() === :invalid_type)
+}

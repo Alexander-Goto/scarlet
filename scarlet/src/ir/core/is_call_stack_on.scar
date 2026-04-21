@@ -1,0 +1,5 @@
+fn ir__core_fn_is_call_stack_on(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let code = new (exp:name):text => _ ++ "()"
+
+     ir__fn_call("McoreFNcall_stack_onB", [array], code, [set "bool"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

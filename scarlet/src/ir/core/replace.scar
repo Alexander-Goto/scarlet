@@ -1,0 +1,59 @@
+fn ir__core_fn_replace(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box container, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box old_item, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box new_item, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ container:code:text ++ ", " ++ old_item:code:text ++ ", " ++ new_item:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "table", "array", "obj", "custom"]
+     container.maybe_has_type!(valid_types)
+     if container.has_type?(@main.string_types) {
+          old_item.maybe_has_type!("char")
+          new_item.maybe_has_type!("char")
+     } else if container.has_type?(@main.byte_array_types) {
+          old_item.maybe_has_type!("byte")
+          new_item.maybe_has_type!("byte")
+     } else {
+          old_item.maybe_has_type!(@main.look_types)
+          new_item.maybe_has_type!(@main.common_types)
+     }
+
+     if container:comptime_val.null?() || old_item:comptime_val.null?() || new_item:comptime_val.null?() ||
+          not old_item:comptime_val:type.in?(@main.comptime_eq_types) || container:comptime_val:type == "obj" && not container:comptime_val:value[:_][:core_replace].null?()
+     {
+          let result_possible_types = if container:possible_types.null?()
+               valid_types.append("error")
+          else {
+               let result_possible_types = container:possible_types.filter(_.in?(valid_types)).prepare_types_for_cmp()
+
+               if
+                         old_item.has_type?("char") && new_item.has_type?("char") && container.has_type?(@main.string_types)     ||
+                         old_item.has_type?("byte") && new_item.has_type?("byte") && container.has_type?(@main.byte_array_types) ||
+                         old_item.has_type?(@main.look_types) && new_item.has_type?(@main.common_types) && container.has_type?([set "array", "table"])
+                    result_possible_types
+               else result_possible_types.append("error")
+          }
+
+          ir__fn_call("McoreFNreplace", [array container, old_item, new_item], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let [box old_item_value, new_item_value] = if container:comptime_val:type.in?([array "string", "byte_array"])
+               [box old_item:comptime_val:value, new_item:comptime_val:value]
+          else [box old_item:comptime_val, new_item:comptime_val]
+
+          let operand = new (container) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:value => _.replace(old_item_value, new_item_value)
+          }
+          let operand = new (operand):possible_types <= operand:comptime_val.get_type_for_operand()
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

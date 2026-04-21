@@ -1,0 +1,31 @@
+let t_lazy_or = [obj
+     :scar_type = "t_lazy_or"
+
+     :operator = @main.t_token
+     :left     = :i_expression
+     :right    = :i_expression
+]
+
+fn lazy_or_independent?(or, independent_consts)
+     or:left.independent?(independent_consts) &&
+     or:right.independent?(independent_consts)
+
+fn analyze_lazy_or(or, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let [box last_use_info, lambdas_data, def_ids] = or:left.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+     let right_contexts = contexts.append("lor:" ++ format_int(or:operator.get_token_id(), 32, false))
+     or:right.analyze(last_use_info, lambdas_data, right_contexts, name_ids, def_ids)
+}
+
+fn lazy_or_to_operand(or, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box left_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          or:left.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box right_operand, exp_data, right_ir, final_data, dependencies, src_gconsts] =
+          or:right.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (left_operand:code):text => _ ++ (" || " ++ right_operand:code:text)
+
+     let right_context_consts = contexts["lor:" ++ format_int(or:operator.get_token_id(), 32, false)] <? [set]
+
+     ir__lazy_or(left_operand, right_operand, right_ir, code, right_context_consts, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

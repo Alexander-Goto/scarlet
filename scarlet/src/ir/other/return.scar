@@ -1,0 +1,3 @@
+fn ir__raw_return(ir, ir_operand)
+     ir ++ "call_stack__pop(thrd_data);\n" ++
+          "return " ++ ir_operand ++ ";\n"

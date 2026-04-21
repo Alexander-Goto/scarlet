@@ -1,0 +1,42 @@
+let t_call_from_exp = [obj
+     :scar_type = "t_call_from_exp"
+
+     :exp  = :i_expression
+     :args = [array] # [array @i_expression*]
+]
+
+fn call_from_exp_independent?(exp, independent_consts)
+     exp:exp.independent?(independent_consts) && exp:args.all(true, _.independent?(independent_consts))
+
+fn analyze_call_from_exp(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     exp:args.foldl(exp:exp.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids), fn (state, arg) {
+          let [box last_use_info, lambdas_data, def_ids] = state
+
+          arg.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     })
+
+fn call_from_exp_to_operand(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box func, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let [box args, state] = exp:args.map_with_state([box exp_data, ir, final_data, dependencies, src_gconsts], fn (state, arg) {
+          let [box exp_data, ir, final_data, dependencies, src_gconsts] = state
+
+          let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+               arg.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, true, true)
+
+          [box [box exp_data, ir, final_data, dependencies, src_gconsts], arg]
+     })
+     let [box exp_data, ir, final_data, dependencies, src_gconsts] = state
+
+     let code = new (func:code):text => fn (code)
+          if args.empty?()
+               code ++ "()"
+          else args.drop(1).foldl(code ++ "(" ++ args.first():code:text, fn (code, arg) code ++ ", " ++ arg:code:text) ++ ")"
+
+     if args.len() > 16
+          error__fn_params_num_exceeded(args[16]:code)
+     else null
+
+     ir__call_from_exp(func, args, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

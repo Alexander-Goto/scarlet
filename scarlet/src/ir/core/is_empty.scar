@@ -1,0 +1,21 @@
+fn ir__core_fn_is_empty(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     arg.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "box", "table", "set", "array", "obj", "custom"])
+
+     if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_][:core_empty?].null?()
+          ir__fn_call(
+               "McoreFNemptyB", [array arg], code
+               if arg.has_type?([set "short_string", "string", "short_byte_array", "byte_array", "box", "table", "set", "array"]); [set "bool"] else [set "bool", "error"]
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     else {
+          let arg_value = arg:comptime_val:value
+          let operand   = comptime_bool(arg_value.empty?() || arg:comptime_val:type == "obj" && not arg_value[:_].null?() && arg_value.len() == 1, code)
+
+          [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+     }
+}

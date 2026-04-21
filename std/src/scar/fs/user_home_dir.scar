@@ -1,0 +1,5 @@
+`external`
+fn user_home_dir()
+
+`export`
+let user_home_dir = user_home_dir()

@@ -1,0 +1,49 @@
+let t_mtd_call = [obj
+     :scar_type = "t_mtd_call"
+
+     :mtd_const = :i_expression
+     :mtd_name  = @main.t_token
+     :args      = [array] # [array @i_expression*]
+]
+
+fn mtd_call_independent?(exp, independent_consts)
+     exp:mtd_const.independent?(independent_consts) && exp:args.all(true, _.independent?(independent_consts))
+
+fn analyze_mtd_call(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let [box last_use_info, lambdas_data, def_ids] = exp:mtd_const.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+     let call_contexts = contexts.append("mtdc:" ++ format_int(exp:mtd_name.get_token_id(), 32, false))
+     exp:args.foldl([box last_use_info, lambdas_data, def_ids], fn (state, arg) {
+          let [box last_use_info, lambdas_data, def_ids] = state
+          arg.analyze(last_use_info, lambdas_data, call_contexts, name_ids, def_ids)
+     })
+}
+
+fn mtd_call_to_operand(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box mtd_const, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:mtd_const.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let mtd_tkn = str_to_tkn(exp:mtd_name:text)
+
+     let [box args, state] = exp:args.map_with_state([box exp_data, "", final_data, dependencies, src_gconsts], fn (state, arg) {
+          let [box exp_data, args_calc_ir, final_data, dependencies, src_gconsts] = state
+
+          let [box arg, exp_data, args_calc_ir, final_data, dependencies, src_gconsts] =
+               arg.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, args_calc_ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+          [box [box exp_data, args_calc_ir, final_data, dependencies, src_gconsts], arg]
+     })
+     let [box exp_data, args_calc_ir, final_data, dependencies, src_gconsts] = state
+
+     let code = new (mtd_const:code):text => fn (code)
+          code ++ "->" ++ exp:mtd_name:text ++ if exp:args.empty?()
+               "()"
+          else args.drop(1).foldl("(" ++ args.first():code:text, fn (code, arg) code ++ ", " ++ arg:code:text) ++ ")"
+
+     if args.len() > 16
+          error__fn_params_num_exceeded(args[16]:code)
+     else null
+
+     let call_contexts_consts = contexts[format_int(exp:mtd_name.get_token_id(), 32, false)] <? [set]
+     ir__mtd_call(mtd_tkn, mtd_const, args, args_calc_ir, code, call_contexts_consts, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

@@ -1,0 +1,175 @@
+let const__max = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_cmp       = fn (const_1, const_2) cmp(const_1:value, const_2:value)
+          :core___equal__ = fn (const_1, const_2) const_1:value === const_2:value
+     ]
+]
+
+fn to_const__max(arg) new (@main.const__max):value <= arg
+
+fn to_custom_const__max(arg) custom__create(
+     arg
+     [obj
+          :core_cmp       = fn (const_1, const_2) cmp(const_1.custom__get_data(), const_2.custom__get_data())
+          :core___equal__ = fn (const_1, const_2) const_1.custom__get_data() === const_2.custom__get_data()
+     ]
+)
+
+`noinline`
+fn test__max() {
+     test("".max("") === "")
+     test("1".max("") === "1")
+     test("".max("1") === "1")
+     test("1".max("2") === "2")
+     test("2".max("1") === "2")
+     test("0123456789abcde".max("0123456789abcde") === "0123456789abcde")
+     test("0123456789abcde".max("0123456789abcdf") === "0123456789abcdf")
+     test("0123456789abcdf".max("0123456789abcde") === "0123456789abcdf")
+     test("1123456789abcde".max("0123456789abcde") === "1123456789abcde")
+     test("0123456789abcde".max("1123456789abcde") === "1123456789abcde")
+     test("0123456789abcdef".max("0123456789abcdef") === "0123456789abcdef")
+     test("0123456789abcdeg".max("0123456789abcdef") === "0123456789abcdeg")
+     test("0123456789abcdef".max("0123456789abcdeg") === "0123456789abcdeg")
+     test("1123456789abcdef".max("0123456789abcdef") === "1123456789abcdef")
+     test("0123456789abcdef".max("1123456789abcdef") === "1123456789abcdef")
+
+     let string_1 = rnd_string()
+     let string_2 = rnd_string()
+     test(max(string_1, string_2) === if string_1 < string_2; string_2 else string_1)
+
+     test(u"".max(u"") === u"")
+     test(u"1".max(u"") === u"1")
+     test(u"".max(u"1") === u"1")
+     test(u"1".max(u"2") === u"2")
+     test(u"2".max(u"1") === u"2")
+     test(u"0123456789abcd".max(u"0123456789abcd") === u"0123456789abcd")
+     test(u"0123456789abcd".max(u"0123456789abce") === u"0123456789abce")
+     test(u"0123456789abce".max(u"0123456789abcd") === u"0123456789abce")
+     test(u"1123456789abcd".max(u"0123456789abcd") === u"1123456789abcd")
+     test(u"0123456789abcd".max(u"1123456789abcd") === u"1123456789abcd")
+     test(u"0123456789abcdef".max(u"0123456789abcdef") === u"0123456789abcdef")
+     test(u"0123456789abcdeg".max(u"0123456789abcdef") === u"0123456789abcdeg")
+     test(u"0123456789abcdef".max(u"0123456789abcdeg") === u"0123456789abcdeg")
+     test(u"1123456789abcdef".max(u"0123456789abcdef") === u"1123456789abcdef")
+     test(u"0123456789abcdef".max(u"1123456789abcdef") === u"1123456789abcdef")
+
+     let array_1 = rnd_byte_array()
+     let array_2 = rnd_byte_array()
+     test(max(array_1, array_2) === if array_1 < array_2; array_2 else array_1)
+
+     test(:_.max(:_) === :_)
+     test(:1.max(:_) === :_)
+     test(:_.max(:1) === :_)
+     test(:1.max(:2) === :2)
+     test(:2.max(:1) === :2)
+     test(:0123456789abcde.max(:0123456789abcde) === :0123456789abcde)
+     test(:0123456789abcde!.max(:0123456789abcde) === :0123456789abcde!)
+     test(:0123456789abcde.max(:0123456789abcde!) === :0123456789abcde!)
+
+     let token_1 = rnd_token()
+     let token_2 = rnd_token()
+     test(max(token_1, token_2) === if token_1 < token_2; token_2 else token_1)
+
+     test(0b00.max(0b00) === 0b00)
+     test(0bff.max(0bff) === 0bff)
+     test(0b00.max(0bff) === 0bff)
+     test(0bff.max(0b00) === 0bff)
+     test(0b01.max(0b02) === 0b02)
+     test(0b02.max(0b01) === 0b02)
+
+     let byte_1 = rnd_byte()
+     let byte_2 = rnd_byte()
+     test(max(byte_1, byte_2) === if byte_1 < byte_2; byte_2 else byte_1)
+
+     test('0'.max('0') === '0')
+     test('f'.max('f') === 'f')
+     test('0'.max('f') === 'f')
+     test('f'.max('0') === 'f')
+
+     let char_1 = rnd_char()
+     let char_2 = rnd_char()
+     test(max(char_1, char_2) === if char_1 < char_2; char_2 else char_1)
+
+     test(0.max(0) === 0)
+     test(-1.max(0) === 0)
+     test(0.max(-1) === 0)
+     test(-2.max(-1) === -1)
+     test(-1.max(-2) === -1)
+     test(-9223372036854775808.max(9223372036854775807) === 9223372036854775807)
+     test(9223372036854775807.max(-9223372036854775808) === 9223372036854775807)
+
+     let int_1 = rnd()
+     let int_2 = rnd()
+     test(max(int_1, int_2) === if int_1 < int_2; int_2 else int_1)
+
+     test(0.int_to_time().max(0.int_to_time()) === 0.int_to_time())
+     test(1.int_to_time().max(0.int_to_time()) === 1.int_to_time())
+     test(0.int_to_time().max(1.int_to_time()) === 1.int_to_time())
+     test(2.int_to_time().max(1.int_to_time()) === 2.int_to_time())
+     test(1.int_to_time().max(2.int_to_time()) === 2.int_to_time())
+     test(0.int_to_time().max(9223372036825516799.int_to_time()) === 9223372036825516799.int_to_time())
+     test(9223372036825516799.int_to_time().max(0.int_to_time()) === 9223372036825516799.int_to_time())
+
+     let time_1 = (rnd() >> 2).int_to_time()
+     let time_2 = (rnd() >> 2).int_to_time()
+     test(max(time_1, time_2) === if time_1 < time_2; time_2 else time_1)
+
+     test(-0.0.max(0.0).scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test(0.0.max(-0.0).scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(-1.1.max(0.0).scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(0.0.max(-1.1).scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(-2.32.max(-1.71).scarlet__split!!!()[0] === -1.71.scarlet__split!!!()[0])
+     test(-1.71.max(-2.32).scarlet__split!!!()[0] === -1.71.scarlet__split!!!()[0])
+
+     let float_1 = rnd_float()
+     let float_2 = rnd_float()
+     test(max(float_1, float_2) === if float_1 < float_2; float_2 else float_1)
+
+     test([array].max([array]) === [array])
+     test([array 1].max([array]) === [array 1])
+     test([array].max([array 1]) === [array 1])
+     test([array 1].max([array 2]) === [array 2])
+     test([array 2].max([array 1]) === [array 2])
+     test([array 1, 2, 3].max([array 1, 2, 3]) === [array 1, 2, 3])
+     test([array 1, 2, 4].max([array 1, 2, 3]) === [array 1, 2, 4])
+     test([array 1, 2, 3].max([array 2, 2, 3]) === [array 2, 2, 3])
+     test([array -0.0].max([array 0.0])[0].scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test([array 0.0].max([array -0.0])[0].scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+
+     let array_1 = rnd_string_array()
+     let array_2 = rnd_string_array()
+     test(max(array_1, array_2) === if array_1 < array_2; array_2 else array_1)
+
+     test(-0.0.to_const__max().max(0.0.to_const__max()):value.scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test(0.0.to_const__max().max(-0.0.to_const__max()):value.scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(-1.to_const__max().max(2.to_const__max()) === 2.to_const__max())
+     test(10.to_const__max().max(2.to_const__max()) === 10.to_const__max())
+     test(-0.0.to_custom_const__max().max(0.0.to_custom_const__max()).custom__get_data().scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test(0.0.to_custom_const__max().max(-0.0.to_custom_const__max()).custom__get_data().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(-1.to_custom_const__max().max(2.to_custom_const__max()) === 2.to_custom_const__max())
+     test(10.to_custom_const__max().max(2.to_custom_const__max()) === 10.to_custom_const__max())
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(max(error_1, error_2).get_error_id() === :1)
+     test(max(error_2, error_1).get_error_id() === :2)
+     test(max(error_1, heap_string()).get_error_id() === :1)
+     test(max(heap_string(), error_1).get_error_id() === :1)
+     test(max(error_1, heap_table()).get_error_id() === :1)
+     test(max(heap_table(), error_1).get_error_id() === :1)
+
+     test(max(heap_byte_array(), heap_string()).get_error_id() === :invalid_type)
+     test(max(heap_table(), heap_string()).get_error_id() === :invalid_type)
+     test(max(heap_byte_array(), heap_table()).get_error_id() === :invalid_type)
+     test(max(heap_table(), nan()).get_error_id() === :invalid_type)
+     test(max(nan(), heap_table()).get_error_id() === :invalid_type)
+     test(max(heap_string(), nan()).get_error_id() === :invalid_type)
+     test(max(nan(), heap_string()).get_error_id() === :invalid_type)
+
+     test(max(nan(), 1.0).get_error_id() === :nan_cmp)
+     test(max(1.0, nan()).get_error_id() === :nan_cmp)
+     test(max([array nan()], [array 1.0]).get_error_id() === :nan_cmp)
+     test(max([array 1.0], [array nan()]).get_error_id() === :nan_cmp)
+}

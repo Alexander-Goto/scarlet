@@ -1,0 +1,72 @@
+fn ir__box(items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_box, is_last) {
+     let [box items, final_data, dependencies] = operands_have_ir!(items, final_data, dependencies)
+     let [box box_reg, exp_data]               = exp_data.new_reg()
+     let items_len_ir_num                      = items.len().to_ir_num()
+
+     let ir = ir ++ "t_any " ++ box_reg ++ "=box__new(thrd_data," ++ items_len_ir_num ++ "," ++ exp_data:owner_name_ir_const ++ ");\n"
+
+     let [box ir__is_error, ir__error_actions] = if is_box
+          null
+     else items.foldl([box "", "thrd_data->free_boxes^=(u32)1<<box__get_idx(" ++ box_reg ++ ");\n", false], fn (state, item) {
+          let ir__free_item = item.dec_ref_cnt("")
+
+          let [box ir__is_error, ir__error_actions, box_maybe_error] = state
+
+          if not item.maybe_has_type?("error")
+               [box ir__is_error, ir__error_actions ++ ir__free_item, box_maybe_error]
+          else {
+               let ir__type_check    = item:ir ++ ".bytes[15]==tid__error"
+               let ir__is_error      = (if ir__is_error.empty?(); "" else ir__is_error ++ "||") ++ ir__type_check
+               let ir__error_actions = ir__raw_if(
+                    ir__error_actions
+
+                    ir__type_check ++ (if box_maybe_error; "&&" ++ box_reg ++ ".bytes[15]!=tid__error" else "")
+                    :unknown
+                    box_reg ++ "=" ++ item:ir ++ ";\n"
+
+                    ir__free_item
+               )
+
+               [box ir__is_error, ir__error_actions, true]
+          }
+     })
+
+     let [box items_reg, exp_data] = exp_data.new_reg()
+
+     let [box ir__create_box, final_data, dependencies] = ir__memcpy_items(
+          items_reg, 0, items
+
+          "t_any*const " ++ items_reg ++ "=box__get_items(" ++ box_reg ++ ");\n"
+
+          final_data, dependencies
+     )
+
+     let ir = if is_box
+          ir ++ ir__create_box
+     else ir__raw_if(
+          ir
+
+          ir__is_error
+          :unlikely
+          ir__error_actions
+
+          ir__create_box
+     )
+
+     let type = if is_box; [set "box"] else [set "box", "error"]
+     let ir   = ir__assume_type(box_reg, type, ir)
+
+     let ir = if is_last
+          ir__raw_return(ir, box_reg)
+     else ir
+
+     [box
+          new (@main.t_operand) {
+               :code           <= code
+               :ir             <= box_reg
+               :possible_types <= type
+          }
+
+          exp_data, ir, final_data, dependencies, src_gconsts
+     ]
+}

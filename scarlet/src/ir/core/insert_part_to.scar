@@ -1,0 +1,115 @@
+fn ir__core_fn_insert_part_to(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box part, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box array, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box idx, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ part:code:text ++ ", " ++ array:code:text ++ ", " ++ idx:code:text ++ ")")
+
+     let valid_types              = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+     let valid_for_comptime_types = [set "short_string", "string", "short_byte_array", "byte_array", "array"]
+
+     if part:comptime_val.null?() || array:comptime_val.null?() || idx:comptime_val.null?() || not part:comptime_val:type.in?(valid_for_comptime_types) {
+          if part:comptime_val:type === "obj" && part:comptime_val:value[:_][:core_insert_part_to].null?()
+               error__invalid_type(part:code, ".core_insert_part_to", "obj")
+          else null
+
+          let part_possible_types  = part:possible_types
+          let array_possible_types = array:possible_types
+
+          let [box new_part_possible_types, part_maybe_short_string, part_maybe_string, part_maybe_short_byte_array, part_maybe_byte_array] =
+               if part_possible_types.null?()
+                    [box valid_types, true, true, true, true]
+               else {
+                    let new_part_possible_types     = part_possible_types.filter(_.in?(valid_types))
+                    let part_maybe_short_string     = "short_string".in?(new_part_possible_types)
+                    let part_maybe_string           = "string".in?(new_part_possible_types)
+                    let part_maybe_short_byte_array = "short_byte_array".in?(new_part_possible_types)
+                    let part_maybe_byte_array       = "byte_array".in?(new_part_possible_types)
+
+                    if new_part_possible_types.empty?()
+                         error__invalid_type(part:code, valid_types, part_possible_types)
+                    else new_part_possible_types
+
+                    [box new_part_possible_types, part_maybe_short_string, part_maybe_string, part_maybe_short_byte_array, part_maybe_byte_array]
+               }
+
+          let [box new_array_possible_types, array_maybe_short_string, array_maybe_string, array_maybe_short_byte_array, array_maybe_byte_array] =
+               if array_possible_types.null?()
+                    [box valid_types, true, true, true, true]
+               else {
+                    let new_array_possible_types     = array_possible_types.filter(_.in?(valid_types))
+                    let array_maybe_short_string     = "short_string".in?(new_array_possible_types)
+                    let array_maybe_string           = "string".in?(new_array_possible_types)
+                    let array_maybe_short_byte_array = "short_byte_array".in?(new_array_possible_types)
+                    let array_maybe_byte_array       = "byte_array".in?(new_array_possible_types)
+
+                    if new_array_possible_types.empty?()
+                         error__invalid_type(part:code, valid_types, array_possible_types)
+                    else new_array_possible_types
+
+                    [box new_array_possible_types, array_maybe_short_string, array_maybe_string, array_maybe_short_byte_array, array_maybe_byte_array]
+               }
+
+          let result_possible_types = if new_array_possible_types.len() == valid_types.len()
+               new_part_possible_types
+          else {
+               let result_possible_types = new_part_possible_types.filter(_.in?(new_array_possible_types))
+               if result_possible_types.empty?() &&
+                         (part_maybe_string || part_maybe_short_string) /= (array_maybe_string || array_maybe_short_string) &&
+                         (part_maybe_byte_array || part_maybe_short_byte_array) /= (array_maybe_byte_array || array_maybe_short_byte_array)
+                    error__invalid_type(array:code, part_possible_types, array_possible_types)
+               else null
+
+               result_possible_types
+          }
+
+          let result_possible_types = if not "string".in?(result_possible_types) && (part_maybe_short_string || part_maybe_string) && (array_maybe_short_string || array_maybe_string)
+               result_possible_types.append("string")
+          else result_possible_types
+
+          let result_possible_types = if "short_string".in?(result_possible_types) && (part_maybe_string && not array_maybe_short_string || array_maybe_string && not part_maybe_short_string)
+               result_possible_types.remove("short_string")
+          else result_possible_types
+
+          let result_possible_types = if not "byte_array".in?(result_possible_types) && (part_maybe_short_byte_array || part_maybe_byte_array) && (array_maybe_short_byte_array || array_maybe_byte_array)
+               result_possible_types.append("byte_array")
+          else result_possible_types
+
+          let result_possible_types = if "short_byte_array".in?(result_possible_types) && (part_maybe_byte_array && not array_maybe_short_byte_array || array_maybe_byte_array && not part_maybe_short_byte_array)
+               result_possible_types.remove("short_byte_array")
+          else result_possible_types
+
+          let result_possible_types = result_possible_types.append("error")
+
+          if idx:comptime_val:type =/= "int"
+               idx.maybe_has_type!("int")
+          else if not (array:comptime_val.null?() || array:comptime_val:type === "obj" || idx:comptime_val:value.in_range?(0, array:comptime_val:value.len() + 1))
+               error__out_of_bounds(idx:code)
+          else null
+
+          ir__fn_call("McoreFNinsert_part_to", [array part, array, idx], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          array.maybe_has_type!(part:possible_types.prepare_types_for_cmp())
+          idx.maybe_has_type!("int")
+
+          if not idx:comptime_val:value.in_range?(0, array:comptime_val:value.len() + 1)
+               error__out_of_bounds(idx:code)
+          else null
+
+          let operand = new (part) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:value => _.insert_part_to(array:comptime_val:value, idx:comptime_val:value)
+          }
+          let operand = new (operand):possible_types <= operand:comptime_val.get_type_for_operand()
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

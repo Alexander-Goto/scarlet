@@ -1,0 +1,15 @@
+`noinline`
+fn test__delete_empty_dir() {
+     make_dir(fs_path("__tmp_dir__"))
+     test(delete_empty_dir(fs_path("__tmp_dir__")).null?())
+     test(delete_empty_dir(fs_path("__tmp_dir__")) == :not_exist)
+     test(delete_empty_dir(fs_path("/root")) == :access)
+     let long_name = fs_path("/" ++ "a".repeat(16777214))
+     test(long_name.type() == "std.fs_path")
+     test(delete_empty_dir(long_name) == :long)
+     test(delete_empty_dir(fs_path("test")) == :not_dir)
+     test(delete_empty_dir(fs_path("src/helpers")) == :not_empty)
+
+     test(delete_empty_dir(expected_error(:1, heap_string(), heap_string())).get_error_id() == :1)
+     test(delete_empty_dir(heap_string()).get_error_id() == :invalid_type)
+}

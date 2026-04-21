@@ -1,0 +1,10 @@
+fn ir__scarlet__join(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg_0, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box arg_1, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg_0:code:text ++ ", " ++ arg_1:code:text ++ ")")
+
+     ir__fn_call("McoreFNscarlet__joinAAA", [array arg_0, arg_1], code, null, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

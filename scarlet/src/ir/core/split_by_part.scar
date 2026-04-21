@@ -1,0 +1,59 @@
+fn ir__core_fn_split_by_part(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box array, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box separator, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ array:code:text ++ ", " ++ separator:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+     if array:comptime_val.null?() || separator:comptime_val.null?() || array:comptime_val:type.in?([array "array", "obj"]) {
+          if array:comptime_val:type === "obj" && array:comptime_val:value[:_][:core_split_by_part].null?()
+               error__invalid_type(array:code, ".core_split_by_part", "obj")
+          else null
+
+          let separator_expected_types = if array:possible_types.null?()
+               valid_types
+          else {
+               let separator_expected_types = array:possible_types.filter(_.in?(valid_types)).prepare_types_for_cmp()
+               if separator_expected_types.empty?()
+                    error__invalid_type(array:code, valid_types, separator_expected_types)
+               else separator_expected_types
+          }
+          separator.maybe_has_type!(separator_expected_types)
+
+          ir__fn_call(
+               "McoreFNsplit_by_part", [array array, separator], code
+
+               if
+                         array.has_type?(@main.string_types) && separator.has_type?(@main.string_types)         ||
+                         array.has_type?(@main.byte_array_types) && separator.has_type?(@main.byte_array_types) ||
+                         array.has_type?("array") && separator.has_type?("array")
+                    [set "array"]
+               else [set "array", "error"]
+
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     } else {
+          array.maybe_has_type!(valid_types)
+          separator.maybe_has_type!(array:possible_types.prepare_types_for_cmp())
+
+          let array_type = array:comptime_val:type
+          let operand    = new (array) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:type  <= "array"
+               :comptime_val:value => fn (array) {
+                    let result = array.split_by_part(separator:comptime_val:value)
+                    result.map(fn (item) new (@main.t_comptime_val) {:type <= array_type; :value <= item})
+               }
+               :possible_types <= [set "array"]
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

@@ -1,0 +1,47 @@
+let t_char = [obj
+     :scar_type = "t_char"
+     :value     = @main.t_token
+]
+
+fn char_to_operand(char, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let char_text = char:value:text
+     let is_raw    = char_text.first() == 'r'
+     let is_utf8   = char_text.first() == 'u' || is_raw && char_text[1] == 'u'
+     let operand   = if is_utf8 {
+          let char_code = if is_raw
+               char_text[3].char_to_uchar()
+          else if char_text[2] /= '\\'
+               char_text[2].char_to_uchar()
+          else switch char_text[3]
+          case 'n':  u'\n'
+          case 't':  u'\t'
+          case '\'': u'\''
+          case '"':  u'"'
+          case '\\': u'\\'
+          default:   char_text[3, char_text.len() - 1].parse_int(16)
+
+          if char_code.null?()
+               error__not_unicode_char(char)
+          else null
+
+          comptime_int(char_code, char:value)
+     } else {
+          let raw_char = if is_raw
+               char_text[2]
+          else if char_text[1] /= '\\'
+               char_text[1]
+          else switch char_text[2]
+          case 'n':             '\n'
+          case 't':             '\t'
+          case '\'', '"', '\\': char_text[2]
+          default:              char_text[2, char_text.len() - 1].parse_int(16).to_char()
+
+          comptime_char(raw_char, char:value)
+     }
+
+     if is_last {
+          let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+          [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+     } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+}

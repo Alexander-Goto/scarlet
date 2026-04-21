@@ -1,0 +1,28 @@
+let t_const_in_exp = [obj
+     :scar_type = "t_const_in_exp"
+     :name      = @main.t_token
+]
+
+fn const_independent?(const, independent_consts) const:name:text.in?(independent_consts)
+
+fn analyze_const(const, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let name_id = name_ids[const:name:text]
+     if name_id.null?()
+          error__not_found(const:name, "constant")
+     else null
+
+     let last_use_info = new (last_use_info)[name_id] <= [table const:name.get_token_id() = contexts]
+
+     [box last_use_info, lambdas_data, def_ids]
+}
+
+fn const_to_operand(const, last_use_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let named_const = exp_data:named_consts[const:name:text]
+     let operand     = new (named_const:operand):code <= const:name
+
+     let is_last_use = const:name.get_token_id().in?(last_use_ids)
+
+     if is_last_use
+          [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+     else [box operand, exp_data, operand.inc_ref_cnt(exp_data:owner_name_ir_const, ir), final_data, dependencies, src_gconsts]
+}

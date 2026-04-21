@@ -1,0 +1,186 @@
+let last_corsar_code = 257
+
+fn rnd_char() {
+     let rnd_code = (rnd() & 0xff'ffff) % @main.last_corsar_code + 1
+     rnd_code.to_char()
+}
+
+fn rnd_chars() {
+     let len = (rnd() & 1023) + 1
+     loop([array].init(len), fn (chars) {
+          let chars = chars.append(rnd_char())
+          break(len(chars) === len, chars)
+     }).drop(rnd() & (len / 2))
+}
+
+fn chars_to_str(chars) chars.foldl("", _.append(_))
+
+fn rnd_string() {
+     let len = (rnd() & 1023) + 1
+     loop("", fn (string) {
+          let string = string.append(rnd_char())
+          break(len(string) === len, string)
+     }).drop(rnd() & (len / 2))
+}
+
+fn rnd_token() {
+     let len    = (rnd() & 0xffff'ffff) % 22 + 1
+     let string = loop("", fn (string) {
+          let string = string.append("_0123456789abcdefghijklmnopqrstuvwxyz"[(rnd() & 0xffff'ffff) % 37])
+          break(len(string) === len, string)
+     })
+
+     let string = string ++ [array "", "!", "!!!", "?"][rnd() & 3]
+     string.str_to_tkn()
+}
+
+fn rnd_byte() (rnd() & 0xff).to_byte()
+
+fn rnd_bool() (rnd() & 1) == 1
+
+fn rnd_byte_array() {
+     let len = (rnd() & 1023) + 1
+     loop([byte_array], fn (array) {
+          let array = array.append(rnd_byte())
+          break(len(array) === len, array)
+     }).drop(rnd() & (len / 2))
+}
+
+fn rnd_string_array() {
+     let len = (rnd() & 1023) + 1
+     loop([array].init(len), fn (array) {
+          let array = array.append(rnd_string())
+          break(len(array) === len, array)
+     }).drop(rnd() & (len / 2))
+}
+
+fn rnd_string_set() {
+     let len = (rnd() & 1023) + 1
+     loop([set].init(len), fn (set) {
+          let set = set.append(rnd_string())
+          break(len(set) === len, set)
+     })
+}
+
+fn rnd_string_table() {
+     let len = (rnd() & 1023) + 1
+     loop([table].init(len), fn (table) {
+          let table = new (table)[rnd_string()] <= rnd_string()
+          break(len(table) === len, table)
+     })
+}
+
+fn rnd_string_obj() {
+     let len = (rnd() & 1023) + 1
+     loop([obj].init(len), fn (obj) {
+          let key = loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+          let obj = new (obj)[key] <= rnd_string()
+          break(len(obj) === len, obj)
+     })
+}
+
+fn rnd_byte_array_array() {
+     let len = (rnd() & 15) + 1
+     loop([array].init(len), fn (array) {
+          let array = array.append(rnd_byte_array())
+          break(len(array) === len, array)
+     }).drop(rnd() & (len / 2))
+}
+
+fn rnd_string_array_array() {
+     let len = (rnd() & 15) + 1
+     loop([array].init(len), fn (array) {
+          let array = array.append(rnd_string_array())
+          break(len(array) === len, array)
+     }).drop(rnd() & (len / 2))
+}
+
+fn rnd_float() loop(null, fn (_) {
+     let float = scarlet__join!!!(rnd(), 0.0.scarlet__split!!!()[1])
+     break(not float.nan?(), float)
+})
+
+fn rnd_hashable(depth) {
+     switch (rnd() % (if depth > 4; 8 else 12)).abs()
+     case 0: rnd_string()
+     case 1: rnd_token()
+     case 2: rnd_byte_array()
+     case 3: rnd_bool()
+     case 4: rnd_byte()
+     case 5: rnd_char()
+     case 6: rnd()
+     case 7: (rnd() >> 2).int_to_time()
+     case 8: {
+          let len = (rnd() & 15) + 1
+          loop([obj].init(len), fn (obj) {
+               let key = loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+               let obj = new (obj)[key] <= rnd_hashable(depth + 1)
+               break(len(obj) === len, obj)
+          })
+     }
+     case 9: {
+          let len = (rnd() & 15) + 1
+          loop([table].init(len), fn (table) {
+               let table = new (table)[rnd_hashable(depth + 1)] <= rnd_hashable(depth + 1)
+               break(len(table) === len, table)
+          })
+     }
+     case 10: {
+          let len = (rnd() & 15) + 1
+          loop([set].init(len), fn (set) {
+               let set = set.append(rnd_hashable(depth + 1))
+               break(len(set) === len, set)
+          })
+     }
+     case 11: {
+          let len = (rnd() & 15) + 1
+          loop([array].init(len), fn (array) {
+               let array = array.append(rnd_hashable(depth + 1))
+               break(len(array) === len, array)
+          }).drop(rnd() & (len / 2))
+     }
+     default: unreachable()
+}
+
+fn rnd_serializable(depth) {
+     switch (rnd() % (if depth > 4; 9 else 13)).abs()
+     case 0: rnd()
+     case 1: rnd_string()
+     case 2: rnd_token()
+     case 3: rnd_bool()
+     case 4: rnd_byte()
+     case 5: rnd_char()
+     case 6: (rnd() >> 2).int_to_time()
+     case 7: rnd_float()
+     case 8: rnd_byte_array()
+     case 9: {
+          let len = (rnd() & 15) + 1
+          loop([obj].init(len), fn (obj) {
+               let key = loop(rnd_token(), fn (key) if key =/= :_; [breaker key] else rnd_token())
+               let obj = new (obj)[key] <= rnd_serializable(depth + 1)
+               break(len(obj) === len, obj)
+          })
+     }
+     case 10: {
+          let len = (rnd() & 15) + 1
+          loop([table].init(len), fn (table) {
+               let table = new (table)[rnd_hashable(depth + 1)] <= rnd_serializable(depth + 1)
+               break(len(table) === len, table)
+          })
+     }
+     case 11: {
+          let len = (rnd() & 15) + 1
+          loop([set].init(len), fn (set) {
+               let set = set.append(rnd_hashable(depth + 1))
+               break(len(set) === len, set)
+          })
+     }
+     case 12: {
+          let len = (rnd() & 15) + 1
+          loop([array].init(len), fn (array) {
+               let array = array.append(rnd_serializable(depth + 1))
+               break(len(array) === len, array)
+          }).drop(rnd() & (len / 2))
+     }
+     default: unreachable()
+}

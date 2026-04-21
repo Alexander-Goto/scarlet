@@ -1,0 +1,159 @@
+let const__to_float = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_float = fn (const) const:value.to_float()
+     ]
+]
+
+fn to_const__to_float(arg) new (@main.const__to_float):value <= arg
+
+fn to_custom_const__to_float(arg) custom__create(
+     arg
+     [obj
+          :core_to_float = fn (const) custom__get_data(const).to_float()
+     ]
+)
+
+let broken_const__to_float = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_float = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_const__to_float(arg) new (@main.broken_const__to_float):value <= arg
+
+fn to_broken_custom_const__to_float(arg) custom__create(
+     arg
+     [obj
+          :core_to_float = fn (_) heap_string()
+     ]
+)
+
+let error_const__to_float = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_float = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__to_float(arg) new (@main.error_const__to_float):value <= arg
+
+fn to_error_custom_const__to_float(arg) custom__create(
+     arg
+     [obj
+          :core_to_float = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__to_float() {
+     test("0".to_float().in_range?(-0.01, 0.01))
+     test("-0".to_float().in_range?(-0.01, 0.01))
+     test("0.0".to_float().in_range?(-0.01, 0.01))
+     test("-0.0".to_float().in_range?(-0.01, 0.01))
+     test("000000000".to_float().in_range?(-0.01, 0.01))
+     test("-000000000".to_float().in_range?(-0.01, 0.01))
+     test("000000000.0000000000000".to_float().in_range?(-0.01, 0.01))
+     test("-000000000.0000000000000".to_float().in_range?(-0.01, 0.01))
+     test("10".to_float().in_range?(9.99, 10.01))
+     test("010".to_float().in_range?(9.99, 10.01))
+     test("10.0".to_float().in_range?(9.99, 10.01))
+     test("010.0000".to_float().in_range?(9.99, 10.01))
+     test("010.00001".to_float().in_range?(9.99, 10.01))
+     test("-10".to_float().in_range?(-10.01, -9.99))
+     test("-010".to_float().in_range?(-10.01, -9.99))
+     test("-10.0".to_float().in_range?(-10.01, -9.99))
+     test("-010.0000".to_float().in_range?(-10.01, -9.99))
+     test("-010.00001".to_float().in_range?(-10.01, -9.99))
+     test("10.5".to_float().in_range?(10.49, 10.51))
+     test("010.5".to_float().in_range?(10.49, 10.51))
+     test(("00000000000000000000000000000000000000000000000000000000010.5" ++ "0").drop(1).to_float().in_range?(10.49, 10.51))
+     test(("010.500000000000000000000000000000000000000000000000000000000" ++ "0").drop(1).to_float().in_range?(10.49, 10.51))
+     test(("010.500000000000000000000000000000000000000000000000000000000" ++ "0".repeat(1000)).drop(1).to_float().in_range?(10.49, 10.51))
+     test("-10.5".to_float().in_range?(-10.51, -10.49))
+     test("-010.5".to_float().in_range?(-10.51, -10.49))
+     test(("0-0000000000000000000000000000000000000000000000000000000010.5" ++ "0").drop(1).to_float().in_range?(-10.51, -10.49))
+     test(("0-10.500000000000000000000000000000000000000000000000000000000" ++ "0").drop(1).to_float().in_range?(-10.51, -10.49))
+     test(("0-10.500000000000000000000000000000000000000000000000000000000" ++ "0".repeat(1000)).drop(1).to_float().in_range?(-10.51, -10.49))
+     test("10.5".to_float().in_range?(10.49, 10.51))
+     test("010.5".to_float().in_range?(10.49, 10.51))
+     test("1.0e+4".to_float().in_range?(9999.99, 10000.01))
+     test("-1.0E+4".to_float().in_range?(-10000.01, -9999.99))
+     test("nan".to_float().nan?())
+     test("NAN".to_float().nan?())
+     test("NaN".to_float().nan?())
+     test("naN".to_float().nan?())
+     test("+nan".to_float().nan?())
+     test("+NAN".to_float().nan?())
+     test("+NaN".to_float().nan?())
+     test("+naN".to_float().nan?())
+     test("-nan".to_float().nan?())
+     test("-NAN".to_float().nan?())
+     test("-NaN".to_float().nan?())
+     test("-naN".to_float().nan?())
+     test("inf".to_float().inf?())
+     test("INF".to_float().inf?())
+     test("iNF".to_float().inf?())
+     test("Inf".to_float().inf?())
+     test("+inf".to_float().inf?())
+     test("+INF".to_float().inf?())
+     test("+iNF".to_float().inf?())
+     test("+Inf".to_float().inf?())
+     test("-inf".to_float().neg_inf?())
+     test("-INF".to_float().neg_inf?())
+     test("-iNF".to_float().neg_inf?())
+     test("-Inf".to_float().neg_inf?())
+
+     test(0b00.to_float().in_range?(-0.01, 0.01))
+     test(0bff.to_float().in_range?(254.99, 255.01))
+     test(0b01.to_float().in_range?(0.99, 1.01))
+     test(0b10.to_float().in_range?(15.99, 16.01))
+     test(0bfe.to_float().in_range?(253.99, 254.01))
+     test(0bef.to_float().in_range?(238.99, 239.01))
+
+     test(0.to_float().in_range?(-0.01, 0.01))
+     test(255.to_float().in_range?(254.99, 255.01))
+     test(1.to_float().in_range?(0.99, 1.01))
+     test(16.to_float().in_range?(15.99, 16.01))
+     test(254.to_float().in_range?(253.99, 254.01))
+     test(239.to_float().in_range?(238.99, 239.01))
+     test(-1.to_float().in_range?(-1.01, -0.99))
+     test(-9223372036854775808.to_float().in_range?(-9223372036854777856.0, -9223372036854774784.00))
+     test(9223372036854775807.to_float().in_range?(9223372036854774784.00, 9223372036854777856.0))
+
+     test(nan().to_float().nan?())
+     test(inf().to_float().inf?())
+     test(neg_inf().to_float().neg_inf?())
+
+     let float = rnd_float()
+     test(float.to_float().scarlet__split!!!()[0] === float.scarlet__split!!!()[0])
+
+     test(256.9.to_const__to_float().to_float().in_range?(256.89, 256.91))
+     test(1.0.to_const__to_float().to_float().in_range?(0.99, 1.01))
+
+     test(256.9.to_custom_const__to_float().to_float().in_range?(256.89, 256.91))
+     test(1.0.to_custom_const__to_float().to_float().in_range?(0.99, 1.01))
+
+     test(expected_error(:1, heap_string(), heap_string()).to_float().get_error_id() === :1)
+
+     test(heap_table().to_float().get_error_id() === :invalid_type)
+
+     test("".to_float().null?())
+     test("a".to_float().null?())
+     test("0000a".to_float().null?())
+     test("0000.0a+1".to_float().null?())
+     test("11111111a1a11a1a1a1a1a11a1a1a1a".to_float().null?())
+     test("a".repeat(1000).to_float().null?())
+     test("\000090".to_float().null?())
+     test(("\000090" ++ "0".repeat(19)).to_float().null?())
+     test(heap_string().to_float().null?())
+
+     test(to_broken_const__to_float("").to_float().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__to_float("").to_float().get_error_id() === :invalid_type)
+     test(to_error_const__to_float("").to_float().get_error_id() === :3)
+     test(to_error_custom_const__to_float("").to_float().get_error_id() === :4)
+}

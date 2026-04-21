@@ -1,0 +1,9 @@
+let t_exp_data = [obj
+     :owner_id            = ""
+     :owner_name_ir_const = ""
+     :named_consts        = [table] # [table name:@string = @t_named_const]
+     :name_ids            = [table] # [table def_id:@int = name:@string]
+     :ir_reg_num          = 0
+]
+
+fn new_reg(exp_data) [box "__" ++ exp_data:ir_reg_num.to_string(), new (exp_data):ir_reg_num => _ + 1]

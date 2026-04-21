@@ -1,0 +1,8 @@
+fn to_ir_u128(value) {
+     let [box low, high] = scarlet__split!!!(value)
+     let low_string      = format_int(low, 16, false)
+
+     if high == 0
+          "0x" ++ low_string ++ "uwb"
+     else "0x" ++ format_int(high, 16, false) ++ "0".repeat(16 - low_string.len()) ++ low_string ++ "uwb"
+}

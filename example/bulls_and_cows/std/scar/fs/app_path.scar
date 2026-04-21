@@ -1,0 +1,5 @@
+`external`
+fn app_path()
+
+`export`
+let app_path = app_path()

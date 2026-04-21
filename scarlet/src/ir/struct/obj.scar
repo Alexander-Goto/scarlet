@@ -1,0 +1,315 @@
+fn fix_obj__get_idx_offset_and_size(keys) {
+     let keys_len = keys.len()
+     let size     = if keys_len == 0; 0 else 64 - (keys_len - 1).qty_leading_0_bits()
+     if size == 0
+          [box 0, 0]
+     else {
+          let [box low_any_1, high_any_1, low_all_1, high_all_1] = keys.foldl([box 0, 0, -1, -1], fn (state, key) {
+               let [box low_any_1, high_any_1, low_all_1, high_all_1] = state
+
+               let [box key_low_bits, key_high_bits] = key.scarlet__split!!!()
+               [box low_any_1 | key_low_bits, high_any_1 | key_high_bits, low_all_1 & key_low_bits, high_all_1 & key_high_bits]
+          })
+
+          let init_low_maybe_uniq_bits  = low_any_1 ^ low_all_1
+          let init_high_maybe_uniq_bits = high_any_1 ^ high_all_1
+          loop([box 0, init_low_maybe_uniq_bits, init_high_maybe_uniq_bits, [set].init(keys_len), size, (1 << size) - 1, false], fn (state) {
+               let [box offset, low_maybe_uniq_bits, high_maybe_uniq_bits, uniq_fix_idxes, size, mask, is_bigger] = state
+
+               if (low_maybe_uniq_bits & mask) /= mask
+                    if (low_maybe_uniq_bits | high_maybe_uniq_bits) == 0
+                         if is_bigger
+                              [breaker null]
+                         else [box 0, init_low_maybe_uniq_bits, init_high_maybe_uniq_bits, uniq_fix_idxes.clear(), size + 1, mask << 1 | 1, true]
+                    else {
+                         let shifts = max(1, low_maybe_uniq_bits.qty_trailing_0_bits())
+                         [box offset + shifts, low_maybe_uniq_bits >> shifts | high_maybe_uniq_bits << (64 - shifts), high_maybe_uniq_bits >> shifts, uniq_fix_idxes, size, mask, is_bigger]
+                    }
+               else keys.foldl_kv(uniq_fix_idxes, fn (uniq_fix_idxes, key_idx, key) {
+                    let [box key_low_bits, key_high_bits] = key.scarlet__split!!!()
+                    let fix_idx                           = (
+                         if offset < 64
+                              key_low_bits >> offset | key_high_bits << (64 - offset)
+                         else key_high_bits >> (offset - 64)
+                    ) & mask
+
+                    let uniq_fix_idxes_prev_qty = uniq_fix_idxes.len()
+                    let uniq_fix_idxes          = uniq_fix_idxes.append(fix_idx)
+                    if uniq_fix_idxes.len() == uniq_fix_idxes_prev_qty {
+                         let shifts = max(1, low_maybe_uniq_bits.qty_trailing_0_bits())
+                         [breaker [box offset + shifts, low_maybe_uniq_bits >> shifts | high_maybe_uniq_bits << (64 - shifts), high_maybe_uniq_bits >> shifts, uniq_fix_idxes.clear(), size, mask, is_bigger]]
+                    } else if key_idx + 1 < keys_len
+                         uniq_fix_idxes
+                    else [breaker [breaker [box offset, size]]]
+               })
+          })
+     }
+}
+
+fn ir__obj(kvs, code, exp_data, ir, final_data, dependencies, src_gconsts, is_fix, is_obj, is_last) {
+     let [box kvs, state] = kvs.map_kv_with_state([box null, final_data, dependencies], fn (state, kv_idx, kv) {
+          let [box mtds_idx, final_data, dependencies] = state
+
+          let [box kv, key]   = new (kv):key <<= :holder
+          let [box kv, value] = new (kv):value <<= :holder
+
+          let [box key, final_data, dependencies]   = key.has_ir!(final_data, dependencies)
+          let [box value, final_data, dependencies] = value.has_ir!(final_data, dependencies)
+
+          let kv = new (kv) {
+               :key   <= key
+               :value <= value
+          }
+
+          [box [box if key:comptime_val:value === :_; kv_idx else mtds_idx, final_data, dependencies], kv]
+     })
+     let [box mtds_idx, final_data, dependencies] = state
+
+     let [box obj_reg, exp_data] = exp_data.new_reg()
+
+     let [box ir__is_error, ir__error_actions] = if is_obj
+          null
+     else {
+          let valid_value_types           = if is_fix; @main.common_types__null else @main.common_types
+          let valid_value_types_and_error = if is_fix; @main.common_types__null_error else @main.common_types__error
+
+          kvs.foldl_kv([box "", "free((void*)" ++ obj_reg ++ ".qwords[0]);\n", false], fn (state, kv_idx, kv) {
+               let [box ir__is_error, ir__error_actions, obj_maybe_error] = state
+
+               let [obj key = :key, value = :value] = kv
+
+               let ir__free_key = key.dec_ref_cnt("")
+
+               let [box ir__is_error, ir__error_actions, obj_maybe_error] = if key.has_type?("token")
+                    [box ir__is_error, ir__error_actions ++ ir__free_key, obj_maybe_error]
+               else {
+                    let ir__type_check             = key:ir ++ ".bytes[15]!=tid__token"
+                    let ir__is_error               = (if ir__is_error.empty?(); "" else ir__is_error ++ "||") ++ ir__type_check
+                    let key_maybe_error            = key.maybe_has_type?("error")
+                    let ir__set_invalid_type_error = ir__free_key ++ obj_reg ++ "=error__invalid_type(thrd_data," ++ exp_data:owner_name_ir_const ++ ");\n"
+                    let ir__error_actions          = ir__raw_if(
+                         ir__error_actions
+
+                         ir__type_check ++ (if obj_maybe_error; "&&" ++ obj_reg ++ ".bytes[15]!=tid__error" else "")
+                         :unknown
+                         if key_maybe_error
+                              ir__raw_if(
+                                   ""
+
+                                   key:ir ++ ".bytes[15]==tid__error"
+                                   :unknown
+                                   obj_reg ++ "=" ++ key:ir ++ ";\n"
+
+                                   if key.has_type?([set "error", "token"]); null else ir__set_invalid_type_error
+                              )
+                         else ir__set_invalid_type_error
+
+                         ir__free_key
+                    )
+                    [box ir__is_error, ir__error_actions, true]
+               }
+
+               let ir__free_value = value.dec_ref_cnt("")
+
+               if value.has_type?(valid_value_types)
+                    [box ir__is_error, ir__error_actions ++ ir__free_value, obj_maybe_error]
+               else {
+                    let ir__type_check = if kv_idx === mtds_idx
+                         value:ir ++ ".bytes[15]!=tid__obj" ++ (if is_fix; "&&" ++ value:ir ++ ".bytes[15]!=tid__null" else "")
+                    else (if is_fix; "!type_is_common_or_null(" else "!type_is_common(") ++ value:ir ++ ".bytes[15])"
+
+                    let ir__is_error               = (if ir__is_error.empty?(); "" else ir__is_error ++ "||") ++ ir__type_check
+                    let value_maybe_error          = value.maybe_has_type?("error")
+                    let ir__set_invalid_type_error = ir__free_value ++ obj_reg ++ "=error__invalid_type(thrd_data," ++ exp_data:owner_name_ir_const ++ ");\n"
+                    let ir__error_actions          = ir__raw_if(
+                         ir__error_actions
+
+                         ir__type_check ++ (if obj_maybe_error; "&&" ++ obj_reg ++ ".bytes[15]!=tid__error" else "")
+                         :unknown
+                         if value_maybe_error
+                              ir__raw_if(
+                                   ""
+
+                                   value:ir ++ ".bytes[15]==tid__error"
+                                   :unknown
+                                   obj_reg ++ "=" ++ value:ir ++ ";\n"
+
+                                   if value.has_type?(valid_value_types_and_error); ir__free_value else ir__set_invalid_type_error
+                              )
+                         else ir__set_invalid_type_error
+
+                         ir__free_value
+                    )
+
+                    [box ir__is_error, ir__error_actions, true]
+               }
+          })
+     }
+
+     let hash_map_keys_len_ir_num = kvs.len().to_ir_num()
+     let [box kvs, mtds]          = if mtds_idx.null?()
+          [box kvs, null]
+     else {
+          let mtds = kvs[mtds_idx]:value
+          let kvs  = kvs.delete(mtds_idx, mtds_idx + 1)
+          [box kvs, mtds]
+     }
+
+     let [box exp_data, ir] = if is_fix
+          ir__fix_obj(obj_reg, kvs, mtds, hash_map_keys_len_ir_num, ir__is_error, ir__error_actions, exp_data, ir)
+     else [box exp_data, ir__hash_map_obj(obj_reg, kvs, mtds, false, hash_map_keys_len_ir_num, ir__is_error, ir__error_actions, exp_data:owner_name_ir_const, ir)]
+
+     let type = if is_obj; [set "obj"] else [set "obj", "error"]
+     let ir   = ir__assume_type(obj_reg, type, ir)
+
+     let ir = if is_last
+          ir__raw_return(ir, obj_reg)
+     else ir
+
+     let obj_operand = new (@main.t_operand) {
+          :code           <= code
+          :ir             <= obj_reg
+          :possible_types <= type
+     }
+
+     [box obj_operand, exp_data, ir, final_data, dependencies, src_gconsts]
+}
+
+fn ir__fix_obj(obj_reg, kvs, mtds, hash_map_keys_len_ir_num, ir__is_error, ir__error_actions, exp_data, ir) {
+     let keys = kvs.map(fn (kv) kv:key:comptime_val:value)
+
+     let [box fix_offset, fix_size] = fix_obj__get_idx_offset_and_size(keys)
+     if fix_offset.null?()
+          [box exp_data, ir__hash_map_obj(obj_reg, kvs, mtds, true, hash_map_keys_len_ir_num, ir__is_error, ir__error_actions, exp_data:owner_name_ir_const, ir)]
+     else {
+          let mask      = (1 << fix_size) - 1
+          let obj_items = keys.foldl_kv([array :null].repeat(1 << fix_size), fn (obj_items, idx, key_token) {
+               let [box low_bits, high_bits] = key_token.scarlet__split!!!()
+               let fix_idx                   = (
+                    if fix_offset < 64
+                         low_bits >> fix_offset | high_bits << (64 - fix_offset)
+                    else high_bits >> (fix_offset - 64)
+               ) & mask
+
+               new (obj_items)[fix_idx] <= kvs[idx]
+          })
+
+          let [box hash_map_len_reg, exp_data] = exp_data.new_reg()
+          let [box obj_items_reg, exp_data]    = exp_data.new_reg()
+
+          let mtds_not_exist  = mtds.null?() || mtds.has_type?("null")
+          let null_values_qty = kvs.foldl(0, fn (null_values_qty, kv) null_values_qty + if kv:value.has_type?("null"); 1 else 0)
+
+          let ir             = ir ++ "t_any " ++ obj_reg ++ "=obj__init_fix(" ++ fix_offset.to_string() ++ "," ++ fix_size.to_string() ++ ");\n"
+          let ir__create_obj = "u64 " ++ hash_map_len_reg ++ "=" ++ (kvs.len() + (if mtds_not_exist; 0 else 1) - null_values_qty).to_ir_num() ++ ";\n"
+
+          let [box ir__create_obj, exp_data] = if mtds_not_exist
+               [box ir__create_obj ++ "t_any*const " ++ obj_items_reg ++ "=obj__get_fields(" ++ obj_reg ++ ");\n", exp_data]
+          else {
+               let [box mtds_reg, exp_data] = exp_data.new_reg()
+
+               let ir__create_obj = ir__create_obj ++ "t_any*const " ++ mtds_reg ++ "=obj__get_mtds(" ++ obj_reg ++ ");\n" ++
+                    "t_any*const " ++ obj_items_reg ++ "=&" ++ mtds_reg ++ "[1];\n" ++
+                    mtds_reg ++ "[0]=" ++ mtds:ir ++ ";\n" ++
+                    if mtds.maybe_has_type?("null"); hash_map_len_reg ++ "-=" ++ mtds:ir ++ ".bytes[15]==tid__null;\n" else ""
+
+               [box ir__create_obj, exp_data]
+          }
+
+          let ir__create_obj = obj_items.foldl_kv(ir__create_obj, fn (ir__create_obj, idx, kv)
+               if kv === :null
+                    ir__create_obj
+               else {
+                    let key_idx_ir   = (idx * 2).to_ir_num()
+                    let value_idx_ir = (idx * 2 + 1).to_ir_num()
+
+                    let not_null_creation = obj_items_reg ++ "[" ++ key_idx_ir ++ "]=" ++ kv:key:ir ++ ";\n" ++
+                         obj_items_reg ++ "[" ++ value_idx_ir  ++ "]=" ++ kv:value:ir ++ ";\n"
+
+                    if kv:value.maybe_has_type?("null") {
+                         let [box low, high] = scarlet__split!!!(kv:key:comptime_val:value)
+                         let low_string      = format_int(low, 16, false)
+                         let holder_key      = "0x" ++ format_int(high ^ 0x200'0000'0000'0000, 16, false) ++ # tid__token ^ 2 = tid__holder
+                              "0".repeat(16 - low_string.len()) ++ low_string ++ "uwb"
+
+                         let null_creation = obj_items_reg ++ "[" ++ key_idx_ir ++ "].raw_bits=" ++ holder_key ++ ";\n" ++
+                              obj_items_reg ++ "[" ++ value_idx_ir ++ "].bytes[15]=tid__holder;\n"
+
+                         if kv:value.has_type?("null")
+                              ir__create_obj ++ null_creation
+                         else
+                              ir__raw_if(
+                                   ir__create_obj
+
+                                   kv:value:ir ++ ".bytes[15]==tid__null"
+                                   :unknown
+
+                                   hash_map_len_reg ++ "-=1;\n" ++ null_creation
+
+                                   not_null_creation
+                              )
+                    } else ir__create_obj ++ not_null_creation
+               }
+          )
+          let ir__create_obj = ir__create_obj ++ obj_reg ++ "=hash_map__set_len(" ++ obj_reg ++ "," ++ hash_map_len_reg ++ ");\n"
+
+          let ir = if ir__is_error.null?()
+               ir ++ ir__create_obj
+          else ir__raw_if(
+               ir
+
+               ir__is_error
+               :unlikely
+               ir__error_actions
+
+               ir__create_obj
+          )
+
+          [box exp_data, ir]
+     }
+}
+
+fn ir__hash_map_obj(obj_reg, kvs, mtds, allow_null_in_value, hash_map_keys_len_ir_num, ir__is_error, ir__error_actions, owner_name_ir_const, ir) {
+     let no_mtds        = mtds.null?() || mtds.has_type?("null")
+     let owner_name_arg = "," ++ owner_name_ir_const ++ ");\n"
+     let ir             = ir ++ "t_any " ++ obj_reg ++ "=obj__init(thrd_data," ++ hash_map_keys_len_ir_num ++ owner_name_arg
+
+     let ir__create_obj = if no_mtds
+          ""
+     else "*obj__get_mtds(" ++ obj_reg ++ ")=" ++ mtds:ir ++ ";\n" ++
+          obj_reg ++ "=hash_map__set_len(" ++ obj_reg ++ ",1);\n"
+
+     let add_ir_part    = obj_reg ++ "=obj__builtin_unsafe_add_kv__own(thrd_data," ++ obj_reg ++ ","
+     let ir__create_obj = kvs.foldl(ir__create_obj, fn (ir__create_obj, kv) {
+          let [obj key = :key, value = :value] = kv
+
+          if value.has_type?("null")
+               ir__create_obj
+          else {
+               let ir__add_item = add_ir_part ++ key:ir ++ "," ++ value:ir ++ owner_name_arg
+               if allow_null_in_value && value.maybe_has_type?("null")
+                    ir__raw_if(
+                         ir__create_obj
+
+                         value:ir ++ ".bytes[15]!=tid__null"
+                         :unknown
+                         ir__add_item
+
+                         null
+                    )
+               else ir__create_obj ++ ir__add_item
+          }
+     })
+
+     if ir__is_error.null?()
+          ir ++ ir__create_obj
+     else ir__raw_if(
+          ir
+
+          ir__is_error
+          :unlikely
+          ir__error_actions
+
+          ir__create_obj
+     )
+}

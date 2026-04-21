@@ -1,0 +1,465 @@
+let container__all = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_all = fn (container, default_result, func) container:value.all(default_result, func)
+     ]
+]
+
+fn to_container__all(arg) new (@main.container__all):value <= arg
+
+fn to_custom_container__all(arg) custom__create(
+     arg
+     [obj
+          :core_all = fn (container, default_result, func) custom__get_data(container).all(default_result, func)
+     ]
+)
+
+let broken_container__all = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_all = fn (_, _, _) heap_string()
+     ]
+]
+
+fn to_broken_container__all(arg) new (@main.broken_container__all):value <= arg
+
+fn to_broken_custom_container__all(arg) custom__create(
+     arg
+     [obj
+          :core_all = fn (_, _, _) heap_string()
+     ]
+)
+
+let error_container__all = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_all = fn (_, _, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__all(arg) new (@main.error_container__all):value <= arg
+
+fn to_error_custom_container__all(arg) custom__create(
+     arg
+     [obj
+          :core_all = fn (_, _, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__all() {
+     let items = "3".to_array()
+     test("".all(true, fn (_) items))
+     test(not "".all(false, fn (_) items))
+     test(not "1".all(true, fn (char) items[0] === char))
+     test("3".all(true, fn (char) items[0] === char))
+     test("333333333333333".all(true, fn (char) items[0] === char))
+     test(not "233333333333333".all(true, fn (char) items[0] === char))
+     test(not "333333333333332".all(true, fn (char) items[0] === char))
+     test(not "222222222222222".all(true, fn (char) items[0] === char))
+     test(not "0123456789abcde".all(true, fn (char) items[0] === char))
+
+     let items = "\000093".to_array()
+     test(not "\000091".all(true, fn (char) items[0] === char))
+     test("\000093".all(true, fn (char) items[0] === char))
+     test("\000093\000093\000093\000093\000093\000093\000093".all(true, fn (char) items[0] === char))
+     test(not "\000092\000093\000093\000093\000093\000093\000093".all(true, fn (char) items[0] === char))
+     test(not "2\000093\000093\000093\000093\000093\000093\000093".all(true, fn (char) items[0] === char))
+     test(not "\000093\000093\000093\000093\000093\000093\0000933".all(true, fn (char) items[0] === char))
+     test(not "\000092\000092\000092\000092\000092\000092\0000923".all(true, fn (char) items[0] === char))
+     test(not "012\000093456789abcd".all(true, fn (char) items[0] === char))
+
+     let items = "3".to_array()
+     test("3333333333333333".all(true, fn (char) items[0] === char))
+     test(not "2333333333333333".all(true, fn (char) items[0] === char))
+     test(not "3333333333333332".all(true, fn (char) items[0] === char))
+     test(not "2222222222222222".all(true, fn (char) items[0] === char))
+     test(not "0123456789abcdef".all(true, fn (char) items[0] === char))
+
+     let string = ("033333333333333" ++ "330")[1, 17]
+     test(string.all(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("023333333333333" ++ "330")[1, 17]
+     test(not string.all(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("033333333333333" ++ "320")[1, 17]
+     test(not string.all(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("022222222222222" ++ "220")[1, 17]
+     test(not string.all(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("00123456789abcd" ++ "ef0")[1, 17]
+     test(not string.all(true, fn (char) items[0] === char))
+     string.ignore()
+
+     test(("033333333333333" ++ "330")[1, 17].all(true, fn (char) items[0] === char))
+     test(not ("023333333333333" ++ "330")[1, 17].all(true, fn (char) items[0] === char))
+     test(not ("033333333333333" ++ "320")[1, 17].all(true, fn (char) items[0] === char))
+     test(not ("022222222222222" ++ "220")[1, 17].all(true, fn (char) items[0] === char))
+     test(not ("00123456789abcd" ++ "ef0")[1, 17].all(true, fn (char) items[0] === char))
+
+     let items = "\000093".to_array()
+     test("\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093".all(true, fn (char) items[0] === char))
+     test(not "\000092\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093".all(true, fn (char) items[0] === char))
+     test(not "\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000092".all(true, fn (char) items[0] === char))
+     test(not "\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092".all(true, fn (char) items[0] === char))
+     test(not "\000090\000091\000092\000093\000094\000095\000096\000097\000098\000099\00009a\00009b\00009c\00009d\00009e\00009f".all(true, fn (char) items[0] === char))
+
+     let string = ("0\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\000093\000090")[1, 17]
+     test(string.all(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("0\000092\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\0000930")[1, 17]
+     test(not string.all(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("0\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\0000920")[1, 17]
+     test(not string.all(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("0\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092" ++ "\000092\0000920")[1, 17]
+     test(not string.all(true, fn (char) items[0] === char))
+     string.ignore()
+
+     let string = ("0\000090\000091\000092\000093\000094\000095\000096\000097\000098\000099\00009a\00009b\00009c\00009d" ++ "\00009e\00009f0")[1, 17]
+     test(not string.all(true, fn (char) items[0] === char))
+     string.ignore()
+
+     test(("0\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\0000930")[1, 17].all(true, fn (char) items[0] === char))
+     test(not ("0\000092\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\0000930")[1, 17].all(true, fn (char) items[0] === char))
+     test(not ("0\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093\000093" ++ "\000093\0000920")[1, 17].all(true, fn (char) items[0] === char))
+     test(not ("0\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092\000092" ++ "\000092\0000920")[1, 17].all(true, fn (char) items[0] === char))
+     test(not ("0\000090\000091\000092\000093\000094\000095\000096\000097\000098\000099\00009a\00009b\00009c\00009d" ++ "\00009e\00009f0")[1, 17].all(true, fn (char) items[0] === char))
+
+     test(not "01".all(true, fn (char) if char === '0'; false else expected_error(:5, "", "")))
+     test(not heap_string().all(true, fn (char) if char === '0'; false else expected_error(:5, "", "")))
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = string_1.take_while(_ =/= '3').len() === string_1.len()
+     let have     = string_1.all(true, _ =/= '3')
+     test(expected === have)
+     string_2.ignore()
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = string_1.take_while(_ =/= '3').len() === string_1.len()
+     let have     = string_1.all(true, fn (char) string_1 === 17 || char =/= '3')
+     test(expected === have)
+     string_2.ignore()
+
+     let items = u"3".to_array()
+     test(u"".all(true, fn (_) items))
+     test(not u"".all(false, fn (_) items))
+     test(not u"1".all(true, fn (byte) items[0] === byte))
+     test(u"3".all(true, fn (byte) items[0] === byte))
+     test(u"33333333333333".all(true, fn (byte) items[0] === byte))
+     test(not u"23333333333333".all(true, fn (byte) items[0] === byte))
+     test(not u"33333333333332".all(true, fn (byte) items[0] === byte))
+     test(not u"22222222222222".all(true, fn (byte) items[0] === byte))
+     test(not u"0123456789abcd".all(true, fn (byte) items[0] === byte))
+
+     let items = u"3".to_array()
+     test(u"3333333333333333".all(true, fn (byte) items[0] === byte))
+     test(not u"2333333333333333".all(true, fn (byte) items[0] === byte))
+     test(not u"3333333333333332".all(true, fn (byte) items[0] === byte))
+     test(not u"2222222222222222".all(true, fn (byte) items[0] === byte))
+     test(not u"0123456789abcdef".all(true, fn (byte) items[0] === byte))
+
+     let array = (u"033333333333333" ++ u"330")[1, 17]
+     test(array.all(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     let array = (u"023333333333333" ++ u"330")[1, 17]
+     test(not array.all(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     let array = (u"033333333333333" ++ u"320")[1, 17]
+     test(not array.all(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     let array = (u"022222222222222" ++ u"220")[1, 17]
+     test(not array.all(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     let array = (u"00123456789abcd" ++ u"ef0")[1, 17]
+     test(not array.all(true, fn (byte) items[0] === byte))
+     array.ignore()
+
+     test((u"033333333333333" ++ u"330")[1, 17].all(true, fn (byte) items[0] === byte))
+     test(not (u"023333333333333" ++ u"330")[1, 17].all(true, fn (byte) items[0] === byte))
+     test(not (u"033333333333333" ++ u"320")[1, 17].all(true, fn (byte) items[0] === byte))
+     test(not (u"022222222222222" ++ u"220")[1, 17].all(true, fn (byte) items[0] === byte))
+     test(not (u"00123456789abcd" ++ u"ef0")[1, 17].all(true, fn (byte) items[0] === byte))
+
+     test(not u"01".all(true, fn (byte) if byte === u"0"[0]; false else expected_error(:5, "", "")))
+     test(not heap_byte_array().all(true, fn (byte) if byte === u"0"[0]; false else expected_error(:5, "", "")))
+
+     let array_1  = rnd_byte_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.take_while(_ =/= 0b03).len() === array_1.len()
+     let have     = array_1.all(true, _ =/= 0b03)
+     test(expected === have)
+     array_2.ignore()
+
+     let array_1  = rnd_byte_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.take_while(_ =/= 0b03).len() === array_1.len()
+     let have     = array_1.all(true, fn (byte) array_1 === 17 || byte =/= 0b03)
+     test(expected === have)
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([array].all(true, fn (_) string_1))
+     test(not [array].all(false, fn (_) string_1))
+     test(not [array "1"].all(true, fn (item) string_1 === item))
+     test([array "0123456789abcdef1"].all(true, fn (item) string_1 === item))
+     test([array "0123456789abcdef1", "0123456789abcdef1", "0123456789abcdef1"].all(true, fn (item) string_1 === item))
+     test(not [array "1123456789abcdef1", "0123456789abcdef1", "0123456789abcdef1"].all(true, fn (item) string_1 === item))
+     test(not [array "0123456789abcdef1", "0123456789abcdef1", "1123456789abcdef1"].all(true, fn (item) string_1 === item))
+     test(not [array "1123456789abcdef1", "1123456789abcdef1", "1123456789abcdef1"].all(true, fn (item) string_1 === item))
+
+     let array = [array].init(10)
+     test(array.all(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_1, string_0][1, 2]
+     test(array.all(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_1, string_1, string_1, string_0][1, 4]
+     test(array.all(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_2, string_1, string_1, string_0][1, 4]
+     test(not array.all(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_1, string_1, string_2, string_0][1, 4]
+     test(not array.all(true, fn (item) string_1 === item))
+     array.ignore()
+
+     let array = [array string_0, string_2, string_2, string_2, string_0][1, 4]
+     test(not array.all(true, fn (item) string_1 === item))
+     array.ignore()
+
+     test([array].init(10).all(true, fn (item) string_1 === item))
+     test(not [array].init(10).all(false, fn (item) string_1 === item))
+     test([array string_0, string_1, string_0][1, 2].all(true, fn (item) string_1 === item))
+     test([array string_0, string_1, string_1, string_1, string_0][1, 4].all(true, fn (item) string_1 === item))
+     test(not [array string_0, string_2, string_1, string_1, string_0][1, 4].all(true, fn (item) string_1 === item))
+     test(not [array string_0, string_1, string_1, string_2, string_0][1, 4].all(true, fn (item) string_1 === item))
+     test(not [array string_0, string_2, string_2, string_2, string_0][1, 4].all(true, fn (item) string_1 === item))
+
+     test(not [array heap_string(), heap_table()].all(true, fn (item) if item.type() === "core.string"; false else expected_error(:5, "", "")))
+
+     let array_1  = rnd_string_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.take_while(fn (string) string[0] =/= '3').len() === array_1.len()
+     let have     = array_1.all(true, fn (string) string[0] =/= '3')
+     test(expected === have)
+     array_2.ignore()
+
+     let array_1  = rnd_string_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.take_while(fn (string) string[0] =/= '3').len() === array_1.len()
+     let have     = array_1.all(true, fn (string) array_1 === 17 || string[0] =/= '3')
+     test(expected === have)
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([set].all(true, fn (_) string_1))
+     test(not [set].all(false, fn (_) string_1))
+     test(not [set "1"].all(true, fn (item) string_1 === item))
+     test([set "0123456789abcdef1"].all(true, fn (item) string_1 === item))
+     test([set "0123456789abcdef", "1123456789abcdef1", "0"].all(true, fn (item) string_1 =/= item))
+     test(not [set "0123456789abcdef1", "1123456789abcdef1", "0123456789abcdef0"].all(true, fn (item) string_1 =/= item))
+
+     let set = [set].init(10)
+     test(set.all(true, fn (item) string_1 === item))
+     set.ignore()
+
+     let set = [set string_1]
+     test(set.all(true, fn (item) string_1 === item))
+     set.ignore()
+
+     let set = [set string_0]
+     test(not set.all(true, fn (item) string_1 === item))
+     set.ignore()
+
+     let set = [set string_0, string_1, string_2]
+     test(not set.all(true, fn (item) string_1 =/= item))
+     set.ignore()
+
+     let set = [set string_0, string_2]
+     test(set.all(true, fn (item) string_1 =/= item))
+     set.ignore()
+
+     test([set].init(10).all(true, fn (item) string_1 === item))
+     test(not [set].init(10).all(false, fn (item) string_1 === item))
+     test([set string_1].all(true, fn (item) string_1 === item))
+     test(not [set string_0].all(true, fn (item) string_1 === item))
+     test(not [set string_0, string_1, string_2].all(true, fn (item) string_1 =/= item))
+     test([set string_0, string_2].all(true, fn (item) string_1 =/= item))
+
+     let set_1    = rnd_string_set()
+     let set_2    = if rnd_bool(); set_1 else null
+     let expected = set_1.filter(fn (string) string[0] =/= '3').len() === set_1.len()
+     let have     = set_1.all(true, fn (string) string[0] =/= '3')
+     test(expected === have)
+     set_2.ignore()
+
+     let set_1    = rnd_string_set()
+     let set_2    = if rnd_bool(); set_1 else null
+     let expected = set_1.filter(fn (string) string[0] =/= '3').len() === set_1.len()
+     let have     = set_1.all(true, fn (string) set_1 === 17 || string[0] =/= '3')
+     test(expected === have)
+     set_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([table].all(true, fn (_) string_1))
+     test(not [table].all(false, fn (_) string_1))
+     test(not [table "0123456789abcdef1" = "1"].all(true, fn (item) string_1 === item))
+     test([table "0" = "0123456789abcdef1"].all(true, fn (item) string_1 === item))
+     test([table "0123456789abcdef1" = "0123456789abcdef", "0" = "1123456789abcdef1", "1" = "0"].all(true, fn (item) string_1 =/= item))
+     test(not [table "0" = "0123456789abcdef1", "1" = "1123456789abcdef1", "2" = "0123456789abcdef0"].all(true, fn (item) string_1 =/= item))
+
+     let table = [table].init(10)
+     test(table.all(true, fn (item) string_1 === item))
+     table.ignore()
+
+     let table = [table string_0 = string_1]
+     test(table.all(true, fn (item) string_1 === item))
+     table.ignore()
+
+     let table = [table string_1 = string_0]
+     test(not table.all(true, fn (item) string_1 === item))
+     table.ignore()
+
+     let table = [table string_0 = string_1, string_2 = string_0]
+     test(not table.all(true, fn (item) string_1 =/= item))
+     table.ignore()
+
+     let table = [table string_1 = string_0, string_0 = string_2]
+     test(table.all(true, fn (item) string_1 =/= item))
+     table.ignore()
+
+     test([table].init(10).all(true, fn (item) string_1 === item))
+     test(not [table].init(10).all(false, fn (item) string_1 === item))
+     test([table string_0 = string_1].all(true, fn (item) string_1 === item))
+     test(not [table string_1 = string_0].all(true, fn (item) string_1 === item))
+     test(not [table string_0 = string_1, string_2 = string_0].all(true, fn (item) string_1 =/= item))
+     test([table string_1 = string_0, string_0 = string_2].all(true, fn (item) string_1 =/= item))
+
+     let table_1  = rnd_string_table()
+     let table_2  = if rnd_bool(); table_1 else null
+     let expected = table_1.filter(fn (string) string[0] =/= '3').len() === table_1.len()
+     let have     = table_1.all(true, fn (string) string[0] =/= '3')
+     test(expected === have)
+     table_2.ignore()
+
+     let table_1  = rnd_string_table()
+     let table_2  = if rnd_bool(); table_1 else null
+     let expected = table_1.filter(fn (string) string[0] =/= '3').len() === table_1.len()
+     let have     = table_1.all(true, fn (string) table_1 === 17 || string[0] =/= '3')
+     test(expected === have)
+     table_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([obj].all(true, fn (_) string_1))
+     test(not [obj].all(false, fn (_) string_1))
+     test(not [obj :0 = "1"].all(true, fn (item) string_1 === item))
+     test([obj :0 = "0123456789abcdef1"].all(true, fn (item) string_1 === item))
+     test([obj :0 = "0123456789abcdef", :1 = "1123456789abcdef1", :2 = "0"].all(true, fn (item) string_1 =/= item))
+     test([obj :_ = [obj :0 = "0123456789abcdef1"], :0 = "0123456789abcdef", :1 = "1123456789abcdef1", :2 = "0"].all(true, fn (item) string_1 =/= item))
+     test(not [obj :0 = "0123456789abcdef1", :1 = "1123456789abcdef1", :2 = "0123456789abcdef0"].all(true, fn (item) string_1 =/= item))
+
+     let obj = [obj].init(10)
+     test(obj.all(true, fn (item) string_1 === item))
+     obj.ignore()
+
+     let obj = [obj :0 = string_1]
+     test(obj.all(true, fn (item) string_1 === item))
+     obj.ignore()
+
+     let obj = [obj :1 = string_0]
+     test(not obj.all(true, fn (item) string_1 === item))
+     obj.ignore()
+
+     let obj = [obj :0 = string_1, :2 = string_0]
+     test(not obj.all(true, fn (item) string_1 =/= item))
+     obj.ignore()
+
+     let obj = [obj :1 = string_0, :0 = string_2]
+     test(obj.all(true, fn (item) string_1 =/= item))
+     obj.ignore()
+
+     let obj = [obj :_ = [obj :0 = string_1],  :1 = string_0, :0 = string_2]
+     test(obj.all(true, fn (item) string_1 =/= item))
+     obj.ignore()
+
+     test([obj].init(10).all(true, fn (item) string_1 === item))
+     test(not [obj].init(10).all(false, fn (item) string_1 === item))
+     test([obj :0 = string_1].all(true, fn (item) string_1 === item))
+     test(not [obj :1 = string_0].all(true, fn (item) string_1 === item))
+     test(not [obj :0 = string_1, :2 = string_0].all(true, fn (item) string_1 =/= item))
+     test([obj :1 = string_0, :0 = string_2].all(true, fn (item) string_1 =/= item))
+     test([obj :_ = [obj :0 = string_1],  :1 = string_0, :0 = string_2].all(true, fn (item) string_1 =/= item))
+
+     let obj_1  = rnd_string_obj()
+     let obj_2  = if rnd_bool(); obj_1 else null
+     let expected = obj_1.filter(fn (string) string[0] =/= '3').len() === obj_1.len()
+     let have     = obj_1.all(true, fn (string) string[0] =/= '3')
+     test(expected === have)
+     obj_2.ignore()
+
+     let obj_1  = rnd_string_obj()
+     let obj_2  = if rnd_bool(); obj_1 else null
+     let expected = obj_1.filter(fn (string) string[0] =/= '3').len() === obj_1.len()
+     let have     = obj_1.all(true, fn (string) obj_1 === 17 || string[0] =/= '3')
+     test(expected === have)
+     obj_2.ignore()
+
+     test(to_container__all("abc").all(true, _.ascii_lower?()))
+     test(not to_container__all("aBc").all(true, _.ascii_lower?()))
+     test(not to_container__all("ABC").all(true, _.ascii_lower?()))
+     test(to_custom_container__all("abc").all(true, _.ascii_lower?()))
+     test(not to_custom_container__all("aBc").all(true, _.ascii_lower?()))
+     test(not to_custom_container__all("ABC").all(true, _.ascii_lower?()))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let error_3 = expected_error(:3, heap_string(), heap_string())
+     test(error_1.all(true, _ === heap_string()).get_error_id() === :1)
+     test(heap_string().all(error_1, _ === heap_string()).get_error_id() === :1)
+     test(heap_string().all(true, error_1).get_error_id() === :1)
+     test(error_1.all(error_2, error_3).get_error_id() === :1)
+     test(error_3.all(error_2, error_1).get_error_id() === :3)
+
+     test((_ === heap_string()).scarlet__erase_info().all(true, _ === heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().all(heap_string(), _ === heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().all(true, heap_table()).get_error_id() === :invalid_type)
+     test((_ === heap_string()).scarlet__erase_info().all(heap_string(), heap_table()).get_error_id() === :invalid_type)
+
+     test(to_broken_container__all("").all(true, _ === heap_string()).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__all("").all(true, _ === heap_string()).get_error_id() === :invalid_type)
+     test(to_error_container__all("").all(true, _ === heap_string()).get_error_id() === :3)
+     test(to_error_custom_container__all("").all(true, _ === heap_string()).get_error_id() === :4)
+
+     test([array heap_string()].all(true, fn (_) expected_error(:5, heap_string(), heap_string())).get_error_id() === :5)
+}

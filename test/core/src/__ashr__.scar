@@ -1,0 +1,176 @@
+let num__ashr = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___ashr__  = fn (num, shifts) to_num__ashr(num:value >>> shifts)
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__ashr(arg) new (@main.num__ashr):value <= arg
+
+fn to_custom_num__ashr(arg) custom__create(
+     arg
+     [obj
+          :core___ashr__  = fn (num, shifts) to_custom_num__ashr(num.custom__get_data() >>> shifts)
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__ashr = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___ashr__ = fn (_, _) heap_string()
+     ]
+]
+
+fn to_broken_num__ashr(arg) new (@main.broken_num__ashr):value <= arg
+
+fn to_broken_custom_num__ashr(arg) custom__create(
+     arg
+     [obj
+          :core___ashr__ = fn (_, _) heap_string()
+     ]
+)
+
+let error_num__ashr = [obj
+     :value = 0
+
+     :_ = [obj
+          :core___ashr__ = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__ashr(arg) new (@main.error_num__ashr):value <= arg
+
+fn to_error_custom_num__ashr(arg) custom__create(
+     arg
+     [obj
+          :core___ashr__ = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test____ashr__() {
+     test((0 >>> 0) === 0)
+     test((0 >>> 1) === 0)
+     test((1 >>> 0) === 1)
+     test((1 >>> 1) === 0)
+     test((-1 >>> 0) === -1)
+     test((-1 >>> 1) === -1)
+     test((-708044971986000615 >>> 3) === -88505621498250077)
+     test((-708044971986000615 >>> 58) === -3)
+     test((-708044971986000615 >>> 59) === -2)
+     test((-708044971986000615 >>> 60) === -1)
+     test((-708044971986000615 >>> 61) === -1)
+     test((-708044971986000615 >>> 64) === -1)
+     test((-9223372036854775808 >>> 0) === -9223372036854775808)
+     test((-9223372036854775808 >>> 1) === -4611686018427387904)
+     test((-9223372036854775808 >>> 62) === -2)
+     test((-9223372036854775808 >>> 63) === -1)
+     test((-9223372036854775808 >>> 64) === -1)
+     test((9223372036854775807 >>> 0) === 9223372036854775807)
+     test((9223372036854775807 >>> 1) === 4611686018427387903)
+     test((9223372036854775807 >>> 17) === 70368744177663)
+     test((9223372036854775807 >>> 62) === 1)
+     test((9223372036854775807 >>> 63) === 0)
+     test((9223372036854775807 >>> 64) === 0)
+
+     test((0 >>> 0b00) === 0)
+     test((0 >>> 0b01) === 0)
+     test((1 >>> 0b00) === 1)
+     test((1 >>> 0b01) === 0)
+     test((-1 >>> 0b00) === -1)
+     test((-1 >>> 0b01) === -1)
+     test((-708044971986000615 >>> 0b03) === -88505621498250077)
+     test((-708044971986000615 >>> 0b3a) === -3)
+     test((-708044971986000615 >>> 0b3b) === -2)
+     test((-708044971986000615 >>> 0b3c) === -1)
+     test((-708044971986000615 >>> 0b3d) === -1)
+     test((-708044971986000615 >>> 0b40) === -1)
+     test((-9223372036854775808 >>> 0b00) === -9223372036854775808)
+     test((-9223372036854775808 >>> 0b01) === -4611686018427387904)
+     test((-9223372036854775808 >>> 0b3e) === -2)
+     test((-9223372036854775808 >>> 0b3f) === -1)
+     test((-9223372036854775808 >>> 0b40) === -1)
+     test((9223372036854775807 >>> 0b00) === 9223372036854775807)
+     test((9223372036854775807 >>> 0b01) === 4611686018427387903)
+     test((9223372036854775807 >>> 0b11) === 70368744177663)
+     test((9223372036854775807 >>> 0b3e) === 1)
+     test((9223372036854775807 >>> 0b3f) === 0)
+     test((9223372036854775807 >>> 0b40) === 0)
+
+     test((to_num__ashr(0) >>> 0) === to_num__ashr(0))
+     test((to_num__ashr(-708044971986000615) >>> 3) === to_num__ashr(-88505621498250077))
+
+     test((to_custom_num__ashr(0) >>> 0) === to_custom_num__ashr(0))
+     test((to_custom_num__ashr(-708044971986000615) >>> 3) === to_custom_num__ashr(-88505621498250077))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let string  = heap_string()
+     test((error_1 >>> 1).get_error_id() === :1)
+     test((1 >>> error_1).get_error_id() === :1)
+     test((error_1 >>> error_2).get_error_id() === :1)
+     test((error_2 >>> error_1).get_error_id() === :2)
+     test((error_1 >>> string).get_error_id() === :1)
+     test((string >>> error_1).get_error_id() === :1)
+
+     test((string >>> string).get_error_id() === :invalid_type)
+     test((string >>> 1).get_error_id() === :invalid_type)
+     test((1 >>> string).get_error_id() === :invalid_type)
+
+     test((to_num__ashr(1) >>> error_1).get_error_id() === :1)
+     test((to_num__ashr(1) >>> string).get_error_id() === :invalid_type)
+
+     test((to_custom_num__ashr(1) >>> error_1).get_error_id() === :1)
+     test((to_custom_num__ashr(1) >>> string).get_error_id() === :invalid_type)
+
+     test((to_broken_num__ashr(1) >>> 0).get_error_id() === :invalid_type)
+     test((to_broken_custom_num__ashr(1) >>> 0).get_error_id() === :invalid_type)
+     test((to_error_num__ashr(1) >>> 0).get_error_id() === :3)
+     test((to_error_custom_num__ashr(1) >>> 0).get_error_id() === :4)
+
+     test((0 >>> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >>> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >>> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >>> 65.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >>> 66.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >>> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >>> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >>> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >>> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >>> 65.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >>> 66.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >>> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >>> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >>> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >>> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >>> 65.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >>> 66.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >>> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >>> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >>> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >>> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >>> 65.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >>> 66.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >>> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >>> -1.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >>> -2.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >>> -9223372036854775808.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >>> 65.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >>> 66.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >>> 9223372036854775807.scarlet__erase_info()).get_error_id() === :bits_shift)
+
+     test((0 >>> 0x41.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((0 >>> 0xff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >>> 0x41.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((1 >>> 0xff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >>> 0x41.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((9223372036854775807 >>> 0xff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >>> 0x41.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-1 >>> 0xff.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >>> 0x41.scarlet__erase_info()).get_error_id() === :bits_shift)
+     test((-9223372036854775808 >>> 0xff.scarlet__erase_info()).get_error_id() === :bits_shift)
+}

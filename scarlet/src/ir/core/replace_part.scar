@@ -1,0 +1,67 @@
+fn ir__core_fn_replace_part(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box array, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box old_part, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box new_part, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ array:code:text ++ ", " ++ old_part:code:text ++ ", " ++ new_part:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+     if array:comptime_val.null?() || old_part:comptime_val.null?() || new_part:comptime_val.null?() || array:comptime_val:type.in?([array "array", "obj"]) {
+          let result_possible_types = if array:possible_types.null?()
+               valid_types
+          else {
+               let result_possible_types = array:possible_types.filter(_.in?(valid_types)).prepare_types_for_cmp()
+               if result_possible_types.empty?()
+                    error__invalid_type(array:code, valid_types, array:type)
+               else result_possible_types
+          }
+
+          let result_possible_types = if old_part:possible_types.null?()
+               result_possible_types
+          else {
+               let new_result_possible_types = old_part:possible_types.filter(_.in?(result_possible_types)).prepare_types_for_cmp()
+               if new_result_possible_types.empty?()
+                    error__invalid_type(old_part:code, result_possible_types, old_part:possible_types)
+               else new_result_possible_types
+          }
+
+          let result_possible_types = if new_part:possible_types.null?()
+               result_possible_types
+          else {
+               let new_result_possible_types = new_part:possible_types.filter(_.in?(result_possible_types)).prepare_types_for_cmp()
+               if new_result_possible_types.empty?()
+                    error__invalid_type(new_part:code, result_possible_types, new_part:possible_types)
+               else new_result_possible_types
+          }
+
+          let result_possible_types = if
+                    array.has_type?(@main.string_types) && old_part.has_type?(@main.string_types) && new_part.has_type?(@main.string_types)             ||
+                    array.has_type?(@main.byte_array_types) && old_part.has_type?(@main.byte_array_types) && new_part.has_type?(@main.byte_array_types) ||
+                    array.has_type?("array") && old_part.has_type?("array") && new_part.has_type?("array")
+               result_possible_types
+          else result_possible_types.append("error")
+
+          ir__fn_call("McoreFNreplace_part", [array array, old_part, new_part], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          array.maybe_has_type!(valid_types)
+          let expected_types = array:possible_types.prepare_types_for_cmp()
+          old_part.maybe_has_type!(expected_types)
+          new_part.maybe_has_type!(expected_types)
+
+          let operand = new (array) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:value => _.replace_part(old_part:comptime_val:value, new_part:comptime_val:value)
+          }
+          let operand = new (operand):possible_types <= operand:comptime_val.get_type_for_operand()
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

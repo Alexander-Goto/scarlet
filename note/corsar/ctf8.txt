@@ -1,0 +1,6 @@
+x - bits of bswap24(corsar_code)
+
+1 byte = 0xxxxxxx                              7  bits
+2 byte = 100xxxxx 11xxxxxx                     11 bits
+3 byte = 1010xxxx 11xxxxxx 11xxxxxx            16 bits
+4 byte = 1011xxxx 11xxxxxx 11xxxxxx 11xxxxxx   22 bits

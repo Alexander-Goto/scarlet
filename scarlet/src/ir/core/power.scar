@@ -1,0 +1,96 @@
+fn ir__core_fn_power(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain) {
+     let [box exp, exp_data, ir, final_data, dependencies, src_gconsts] = if is_first_in_chain
+          num_chain_items_to_operands(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+
+     if is_first_in_chain && exp:scar_type == "t_operand"
+          [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+     else {
+          let [box num, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, false, false, false, false)
+          let [box power, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, args_ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+          let code = new (exp:name):text => _ ++ ("(" ++ num:code:text ++ ", " ++ power:code:text ++ ")")
+
+          if num:comptime_val.null?() || power:comptime_val.null?() || not num:comptime_val:type.in?(@main.num_types) {
+               if num:comptime_val:type === "obj" && num:comptime_val:value[:_][:core_power].null?()
+                    error__invalid_type(num:code, ".core_power", "obj")
+               else null
+
+               let num_possible_types   = num:possible_types
+               let power_possible_types = power:possible_types
+
+               let result_possible_types = if num_possible_types.null?()
+                    @main.num_types__mtd
+               else {
+                    let new_num_possible_types = num_possible_types.filter(_.in?(@main.num_types__mtd))
+                    if new_num_possible_types.empty?()
+                         error__invalid_type(num:code, @main.num_types__mtd, num_possible_types)
+                    else new_num_possible_types
+               }
+
+               let result_possible_types = if power_possible_types.null?()
+                    result_possible_types
+               else {
+                    let new_power_possible_types = power_possible_types.filter(_.in?(result_possible_types))
+                    if new_power_possible_types.empty?()
+                         error__invalid_type(power:code, result_possible_types, power_possible_types)
+                    else new_power_possible_types
+               }
+
+               let maybe_error = num_possible_types.null?() || power_possible_types.null?() ||
+                    num_possible_types.len() /= 1 || not num_possible_types.take_one().in?(@main.num_types) ||
+                    num_possible_types /= power_possible_types
+               let need_chain = (exp:args.first():scar_type /= "t_operand" || exp:args[1]:scar_type /= "t_operand") &&
+                    is_first_in_chain && result_possible_types.any(true, _.in?(@main.num_types))
+
+               let result_possible_types = if maybe_error; result_possible_types.append("error") else result_possible_types
+
+               let [box not_chain_operand, exp_data, not_chain_ir, final_data, dependencies, src_gconsts] = if maybe_error || not need_chain
+                    ir__fn_call("McoreFNpower", [array num, power], code, result_possible_types, exp_data, args_ir, final_data, dependencies, src_gconsts, is_last)
+               else [box null, exp_data, args_ir, final_data, dependencies, src_gconsts]
+
+               if not need_chain
+                    [box not_chain_operand, exp_data, ir ++ not_chain_ir, final_data, dependencies, src_gconsts]
+               else {
+                    let maybe_byte    = "byte".in?(result_possible_types)
+                    let maybe_int     = "int".in?(result_possible_types)
+                    let maybe_float   = "float".in?(result_possible_types)
+                    let chain_type_ir = if maybe_int && not (maybe_byte || maybe_float)
+                         "tid__int"
+                    else if maybe_float && not (maybe_byte || maybe_int)
+                         "tid__float"
+                    else if maybe_byte && not (maybe_int || maybe_float)
+                         "tid__byte"
+                    else null
+
+                    let [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir] =
+                         num_chain_creation_prepare(exp, maybe_byte, maybe_int, maybe_float, "", chain_type_ir)
+
+                    num_chain_create(
+                         chain_predicate_ir, chain_type_ir
+                         byte_chain_ir, int_chain_ir, float_chain_ir
+                         [box maybe_byte, maybe_int, maybe_float]
+                         result_possible_types, code, not_chain_ir, not_chain_operand:ir
+                         exp_data, ir, final_data, dependencies, src_gconsts, is_last
+                    )
+               }
+          } else {
+               power.maybe_has_type!(num:comptime_val:type)
+
+               let operand = new (num) {
+                    :ir                 <= null
+                    :code               <= code
+                    :comptime_val:value => power(_, power:comptime_val:value)
+               }
+               let ir = ir ++ args_ir
+
+               if is_last {
+                    let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+                    [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+               } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+          }
+     }
+}

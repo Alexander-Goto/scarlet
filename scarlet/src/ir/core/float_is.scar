@@ -1,0 +1,37 @@
+fn ir__core_fn_float_is(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     if arg:comptime_val:type =/= "float" {
+          if arg:comptime_val:type =/= "obj"
+               arg.maybe_has_type!([set "float", "obj", "custom"])
+          else {
+               let [box token, mtd_type] = switch fn_ir_name
+               case "McoreFNinfB":     [box :core_inf?, ".core_inf?"]
+               case "McoreFNnanB":     [box :core_nan?, ".core_nan?"]
+               case "McoreFNneg_infB": [box :core_neg_inf?, ".core_neg_inf?"]
+               default:                unreachable()
+
+               if arg:comptime_val:value[:_][token].null?()
+                    error__invalid_type(arg:code, mtd_type, "obj")
+               else null
+          }
+
+          ir__fn_call(fn_ir_name, [array arg], code, if arg.has_type?("float"); [set "bool"] else [set "bool", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let value   = arg:comptime_val:value
+          let operand = comptime_bool(
+               switch fn_ir_name
+               case "McoreFNinfB":     inf?(value)
+               case "McoreFNnanB":     nan?(value)
+               case "McoreFNneg_infB": neg_inf?(value)
+               default:                unreachable()
+
+               code
+          )
+
+          [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+     }
+}

@@ -1,0 +1,10 @@
+let t_null = [obj
+     :scar_type = "t_null"
+     :keyword   = @main.t_token
+]
+
+fn null_to_operand(null_, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let operand = comptime_null(null_:keyword)
+
+     [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+}

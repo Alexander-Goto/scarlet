@@ -1,0 +1,86 @@
+let char__char_to_uchar = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_char_to_uchar = fn (char) char:value.char_to_uchar()
+     ]
+]
+
+fn to_char__char_to_uchar(arg) new (@main.char__char_to_uchar):value <= arg
+
+fn to_custom_char__char_to_uchar(arg) custom__create(
+     arg
+     [obj
+          :core_char_to_uchar = fn (char) char.custom__get_data().char_to_uchar()
+     ]
+)
+
+let broken_char__char_to_uchar = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_char_to_uchar = fn (_) heap_byte_array()
+     ]
+]
+
+fn to_broken_char__char_to_uchar(arg) new (@main.broken_char__char_to_uchar):value <= arg
+
+fn to_broken_custom_char__char_to_uchar(arg) custom__create(
+     arg
+     [obj
+          :core_char_to_uchar = fn (_) heap_byte_array()
+     ]
+)
+
+let error_char__char_to_uchar = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_char_to_uchar = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__char_to_uchar(arg) new (@main.error_char__char_to_uchar):value <= arg
+
+fn to_error_custom_char__char_to_uchar(arg) custom__create(
+     arg
+     [obj
+          :core_char_to_uchar = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__char_to_uchar() {
+     test('\000001'.char_to_uchar() === 1)
+     test('\00007f'.char_to_uchar() === 127)
+     test('\000020'.char_to_uchar() === 32)
+     test('!'.char_to_uchar() === 33)
+     test('~'.char_to_uchar() === 126)
+     test('A'.char_to_uchar() === 65)
+     test('Z'.char_to_uchar() === 90)
+     test('a'.char_to_uchar() === 97)
+     test('z'.char_to_uchar() === 122)
+     test('0'.char_to_uchar() === 48)
+     test('9'.char_to_uchar() === 57)
+     test('\000081'.char_to_uchar() === 1041)
+     test('\0000ff'.char_to_uchar() === 1101)
+     test('\000101'.char_to_uchar() === 1103)
+
+     let string = rnd_string()
+     test(string.foldl(u"", fn (ustring, char) ustring ++ char.char_to_uchar().uchar_to_ustr()) === string.str_to_ustr())
+
+     test(to_char__char_to_uchar('A').char_to_uchar() === 65)
+     test(to_char__char_to_uchar('\000101').char_to_uchar() === 1103)
+
+     test(to_custom_char__char_to_uchar('A').char_to_uchar() === 65)
+     test(to_custom_char__char_to_uchar('\000101').char_to_uchar() === 1103)
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.char_to_uchar().get_error_id() === :1)
+     test(heap_table().char_to_uchar().get_error_id() === :invalid_type)
+
+     test(to_broken_char__char_to_uchar('A').char_to_uchar().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__char_to_uchar('A').char_to_uchar().get_error_id() === :invalid_type)
+     test(to_error_char__char_to_uchar('A').char_to_uchar().get_error_id() === :3)
+     test(to_error_custom_char__char_to_uchar('A').char_to_uchar().get_error_id() === :4)
+}

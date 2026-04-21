@@ -1,0 +1,80 @@
+fn ir__core_fn___great_or_eq__(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box left, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:left.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box right, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:right.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (left:code):text => _ ++ (" >= " ++ right:code:text)
+
+     let left_is_nan  = left:comptime_val:type === "float" && left:comptime_val:value.nan?()
+     let right_is_nan = right:comptime_val:type === "float" && right:comptime_val:value.nan?()
+     if left_is_nan || right_is_nan
+          error__nan_cmp((if left_is_nan; left else right):code)
+     else null
+
+     if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.always_ord_types__float){
+          if left:comptime_val:type === "obj" && left:comptime_val:value[:_][:core_cmp].null?()
+               error__invalid_type(left:code, ".core_cmp", "obj")
+          else null
+
+          let [box left, final_data, dependencies]  = left.has_ir!(final_data, dependencies)
+          let [box right, final_data, dependencies] = right.has_ir!(final_data, dependencies)
+
+          let left_ir  = left:ir
+          let right_ir = right:ir
+
+          let left_possible_types  = left:possible_types
+          let right_possible_types = right:possible_types
+          let right_expected_types = if left_possible_types.null?()
+               @main.ord_types__mtd
+          else {
+               let new_left_possible_types = left_possible_types.filter(_.in?(@main.ord_types__mtd)).prepare_types_for_cmp()
+               if new_left_possible_types.empty?()
+                    error__invalid_type(left:code, @main.ord_types__mtd, left_possible_types)
+               else new_left_possible_types
+          }
+          right.maybe_has_type!(right_expected_types)
+
+          let maybe_error = left_possible_types.null?() || right_possible_types.null?() ||
+               not (
+                    left_possible_types.len() == 1 && left_possible_types == right_possible_types && left_possible_types.take_one().in?(@main.always_ord_types) ||
+                    left_possible_types.all(true, _.in?(@main.string_types)) && right_possible_types.all(true, _.in?(@main.string_types)) ||
+                    left_possible_types.all(true, _.in?(@main.byte_array_types)) && right_possible_types.all(true, _.in?(@main.byte_array_types))
+               )
+
+          let has_known_types = left_possible_types === right_possible_types && left_possible_types.len() == 1
+          if not maybe_error && has_known_types && left_possible_types.take_one().in?(@main.simple_ord_types) {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+
+               let ir = ir ++ "t_any const " ++ result_reg ++ "={.structure={.value=" ++
+                    if left:possible_types.take_one() == "byte"
+                         left_ir ++ ".bytes[0]>=" ++ right_ir ++ ".bytes[0],.type=tid__bool}};\n"
+                    else "(i64)" ++ left_ir ++ ".qwords[0]>=(i64)" ++ right_ir ++ ".qwords[0],.type=tid__bool}};\n"
+
+               let operand = new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= [set "bool"]
+               }
+
+               [box operand, exp_data, if is_last; ir__raw_return(ir, result_reg) else ir, final_data, dependencies, src_gconsts]
+          } else if not maybe_error && has_known_types && left_possible_types.take_one().in?([array "char", "short_string", "short_byte_array"]) {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+
+               let ir = ir ++ "t_any const " ++ result_reg ++ "={.bytes={scar__memcmp(" ++ left_ir ++ ".bytes," ++ right_ir ++ ".bytes,16)!=-1,[15]=tid__bool}};\n"
+
+               let operand = new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= [set "bool"]
+               }
+
+               [box operand, exp_data, if is_last; ir__raw_return(ir, result_reg) else ir, final_data, dependencies, src_gconsts]
+          } else ir__fn_call("McoreFN__great_or_eq__", [array left, right], code, if maybe_error; [set "bool", "error"] else [set "bool"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          right.maybe_has_type!(left:possible_types.prepare_types_for_cmp())
+
+          let operand = comptime_bool(left:comptime_val:value >= right:comptime_val:value, code)
+          [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]
+     }
+}

@@ -1,0 +1,24 @@
+fn main() {
+     if @core.cli_args.len() == 1 && @core.cli_args.first() == "--child" {
+          u"stdout string".uprint()
+          stderr()->write(u"stderr string")->flush()
+
+          guard((@core.env_vars)["new_var"] === "new_var_value")
+          guard(read_cli_line() == "line_1")
+          guard(read_cli_line() == "line_2")
+     } else {
+          print("\00001b[2K\00000dtesting gconsts...");          test__gconsts()
+          print("\00001b[2K\00000dtesting change_dir...");       test__change_dir()
+          print("\00001b[2K\00000dtesting current_dir...");      test__current_dir()
+          print("\00001b[2K\00000dtesting delete_empty_dir..."); test__delete_empty_dir()
+          print("\00001b[2K\00000dtesting delete_file...");      test__delete_file()
+          print("\00001b[2K\00000dtesting fs_path...");          test__fs_path()
+          print("\00001b[2K\00000dtesting list_dir...");         test__list_dir()
+          print("\00001b[2K\00000dtesting make_dir...");         test__make_dir()
+          print("\00001b[2K\00000dtesting file...");             test__file()
+          print("\00001b[2K\00000dtesting root?...");            test__root?()
+          print("\00001b[2K\00000dtesting run_app...");          test__run_app()
+
+          print("\00001b[2K\00000d")
+     }
+}

@@ -1,0 +1,333 @@
+let container__all_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_all_kv = fn (container, default_result, func) container:value.all_kv(default_result, func)
+     ]
+]
+
+fn to_container__all_kv(arg) new (@main.container__all_kv):value <= arg
+
+fn to_custom_container__all_kv(arg) custom__create(
+     arg
+     [obj
+          :core_all_kv = fn (container, default_result, func) custom__get_data(container).all_kv(default_result, func)
+     ]
+)
+
+let broken_container__all_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_all_kv = fn (_, _, _) heap_string()
+     ]
+]
+
+fn to_broken_container__all_kv(arg) new (@main.broken_container__all_kv):value <= arg
+
+fn to_broken_custom_container__all_kv(arg) custom__create(
+     arg
+     [obj
+          :core_all_kv = fn (_, _, _) heap_string()
+     ]
+)
+
+let error_container__all_kv = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_all_kv = fn (_, _, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__all_kv(arg) new (@main.error_container__all_kv):value <= arg
+
+fn to_error_custom_container__all_kv(arg) custom__create(
+     arg
+     [obj
+          :core_all_kv = fn (_, _, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__all_kv() {
+     let items = "3".to_array()
+     test("".all_kv(true, fn (_, _) items))
+     test(not "".all_kv(false, fn (_, _) items))
+     test("3".all_kv(true, fn (idx, char) idx === 0 && items[0] === char))
+     test(not "3".all_kv(true, fn (idx, char) idx === 1 && items[0] === char))
+     test(not "1".all_kv(true, fn (idx, char) idx === 0 && items[0] === char))
+     test(not "1".all_kv(true, fn (idx, char) idx === 1 && items[0] === char))
+     test("abcdefghijklmn3".all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+     test(not "bcdefghijklmn03".all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+     test(not "bcdefghijklmn01".all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+
+     test("abcdefghijklmno3".all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+     test(not "bcdefghijklmno03".all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+     test(not "bcdefghijklmno01".all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+
+     test(("0abcdefghijklmno3" ++ "0")[1, 17].all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+     test(not ("0bcdefghijklmno03" ++ "0")[1, 17].all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+     test(not ("0bcdefghijklmno01" ++ "0")[1, 17].all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+
+     let string = ("0abcdefghijklmno3" ++ "0")[1, 17]
+     test(string.all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+     string.ignore()
+
+     let string = ("0bcdefghijklmno03" ++ "0")[1, 17]
+     test(not string.all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+     string.ignore()
+
+     let string = ("0bcdefghijklmno01" ++ "0")[1, 17]
+     test(not string.all_kv(true, fn (idx, char) char.to_int() === idx + 97 || items[0] === char))
+     string.ignore()
+
+     test(not "01".all_kv(true, fn (_, char) if char === '0'; false else expected_error(:5, "", "")))
+     test(not heap_string().all_kv(true, fn (_, char) if char === '0'; false else expected_error(:5, "", "")))
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = string_1.foldl_kv(true, fn (state, idx, char) state && if idx.odd?(); char =/= '3' else char =/= '_')
+     let have     = string_1.all_kv(true, fn (idx, char) if idx.odd?(); char =/= '3' else char =/= '_')
+     test(expected === have)
+     string_2.ignore()
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = string_1.foldl_kv(true, fn (state, idx, char) state && if idx.odd?(); char =/= '3' else char =/= '_')
+     let have     = string_1.all_kv(true, fn (idx, char) if string_1 === 17 || idx.odd?(); char =/= '3' else char =/= '_')
+     test(expected === have)
+     string_2.ignore()
+
+     let items = u"3".to_array()
+     test(u"".all_kv(true, fn (_, _) items))
+     test(not u"".all_kv(false, fn (_, _) items))
+     test(u"3".all_kv(true, fn (idx, byte) idx === 0 && items[0] === byte))
+     test(not u"3".all_kv(true, fn (idx, byte) idx === 1 && items[0] === byte))
+     test(not u"1".all_kv(true, fn (idx, byte) idx === 0 && items[0] === byte))
+     test(not u"1".all_kv(true, fn (idx, byte) idx === 1 && items[0] === byte))
+     test(u"abcdefghijklm3".all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+     test(not u"bcdefghijklmn3".all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+     test(not u"bcdefghijklmn1".all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+
+     test(u"abcdefghijklmno3".all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+     test(not u"bcdefghijklmno03".all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+     test(not u"bcdefghijklmno01".all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+
+     test((u"0abcdefghijklmno3" ++ u"0")[1, 17].all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+     test(not (u"0bcdefghijklmno03" ++ u"0")[1, 17].all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+     test(not (u"0bcdefghijklmno01" ++ u"0")[1, 17].all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+
+     let array = (u"0abcdefghijklmno3" ++ u"0")[1, 17]
+     test(array.all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+     array.ignore()
+
+     let array = (u"0bcdefghijklmno03" ++ u"0")[1, 17]
+     test(not array.all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+     array.ignore()
+
+     let array = (u"0bcdefghijklmno01" ++ u"0")[1, 17]
+     test(not array.all_kv(true, fn (idx, byte) byte.to_int() === idx + 97 || items[0] === byte))
+     array.ignore()
+
+     test(not u"01".all_kv(true, fn (_, byte) if byte === u"0"[0]; false else expected_error(:5, "", u"")))
+     test(not heap_byte_array().all_kv(true, fn (_, byte) if byte === u"0"[0]; false else expected_error(:5, "", u"")))
+
+     let array_1 = rnd_byte_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     let expected = array_1.foldl_kv(true, fn (state, idx, byte) state && if idx.odd?(); byte =/= 0b03 else byte =/= 0b01)
+     let have     = array_1.all_kv(true, fn (idx, byte) if idx.odd?(); byte =/= 0b03 else byte =/= 0b01)
+     test(expected === have)
+     array_2.ignore()
+
+     let array_1 = rnd_byte_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     let expected = array_1.foldl_kv(true, fn (state, idx, byte) state && if idx.odd?(); byte =/= 0b03 else byte =/= 0b01)
+     let have     = array_1.all_kv(true, fn (idx, byte) if array_1 === 17 || idx.odd?(); byte =/= 0b03 else byte =/= 0b01)
+     test(expected === have)
+     array_2.ignore()
+
+     let string_0 = "0".repeat(16)
+     let string_1 = "1".repeat(16)
+     let string_2 = "2".repeat(16)
+     test([array].all_kv(true, fn (_, _) string_1))
+     test(not [array].all_kv(false, fn (_, _) string_1))
+     test([array 0, 1, 2, 16].all_kv(true, fn (idx, item) idx === item || item === string_0.len()))
+     test(not [array 1, 2, 16, 0].all_kv(true, fn (idx, item) idx === item || item === string_0.len()))
+     test(not [array 1, 2, 15, 0].all_kv(true, fn (idx, item) idx === item || item === string_0.len()))
+
+     test([array].init(10).all_kv(true, fn (_, _) string_1))
+     test(not [array].init(10).all_kv(false, fn (_, _) string_1))
+     test([array string_0, string_0, string_1, string_2, string_0, string_0][1, 5].all_kv(true, fn (idx, item) idx + 48 === item[0].to_int() || item === string_0))
+     test(not [array string_0, string_1, string_2, string_1, string_0, string_0][1, 5].all_kv(true, fn (idx, item) idx + 48 === item[0].to_int() || item === string_0))
+     test(not [array string_0, string_1, string_2, string_1, string_2, string_0][1, 5].all_kv(true, fn (idx, item) idx + 48 === item[0].to_int() || item === string_0))
+
+     let array = [array].init(10)
+     test(array.all_kv(true, fn (_, _) string_1))
+     array.ignore()
+
+     let array = [array string_0, string_0, string_1, string_2, string_0, string_0][1, 5]
+     test(array.all_kv(true, fn (idx, item) idx + 48 === item[0].to_int() || item === string_0))
+     array.ignore()
+
+     let array = [array string_0, string_1, string_2, string_1, string_0, string_0][1, 5]
+     test(not array.all_kv(true, fn (idx, item) idx + 48 === item[0].to_int() || item === string_0))
+     array.ignore()
+
+     let array = [array string_0, string_1, string_2, string_1, string_2, string_0][1, 5]
+     test(not array.all_kv(true, fn (idx, item) idx + 48 === item[0].to_int() || item === string_0))
+     array.ignore()
+
+     test(not [array heap_string(), heap_table()].all_kv(true, fn (_, item) if item.type() === "core.string"; false else expected_error(:5, "", "")))
+
+     let array_1  = rnd_string_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.foldl_kv(true, fn (state, idx, string) state && if idx.odd?(); string[0] =/= '3' else string[0] =/= '1')
+     let have     = array_1.all_kv(true, fn (idx, string) if idx.odd?(); string[0] =/= '3' else string[0] =/= '1')
+     test(expected === have)
+     array_2.ignore()
+
+     let array_1  = rnd_string_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.foldl_kv(true, fn (state, idx, string) state && if idx.odd?(); string[0] =/= '3' else string[0] =/= '1')
+     let have     = array_1.all_kv(true, fn (idx, string) if array_1 === 17 || idx.odd?(); string[0] =/= '3' else string[0] =/= '1')
+     test(expected === have)
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([table].all_kv(true, fn (_, _) string_1))
+     test(not [table].all_kv(false, fn (_, _) string_1))
+     test([table 1 = 1].all_kv(true, fn (key, value) key === value || value === string_0))
+     test([table 1 = 1, 2 = 2].all_kv(true, fn (key, value) key === value || value === string_0))
+     test(not [table 1 = 2, 2 = 2].all_kv(true, fn (key, value) key === value || value === string_0))
+     test(not [table 1 = 2, 2 = 1].all_kv(true, fn (key, value) key === value || value === string_0))
+
+     let table = [table].init(10)
+     test(table.all_kv(true, fn (_, _) string_1))
+     table.ignore()
+
+     let table = [table string_1 = string_1]
+     test(table.all_kv(true, fn (key, value) key === value || value === string_0))
+     table.ignore()
+
+     let table = [table string_1 = string_1, string_2 = string_2]
+     test(table.all_kv(true, fn (key, value) key === value || value === string_0))
+     table.ignore()
+
+     let table = [table string_1 = string_0, string_2 = string_0]
+     test(table.all_kv(true, fn (key, value) key === value || value === string_0))
+     table.ignore()
+
+     let table = [table string_1 = string_1, string_2 = string_1]
+     test(not table.all_kv(true, fn (key, value) key === value || value === string_0))
+     table.ignore()
+
+     let table = [table string_0 = string_1, string_1 = string_2]
+     test(not table.all_kv(true, fn (key, value) key === value || value === string_0))
+     table.ignore()
+
+     test([table].init(10).all_kv(true, fn (_, _) string_1))
+     test(not [table].init(10).all_kv(false, fn (_, _) string_1))
+     test([table string_1 = string_1].all_kv(true, fn (key, value) key === value || value === string_0))
+     test([table string_1 = string_1, string_2 = string_2].all_kv(true, fn (key, value) key === value || value === string_0))
+     test([table string_1 = string_0, string_2 = string_0].all_kv(true, fn (key, value) key === value || value === string_0))
+     test(not [table string_1 = string_1, string_2 = string_1].all_kv(true, fn (key, value) key === value || value === string_0))
+     test(not [table string_0 = string_1, string_1 = string_2].all_kv(true, fn (key, value) key === value || value === string_0))
+
+     let table_1  = rnd_string_table()
+     let table_2  = if rnd_bool(); table_1 else null
+     let expected = table_1.foldl_kv(true, fn (state, key, value) state && key[0] =/= '3' && value[0] =/= '2')
+     let have     = table_1.all_kv(true, fn (key, value) key[0] =/= '3' && value[0] =/= '2')
+     test(expected === have)
+     table_2.ignore()
+
+     let table_1  = rnd_string_table()
+     let table_2  = if rnd_bool(); table_1 else null
+     let expected = table_1.foldl_kv(true, fn (state, key, value) state && key[0] =/= '3' && value[0] =/= '2')
+     let have     = table_1.all_kv(true, fn (key, value) table_1 === 17 || key[0] =/= '3' && value[0] =/= '2')
+     test(expected === have)
+     table_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([obj].all_kv(true, fn (_, _) string_1))
+     test(not [obj].all_kv(false, fn (_, _) string_1))
+     test([obj :1 = :1].all_kv(true, fn (key, value) key === value || value === string_0))
+     test([obj :1 = :1, :2 = :2].all_kv(true, fn (key, value) key === value || value === string_0))
+     test(not [obj :1 = :2, :2 = :2].all_kv(true, fn (key, value) key === value || value === string_0))
+     test(not [obj :1 = :2, :2 = :1].all_kv(true, fn (key, value) key === value || value === string_0))
+     test([obj :_ = [obj], :1 = :1, :2 = :2].all_kv(true, fn (key, value) key === value || value === [obj]))
+
+     let obj = [obj].init(10)
+     test(obj.all_kv(true, fn (_, _) string_1))
+     obj.ignore()
+
+     let obj = [obj :1 = string_1]
+     test(obj.all_kv(true, fn (key, value) key === :1 && value === string_1))
+     obj.ignore()
+
+     let obj = [obj :1 = string_1, :2 = string_2]
+     test(obj.all_kv(true, fn (key, value) key === :1 || value === string_2))
+     obj.ignore()
+
+     let obj = [obj :1 = string_1, :2 = string_2]
+     test(not obj.all_kv(true, fn (key, value) key === :3 || value === string_1))
+     obj.ignore()
+
+     let obj = [obj :_ = [obj], :1 = string_1, :2 = string_2]
+     test(obj.all_kv(true, fn (key, value) key === :1 || value === string_2))
+     obj.ignore()
+
+     test([obj].init(10).all_kv(true, fn (_, _) string_1))
+     test(not [obj].init(10).all_kv(false, fn (_, _) string_1))
+     test([obj :1 = string_1].all_kv(true, fn (key, value) key === :1 && value === string_1))
+     test([obj :1 = string_1, :2 = string_2].all_kv(true, fn (key, value) key === :1 || value === string_2))
+     test(not [obj :1 = string_1, :2 = string_2].all_kv(true, fn (key, value) key === :3 || value === string_0))
+     test([obj :_ = [obj], :1 = string_1, :2 = string_2].all_kv(true, fn (key, value) key === :1 || value === string_2))
+
+     let obj_1    = rnd_string_obj()
+     let obj_2    = if rnd_bool(); obj_1 else null
+     let expected = obj_1.foldl_kv(true, fn (state, key, value) state && key < :_ && value[0] =/= '2')
+     let have     = obj_1.all_kv(true, fn (key, value) key < :_ && value[0] =/= '2')
+     test(expected === have)
+     obj_2.ignore()
+
+     let obj_1    = rnd_string_obj()
+     let obj_2    = if rnd_bool(); obj_1 else null
+     let expected = obj_1.foldl_kv(true, fn (state, key, value) state && key < :_ && value[0] =/= '2')
+     let have     = obj_1.all_kv(true, fn (key, value) obj_1 === 17 || key < :_ && value[0] =/= '2')
+     test(expected === have)
+     obj_2.ignore()
+
+     test(to_container__all_kv("Abc").all_kv(true, fn (idx, char) idx === 0 || char.lower?()))
+     test(to_container__all_kv("aBc").all_kv(true, fn (idx, char) idx === 1 || char.lower?()))
+     test(not to_container__all_kv("ABc").all_kv(true, fn (idx, char) idx === 0 || char.lower?()))
+
+     test(to_custom_container__all_kv("Abc").all_kv(true, fn (idx, char) idx === 0 || char.lower?()))
+     test(to_custom_container__all_kv("aBc").all_kv(true, fn (idx, char) idx === 1 || char.lower?()))
+     test(not to_custom_container__all_kv("ABc").all_kv(true, fn (idx, char) idx === 0 || char.lower?()))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     let error_3 = expected_error(:3, heap_string(), heap_string())
+     test(error_1.all_kv(true, _ === heap_string()).get_error_id() === :1)
+     test(heap_string().all_kv(error_1, _ === heap_string()).get_error_id() === :1)
+     test(heap_string().all_kv(true, error_1).get_error_id() === :1)
+     test(error_1.all_kv(error_2, error_3).get_error_id() === :1)
+     test(error_3.all_kv(error_2, error_1).get_error_id() === :3)
+
+     test((_ === heap_string()).scarlet__erase_info().all_kv(true, _ === heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().all_kv(heap_string(), _ === heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().all_kv(true, heap_table()).get_error_id() === :invalid_type)
+     test((_ === heap_string()).scarlet__erase_info().all_kv(heap_string(), heap_table()).get_error_id() === :invalid_type)
+
+     test(to_broken_container__all_kv("").all_kv(true, _ === heap_string()).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__all_kv("").all_kv(true, _ === heap_string()).get_error_id() === :invalid_type)
+     test(to_error_container__all_kv("").all_kv(true, _ === heap_string()).get_error_id() === :3)
+     test(to_error_custom_container__all_kv("").all_kv(true, _ === heap_string()).get_error_id() === :4)
+
+     test([array heap_string()].all_kv(true, fn (_, _) expected_error(:5, heap_string(), heap_string())).get_error_id() === :5)
+}

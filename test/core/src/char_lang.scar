@@ -1,0 +1,91 @@
+let char__char_lang = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_char_lang = fn (char) char:value.char_lang()
+     ]
+]
+
+fn to_char__char_lang(arg) new (@main.char__char_lang):value <= arg
+
+fn to_custom_char__char_lang(arg) custom__create(
+     arg
+     [obj
+          :core_char_lang = fn (char) char.custom__get_data().char_lang()
+     ]
+)
+
+let broken_char__char_lang = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_char_lang = fn (_) heap_byte_array()
+     ]
+]
+
+fn to_broken_char__char_lang(arg) new (@main.broken_char__char_lang):value <= arg
+
+fn to_broken_custom_char__char_lang(arg) custom__create(
+     arg
+     [obj
+          :core_char_lang = fn (_) heap_byte_array()
+     ]
+)
+
+let error_char__char_lang = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_char_lang = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__char_lang(arg) new (@main.error_char__char_lang):value <= arg
+
+fn to_error_custom_char__char_lang(arg) custom__create(
+     arg
+     [obj
+          :core_char_lang = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__char_lang() {
+     test('\000001'.char_lang().null?())
+     test('\000002'.char_lang().null?())
+     test('\000003'.char_lang().null?())
+     test('\000004'.char_lang().null?())
+     test('\000005'.char_lang().null?())
+     test('\000006'.char_lang().null?())
+     test('\000007'.char_lang().null?())
+     test('\000008'.char_lang().null?())
+     test('\000009'.char_lang().null?())
+     test('\000020'.char_lang().null?())
+     test('!'.char_lang().null?())
+     test('~'.char_lang().null?())
+     test('a'.char_lang() === "en")
+     test('A'.char_lang() === "en")
+     test('z'.char_lang() === "en")
+     test('Z'.char_lang() === "en")
+     test('\0000a2'.char_lang() === "ru")
+     test('\000080'.char_lang() === "ru")
+     test('\0000c1'.char_lang() === "ru")
+     test('\0000a1'.char_lang() === "ru")
+     test('\0000c2'.char_lang() === "be")
+     test('\000101'.char_lang() === "be")
+
+     test(to_char__char_lang('a').char_lang() === "en")
+     test(to_char__char_lang('\000101').char_lang() === "be")
+
+     test(to_custom_char__char_lang('a').char_lang() === "en")
+     test(to_custom_char__char_lang('\000101').char_lang() === "be")
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.char_lang().get_error_id() === :1)
+     test(heap_table().char_lang().get_error_id() === :invalid_type)
+
+     test(to_broken_char__char_lang('a').char_lang().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__char_lang('a').char_lang().get_error_id() === :invalid_type)
+     test(to_error_char__char_lang('a').char_lang().get_error_id() === :3)
+     test(to_error_custom_char__char_lang('a').char_lang().get_error_id() === :4)
+}

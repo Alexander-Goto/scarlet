@@ -1,0 +1,83 @@
+let num__cos = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_cos       = fn (num) to_num__cos(num:value.cos())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__cos(arg) new (@main.num__cos):value <= arg
+
+fn to_custom_num__cos(arg) custom__create(
+     arg
+     [obj
+          :core_cos       = fn (num) to_custom_num__cos(num.custom__get_data().cos())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__cos = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_cos = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__cos(arg) new (@main.broken_num__cos):value <= arg
+
+fn to_broken_custom_num__cos(arg) custom__create(
+     arg
+     [obj
+          :core_cos = fn (_) heap_string()
+     ]
+)
+
+let error_num__cos = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_cos = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__cos(arg) new (@main.error_num__cos):value <= arg
+
+fn to_error_custom_num__cos(arg) custom__create(
+     arg
+     [obj
+          :core_cos = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__cos() {
+     test(0.0.cos().in_range?(0.99, 1.01))
+     test(-0.0.cos().in_range?(0.99, 1.01))
+     test(0.1.cos().in_range?(0.99, 1.0))
+     test(-0.1.cos().in_range?(0.99, 1.0))
+     test(1.0.cos().in_range?(0.54, 0.55))
+     test(-1.0.cos().in_range?(0.54, 0.55))
+     test(123.3.cos().in_range?(-0.72, -0.71))
+     test(-123.3.cos().in_range?(-0.72, -0.71))
+     test(inf().cos().nan?())
+     test(neg_inf().cos().nan?())
+     test(nan().cos().nan?())
+
+     test(to_num__cos(0.0).cos():value.in_range?(0.99, 1.01))
+     test(to_num__cos(-1.0).cos():value.in_range?(0.54, 0.55))
+
+     test(to_custom_num__cos(0.0).cos().custom__get_data().in_range?(0.99, 1.01))
+     test(to_custom_num__cos(-1.0).cos().custom__get_data().in_range?(0.54, 0.55))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     let string  = heap_string()
+     test(error.cos().get_error_id() === :1)
+     test(string.cos().get_error_id() === :invalid_type)
+
+     test(to_broken_num__cos(1.0).cos().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__cos(1.0).cos().get_error_id() === :invalid_type)
+     test(to_error_num__cos(1.0).cos().get_error_id() === :3)
+     test(to_error_custom_num__cos(1.0).cos().get_error_id() === :4)
+}

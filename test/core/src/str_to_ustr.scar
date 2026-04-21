@@ -1,0 +1,18 @@
+`noinline`
+fn test__str_to_ustr() {
+     test("".str_to_ustr() === u"")
+     test("a".str_to_ustr() === u"a")
+     test("Hello world!!!".str_to_ustr() === u"Hello world!!!")
+     test("0123456789abcde".str_to_ustr() === u"0123456789abcde")
+     test("\000090\0000b2\0000aa\0000a3\0000a6\0000b4\000021".str_to_ustr() === [byte_array 0bd0, 0b9f, 0bd1, 0b80, 0bd0, 0bb8, 0bd0, 0bb2, 0bd0, 0bb5, 0bd1, 0b82, 0b21])
+
+     test("0123456789abcdef".str_to_ustr() === u"0123456789abcdef")
+     test("\000090\0000b2\0000aa\0000a3\0000a6\0000b4\000021!!!!!".str_to_ustr() === [byte_array 0bd0, 0b9f, 0bd1, 0b80, 0bd0, 0bb8, 0bd0, 0bb2, 0bd0, 0bb5, 0bd1, 0b82, 0b21, 0b21, 0b21, 0b21, 0b21, 0b21])
+
+     test(("00123456789abcdef" ++ "0")[1, 17].str_to_ustr() === u"0123456789abcdef")
+     test(("0\000090\0000b2\0000aa\0000a3\0000a6\0000b4\000021!!!!!" ++ "0")[1, 13].str_to_ustr() === [byte_array 0bd0, 0b9f, 0bd1, 0b80, 0bd0, 0bb8, 0bd0, 0bb2, 0bd0, 0bb5, 0bd1, 0b82, 0b21, 0b21, 0b21, 0b21, 0b21, 0b21])
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.str_to_ustr().get_error_id() === :1)
+     test(heap_table().str_to_ustr().get_error_id() === :invalid_type)
+}

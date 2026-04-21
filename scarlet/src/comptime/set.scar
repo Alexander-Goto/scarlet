@@ -1,0 +1,18 @@
+fn comptime_set(items, code) if items.empty?()
+     new (@main.t_operand) {
+          :code           <= code
+          :ir             <= "empty_set"
+          :possible_types <= [set "set"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "set"
+               :value <= [set]
+          }
+     }
+else new (@main.t_operand) {
+     :code           <= code
+     :possible_types <= [set "set"]
+     :comptime_val   <= new (@main.t_comptime_val) {
+          :type  <= "set"
+          :value <= items.foldl([set].init(items.len()), fn (set, item) set.append(item:comptime_val))
+     }
+}

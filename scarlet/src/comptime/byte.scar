@@ -1,0 +1,9 @@
+fn comptime_byte(value, code)
+     new (@main.t_operand) {
+          :code           <= code
+          :possible_types <= [set "byte"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "byte"
+               :value <= value
+          }
+     }

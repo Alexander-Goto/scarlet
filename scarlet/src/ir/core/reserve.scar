@@ -1,0 +1,26 @@
+fn ir__core_fn_reserve(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box container, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box add_len, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ container:code:text ++ ", " ++ add_len:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "table", "set", "obj", "custom"]
+     container.maybe_has_type!(valid_types)
+     add_len.maybe_has_type!("int")
+
+     if not add_len:comptime_val.null?() && add_len:comptime_val:value < 0
+          error__out_of_bounds(add_len:code)
+     else null
+
+     ir__fn_call(
+          "McoreFNreserve", [array container, add_len], code
+
+          if container:possible_types.null?()
+               valid_types.append("error")
+          else container:possible_types.filter(_.in?(valid_types)).append("error")
+
+          exp_data, ir, final_data, dependencies, src_gconsts, is_last
+     )
+}

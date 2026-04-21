@@ -1,0 +1,4 @@
+`noinline`
+fn test__root?() {
+     test(not root?())
+}

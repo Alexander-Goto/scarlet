@@ -1,0 +1,5 @@
+fn heap_string() "0123456789abcde" ++ "f"
+
+fn heap_byte_array() u"0123456789abcd" ++ u"f"
+
+fn heap_table() [table 1 = heap_string()]

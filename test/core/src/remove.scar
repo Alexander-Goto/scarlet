@@ -1,0 +1,122 @@
+let set__remove = [obj
+     :value = [set]
+
+     :_ = [obj
+          :core_remove    = fn (set, item) to_set__remove(set:value.remove(item))
+          :core___equal__ = fn (set_1, set_2) set_1:value === set_2:value
+     ]
+]
+
+fn to_set__remove(arg) new (@main.set__remove):value <= arg
+
+fn to_custom_set__remove(arg) custom__create(
+     arg
+     [obj
+          :core_remove    = fn (set, item) to_custom_set__remove(set.custom__get_data().remove(item))
+          :core___equal__ = fn (set_1, set_2) set_1.custom__get_data() === set_2.custom__get_data()
+     ]
+)
+
+let broken_set__remove = [obj
+     :value = [set]
+
+     :_ = [obj
+          :core_remove    = fn (_, _) heap_table()
+     ]
+]
+
+fn to_broken_set__remove(arg) new (@main.broken_set__remove):value <= arg
+
+fn to_broken_custom_set__remove(arg) custom__create(
+     arg
+     [obj
+          :core_remove    = fn (_, _) heap_table()
+     ]
+)
+
+let error_set__remove = [obj
+     :value = [set]
+
+     :_ = [obj
+          :core_remove    = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_set__remove(arg) new (@main.error_set__remove):value <= arg
+
+fn to_error_custom_set__remove(arg) custom__create(
+     arg
+     [obj
+          :core_remove    = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__remove() {
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+
+     test([set].remove(1) === [set])
+     test([set 1].remove("") === [set 1])
+     test([set 1].remove(1) === [set])
+     test([set ""].remove(1) === [set ""])
+     test([set ""].remove("") === [set])
+     test([set 1, ""].remove(1) === [set ""])
+     test([set 1, ""].remove("") === [set 1])
+
+     test([set].init(10).remove(string_0) === [set].init(10))
+     test([set string_1].remove(string_2) === [set string_1])
+     test([set string_1].remove(string_1) === [set])
+     test([set string_1, string_2].remove(string_0) === [set string_1, string_2])
+     test([set string_1, string_2].remove(string_1) === [set string_2])
+     test([set string_1, string_2].remove(string_2) === [set string_1])
+     test([set string_1, string_2].remove(string_1).remove(string_2) === [set])
+
+     let set = [set].init(10)
+     test(set.remove(string_0) === [set])
+     set.ignore()
+
+     let set = [set string_1]
+     test(set.remove(string_2) === [set string_1])
+     test(set.remove(string_1) === [set])
+     set.ignore()
+
+     let set = [set string_1, string_2]
+     test(set.remove(string_0) === [set string_1, string_2])
+     test(set.remove(string_1) === [set string_2])
+     test(set.remove(string_2) === [set string_1])
+     test(set.remove(string_1).remove(string_2) === [set])
+     set.ignore()
+
+     let array    = rnd_string_array()
+     let string   = if rnd_bool(); array[(rnd() & 0xffff) % len(array)] else rnd_string()
+     let set_1    = array.foldl([set].init(len(array)), fn (set, item) set.append(item))
+     let set_2    = if rnd_bool(); set_1 else null
+     let expected = array.foldl([set].init(len(array)), fn (set, item) if item =/= string; set.append(item) else set)
+     test(expected === set_1.remove(string))
+     set_2.ignore()
+
+     test(remove([set 1, 2].to_set__remove(), 1) === [set 2].to_set__remove())
+     test(remove([set 1, 2].to_set__remove(), 2) === [set 1].to_set__remove())
+     test(remove([set 1, 2].to_custom_set__remove(), 1) === [set 2].to_custom_set__remove())
+     test(remove([set 1, 2].to_custom_set__remove(), 2) === [set 1].to_custom_set__remove())
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.remove(heap_string()).get_error_id() === :1)
+     test([set heap_string()].remove(error_1).get_error_id() === :1)
+     test(error_1.remove(error_2).get_error_id() === :1)
+     test(error_2.remove(error_1).get_error_id() === :2)
+     test(error_1.remove([box heap_string()].scarlet__erase_info()).get_error_id() === :1)
+     test(heap_string().remove(error_1).get_error_id() === :1)
+
+     test(heap_string().remove(heap_string()).get_error_id() === :invalid_type)
+     test([set heap_string()].remove([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test(heap_string().remove([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+
+     test(remove(to_broken_set__remove([set ""]), 0).get_error_id() === :invalid_type)
+     test(remove(to_broken_custom_set__remove([set ""]), 0).get_error_id() === :invalid_type)
+     test(remove(to_error_set__remove([set ""]), 0).get_error_id() === :3)
+     test(remove(to_error_custom_set__remove([set ""]), 0).get_error_id() === :4)
+}

@@ -1,0 +1,9 @@
+fn comptime_char(value, code)
+     new (@main.t_operand) {
+          :code           <= code
+          :possible_types <= [set "char"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "char"
+               :value <= value
+          }
+     }

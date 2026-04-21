@@ -1,0 +1,88 @@
+let t_fn_call = [obj
+     :scar_type = "t_fn_call"
+
+     :name = @main.t_token
+     :args = [array] # [array @i_expression*]
+]
+
+fn fn_call_independent?(call, independent_consts) call:args.all(true, fn (arg) arg.independent?(independent_consts))
+
+fn analyze_fn_call(call, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     call:args.foldl([box last_use_info, lambdas_data, def_ids], fn (state, arg) {
+          let [box last_use_info, lambdas_data, def_ids] = state
+
+          arg.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     })
+
+fn fn_call_to_operand(call, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain) {
+     let func     = final_data.get_fn(call:name)
+     let args_len = call:args.len()
+     if func:params.len() /= args_len
+          error__wrong_args_num(call:name)
+     else null
+
+     let is_partial_application = call:args.any(false, fn (arg) arg:scar_type == "t_holder")
+     let fn_ir_name             = func:ir_name
+     let from_core              = "McoreF".prefix_of?(fn_ir_name)
+
+     if from_core
+          if is_partial_application {
+               let linear_alloc_mask = if is_linear_alloc; get_core_fn_partial_app_linear_alloc_mask(fn_ir_name) else 0
+
+               let [box args_operands, exp_data, ir, final_data, dependencies, src_gconsts] = call:args.foldl_kv(
+                    [box [array].init(args_len), exp_data, ir, final_data, dependencies, src_gconsts]
+
+                    fn (state, idx, arg_exp) {
+                         let [box args_operands, exp_data, ir, final_data, dependencies, src_gconsts] = state
+
+                         let [box arg_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+                              arg_exp.to_operand(
+                                   last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts
+                                   false, (linear_alloc_mask >> idx & 1) == 1, true, true
+                              )
+
+                         [box args_operands.append(arg_operand), exp_data, ir, final_data, dependencies, src_gconsts]
+                    }
+               )
+
+               core_fn_partial_app_args_has_correct_types!(fn_ir_name, args_operands, call:name)
+
+               let code = if args_operands.empty?()
+                    new (call:name):text => _ ++ "()"
+               else {
+                    let code_text = args_operands.take(args_len - 1).foldl(call:name:text ++ "(", fn (text, arg) text ++ arg:code:text ++ ", ")
+                    let code_text = code_text ++ args_operands.last():code:text ++ ")"
+                    new (call:name):text <= code_text
+               }
+
+               ir__partial_application(fn_ir_name, args_operands, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+          } else ir__core_fn_call(fn_ir_name, call, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain)
+     else {
+          let dependencies = new (dependencies):fns => _.append(fn__ir_name_to_full_name(fn_ir_name))
+
+          let [box args_operands, exp_data, ir, final_data, dependencies, src_gconsts] = call:args.foldl(
+               [box [array].init(args_len), exp_data, ir, final_data, dependencies, src_gconsts]
+
+               fn (state, arg_exp) {
+                    let [box args_operands, exp_data, ir, final_data, dependencies, src_gconsts] = state
+
+                    let [box arg_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+                         arg_exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, true, true)
+
+                    [box args_operands.append(arg_operand), exp_data, ir, final_data, dependencies, src_gconsts]
+               }
+          )
+
+          let code = if args_operands.empty?()
+               new (call:name):text => _ ++ "()"
+          else {
+               let code_text = args_operands.take(args_len - 1).foldl(call:name:text ++ "(", fn (text, arg) text ++ arg:code:text ++ ", ")
+               let code_text = code_text ++ args_operands.last():code:text ++ ")"
+               new (call:name):text <= code_text
+          }
+
+          if is_partial_application
+               ir__partial_application(fn_ir_name, args_operands, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+          else ir__fn_call(fn_ir_name, args_operands, code, null, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     }
+}

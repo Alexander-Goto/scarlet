@@ -1,0 +1,10 @@
+fn ir__core_fn_pop(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     arg.maybe_has_type!("channel")
+
+     ir__fn_call("McoreFNpop", [array arg], code, @main.shared_types__error, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

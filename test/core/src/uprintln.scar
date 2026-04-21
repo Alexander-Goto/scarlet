@@ -1,0 +1,5 @@
+`noinline`
+fn test__uprintln() {
+     test(expected_error(:1, heap_string(), heap_string()).uprintln().get_error_id() === :1)
+     test(heap_string().uprintln().get_error_id() === :invalid_type)
+}

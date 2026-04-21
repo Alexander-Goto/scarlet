@@ -1,0 +1,7 @@
+let t_const_def = [obj
+     :scar_type = "t_const_def"
+
+     :keyword = @main.t_token
+     :name    = @main.t_token
+     :value   = :i_expression
+]

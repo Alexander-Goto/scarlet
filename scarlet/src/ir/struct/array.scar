@@ -1,0 +1,86 @@
+fn ir__array(items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_array, is_last) {
+     let [box items, final_data, dependencies] = operands_have_ir!(items, final_data, dependencies)
+     let [box array_reg, exp_data]             = exp_data.new_reg()
+     let items_len_ir_num                      = items.len().to_ir_num()
+
+     let ir = ir ++ "t_any " ++ array_reg ++ "=array__init(thrd_data," ++ items_len_ir_num ++ "," ++ exp_data:owner_name_ir_const ++ ");\n"
+
+     let [box ir__is_error, ir__error_actions] = if is_array
+          null
+     else items.foldl([box "", "free((void*)" ++ array_reg ++ ".qwords[0]);\n", false], fn (state, item) {
+          let [box ir__is_error, ir__error_actions, array_maybe_error] = state
+
+          let ir__free_item = item.dec_ref_cnt("")
+
+          if item.has_type?(@main.common_types)
+               [box ir__is_error, ir__error_actions ++ ir__free_item, array_maybe_error]
+          else {
+               let ir__type_check             = "!type_is_common(" ++ item:ir ++ ".bytes[15])"
+               let ir__is_error               = (if ir__is_error.empty?(); "" else ir__is_error ++ "||") ++ ir__type_check
+               let item_maybe_error           = item.maybe_has_type?("error")
+               let ir__set_invalid_type_error = ir__free_item ++ array_reg ++ "=error__invalid_type(thrd_data," ++ exp_data:owner_name_ir_const ++ ");\n"
+               let ir__error_actions          = ir__raw_if(
+                    ir__error_actions
+
+                    ir__type_check ++ (if array_maybe_error; "&&" ++ array_reg ++ ".bytes[15]!=tid__error" else "")
+                    :unknown
+                    if item_maybe_error
+                         ir__raw_if(
+                              ""
+
+                              item:ir ++ ".bytes[15]==tid__error"
+                              :unknown
+                              array_reg ++ "=" ++ item:ir ++ ";\n"
+
+                              if item.has_type?(@main.common_types__error); ir__free_item else ir__set_invalid_type_error
+                         )
+                    else ir__set_invalid_type_error
+
+                    ir__free_item
+               )
+
+               [box ir__is_error, ir__error_actions, true]
+          }
+     })
+
+     let [box items_reg, exp_data]                        = exp_data.new_reg()
+     let [box ir__create_array, final_data, dependencies] = ir__memcpy_items(
+          items_reg, 0, items
+
+          "slice_array__set_len(" ++ array_reg ++  "," ++ items_len_ir_num ++ ");\n" ++
+          "t_any*const " ++ items_reg ++ "=slice_array__get_items(" ++ array_reg ++ ");\n" ++
+          array_reg ++ "=slice__set_metadata(" ++ array_reg ++  ",0," ++
+          if items.len() < 0xfff'ffff; items_len_ir_num ++ ");\n" else "0xfffffff);\n"
+
+          final_data, dependencies
+     )
+
+     let ir = if is_array
+          ir ++ ir__create_array
+     else ir__raw_if(
+          ir
+
+          ir__is_error
+          :unlikely
+          ir__error_actions
+
+          ir__create_array
+     )
+
+     let type = if is_array; [set "array"] else [set "array", "error"]
+     let ir   = ir__assume_type(array_reg, type, ir)
+
+     let ir = if is_last
+          ir__raw_return(ir, array_reg)
+     else ir
+
+     [box
+          new (@main.t_operand) {
+               :code           <= code
+               :ir             <= array_reg
+               :possible_types <= type
+          }
+
+          exp_data, ir, final_data, dependencies, src_gconsts
+     ]
+}

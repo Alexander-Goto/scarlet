@@ -1,0 +1,21 @@
+fn ir__core_fn_log_msg(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box level, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box msg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ level:code:text ++ msg:code:text ++ ")")
+
+     level.maybe_has_type!("int")
+     msg.maybe_has_type!(@main.string_types)
+
+     if level:comptime_val:type === "int" && not level:comptime_val:value.in_range?(@core.log_lvl__minimum, @core.log_lvl__maximum + 1)
+          error__out_of_bounds(level:code)
+     else null
+
+     ir__fn_call(
+          fn_ir_name, [array level, msg], code
+          if not level:comptime_val.null?() && msg.has_type?(@main.string_types); [set "null"] else [set "null", "error"]
+          exp_data, ir, final_data, dependencies, src_gconsts, is_last
+     )
+}

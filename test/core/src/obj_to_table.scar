@@ -1,0 +1,16 @@
+`noinline`
+fn test__obj_to_table() {
+     test([obj].obj_to_table() === [table])
+     test([obj].init(10).obj_to_table() === [table])
+     test([obj :1 = heap_string()].obj_to_table() === [table :1 = heap_string()])
+     test([obj :1 = heap_string(), :_ = [obj :2 = heap_string()]].obj_to_table() === [table :1 = heap_string(), :_ = [obj :2 = heap_string()]])
+     test([obj :1 = heap_string(), :3 = 12, :4 = heap_byte_array(), :_ = [obj :2 = heap_string()]].obj_to_table() === [table :1 = heap_string(), :3 = 12, :4 = heap_byte_array(), :_ = [obj :2 = heap_string()]])
+
+     let obj            = rnd_string_obj()
+     let expected_table = obj.foldl_kv([table], fn(table, key, value) new (table)[key] <= value)
+     test(expected_table === obj.obj_to_table())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.obj_to_table().get_error_id() === :1)
+     test(heap_string().obj_to_table().get_error_id() === :invalid_type)
+}

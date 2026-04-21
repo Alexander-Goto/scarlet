@@ -1,0 +1,1 @@
+fn main() run_user_cmd(@main.user_cmd)

@@ -1,0 +1,127 @@
+fn ir__raw_if(ir, predicate, predicate_is_true_probability, then_branch, else_branch)
+     ir ++ "if(" ++ predicate ++ ")" ++
+     (switch predicate_is_true_probability case :unknown: "" case :unlikely: "[[clang::unlikely]]" case :likely: "[[clang::likely]]" default: unreachable()) ++
+     "{\n" ++ then_branch ++
+     (if else_branch.null?(); "" else "}else{\n" ++ else_branch) ++
+     "}\n"
+
+fn ir__if(predicate_operand, then_operand, then_ir, else_operand, else_ir, code, only_in_then, only_in_else, only_in_then_and_else, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     predicate_operand.maybe_has_type!("bool")
+
+     let named_consts           = exp_data:named_consts
+     let free_else_for_then__ir = only_in_else.foldl("", fn (free_else_for_then__ir, name) named_consts[name]:operand.dec_ref_cnt(free_else_for_then__ir))
+     let free_then_for_else__ir = only_in_then.foldl("", fn (free_then_for_else__ir, name) named_consts[name]:operand.dec_ref_cnt(free_then_for_else__ir))
+
+     if not predicate_operand:comptime_val.null?()
+          if predicate_operand:comptime_val:value
+               [box new (then_operand):code <= code, exp_data, ir ++ free_else_for_then__ir ++ then_ir, final_data, dependencies, src_gconsts]
+          else [box new (else_operand):code <= code, exp_data, ir ++ free_then_for_else__ir ++ else_ir, final_data, dependencies, src_gconsts]
+     else {
+          let predicate_is_bool = predicate_operand.has_type?("bool")
+
+          let [box then_operand, final_data, dependencies] = then_operand.has_ir!(final_data, dependencies)
+          let [box else_operand, final_data, dependencies] = else_operand.has_ir!(final_data, dependencies)
+
+          let [box result_reg, exp_data] = exp_data.new_reg()
+          let [box ir, if_ir, exp_data]  = if is_last {
+               let if_ir = ir__raw_if(
+                    ""
+
+                    predicate_operand:ir ++ ".bytes[0]==1"
+                    :unknown
+
+                    free_else_for_then__ir ++ then_ir
+
+                    null
+               ) ++ free_then_for_else__ir ++ else_ir
+
+               [box ir, if_ir, exp_data]
+          } else {
+               let if_ir = ir__raw_if(
+                    ""
+
+                    predicate_operand:ir ++ ".bytes[0]==1"
+                    :unknown
+
+                    free_else_for_then__ir ++ then_ir ++ result_reg ++ "=" ++ then_operand:ir ++ ";\n"
+
+                    free_then_for_else__ir ++ else_ir ++ result_reg ++ "=" ++ else_operand:ir ++ ";\n"
+               )
+
+               [box ir ++ "t_any " ++ result_reg ++ ";\n", if_ir, exp_data]
+          }
+
+          let ir = if predicate_is_bool
+               ir ++ if_ir
+          else {
+               let free_consts__ir = only_in_then_and_else.foldl("", fn (free_consts__ir, name) named_consts[name]:operand.dec_ref_cnt(free_consts__ir)) ++
+                    free_then_for_else__ir ++ free_else_for_then__ir
+
+               if is_last {
+                    let invalid_type_error_reg_set = "t_any const " ++ result_reg ++ "=error__invalid_type(thrd_data," ++ exp_data:owner_name_ir_const ++ ");\n"
+
+                    ir__raw_if(
+                         ir
+
+                         predicate_operand:ir ++ ".bytes[15]!=tid__bool"
+                         :unlikely
+
+                         ir__raw_if(
+                              free_consts__ir
+
+                              predicate_operand:ir ++ ".bytes[15]==tid__error"
+                              :unknown
+
+                              ir__raw_return("", predicate_operand:ir)
+
+                              null
+                         ) ++ ir__raw_return(predicate_operand.dec_ref_cnt("") ++ invalid_type_error_reg_set, result_reg)
+
+                         null
+                    ) ++ if_ir
+               } else ir__raw_if(
+                    ir
+
+                    predicate_operand:ir ++ ".bytes[15]!=tid__bool"
+                    :unlikely
+
+                    ir__raw_if(
+                         free_consts__ir
+
+                         predicate_operand:ir ++ ".bytes[15]==tid__error"
+                         :unknown
+
+                         result_reg ++ "=" ++ predicate_operand:ir ++ ";\n"
+
+                         predicate_operand.dec_ref_cnt("") ++ result_reg ++ "=error__invalid_type(thrd_data," ++ exp_data:owner_name_ir_const ++ ");\n"
+                    )
+
+                    if_ir
+               )
+          }
+
+          let is_gconst = predicate_is_bool && then_operand:is_gconst && else_operand:is_gconst
+
+          let then_possible_types = then_operand:possible_types
+          let else_possible_types = else_operand:possible_types
+          let possible_types      = if then_possible_types.null?() || else_possible_types.null?()
+               null
+          else {
+               let possible_types = then_possible_types.foldl(else_possible_types, _.append(_))
+               if predicate_is_bool; possible_types else possible_types.append("error")
+          }
+
+          let ir = if is_last; ir else ir__assume_type(result_reg, possible_types, ir)
+
+          [box
+               new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= possible_types
+                    :is_gconst      <= is_gconst
+               }
+
+               exp_data, ir, final_data, dependencies, src_gconsts
+          ]
+     }
+}

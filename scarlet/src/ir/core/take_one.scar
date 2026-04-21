@@ -1,0 +1,39 @@
+fn ir__core_fn_take_one(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     arg.maybe_has_type!([set "table", "set", "obj", "custom"])
+
+     if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_][:core_take_one].null?()
+          ir__fn_call(
+               "McoreFNtake_one", [array arg], code
+
+               if arg.has_type?("table")
+                    @main.common_types__null
+               else if arg.has_type?("set")
+                    @main.all_hash_map_key_types__null
+               else @main.common_types__null_error
+
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     else {
+          let comptime_value = (if arg:comptime_val:type == "obj" && :_.key_of?(arg:comptime_val:value)
+               arg:comptime_val:value.foldl_kv(@main.comptime_null_val, fn (null_val, key, value) if key == :_; null_val else [breaker value])
+          else arg:comptime_val:value.take_one()) <? @main.comptime_null_val
+
+          let operand = new (arg) {
+               :ir             <= null
+               :code           <= code
+               :comptime_val   <= comptime_value
+               :possible_types <= comptime_value.get_type_for_operand()
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

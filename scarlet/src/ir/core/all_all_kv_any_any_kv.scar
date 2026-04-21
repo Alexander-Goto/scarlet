@@ -1,0 +1,20 @@
+fn ir__core_fn_all_all_kv_any_any_kv(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box container, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box default_result, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box func, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, true, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ container:code:text ++ ", " ++ func:code:text ++ ")")
+
+     container.maybe_has_type!(
+          if fn_ir_name.last() == 'v'
+               [set "short_string", "string", "short_byte_array", "byte_array", "table", "array", "obj", "custom"]
+          else [set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom"]
+     )
+     default_result.maybe_has_type!("bool")
+     func.maybe_has_type!(@main.fn_types)
+
+     ir__fn_call(fn_ir_name, [array container, default_result, func], code, [set "bool", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

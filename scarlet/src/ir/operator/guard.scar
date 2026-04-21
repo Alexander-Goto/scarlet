@@ -1,0 +1,15 @@
+fn ir__guard(guarded_exp, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     guarded_exp.maybe_has_type!("bool")
+
+     let comptime_true = comptime_bool(true, code)
+
+     if guarded_exp:comptime_val:value === true
+          [box comptime_true, exp_data, if is_last; ir__raw_return(ir, "bool__true") else ir, final_data, dependencies, src_gconsts]
+     else {
+          let [box file_name_ir_const, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ code:file ++ "\";\n", final_data, dependencies)
+
+          let ir = ir ++ "Oguard(thrd_data," ++ guarded_exp:ir ++ "," ++ file_name_ir_const ++ "," ++ code:line.to_ir_num() ++ "," ++ code:row.to_ir_num() ++ ");\n"
+
+          [box comptime_true, exp_data, if is_last; ir__raw_return(ir, "bool__true") else ir, final_data, dependencies, src_gconsts]
+     }
+}

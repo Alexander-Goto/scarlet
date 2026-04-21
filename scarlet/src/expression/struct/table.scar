@@ -1,0 +1,86 @@
+let t_table = [obj
+     :scar_type = "t_table"
+
+     :open_char = @main.t_token
+     :kvs       = [array] # [array [obj :key = @i_expression, :value = @i_expression]*]
+]
+
+fn table_independent?(table, independent_consts) table:kvs.all(true, fn (kv) kv:key.independent?(independent_consts) && kv:value.independent?(independent_consts))
+
+fn analyze_table(table, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     table:kvs.foldl([box last_use_info, lambdas_data, def_ids], fn (state, kv) {
+          let [box last_use_info, lambdas_data, def_ids] = state
+
+          let [box last_use_info, lambdas_data, def_ids] = kv:key.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+          kv:value.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     })
+
+fn table_to_operand(table, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box kvs_operands, code, exp_data, ir, final_data, dependencies, src_gconsts, is_comptime, is_table] = if table:kvs.empty?()
+          [box [array], "[table]", exp_data, ir, final_data, dependencies, src_gconsts, true, true]
+     else table:kvs.foldl([box [array].init(table:kvs.len()), "[table", exp_data, ir, final_data, dependencies, src_gconsts, true, true, [set].init(table:kvs.len())], fn (state, kv) {
+          let [box kvs_operands, code, exp_data, ir, final_data, dependencies, src_gconsts, is_comptime, is_table, existed_key_ids] = state
+
+          let [box key_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+               kv:key.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+          let [box value_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+               kv:value.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+          let [box all_key_types_valid, any_key_types_valid] = if key_operand:possible_types.null?()
+               [box false, true]
+          else key_operand:possible_types.foldl([box true, false], fn (result, type) {
+               let [box all_key_types_valid, any_key_types_valid] = result
+
+               let all_key_types_valid = all_key_types_valid && type.in?(@main.always_hash_map_key_types)
+               let any_key_types_valid = any_key_types_valid || type.in?(@main.all_hash_map_key_types)
+
+               break(not all_key_types_valid && any_key_types_valid, [box all_key_types_valid, any_key_types_valid])
+          })
+
+          if not any_key_types_valid
+               error__invalid_type(key_operand:code, "param(hash:arg)", key_operand:possible_types)
+          else null
+
+          let [box all_value_types_valid, any_value_types_valid] = if value_operand:possible_types.null?()
+               [box false, true]
+          else value_operand:possible_types.foldl([box true, false], fn (result, type) {
+               let [box all_value_types_valid, any_value_types_valid] = result
+
+               let type_valid            = type.in?(@main.common_types)
+               let all_value_types_valid = all_value_types_valid && type_valid
+               let any_value_types_valid = any_value_types_valid || type_valid
+
+               break(not all_value_types_valid && any_value_types_valid, [box all_value_types_valid, any_value_types_valid])
+          })
+
+          if not any_value_types_valid
+               error__invalid_type(value_operand:code, @main.common_types, value_operand:possible_types)
+          else null
+
+          let new_key_id = if key_operand:comptime_val.null?()
+               key_operand:ir
+          else key_operand:comptime_val
+
+          let existed_key_ids = existed_key_ids.append_new(new_key_id)
+          if existed_key_ids.null?()
+               error__already_exists(key_operand:code, "table key")
+          else null
+
+          let kvs_operands = kvs_operands.append([obj :key = key_operand, :value = value_operand])
+          let code         = code ++ " " ++ key_operand:code:text ++ " = " ++ value_operand:code:text ++ ","
+          let is_comptime  = is_comptime && not key_operand:comptime_val.null?() && all_key_types_valid && not value_operand:comptime_val.null?()
+          let is_table     = is_table && all_key_types_valid && all_value_types_valid
+
+          [box kvs_operands, code, exp_data, ir, final_data, dependencies, src_gconsts, is_comptime, is_table, existed_key_ids]
+     })
+
+     let code = new (table:open_char):text <= if code.last() == ','; new (code)[code.len() - 1] <= ']' else code
+     if is_comptime {
+          let operand = comptime_table(kvs_operands, code)
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     } else ir__table(kvs_operands, code, exp_data, ir, final_data, dependencies, src_gconsts, is_table, is_last)
+}

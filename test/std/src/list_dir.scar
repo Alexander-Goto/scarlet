@@ -1,0 +1,14 @@
+`noinline`
+fn test__list_dir() {
+     test(list_dir(current_dir()).sort(true) == [array "srcD", "test.cF", "test.scarF", "test.shF", "testF"])
+
+     test(list_dir(fs_path("__tmp_dir__")) == :not_exist)
+     test(list_dir(fs_path("/root")) == :access)
+     let long_name = fs_path("/" ++ "a".repeat(16777214))
+     test(long_name.type() == "std.fs_path")
+     test(list_dir(long_name) == :long)
+     test(list_dir(fs_path("test")) == :not_dir)
+
+     test(list_dir(expected_error(:1, heap_string(), heap_string())).get_error_id() == :1)
+     test(list_dir(heap_string()).get_error_id() == :invalid_type)
+}

@@ -1,0 +1,73 @@
+let num__neg_inf = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_neg_inf? = fn (num) num:value.neg_inf?()
+     ]
+]
+
+fn to_num__neg_inf?(arg) new (@main.num__neg_inf):value <= arg
+
+fn to_custom_num__neg_inf?(arg) custom__create(
+     arg
+     [obj
+          :core_neg_inf? = fn (num) num.custom__get_data().neg_inf?()
+     ]
+)
+
+let broken_num__neg_inf = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_neg_inf? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__neg_inf?(arg) new (@main.broken_num__neg_inf):value <= arg
+
+fn to_broken_custom_num__neg_inf?(arg) custom__create(
+     arg
+     [obj
+          :core_neg_inf? = fn (_) heap_string()
+     ]
+)
+
+let error_num__neg_inf = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_neg_inf? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__neg_inf?(arg) new (@main.error_num__neg_inf):value <= arg
+
+fn to_error_custom_num__neg_inf?(arg) custom__create(
+     arg
+     [obj
+          :core_neg_inf? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__neg_inf?() {
+     test(neg_inf().neg_inf?())
+     test(not inf().neg_inf?())
+     test(not 0.0.neg_inf?())
+     test(not nan().neg_inf?())
+     test(not 12312.3.neg_inf?())
+
+     test(neg_inf().to_num__neg_inf?().neg_inf?())
+     test(not 0.0.to_num__neg_inf?().neg_inf?())
+     test(neg_inf().to_custom_num__neg_inf?().neg_inf?())
+     test(not 0.0.to_custom_num__neg_inf?().neg_inf?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.neg_inf?().get_error_id() === :1)
+     test(heap_table().neg_inf?().get_error_id() === :invalid_type)
+
+     test(to_broken_num__neg_inf?(1.0).neg_inf?().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__neg_inf?(1.0).neg_inf?().get_error_id() === :invalid_type)
+     test(to_error_num__neg_inf?(1.0).neg_inf?().get_error_id() === :3)
+     test(to_error_custom_num__neg_inf?(1.0).neg_inf?().get_error_id() === :4)
+}

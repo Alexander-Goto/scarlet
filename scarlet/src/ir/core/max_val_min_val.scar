@@ -1,0 +1,82 @@
+fn ir__core_fn_max_val_min_val(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain) {
+     let [box exp, exp_data, ir, final_data, dependencies, src_gconsts] = if is_first_in_chain
+          num_chain_items_to_operands(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+
+     if is_first_in_chain && exp:scar_type == "t_operand"
+          [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+     else {
+          let [box arg, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, false, false, false, false)
+
+          let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+          if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@main.limited_ord_types) {
+               if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_][if fn_ir_name == "McoreFNmax_val"; :core_max_val else :core_min_val].null?()
+                    error__invalid_type(arg:code, if fn_ir_name == "McoreFNmax_val"; ".core_max_val" else ".core_min_val", "obj")
+               else null
+
+               let arg_possible_types = arg:possible_types
+
+               let [box result_possible_types, maybe_chain, maybe_error] = if arg_possible_types.null?()
+                    [box @main.limited_ord_types__mtd_error, true, true]
+               else if arg_possible_types.all(true, _.in?(@main.limited_ord_types))
+                    [box arg_possible_types, true, false]
+               else {
+                    let new_arg_possible_types = arg_possible_types.filter(_.in?(@main.limited_ord_types__mtd))
+
+                    if new_arg_possible_types.empty?()
+                         error__invalid_type(arg:code, @main.limited_ord_types__mtd, arg_possible_types)
+                    else null
+
+                    let new_arg_possible_types = new_arg_possible_types.append("error")
+                    [box new_arg_possible_types, new_arg_possible_types.any(true, _.in?(@main.num_types)), true]
+               }
+
+               let need_chain = exp:args.first():scar_type /= "t_operand" && is_first_in_chain && maybe_chain
+
+               let [box not_chain_operand, exp_data, not_chain_ir, final_data, dependencies, src_gconsts] = if maybe_error || not need_chain
+                    ir__fn_call(fn_ir_name, [array arg], code, result_possible_types, exp_data, args_ir, final_data, dependencies, src_gconsts, is_last)
+               else [box null, exp_data, args_ir, final_data, dependencies, src_gconsts]
+
+               if not need_chain
+                    [box not_chain_operand, exp_data, ir ++ not_chain_ir, final_data, dependencies, src_gconsts]
+               else {
+                    let maybe_byte    = "byte".in?(result_possible_types)
+                    let maybe_int     = "int".in?(result_possible_types)
+                    let maybe_float   = "float".in?(result_possible_types)
+                    let chain_type_ir = if maybe_int && not (maybe_byte || maybe_float)
+                         "tid__int"
+                    else if maybe_float && not (maybe_byte || maybe_int)
+                         "tid__float"
+                    else if maybe_byte && not (maybe_int || maybe_float)
+                         "tid__byte"
+                    else null
+
+                    let [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir] =
+                         num_chain_creation_prepare(exp, maybe_byte, maybe_int, maybe_float, "", chain_type_ir)
+
+                    num_chain_create(
+                         chain_predicate_ir, chain_type_ir
+                         byte_chain_ir, int_chain_ir, float_chain_ir
+                         [box maybe_byte, maybe_int, maybe_float]
+                         result_possible_types, code, not_chain_ir, not_chain_operand:ir
+                         exp_data, ir, final_data, dependencies, src_gconsts, is_last
+                    )
+               }
+          } else {
+               let operand = new (arg) {
+                    :ir                 <= null
+                    :code               <= code
+                    :comptime_val:value => if fn_ir_name == "McoreFNmax_val"; max_val(_) else min_val(_)
+               }
+               let ir = ir ++ args_ir
+
+               if is_last {
+                    let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+                    [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+               } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+          }
+     }
+}

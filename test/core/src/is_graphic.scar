@@ -1,0 +1,84 @@
+let char__graphic = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_graphic? = fn (char) char:value.graphic?()
+     ]
+]
+
+fn to_char__graphic?(arg) new (@main.char__graphic):value <= arg
+
+fn to_custom_char__graphic?(arg) custom__create(
+     arg
+     [obj
+          :core_graphic? = fn (char) char.custom__get_data().graphic?()
+     ]
+)
+
+let broken_char__graphic = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_graphic? = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_char__graphic?(arg) new (@main.broken_char__graphic):value <= arg
+
+fn to_broken_custom_char__graphic?(arg) custom__create(
+     arg
+     [obj
+          :core_graphic? = fn (_) heap_string()
+     ]
+)
+
+let error_char__graphic = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_graphic? = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_char__graphic?(arg) new (@main.error_char__graphic):value <= arg
+
+fn to_error_custom_char__graphic?(arg) custom__create(
+     arg
+     [obj
+          :core_graphic? = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__graphic?() {
+     test(not '\000001'.graphic?())
+     test(not '\000008'.graphic?())
+     test('\000009'.graphic?())
+     test(' '.graphic?())
+     test('0'.graphic?())
+     test('9'.graphic?())
+     test('a'.graphic?())
+     test('z'.graphic?())
+     test('A'.graphic?())
+     test('Z'.graphic?())
+
+     let string = rnd_string()
+     test(string.filter(fn (char) char === '\000009' || char.in_range?('\000020', '\00007f') || (char >= '\000080' && char <= '\000101')) === string.filter(graphic?(_)))
+
+     test(to_char__graphic?('9').graphic?())
+     test(to_char__graphic?('\000009').graphic?())
+     test(not to_char__graphic?('\n').graphic?())
+
+     test(to_custom_char__graphic?('9').graphic?())
+     test(to_custom_char__graphic?('\000009').graphic?())
+     test(not to_custom_char__graphic?('\n').graphic?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.graphic?().get_error_id() === :1)
+     test(heap_table().graphic?().get_error_id() === :invalid_type)
+
+     test(to_broken_char__graphic?('a').graphic?().get_error_id() === :invalid_type)
+     test(to_broken_custom_char__graphic?('a').graphic?().get_error_id() === :invalid_type)
+     test(to_error_char__graphic?('a').graphic?().get_error_id() === :3)
+     test(to_error_custom_char__graphic?('a').graphic?().get_error_id() === :4)
+}

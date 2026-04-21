@@ -1,0 +1,33 @@
+`noinline`
+fn test____get_field__() {
+     test(null:1.null?())
+     test(null:2.null?())
+     test(null:_.null?())
+     test(null:1:2.null?())
+
+     test([obj :1 = 2]:1 === 2)
+     test([obj :1 = 2]:0.null?())
+     test([obj :1 = 2]:_.null?())
+     test([obj :1 = 2, :2 = 10]:1 === 2)
+     test([obj :1 = 2, :2 = 10]:2 === 10)
+     test([obj :1 = 2, :2 = 10]:0.null?())
+     test([obj :1 = 2, :2 = 10]:3.null?())
+     test([obj :1 = 2, :2 = 10]:_.null?())
+     test([obj :1 = 2, :2 = 10, :_ = [obj :1 = 11]]:1 === 2)
+     test([obj :1 = 2, :2 = 10, :_ = [obj :1 = 11]]:2 === 10)
+     test([obj :1 = 2, :2 = 10, :_ = [obj :1 = 11]]:_ === [obj :1 = 11])
+     test([obj :1 = 2, :2 = 10, :_ = [obj :1 = 11]]:0.null?())
+     test([obj :1 = 2, :2 = 10, :_ = [obj :1 = 11]]:3.null?())
+     test([obj :1 = "0123456789abcde" ++ "f", :2 = "1123456789abcde" ++ "f", :_ = [obj :1 = "1123456789abcde" ++ "0"]]:1 === "0123456789abcdef")
+     test([obj :1 = "0123456789abcde" ++ "f", :2 = "1123456789abcde" ++ "f", :_ = [obj :1 = "1123456789abcde" ++ "0"]]:2 === "1123456789abcdef")
+     test([obj :1 = "0123456789abcde" ++ "f", :2 = "1123456789abcde" ++ "f", :_ = [obj :1 = "1123456789abcde" ++ "0"]]:_ === [obj :1 = "1123456789abcde0"])
+     test([obj :1 = "0123456789abcde" ++ "f", :2 = "1123456789abcde" ++ "f", :_ = [obj :1 = "1123456789abcde" ++ "0"]]:0.null?())
+     test([obj :1 = "0123456789abcde" ++ "f", :2 = "1123456789abcde" ++ "f", :_ = [obj :1 = "1123456789abcde" ++ "0"]]:3.null?())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error:hello.get_error_id() === :1)
+     test(error:_.get_error_id() === :1)
+
+     test(heap_string():hello.get_error_id() === :invalid_type)
+     test(heap_string():_.get_error_id() === :invalid_type)
+}

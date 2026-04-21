@@ -1,0 +1,17 @@
+fn name!(name, owner) {
+     let name_str = name:text
+
+     let suffix          = name_str.drop_while(fn (char) char.ascii_lower?() || char.ascii_digit?() || char == '_')
+     let forbidden_names = switch owner
+     case "attribute", "global constant":   [set "_"]
+     case "function parameter", "constant": [set "case", "default", "else", "false", "fn", "if", "let", "new", "not", "null", "switch", "_", "true"]
+     case "function":                       [set
+          "case", "default", "else", "fn", "guard", "if", "let", "new", "not", "scarlet__erase_info"
+          "scarlet__erase_value", "switch", "test", "unreachable", "_", "!", "!!!", "?"
+     ]
+     default: unreachable()
+
+     if not ((name_str.first().ascii_lower?() || name_str.first() == '_') && if owner == "function"; suffix.in?([set "", "?", "!", "!!!"]) else suffix.empty?()) || name_str.in?(forbidden_names)
+          error__invalid_name(name, owner)
+     else null
+}

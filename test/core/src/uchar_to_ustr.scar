@@ -1,0 +1,25 @@
+`noinline`
+fn test__uchar_to_ustr() {
+     test(1.uchar_to_ustr() === [byte_array 0b01])
+     test(97.uchar_to_ustr() === u"a")
+     test(127.uchar_to_ustr() === [byte_array 0b7f])
+     test(128.uchar_to_ustr() === [byte_array 0bc2, 0b80])
+     test(1061.uchar_to_ustr() === [byte_array 0bd0, 0ba5])
+     test(2047.uchar_to_ustr() === [byte_array 0bdf, 0bbf])
+     test(2048.uchar_to_ustr() === [byte_array 0be0, 0ba0, 0b80])
+     test(9984.uchar_to_ustr() === [byte_array 0be2, 0b9c, 0b80])
+     test(65535.uchar_to_ustr() === [byte_array 0bef, 0bbf, 0bbf])
+     test(65536.uchar_to_ustr() === [byte_array 0bf0, 0b90, 0b80, 0b80])
+     test(128080.uchar_to_ustr() === [byte_array 0bf0, 0b9f, 0b91, 0b90])
+     test(1114111.uchar_to_ustr() === [byte_array 0bf4, 0b8f, 0bbf, 0bbf])
+
+     test(expected_error(:1, heap_string(), heap_string()).uchar_to_ustr().get_error_id() === :1)
+
+     test(heap_string().uchar_to_ustr().get_error_id() === :invalid_type)
+
+     test(0.scarlet__erase_info().uchar_to_ustr().get_error_id() === :out_of_bounds)
+     test(-1.scarlet__erase_info().uchar_to_ustr().get_error_id() === :out_of_bounds)
+     test(-9223372036854775808.scarlet__erase_info().uchar_to_ustr().get_error_id() === :out_of_bounds)
+     test(9223372036854775807.scarlet__erase_info().uchar_to_ustr().get_error_id() === :out_of_bounds)
+     test(1114112.scarlet__erase_info().uchar_to_ustr().get_error_id() === :out_of_bounds)
+}

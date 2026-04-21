@@ -1,0 +1,24 @@
+fn comptime_obj(kvs, code) if kvs.empty?()
+     new (@main.t_operand) {
+          :code           <= code
+          :ir             <= "empty_obj"
+          :possible_types <= [set "obj"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "obj"
+               :value <= [table]
+          }
+     }
+else new (@main.t_operand) {
+     :code           <= code
+     :possible_types <= [set "obj"]
+     :comptime_val   <= new (@main.t_comptime_val) {
+          :type  <= "obj"
+          :value <= kvs.foldl([table].init(kvs.len()), fn (obj, kv) {
+               let key   = kv:key:comptime_val:value
+               let value = kv:value:comptime_val
+               if key == :_ && value:type == "null"
+                    obj
+               else new (obj)[kv:key:comptime_val:value] <= kv:value:comptime_val}
+          )
+     }
+}

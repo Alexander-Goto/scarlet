@@ -1,0 +1,213 @@
+let const__to_string = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_string = fn (arg) arg:value.to_string()
+     ]
+]
+
+fn to_const__to_string(arg) new (@main.const__to_string):value <= arg
+
+fn to_custom_const__to_string(arg) custom__create(
+     arg
+     [obj
+          :core_to_string = fn (arg) arg.custom__get_data().to_string()
+     ]
+)
+
+let broken_const__to_string = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_string = fn (_) heap_table()
+     ]
+]
+
+fn to_broken_const__to_string(arg) new (@main.broken_const__to_string):value <= arg
+
+fn to_broken_custom_const__to_string(arg) custom__create(
+     arg
+     [obj
+          :core_to_string = fn (_) heap_table()
+     ]
+)
+
+let error_const__to_string = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_string = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__to_string(arg) new (@main.error_const__to_string):value <= arg
+
+fn to_error_custom_const__to_string(arg) custom__create(
+     arg
+     [obj
+          :core_to_string = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__to_string() {
+     test("".to_string() === "")
+     test("0123456789abcde".to_string() === "0123456789abcde")
+     test(heap_string().to_string() === heap_string())
+
+     let string = rnd_string()
+     test(string.to_string() === string)
+
+     test(null.to_string() === "null")
+
+     test(:_.to_string() === "_")
+     test(:0.to_string() === "0")
+     test(:9.to_string() === "9")
+     test(:a.to_string() === "a")
+     test(:z.to_string() === "z")
+     test(:_!.to_string() === "_!")
+     test(:0!.to_string() === "0!")
+     test(:9!.to_string() === "9!")
+     test(:a!.to_string() === "a!")
+     test(:z!.to_string() === "z!")
+     test(:_!!!.to_string() === "_!!!")
+     test(:0!!!.to_string() === "0!!!")
+     test(:9!!!.to_string() === "9!!!")
+     test(:a!!!.to_string() === "a!!!")
+     test(:z!!!.to_string() === "z!!!")
+     test(:_?.to_string() === "_?")
+     test(:0?.to_string() === "0?")
+     test(:9?.to_string() === "9?")
+     test(:a?.to_string() === "a?")
+     test(:z?.to_string() === "z?")
+     test(:______________________.to_string() === "______________________")
+     test(:0000000000000000000000.to_string() === "0000000000000000000000")
+     test(:9999999999999999999999.to_string() === "9999999999999999999999")
+     test(:aaaaaaaaaaaaaaaaaaaaaa.to_string() === "aaaaaaaaaaaaaaaaaaaaaa")
+     test(:zzzzzzzzzzzzzzzzzzzzzz.to_string() === "zzzzzzzzzzzzzzzzzzzzzz")
+     test(:hello_world.to_string() === "hello_world")
+     test(:______________________!.to_string() === "______________________!")
+     test(:0000000000000000000000!.to_string() === "0000000000000000000000!")
+     test(:9999999999999999999999!.to_string() === "9999999999999999999999!")
+     test(:aaaaaaaaaaaaaaaaaaaaaa!.to_string() === "aaaaaaaaaaaaaaaaaaaaaa!")
+     test(:zzzzzzzzzzzzzzzzzzzzzz!.to_string() === "zzzzzzzzzzzzzzzzzzzzzz!")
+     test(:hello_world!.to_string() === "hello_world!")
+     test(:______________________!!!.to_string() === "______________________!!!")
+     test(:0000000000000000000000!!!.to_string() === "0000000000000000000000!!!")
+     test(:9999999999999999999999!!!.to_string() === "9999999999999999999999!!!")
+     test(:aaaaaaaaaaaaaaaaaaaaaa!!!.to_string() === "aaaaaaaaaaaaaaaaaaaaaa!!!")
+     test(:zzzzzzzzzzzzzzzzzzzzzz!!!.to_string() === "zzzzzzzzzzzzzzzzzzzzzz!!!")
+     test(:hello_world!!!.to_string() === "hello_world!!!")
+     test(:______________________?.to_string() === "______________________?")
+     test(:0000000000000000000000?.to_string() === "0000000000000000000000?")
+     test(:9999999999999999999999?.to_string() === "9999999999999999999999?")
+     test(:aaaaaaaaaaaaaaaaaaaaaa?.to_string() === "aaaaaaaaaaaaaaaaaaaaaa?")
+     test(:zzzzzzzzzzzzzzzzzzzzzz?.to_string() === "zzzzzzzzzzzzzzzzzzzzzz?")
+     test(:hello_world?.to_string() === "hello_world?")
+
+     test(true.to_string() === "true")
+     test(false.to_string() === "false")
+
+     test(0b00.to_string() === "00")
+     test(0bff.to_string() === "ff")
+     test(0b01.to_string() === "01")
+     test(0b10.to_string() === "10")
+     test(0bfe.to_string() === "fe")
+     test(0bef.to_string() === "ef")
+
+     test('a'.to_string() === "a")
+     let char = rnd_char()
+     test(char.to_string() === "".append(char))
+
+     test(0.to_string() === "0")
+     test(1.to_string() === "1")
+     test(-1.to_string() === "-1")
+     test(9223372036854775807.to_string() === "9223372036854775807")
+     test(-9223372036854775808.to_string() === "-9223372036854775808")
+     let int = loop(null, fn (_) {
+          let int = rnd()
+          break(int =/= -9223372036854775808 && int =/= 0, int)
+     })
+     let is_neg   = int < 0
+     let expected = (loop([box "", int.abs()], fn (state) {
+          let [box result, digits] = state
+
+          let digit_idx = digits % 10
+          let digits    = digits / 10
+          let result    = result.append("0123456789"[digit_idx])
+
+          if digits === 0
+               [breaker result]
+          else [box result, digits]
+     }) ++ if is_neg; "-" else "").reverse()
+     test(int.to_string() === expected)
+
+     test([byte_array].to_string() === "")
+     test([byte_array 0b00].to_string() === "00")
+     test([byte_array 0b00, 0b01].to_string() === "0001")
+     test([byte_array 0b00, 0b01, 0b02].to_string() === "000102")
+     test([byte_array 0b00, 0b01, 0b02, 0bff, 0bfe, 0bef].to_string() === "000102fffeef")
+     test([byte_array 0b00, 0b01, 0b02, 0bff, 0bfe, 0bef, 0b03, 0b04].to_string() === "000102fffeef0304")
+
+     let array = rnd_byte_array()
+     test(array.foldl("", fn (string, byte) string ++ byte.to_string()) === array.to_string())
+
+     let timezone     = timezone()
+     let tz_sign      = if timezone < 0; "-" else "+"
+     let tz_hour_int  = timezone.abs() / 3600
+     let tz_hour_frac = timezone.abs() % 3600 / 36
+     let expected = "13.08.2010 23:14:57 " ++ tz_sign ++ tz_hour_int.to_string() ++ "." ++ (if tz_hour_frac < 10; "0" else "") ++ tz_hour_frac.to_string()
+     test(assemble_time(timezone, 2010, 8, 13, 23, 14, 57).to_string() === expected)
+
+     let expected = "28.02.2001 10:03:20 " ++ tz_sign ++ tz_hour_int.to_string() ++ "." ++ (if tz_hour_frac < 10; "0" else "") ++ tz_hour_frac.to_string()
+     test(assemble_time(timezone, 2001, 2, 28, 10, 3, 20).to_string() === expected)
+
+     test(0.5.to_string() === "0.5")
+     test(1.625.to_string() === "1.625")
+     test((1.0/3.0).to_string() === "0.333333333333333")
+     test(9223372036854775808.0.to_string() === "9223372036854775808.0")
+     test(-0.5.to_string() === "-0.5")
+     test(-1.625.to_string() === "-1.625")
+     test((-1.0/3.0).to_string() === "-0.333333333333333")
+     test(-9223372036854775808.0.to_string() === "-9223372036854775808.0")
+     test(nan().to_string().to_lower() === "nan")
+     test(inf().to_string().to_lower() === "inf")
+     test(neg_inf().to_string() === "-inf")
+
+     test([box 0b00, null].to_string() === "[box 00, null]")
+     test([box].to_string() === "[box]")
+     test([box 1, 2, 3].to_string() === "[box 1, 2, 3]")
+
+     test([array].to_string() === "[array]")
+     test([array 1, 2, 3].to_string() === "[array 1, 2, 3]")
+     test([array 0b00, :12].to_string() === "[array 00, 12]")
+
+     test([obj].to_string() === "[obj]")
+     test([obj :_ = [obj]].to_string() === "[obj]")
+     test([obj :1 = 0b00].to_string() === "[obj 1 = 00]")
+     test([obj :1 = 0b00, :_ = [obj]].to_string() === "[obj 1 = 00]")
+     test([obj :1 = 0b00, :2 = 0bff].to_string().in?([array "[obj 1 = 00, 2 = ff]", "[obj 2 = ff, 1 = 00]"]))
+     test([obj :1 = 0b00, :2 = 0bff, :_ = [obj]].to_string().in?([array "[obj 1 = 00, 2 = ff]", "[obj 2 = ff, 1 = 00]"]))
+
+     test([table].to_string() === "[table]")
+     test([table :1 = 0b00].to_string() === "[table 1 = 00]")
+     test([table :1 = 0b00, :2 = 0bff].to_string().in?([array "[table 1 = 00, 2 = ff]", "[table 2 = ff, 1 = 00]"]))
+
+     test([set].to_string() === "[set]")
+     test([set :1].to_string() === "[set 1]")
+     test([set :1, :2].to_string().in?([array "[set 1, 2]", "[set 2, 1]"]))
+
+     test(to_const__to_string('a').to_string() === "a")
+     test(to_const__to_string('Z').to_string() === "Z")
+
+     test(to_custom_const__to_string('a').to_string() === "a")
+     test(to_custom_const__to_string('Z').to_string() === "Z")
+
+     test(expected_error(:1, heap_string(), heap_string()).to_string().get_error_id() === :1)
+     test((_ ++ heap_string()).scarlet__erase_info().to_string().get_error_id() === :invalid_type)
+
+     test(to_broken_const__to_string("").to_string().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__to_string("").to_string().get_error_id() === :invalid_type)
+     test(to_error_const__to_string("").to_string().get_error_id() === :3)
+     test(to_error_custom_const__to_string("").to_string().get_error_id() === :4)
+}

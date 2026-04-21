@@ -1,0 +1,188 @@
+fn create_application(final_data) {
+     let main_fn = final_data:fns["main"]["main"]
+
+     if main_fn.null?()
+          error__no_main()
+     else null
+
+     if not (main_fn:attributes.empty?() && main_fn:params.empty?())
+          error__invalid_main()
+     else null
+
+     let [box application, signatures, def_ir_consts, calc_gconsts_ir_fn, not_used_fns, not_used_gconsts] =
+          loop(
+               [box
+                    new ([table].init(64))[main_fn:ir_name] <= main_fn
+                    "", [set].init(final_data:fns.len() + final_data:gconsts.len() + final_data:ir_consts.len()), "", "", ""
+                    final_data:always_use_fns, final_data:always_use_gconsts
+               ]
+
+               fn (state) {
+                    let [box queue, application, done, signatures, def_ir_consts, calc_gconsts_ir_fn, not_used_fns, not_used_gconsts] = state
+
+                    if queue.empty?()
+                         [breaker [box application, signatures, def_ir_consts, calc_gconsts_ir_fn, not_used_fns, not_used_gconsts]]
+                    else {
+                         let [box ir_name, struct] = queue.take_one_kv()
+                         let queue                 = new (queue)[ir_name] <= null
+                         let done                  = done.append(ir_name)
+                         if struct:scar_type == "t_final_fn"
+                              add_fn_to_application(queue, application, struct, done, signatures, def_ir_consts, calc_gconsts_ir_fn, final_data, not_used_fns, not_used_gconsts)
+                         else add_gconst_to_application(queue, application, struct, done, signatures, def_ir_consts, calc_gconsts_ir_fn, final_data, not_used_fns, not_used_gconsts)
+                    }
+               }
+          )
+
+     not_used_fns.foldl(null, fn (_, name) warning__fn_or_gconst_not_used(name, "function"))
+     not_used_gconsts.foldl(null, fn (_, name) warning__fn_or_gconst_not_used(name, "global constant"))
+
+     let app_code = join_application_parts(signatures, def_ir_consts, application, calc_gconsts_ir_fn)
+     let file     = open_file(fs_path(@main.user_cmd:out), @std.fom__write | @std.fom__new)->write_string(app_code, :ctf8)->flush()
+     if file.error?() || file.type() /= "std.file"
+          error__cant_save_to_file(@main.user_cmd:out)
+     else null
+}
+
+fn add_fn_to_application(queue, application, func, done, signatures, def_ir_consts, calc_gconsts_ir_fn, final_data, not_used_fns, not_used_gconsts) {
+     let signature                       = func.get_signature()
+     let signatures                      = signatures ++ signature ++ ";\n"
+     let not_used_fns = new (not_used_fns)[func:ir_name] <= null
+     if "external".key_of?(func:attributes)
+          [box queue, application, done, signatures, def_ir_consts, calc_gconsts_ir_fn, not_used_fns, not_used_gconsts]
+     else {
+          let [box done, def_ir_consts] = func:dependencies:ir_consts.foldl([box done, def_ir_consts], fn (state, name) {
+               let [box done, def_ir_consts] = state
+
+               if name.in?(done)
+                    [box done, def_ir_consts]
+               else {
+                    let declaration = final_data:ir_consts[name]
+                    if declaration.null?()
+                         error__not_found_ir_const(name.take('S'.look_in(name)).drop(2))
+                    else null
+
+                    [box done.append(name), def_ir_consts ++ declaration]
+               }
+          })
+
+          let queue = func:dependencies:gconsts.foldl(queue, fn (queue, full_name) {
+               let separator_idx = '.'.look_in(full_name)
+               let module        = full_name.take(separator_idx)
+               let short_name    = full_name.drop(separator_idx + 1)
+               let gconst        = final_data:gconsts[short_name][module]
+               if gconst.null?()
+                    error__not_found_when_make_prg("global constant", module, short_name, module.in?(final_data:modules_names))
+               else null
+
+               if gconst:ir_name.in?(done)
+                    queue
+               else new (queue)[gconst:ir_name] <= gconst
+          })
+
+          let queue = func:dependencies:fns.foldl(queue, fn (queue, full_name) {
+               let separator_idx = '.'.look_in(full_name)
+               let module        = full_name.take(separator_idx)
+               let short_name    = full_name.drop(separator_idx + 1)
+               let func          = final_data:fns[short_name][module]
+               if func.null?()
+                    error__not_found_when_make_prg("function", module, short_name, module.in?(final_data:modules_names))
+               else null
+
+               if func:ir_name.in?(done)
+                    queue
+               else new (queue)[func:ir_name] <= func
+          })
+          let application = application ++ signature ++ "{\n" ++ func:ir ++ "}\n"
+
+          [box queue, application, done, signatures, def_ir_consts, calc_gconsts_ir_fn, not_used_fns, not_used_gconsts]
+     }
+}
+
+fn add_gconst_to_application(queue, application, gconst, done, signatures, def_ir_consts, calc_gconsts_ir_fn, final_data, not_used_fns, not_used_gconsts) {
+     let signatures = signatures ++ "static inline t_any get_gc_" ++ gconst:ir_name ++ "(t_thrd_data*const thrd_data);\n" ++
+          "[[clang::noinline]]\nstatic t_any calc_gc_" ++ gconst:ir_name ++ "(t_thrd_data*const thrd_data);\n"
+
+     let not_used_gconsts = new (not_used_gconsts)[gconst:ir_name] <= null
+
+     let [box done, def_ir_consts] = gconst:dependencies:ir_consts.foldl([box done, def_ir_consts], fn (state, name) {
+          let [box done, def_ir_consts] = state
+
+          if name.in?(done)
+               [box done, def_ir_consts]
+          else {
+               let declaration = final_data:ir_consts[name]
+               if declaration.null?()
+                    error__not_found_ir_const(name.take('S'.look_in(name)).drop(2))
+               else null
+
+               [box done.append(name), def_ir_consts ++ declaration]
+          }
+     })
+
+     let queue = gconst:dependencies:gconsts.foldl(queue, fn (queue, full_name) {
+          let separator_idx = '.'.look_in(full_name)
+          let module        = full_name.take(separator_idx)
+          let short_name    = full_name.drop(separator_idx + 1)
+          let gconst        = final_data:gconsts[short_name][module]
+          if gconst.null?()
+               error__not_found_when_make_prg("global constant", module, short_name, module.in?(final_data:modules_names))
+          else null
+
+          if gconst:ir_name.in?(done)
+               queue
+          else new (queue)[gconst:ir_name] <= gconst
+     })
+
+     let queue = gconst:dependencies:fns.foldl(queue, fn (queue, full_name) {
+          let separator_idx = '.'.look_in(full_name)
+          let module        = full_name.take(separator_idx)
+          let short_name    = full_name.drop(separator_idx + 1)
+          let func          = final_data:fns[short_name][module]
+          if func.null?()
+               error__not_found_when_make_prg("function", module, short_name, module.in?(final_data:modules_names))
+          else null
+
+          if func:ir_name.in?(done)
+               queue
+          else new (queue)[func:ir_name] <= func
+     })
+
+     let [box gconst_module, gconst_name] = disassemble_ir_name(gconst:ir_name)
+     let application                          = if "_SW".prefix_of?(gconst_name)
+          application ++ "static t_any " ++ gconst:ir_name ++ "=(const t_any){.bytes={[0]=2,[15]=tid__holder}};\n" ++
+               "[[clang::noinline]]\nstatic t_any calc_gc_" ++ gconst:ir_name ++ "(t_thrd_data*const thrd_data){\n" ++
+               "if(" ++ gconst:ir_name ++ ".bytes[0]==3)[[clang::unlikely]]{\n" ++
+               "fprintf(stderr,recursive_switch_table_mask,\"" ++ gconst:doc_comment ++ "\");\n" ++
+               "exit(EXIT_FAILURE);\n" ++
+               "}\n" ++
+               gconst:ir_name ++ ".bytes[0]=3;\n" ++
+               gconst:ir ++ "}\n"
+     else application ++ "static t_any " ++ gconst:ir_name ++ "=(const t_any){.bytes={[0]=2,[15]=tid__holder}};\n" ++
+          "[[clang::noinline]]\nstatic t_any calc_gc_" ++ gconst:ir_name ++ "(t_thrd_data*const thrd_data){\n" ++
+          "if(" ++ gconst:ir_name ++ ".bytes[0]==3)[[clang::unlikely]]{\n" ++
+          "fprintf(stderr,recursive_gconst_mask,\"" ++ gconst_module ++ "." ++ gconst_name ++ "\");\n" ++
+          "exit(EXIT_FAILURE);\n" ++
+          "}\n" ++
+          gconst:ir_name ++ ".bytes[0]=3;\n" ++
+          gconst:ir ++ "}\n"
+
+     let application = application ++ "static inline t_any get_gc_" ++ gconst:ir_name ++ "(t_thrd_data*const thrd_data){\n" ++
+          "if(" ++ gconst:ir_name ++ ".bytes[15]!=tid__holder)[[clang::likely]]return " ++ gconst:ir_name ++ ";\n" ++
+          gconst:ir_name ++ "=calc_gc_" ++ gconst:ir_name ++ "(thrd_data);\n"
+
+     let application = if gconst:possible_types.null?() || not gconst:possible_types.all(true, _.in?(@main.without_managed_mem_types))
+          ir__assume_type(gconst:ir_name, gconst:possible_types, application) ++
+          gconst:ir_name ++ "=to_global_const(thrd_data," ++ gconst:ir_name ++ "," ++ gconst:name_ir_const ++ ");\n"
+     else application
+
+     let application            = application ++ "return " ++ gconst:ir_name ++ ";\n}\n"
+     let calc_gconsts_ir_fn = calc_gconsts_ir_fn ++ "get_gc_" ++ gconst:ir_name ++ "(thrd_data);\n"
+
+     [box queue, application, done, signatures, def_ir_consts, calc_gconsts_ir_fn, not_used_fns, not_used_gconsts]
+}
+
+
+fn join_application_parts(signatures, def_ir_consts, application, calc_gconsts_ir_fn)
+     @main.core ++ signatures ++ def_ir_consts ++
+     application ++ "int main(int const argc,const char*const*const argv,const char*const*const envp){\nplatform__check();\nt_thrd_data* thrd_data;\ninit_app(&thrd_data,argc,argv,envp);\n" ++
+     calc_gconsts_ir_fn ++ "allow_thrds=true;\ncheck_app_result(thrd_data,MmainFNmain(thrd_data,nullptr));\ndeinit_app(thrd_data);\nreturn 0;\n}"

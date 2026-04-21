@@ -1,0 +1,32 @@
+let comptime_seed       = "0xa1755afd3ce14e5bull"
+let hash_map_max_chunks = 0x8000'0000
+
+fn create_virtual_hash_set(cap) {
+     let chunk_size = (63 - qty_leading_0_bits(cap)) / 4 + 1
+     let chunks_len = cap * 2 / chunk_size
+     let chunks_len = if qty_1_bits(chunks_len) == 1; chunks_len else 1 << 64 - qty_leading_0_bits(chunks_len)
+     let chunks_len = if chunks_len * chunk_size < cap * 2; chunks_len * 2 else chunks_len
+
+     let [box chunks_len, chunk_size] = if chunks_len <= @main.hash_map_max_chunks
+          [box chunks_len, chunk_size]
+     else {
+          let chunks_len = @main.hash_map_max_chunks
+          let chunk_size = cap / chunks_len
+          let chunk_size = if chunk_size * chunks_len == cap; chunk_size else chunk_size + 1
+
+          [box chunks_len, chunk_size]
+     }
+
+     [box chunk_size, chunks_len, [array 0.0].repeat(chunk_size * chunks_len)]
+}
+
+fn virtual_hash_set__add(set, key, chunk_size, chunks_len) {
+     let last_idx = chunk_size * chunks_len - 1
+     loop([box set, (key.hash(0xa175'5afd'3ce1'4e5b) & chunks_len - 1) * chunk_size], fn (state) {
+          let [box set, idx] = state
+
+          if set[idx].type() == "core.float"
+               [breaker new (set)[idx] <= key]
+          else [box set, if idx < last_idx; idx + 1 else 0]
+     })
+}

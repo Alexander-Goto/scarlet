@@ -1,0 +1,127 @@
+let num__sqrt = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_sqrt      = fn (num) to_num__sqrt(num:value.sqrt())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__sqrt(arg) new (@main.num__sqrt):value <= arg
+
+fn to_custom_num__sqrt(arg) custom__create(
+     arg
+     [obj
+          :core_sqrt      = fn (num) to_custom_num__sqrt(num.custom__get_data().sqrt())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__sqrt = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_sqrt = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__sqrt(arg) new (@main.broken_num__sqrt):value <= arg
+
+fn to_broken_custom_num__sqrt(arg) custom__create(
+     arg
+     [obj
+          :core_sqrt = fn (_) heap_string()
+     ]
+)
+
+let error_num__sqrt = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_sqrt = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__sqrt(arg) new (@main.error_num__sqrt):value <= arg
+
+fn to_error_custom_num__sqrt(arg) custom__create(
+     arg
+     [obj
+          :core_sqrt = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__sqrt() {
+     test(nan().sqrt().nan?())
+     test(-0.0.sqrt().scarlet__split!!!()[0] === -0.0.scarlet__split!!!()[0])
+     test(0.0.sqrt().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(inf().sqrt().scarlet__split!!!()[0] === inf().scarlet__split!!!()[0])
+     test(-0.1.sqrt().nan?())
+     test(-1.0.sqrt().nan?())
+     test(neg_inf().sqrt().nan?())
+     test(10.0.sqrt().in_range?(3.15, 3.17))
+     test(16.0.sqrt().in_range?(3.99, 4.01))
+     test(1.0.sqrt().in_range?(0.09, 1.01))
+     test(281474976710656.0.sqrt().in_range?(16777215.0, 16777217.0))
+     test(281474976710655.01.sqrt().in_range?(16777214.0, 16777216.0))
+
+     let float = loop(null, fn (_) {
+          let float = rnd_float()
+          break(float >= 0.01 && float <= 16777216.0, float)
+     })
+     test((float * float).sqrt().in_range?(float - 1.0, float + 1.0))
+
+     test(0b00.sqrt() === 0b00)
+     test(0bff.sqrt() === 0b0f)
+     test(0b10.sqrt() === 0b04)
+     test(0b11.sqrt() === 0b04)
+     test(0b12.sqrt() === 0b04)
+     test(0b19.sqrt() === 0b05)
+
+     let byte               = rnd_byte() % 0b10
+     let offset_to_next_sqr = 0b02 * byte + 0b01
+     let offset             = loop(null, fn (_) {
+          let offset = rnd_byte() % offset_to_next_sqr
+          break(0bff - byte * byte >= offset, offset)
+     })
+     test((byte * byte + offset).sqrt() === byte)
+
+     test(0.sqrt() === 0)
+     test(256.sqrt() === 16)
+     test(257.sqrt() === 16)
+     test(258.sqrt() === 16)
+     test(259.sqrt() === 16)
+     test(9223372036854775807.sqrt() === 3037000499)
+     test(9223372036854775806.sqrt() === 3037000499)
+     test(9223372030926249000.sqrt() === 3037000498)
+     test(1024.sqrt() === 32)
+     test(1025.sqrt() === 32)
+     test(1088.sqrt() === 32)
+     test(1089.sqrt() === 33)
+     test(-1.scarlet__erase_info().sqrt().get_error_id() === :sqrt_from_neg)
+     test(-9223372036854775808.scarlet__erase_info().sqrt().get_error_id() === :sqrt_from_neg)
+
+     let int                = (rnd() >> 1) % 3037000500
+     let offset_to_next_sqr = 2 * int + 1
+     let offset             = loop(null, fn (_) {
+          let offset = (rnd() >> 1) % offset_to_next_sqr
+          break(9223372036854775807 - int * int >= offset, offset)
+     })
+     test((int * int + offset).sqrt() === int)
+
+     test(to_num__sqrt(17).sqrt():value === 4)
+     test(to_num__sqrt(65536).sqrt():value === 256)
+
+     test(to_custom_num__sqrt(17).sqrt().custom__get_data() === 4)
+     test(to_custom_num__sqrt(65536).sqrt().custom__get_data() === 256)
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.sqrt().get_error_id() === :1)
+     test(heap_string().sqrt().get_error_id() === :invalid_type)
+
+     test(to_broken_num__sqrt(1.0).sqrt().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__sqrt(1.0).sqrt().get_error_id() === :invalid_type)
+     test(to_error_num__sqrt(1.0).sqrt().get_error_id() === :3)
+     test(to_error_custom_num__sqrt(1.0).sqrt().get_error_id() === :4)
+}

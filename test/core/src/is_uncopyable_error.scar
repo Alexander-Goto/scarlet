@@ -1,0 +1,12 @@
+`noinline`
+fn test__uncopyable_error?() {
+     let [box string, null_] = heap_string().uncopyable_error?()
+     test(string === heap_string())
+     test(null_.null?())
+     let [box box, null_] = [box heap_string()].uncopyable_error?()
+     test(box === [box heap_string()])
+     test(null_.null?())
+     let [box error_1, error_2] = expected_error(:1, heap_string(), heap_string()).uncopyable_error?()
+     test(error_1.get_error_id() === :1)
+     test(error_2.get_error_id() === :1)
+}

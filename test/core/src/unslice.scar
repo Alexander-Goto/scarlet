@@ -1,0 +1,90 @@
+`noinline`
+fn test__unslice() {
+     test("".unslice() === "")
+     test("0".unslice() === "0")
+     test("01".unslice() === "01")
+     test("012".unslice() === "012")
+     test("0123".unslice() === "0123")
+     test("01234".unslice() === "01234")
+     test("012345".unslice() === "012345")
+     test("0123456".unslice() === "0123456")
+     test("01234567".unslice() === "01234567")
+     test("012345678".unslice() === "012345678")
+     test("0123456789".unslice() === "0123456789")
+     test("0123456789a".unslice() === "0123456789a")
+     test("0123456789ab".unslice() === "0123456789ab")
+     test("0123456789abc".unslice() === "0123456789abc")
+     test("0123456789abcd".unslice() === "0123456789abcd")
+     test("0123456789abcde".unslice() === "0123456789abcde")
+     test("0123456789abcdef".unslice() === "0123456789abcdef")
+     test("0123456789abcdef".unslice().cap() === 16)
+     test("00123456789abcdef0".scarlet__erase_info()[1, 17].unslice() === "0123456789abcdef")
+     test("00123456789abcdef0".scarlet__erase_info()[1, 17].unslice().cap() === 18)
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let expected = string_1.foldl("", _.append(_))
+     test(string_1.unslice() === expected)
+     string_2.ignore()
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let len      = string_1.len()
+     test(string_1.unslice().cap() === len)
+     string_2.ignore()
+
+     test(u"".unslice() === u"")
+     test(u"0".unslice() === u"0")
+     test(u"01".unslice() === u"01")
+     test(u"012".unslice() === u"012")
+     test(u"0123".unslice() === u"0123")
+     test(u"01234".unslice() === u"01234")
+     test(u"012345".unslice() === u"012345")
+     test(u"0123456".unslice() === u"0123456")
+     test(u"01234567".unslice() === u"01234567")
+     test(u"012345678".unslice() === u"012345678")
+     test(u"0123456789".unslice() === u"0123456789")
+     test(u"0123456789a".unslice() === u"0123456789a")
+     test(u"0123456789ab".unslice() === u"0123456789ab")
+     test(u"0123456789abc".unslice() === u"0123456789abc")
+     test(u"0123456789abcd".unslice() === u"0123456789abcd")
+     test(u"0123456789abcde".unslice() === u"0123456789abcde")
+     test(u"0123456789abcde".unslice().cap() === 15)
+     test(u"00123456789abcde0".scarlet__erase_info()[1, 16].unslice() === u"0123456789abcde")
+     test(u"00123456789abcde0".scarlet__erase_info()[1, 16].unslice().cap() === 17)
+
+     let array_1  = rnd_byte_array()
+     let array_2  = if rnd_bool(); array_1 else null
+     let expected = array_1.foldl(u"", _.append(_))
+     test(array_1.unslice() === expected)
+     array_2.ignore()
+
+     let array_1 = rnd_byte_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     let len     = array_1.len()
+     test(array_1.unslice().cap() === len)
+     array_2.ignore()
+
+     test([array].unslice() === [array])
+     test([array].init(1).unslice() === [array])
+     test([array].init(1).unslice().cap() === 0)
+     test([array 1, 2, 3].unslice() === [array 1, 2, 3])
+     test([array 1, 2, 3].unslice().cap() === 3)
+     test([array 1, 2, 3].scarlet__erase_info()[1, 2].unslice() === [array 2])
+     test([array 1, 2, 3].scarlet__erase_info()[1, 2].unslice().cap() === 3)
+
+     let array_1 = rnd_string_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     let expected = array_1.foldl([array].init(len(array_1)), _.append(_))
+     test(array_1.unslice() === expected)
+     array_2.ignore()
+
+     let array_1 = rnd_string_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     let len     = array_1.len()
+     test(array_1.unslice().cap() === len)
+     array_2.ignore()
+
+     test(expected_error(:1, heap_string(), heap_string()).unslice().get_error_id() === :1)
+     test(heap_table().unslice().get_error_id() === :invalid_type)
+}

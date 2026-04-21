@@ -1,0 +1,18 @@
+fn comptime_byte_array(value, code) if value.empty?()
+     new (@main.t_operand) {
+          :code           <= code
+          :ir             <= "(const t_any){.bytes={[15]=tid__short_byte_array}}"
+          :possible_types <= [set "short_byte_array"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "byte_array"
+               :value <= [byte_array]
+          }
+     }
+else new (@main.t_operand) {
+     :code           <= code
+     :possible_types <= if value.short_type?(); [set "short_byte_array"] else [set "byte_array"]
+     :comptime_val   <= new (@main.t_comptime_val) {
+          :type  <= "byte_array"
+          :value <= value
+     }
+}

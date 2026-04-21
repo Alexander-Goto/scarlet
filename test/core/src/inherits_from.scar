@@ -1,0 +1,171 @@
+`noinline`
+fn test__inherits_from() {
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     let string_6 = string_0 ++ "6"
+     let string_7 = string_0 ++ "7"
+     let string_8 = string_0 ++ "8"
+     let string_9 = string_0 ++ "9"
+     test([obj].inherits_from([obj]) === [obj])
+     test([obj].inherits_from([obj]):_.null?())
+     test([obj].init(10).inherits_from([obj].init(10)) === [obj])
+     test([obj].init(10).inherits_from([obj].init(10)):_.null?())
+
+     test([obj].inherits_from([obj :0 = string_0]) === [obj :0 = string_0])
+     test([obj].inherits_from([obj :0 = string_0]):_.null?())
+
+     test([obj].inherits_from([obj :0 = string_0, :_ = [obj :1 = string_1]]) === [obj :0 = string_0])
+     test([obj].inherits_from([obj :0 = string_0, :_ = [obj :1 = string_1]]):_ === [obj :1 = string_1])
+     test([obj].inherits_from([obj :0 = string_0, :_ = [obj :1 = string_1]]):_:_.null?())
+     test([obj].inherits_from([obj :0 = string_0, :_ = [obj :1 = string_1, :_ = [obj :2 = string_2]]]) === [obj :0 = string_0])
+     test([obj].inherits_from([obj :0 = string_0, :_ = [obj :1 = string_1, :_ = [obj :2 = string_2]]]):_ === [obj :1 = string_1])
+     test([obj].inherits_from([obj :0 = string_0, :_ = [obj :1 = string_1, :_ = [obj :2 = string_2]]]):_:_.null?())
+
+     test([obj].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4]]) === [obj :0 = string_0, :3 = string_3])
+     test([obj].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4]]):_ === [obj :1 = string_1, :4 = string_4])
+     test([obj].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4]]):_:_.null?())
+     test([obj].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4, :_ = [obj :2 = string_2]]]) === [obj :0 = string_0, :3 = string_3])
+     test([obj].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4, :_ = [obj :2 = string_2]]]):_ === [obj :1 = string_1, :4 = string_4])
+     test([obj].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4, :_ = [obj :2 = string_2]]]):_:_.null?())
+
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4]]) === [obj :0 = string_0, :3 = string_3, :5 = string_5])
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4]]):_ === [obj :1 = string_1, :4 = string_4])
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4]]):_:_.null?())
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4, :_ = [obj :2 = string_2]]]) === [obj :0 = string_0, :3 = string_3, :5 = string_5])
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4, :_ = [obj :2 = string_2]]]):_ === [obj :1 = string_1, :4 = string_4])
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :4 = string_4, :_ = [obj :2 = string_2]]]):_:_.null?())
+
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]) === [obj :0 = string_0, :3 = string_3, :5 = string_5])
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]):_ === [obj :1 = string_1, :4 = string_4, :6 = string_6])
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]):_:_.null?())
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]) === [obj :0 = string_0, :3 = string_3, :5 = string_5])
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]):_ === [obj :1 = string_1, :4 = string_4, :6 = string_6])
+     test([obj :5 = string_5].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]):_:_.null?())
+
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]) === [obj :0 = string_0, :3 = string_3, :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]):_ === [obj :1 = string_1, :4 = string_4, :6 = string_6, :7 = string_7])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]):_:_.null?())
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]) === [obj :0 = string_0, :3 = string_3, :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]):_ === [obj :1 = string_1, :4 = string_4, :6 = string_6, :7 = string_7])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]):_:_.null?())
+
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]):_ === [obj :1 = string_1, :4 = string_4, :6 = string_6, :7 = string_7])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]):_:_.null?())
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]):_ === [obj :1 = string_1, :4 = string_4, :6 = string_6, :7 = string_7])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]):_:_.null?())
+
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj]):_ === [obj :7 = string_7])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj]):_:_.null?())
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :_ = [obj :_ = [obj :2 = string_2]]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :_ = [obj :_ = [obj :2 = string_2]]]):_ === [obj :7 = string_7])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj :_ = [obj :_ = [obj :2 = string_2]]]):_:_.null?())
+
+     test([obj :5 = string_5, :3 = string_8, :_ = [obj :7 = string_7, :4 = string_9]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]) === [obj :0 = string_0, :3 = string_8, :5 = string_5])
+     test([obj :5 = string_5, :3 = string_8, :_ = [obj :7 = string_7, :4 = string_9]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]):_ === [obj :1 = string_1, :4 = string_9, :6 = string_6, :7 = string_7])
+     test([obj :5 = string_5, :3 = string_8, :_ = [obj :7 = string_7, :4 = string_9]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4]]):_:_.null?())
+     test([obj :5 = string_5, :3 = string_8, :_ = [obj :7 = string_7, :4 = string_9]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]) === [obj :0 = string_0, :3 = string_8, :5 = string_5])
+     test([obj :5 = string_5, :3 = string_8, :_ = [obj :7 = string_7, :4 = string_9]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]):_ === [obj :1 = string_1, :4 = string_9, :6 = string_6, :7 = string_7])
+     test([obj :5 = string_5, :3 = string_8, :_ = [obj :7 = string_7, :4 = string_9]].inherits_from([obj :0 = string_0, :3 = string_3, :_ = [obj :1 = string_1, :6 = string_6, :4 = string_4, :_ = [obj :2 = string_2]]]):_:_.null?())
+
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([obj]):_ === [obj :7 = string_7])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([array]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([array]):_ === [obj :7 = string_7])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([array [obj]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([array [obj]]):_ === [obj :7 = string_7])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([array [obj], [obj]]) === [obj :5 = string_5])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([array [obj], [obj]]):_ === [obj :7 = string_7])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([array
+          [obj :5 = string_1, :3 = string_4, :_ = [obj :7 = string_1, :2 = string_2]]
+          [obj :3 = string_1, :4 = string_2, :_ = [obj :2 = string_1, :4 = string_4]]
+     ]) === [obj :5 = string_5, :3 = string_4, :4 = string_2])
+     test([obj :5 = string_5, :_ = [obj :7 = string_7]].inherits_from([array
+          [obj :5 = string_1, :3 = string_4, :_ = [obj :7 = string_1, :2 = string_2]]
+          [obj :3 = string_1, :4 = string_2, :_ = [obj :2 = string_1, :4 = string_4]]
+     ]):_ === [obj :7 = string_7, :2 = string_2, :4 = string_4])
+
+     let child_properties_len = rnd() & 63;
+     let child_methods_len    = rnd() & 63;
+     let child_properties     = loop([obj].init(child_properties_len), fn (child_properties)
+          if child_properties.len() == child_properties_len
+               [breaker child_properties]
+          else {
+               let name = str_to_tkn(if (rnd() & 3) == 1; "0123456789abcde" ++ (rnd() & 15).to_string() else (rnd() >> 1).to_string())
+               new (child_properties)[name] <= rnd_string()
+          }
+     )
+
+     let child_methods = loop([obj].init(child_methods_len), fn (child_methods)
+          if child_methods.len() == child_methods_len
+               [breaker child_methods]
+          else {
+               let name = str_to_tkn(if (rnd() & 3) == 1; "0123456789abcde" ++ (rnd() & 15).to_string() else (rnd() >> 1).to_string())
+               new (child_methods)[name] <= rnd_string()
+          }
+     )
+
+     let borrowed_child_properties = if rnd_bool(); child_properties else null
+     let borrowed_child_methods    = if rnd_bool(); child_methods else null
+
+     let child = new (child_properties):_ <= child_methods
+
+     let parent_properties_len = rnd() & 63;
+     let parent_methods_len    = rnd() & 63;
+     let parent_properties     = loop([obj].init(parent_properties_len), fn (parent_properties)
+          if parent_properties.len() == parent_properties_len
+               [breaker parent_properties]
+          else {
+               let name = str_to_tkn(if (rnd() & 3) == 1; "0123456789abcde" ++ (rnd() & 15).to_string() else (rnd() >> 1).to_string())
+               new (parent_properties)[name] <= rnd_string()
+          }
+     )
+
+     let parent_methods = loop([obj].init(parent_methods_len), fn (parent_methods)
+          if parent_methods.len() == parent_methods_len
+               [breaker parent_methods]
+          else {
+               let name = str_to_tkn(if (rnd() & 3) == 1; "0123456789abcde" ++ (rnd() & 15).to_string() else (rnd() >> 1).to_string())
+               new (parent_methods)[name] <= rnd_string()
+          }
+     )
+
+     let borrowed_parent_properties = if rnd_bool(); parent_properties else null
+     let borrowed_parent_methods    = if rnd_bool(); parent_methods else null
+
+     let parent = new (parent_properties):_ <= parent_methods
+
+     let expected_properties = parent_properties.foldl_kv(child_properties, fn (expected_properties, name, property)
+          new (expected_properties)[name] => fn (current_property) if current_property.null?(); property else current_property
+     )
+     let expected_methods = parent_methods.foldl_kv(child_methods, fn (expected_methods, name, method)
+          new (expected_methods)[name] => fn (current_method) if current_method.null?(); method else current_method
+     )
+     let expected_obj = new (expected_properties):_ <= expected_methods
+     let have_obj     = child.inherits_from(parent)
+     test(expected_obj === have_obj)
+     test(expected_obj:_ === have_obj:_)
+
+     borrowed_child_properties.ignore()
+     borrowed_child_methods.ignore()
+     borrowed_parent_properties.ignore()
+     borrowed_parent_methods.ignore()
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.inherits_from([obj :2 = heap_string()]).get_error_id() === :1)
+     test([obj :2 = heap_string()].inherits_from(error_1).get_error_id() === :1)
+     test(error_1.inherits_from(error_2).get_error_id() === :1)
+     test(error_2.inherits_from(error_1).get_error_id() === :2)
+     test(error_1.inherits_from(heap_string()).get_error_id() === :1)
+     test(heap_string().inherits_from(error_1).get_error_id() === :1)
+     test(heap_string().inherits_from([obj :2 = heap_string()]).get_error_id() === :invalid_type)
+     test([obj :2 = heap_string()].inherits_from(heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().inherits_from(heap_string()).get_error_id() === :invalid_type)
+}

@@ -1,0 +1,281 @@
+let t_switch_exp = [obj
+     :scar_type = "t_switch_exp"
+
+     :keyword     = @main.t_token
+     :switch_exp  = :i_expression
+     :cases       = [array] # [array [obj :variants = [array @i_expression*], :case_exp = @i_expression]*]
+     :default_exp = :i_expression
+]
+
+fn switch_exp_independent?(switch_, independent_consts)
+     switch_:switch_exp.independent?(independent_consts) &&
+     switch_:cases.all(true, fn (case_) case_:variants.all(true, fn (variant) variant.independent?(independent_consts)) && case_:case_exp.independent?(independent_consts)) &&
+     switch_:default_exp.independent?(independent_consts)
+
+fn analyze_switch_exp(switch_, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let [box last_use_info, lambdas_data, def_ids] = switch_:switch_exp.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+     let keyword_coded_id                      = switch_:keyword.get_token_id().format_int(32, false)
+     let context_prefix                        = "swcs:" ++ keyword_coded_id ++ ":"
+     let [box branches, lambdas_data, def_ids] = switch_:cases.foldl_kv([box [array].init(switch_:cases.len() + 1), lambdas_data, def_ids], fn (state, case_idx, case_) {
+          let [box branches, lambdas_data, def_ids] = state
+
+          let case_contexts                                   = contexts.append(context_prefix ++ format_int(case_idx, 32, false))
+          let [box case_last_use_info, lambdas_data, def_ids] = case_:case_exp.analyze(@main.t_last_use_info, lambdas_data, case_contexts, name_ids, def_ids)
+
+          [box branches.append(case_last_use_info), lambdas_data, def_ids]
+     })
+
+     let default_contexts                                   = contexts.append("swdf:" ++ keyword_coded_id)
+     let [box default_last_use_info, lambdas_data, def_ids] = switch_:default_exp.analyze(@main.t_last_use_info, lambdas_data, default_contexts, name_ids, def_ids)
+
+     [box merge_branches(last_use_info, branches.append(default_last_use_info)), lambdas_data, def_ids]
+}
+
+fn switch_exp_to_operand(switch_, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let [box switch_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          switch_:switch_exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     switch_operand.maybe_has_type!(@main.all_hash_map_key_types)
+
+     let keyword_coded_id = switch_:keyword.get_token_id().format_int(32, false)
+     let switch_name      = "_SWTB_" ++ exp_data:owner_id.drop(@main.compiled_module_name.len() + 1) ++ "_" ++ keyword_coded_id
+     let table_ir_name    = "M" ++ @main.compiled_module_name ++ "GC" ++ switch_name
+     let table_name       = "switch (" ++ switch_:keyword:file ++ ", " ++ switch_:keyword:line.to_string() ++ ", " ++ switch_:keyword:row.to_string() ++ ")"
+
+     let [box owner_name_ir_const, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ table_name ++ "\";\n", final_data, dependencies)
+
+     let table_exp_data = new (exp_data) {
+          :owner_id            <= table_ir_name
+          :owner_name_ir_const <= owner_name_ir_const
+          :ir_reg_num          <= 0
+     }
+
+     let variants_qty = switch_:cases.foldl(0, fn (qty, case_) qty + case_:variants.len())
+     let cases_qty    = switch_:cases.len()
+
+     let [box
+          variants_operands
+          _, need_table, table_is_comptime
+          table_exp_data, variants_ir, final_data, dependencies, src_gconsts
+     ] = switch_:cases.foldl(
+          [box
+               [array].init(cases_qty)
+               [set].init(variants_qty), false, true
+               table_exp_data, "call_stack__push(thrd_data," ++ owner_name_ir_const ++ ");\n", final_data, dependencies, src_gconsts
+          ]
+
+          fn (state, case_) {
+               let [box
+                    variants_operands
+                    existed_variants, need_table, table_is_comptime
+                    table_exp_data, variants_ir, final_data, dependencies, src_gconsts
+               ] = state
+
+               let [box
+                    case_variants_operands
+                    existed_variants, need_table, table_is_comptime
+                    table_exp_data, variants_ir, final_data, dependencies, src_gconsts
+               ] = case_:variants.foldl(
+                    [box
+                         [array].init(case_:variants.len())
+                         existed_variants, need_table, table_is_comptime
+                         table_exp_data, variants_ir, final_data, dependencies, src_gconsts
+                    ]
+
+                    fn (state, variant) {
+                         let [box
+                              case_variants_operands
+                              existed_variants, need_table, table_is_comptime
+                              table_exp_data, variants_ir, final_data, dependencies, src_gconsts
+                         ] = state
+
+                         let variants_ir_first_len = variants_ir.len()
+
+                         let [box variant_last_use_info, variant_lambdas_data, variant_def_ids] =
+                              variant.analyze(@main.t_last_use_info, @main.t_lambdas_data, [set], [table], [set])
+
+                         let [box variant_last_use_ids, variant_contexts, variant_unused_def_ids] = variant_last_use_info.foldl_kv([box [set], [table], variant_def_ids], fn (state, def_id, use_id_and_contexts) {
+                              let [box variant_last_use_ids, variant_contexts, variant_unused_def_ids] = state
+
+                              let [box variant_last_use_ids, variant_contexts] = use_id_and_contexts.foldl_kv([box variant_last_use_ids, variant_contexts], fn (state, last_use_id, last_use_contexts) {
+                                   let [box variant_last_use_ids, variant_contexts] = state
+                                   [box
+                                        variant_last_use_ids.append(last_use_id)
+                                        last_use_contexts.foldl(variant_contexts, fn (variant_contexts, context) new (variant_contexts)[context] => fn (context_def_ids) (context_def_ids <? [set]).append(def_id))
+                                   ]
+                              })
+
+                              [box variant_last_use_ids, variant_contexts, variant_unused_def_ids.remove(def_id)]
+                         })
+
+                         let [box variant_operand, table_exp_data, variants_ir, final_data, dependencies, src_gconsts] =
+                              variant.to_operand(variant_last_use_ids, variant_contexts, variant_lambdas_data, variant_unused_def_ids, table_exp_data, variants_ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+                         variant_operand.maybe_has_type!(@main.all_hash_map_key_types)
+
+                         if not variant.independent?([set])
+                              error__incorrect_switch_variant(variant_operand:code)
+                         else null
+
+                         let variant_is_comptime = not variant_operand:comptime_val.null?()
+                         let variant_id          = if variant_is_comptime
+                              variant_operand:comptime_val
+                         else variant_operand:ir
+
+                         let existed_variants = existed_variants.append_new(variant_id)
+                         if existed_variants.null?()
+                              error__already_exists(variant_operand:code, "variant")
+                         else null
+
+                         let table_is_comptime = table_is_comptime && variant_is_comptime && variant_operand:comptime_val:type.in?(@main.always_hash_map_key_types)
+
+                         let need_table =
+                              need_table                                 ||
+                              variants_ir_first_len /= variants_ir.len() ||
+                              not variant_is_comptime                    ||
+                              not variant_operand:possible_types.take_one().in?(@main.switch_simple_types)
+
+                         [box
+                              case_variants_operands.append(variant_operand)
+                              existed_variants, need_table, table_is_comptime
+                              table_exp_data, variants_ir, final_data, dependencies, src_gconsts
+                         ]
+                    }
+               )
+
+               [box
+                    variants_operands.append(case_variants_operands)
+                    existed_variants, need_table, table_is_comptime
+                    table_exp_data, variants_ir, final_data, dependencies, src_gconsts
+               ]
+          }
+     )
+
+     let [box final_data, dependencies, src_gconsts] = if not need_table
+          [box final_data, dependencies, src_gconsts]
+     else {
+          let table_kvs = variants_operands.foldl_kv(
+               [array].init(variants_qty)
+               fn (table_kvs, case_idx, case_variants) case_variants.foldl(
+                    table_kvs
+                    fn (table_kvs, case_variant) table_kvs.append([obj :key = case_variant, :value = comptime_int(case_idx, @main.t_token)])
+               )
+          )
+
+          if table_is_comptime {
+               let [box table_operand, final_data, dependencies] = comptime_table(table_kvs, @main.t_token).has_ir!(final_data, dependencies)
+
+               [box
+                    new (final_data):gconsts[switch_name][@main.compiled_module_name] <= new (@main.t_final_gconst) {
+                         :ir_name        <= table_ir_name
+                         :ir             <= ir__raw_return(variants_ir, table_operand:ir)
+                         :operand_ir     <= table_operand:ir
+                         :possible_types <= [set "table"]
+                         :comptime_val   <= table_operand:comptime_val
+                         :name_ir_const  <= owner_name_ir_const
+                    }
+
+                    new (dependencies):gconsts => _.append(@main.compiled_module_name ++ "." ++ switch_name)
+                    src_gconsts
+               ]
+          } else {
+               let [box table_operand, table_exp_data, table_gconst_ir, final_data, dependencies, src_gconsts] = ir__table(table_kvs, @main.t_token, table_exp_data, variants_ir, final_data, dependencies, src_gconsts, false, false)
+
+               let [box result_reg] = table_exp_data.new_reg()
+               let table_gconst_ir  = table_gconst_ir ++ "t_any const " ++ result_reg ++ "=check_switch_table(thrd_data," ++ table_operand:ir ++ "," ++ variants_qty.to_ir_num() ++ ");\n"
+
+               [box
+                    new (final_data):gconsts[switch_name][@main.compiled_module_name] <= new (@main.t_final_gconst) {
+                         :ir_name        <= table_ir_name
+                         :ir             <= ir__raw_return(table_gconst_ir, result_reg)
+                         :possible_types <= [set "table"]
+                         :name_ir_const  <= owner_name_ir_const
+                    }
+
+                    new (dependencies):gconsts => _.append(@main.compiled_module_name ++ "." ++ switch_name)
+                    src_gconsts
+               ]
+          }
+     }
+
+     let context_prefix = "swcs:" ++ keyword_coded_id ++ ":"
+     let [box
+          cases_operands
+          branches_context_consts
+          exp_data, cases_irs, final_data, dependencies, src_gconsts
+     ] = switch_:cases.foldl_kv(
+          [box
+               [array].init(cases_qty + 1)
+               [array].init(cases_qty + 1)
+               exp_data, [array].init(cases_qty + 1), final_data, dependencies, src_gconsts
+          ]
+
+          fn (state, case_idx, case_) {
+               let [box
+                    cases_operands
+                    branches_context_consts
+                    exp_data, cases_irs, final_data, dependencies, src_gconsts
+               ] = state
+
+               let [box case_operand, exp_data, case_ir, final_data, dependencies, src_gconsts] =
+                    case_:case_exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, is_last, is_linear_alloc, false, true)
+
+               let case_contexts_consts = contexts[context_prefix ++ format_int(case_idx, 32, false)] <? [set]
+
+               [box
+                    cases_operands.append(case_operand)
+                    branches_context_consts.append(case_contexts_consts)
+                    exp_data, cases_irs.append(case_ir), final_data, dependencies, src_gconsts
+               ]
+          }
+     )
+
+     let code = cases_operands.foldl_kv(switch_:keyword:text ++ " " ++ switch_operand:code:text, fn (code, case_idx, case_operand) {
+          let code = variants_operands[case_idx].foldl(code ++ "; case ", fn (code, variant_operand) code ++ variant_operand:code:text ++ ",")
+          (new (code)[code.len() - 1] <= ':') ++ " " ++ case_operand:code:text
+     })
+
+     let [box default_operand, exp_data, default_ir, final_data, dependencies, src_gconsts] =
+          switch_:default_exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, is_last, is_linear_alloc, false, true)
+
+     let default_contexts_consts = contexts["swdf:" ++ keyword_coded_id] <? [set]
+
+     let cases_operands          = cases_operands.append(default_operand)
+     let branches_context_consts = branches_context_consts.append(default_contexts_consts)
+     let cases_irs               = cases_irs.append(default_ir)
+
+     let code = new (switch_:keyword):text <= code ++ "; default: " ++ default_operand:code:text
+
+     let name_ids                                      = exp_data:name_ids
+     let [box consts_from_any_branch, branches_consts] = branches_context_consts.foldl([box [set], [array].init(cases_qty + 1)], fn (state, branch) {
+          let [box consts_from_any_branch, branches_consts] = state
+
+          let [box consts_from_any_branch, consts_from_current_branch] = branch.foldl([box consts_from_any_branch, [set]], fn (state, def_id) {
+               let [box consts_from_any_branch, consts_from_current_branch] = state
+
+               let const_name = name_ids[def_id]
+               if const_name.null?()
+                    [box consts_from_any_branch, consts_from_current_branch]
+               else [box consts_from_any_branch.append(const_name), consts_from_current_branch.append(const_name)]
+          })
+
+          [box consts_from_any_branch, branches_consts.append(consts_from_current_branch)]
+     })
+
+     if need_table
+          ir__table_switch(
+               switch_operand
+               variants_operands, cases_operands, cases_irs
+               table_ir_name, table_is_comptime
+               code
+               branches_consts, consts_from_any_branch
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     else ir__simple_switch(
+          switch_operand
+          variants_operands, cases_operands, cases_irs
+          code
+          branches_consts, consts_from_any_branch
+          exp_data, ir, final_data, dependencies, src_gconsts, is_last
+     )
+}

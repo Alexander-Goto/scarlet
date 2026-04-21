@@ -1,0 +1,30 @@
+let t_less = [obj
+     :scar_type = "t_less"
+
+     :operator = @main.t_token
+     :left     = :i_expression
+     :right    = :i_expression
+]
+
+fn less_independent?(exp, independent_consts)
+     exp:left.independent?(independent_consts) && exp:right.independent?(independent_consts)
+
+fn analyze_less(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let [box last_use_info, lambdas_data, def_ids] = exp:left.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     exp:right.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+}
+
+fn less_to_operand(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let fn_ir_name = "McoreFN__less__"
+     if exp:left:scar_type == "t_holder" || exp:right:scar_type == "t_holder" {
+          let [box left, exp_data, ir, final_data, dependencies, src_gconsts] =
+               exp:left.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, true, true)
+          let [box right, exp_data, ir, final_data, dependencies, src_gconsts] =
+               exp:right.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, true, true)
+
+          let args = [array left, right]
+          let code = new (left:code):text => _ ++ (" < " ++ right:code:text)
+          core_fn_partial_app_args_has_correct_types!(fn_ir_name, args, null)
+          ir__partial_application(fn_ir_name, args, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     } else ir__core_fn_call(fn_ir_name, exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false)
+}

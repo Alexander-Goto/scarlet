@@ -1,0 +1,4 @@
+`noinline`
+fn test__current_dir() {
+     test(current_dir().type() == "std.fs_path")
+}

@@ -1,0 +1,119 @@
+let const__ascii_to_upper = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_to_upper = fn (arg) to_const__ascii_to_upper(arg:value.ascii_to_upper())
+          :core___equal__      = fn (arg_1, arg_2) arg_1:value === arg_2:value
+     ]
+]
+
+fn to_const__ascii_to_upper(arg) new (@main.const__ascii_to_upper):value <= arg
+
+fn to_custom_const__ascii_to_upper(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_to_upper = fn (arg) to_custom_const__ascii_to_upper(arg.custom__get_data().ascii_to_upper())
+          :core___equal__      = fn (arg_1, arg_2) arg_1.custom__get_data() === arg_2.custom__get_data()
+     ]
+)
+
+let broken_const__ascii_to_upper = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_to_upper = fn (_) heap_table()
+     ]
+]
+
+fn to_broken_const__ascii_to_upper(arg) new (@main.broken_const__ascii_to_upper):value <= arg
+
+fn to_broken_custom_const__ascii_to_upper(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_to_upper = fn (_) heap_table()
+     ]
+)
+
+let error_const__ascii_to_upper = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_ascii_to_upper = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__ascii_to_upper(arg) new (@main.error_const__ascii_to_upper):value <= arg
+
+fn to_error_custom_const__ascii_to_upper(arg) custom__create(
+     arg
+     [obj
+          :core_ascii_to_upper = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__ascii_to_upper() {
+     test('\000001'.ascii_to_upper() === '\000001')
+     test('\000008'.ascii_to_upper() === '\000008')
+     test('\000009'.ascii_to_upper() === '\000009')
+     test('\000020'.ascii_to_upper() === '\000020')
+     test('!'.ascii_to_upper() === '!')
+     test('~'.ascii_to_upper() === '~')
+     test('0'.ascii_to_upper() === '0')
+     test('9'.ascii_to_upper() === '9')
+     test('a'.ascii_to_upper() === 'A')
+     test('z'.ascii_to_upper() === 'Z')
+     test('A'.ascii_to_upper() === 'A')
+     test('Z'.ascii_to_upper() === 'Z')
+
+     test("\000001".ascii_to_upper() === "\000001")
+     test("\000008".ascii_to_upper() === "\000008")
+     test("\000009".ascii_to_upper() === "\000009")
+     test("\000020".ascii_to_upper() === "\000020")
+     test("!".ascii_to_upper() === "!")
+     test("~".ascii_to_upper() === "~")
+     test("0".ascii_to_upper() === "0")
+     test("9".ascii_to_upper() === "9")
+     test("a".ascii_to_upper() === "A")
+     test("z".ascii_to_upper() === "Z")
+     test("A".ascii_to_upper() === "A")
+     test("Z".ascii_to_upper() === "Z")
+     test("az".ascii_to_upper() === "AZ")
+     test("AZ".ascii_to_upper() === "AZ")
+     test("azAZ".ascii_to_upper() === "AZAZ")
+     test("AZaz".ascii_to_upper() === "AZAZ")
+     test("aZAz".ascii_to_upper() === "AZAZ")
+     test("\0000ac\0000c2\0000ba\0000b9".ascii_to_upper() === "\0000ac\0000c2\0000ba\0000b9")
+     test("z\0000ac\0000c2\0000ba\0000b9z".ascii_to_upper() === "Z\0000ac\0000c2\0000ba\0000b9Z")
+     test("\00008b\0000a1\000099\000098".ascii_to_upper() === "\00008b\0000a1\000099\000098")
+     test("Z\00008b\0000a1\000099\000098Z".ascii_to_upper() === "Z\00008b\0000a1\000099\000098Z")
+     test("Hello World".ascii_to_upper() === "HELLO WORLD")
+     test("0123456789abcde".ascii_to_upper() === "0123456789ABCDE")
+     test("0123456789ABCDE".ascii_to_upper() === "0123456789ABCDE")
+     test("abcdefffffffffz".ascii_to_upper() === "ABCDEFFFFFFFFFZ")
+     test("ABCDEFFFFFFFFFZ".ascii_to_upper() === "ABCDEFFFFFFFFFZ")
+     test("Hello WorldHello World".ascii_to_upper() === "HELLO WORLDHELLO WORLD")
+     test("0123456789abcdef".ascii_to_upper() === "0123456789ABCDEF")
+     test("0123456789ABCDEF".ascii_to_upper() === "0123456789ABCDEF")
+     test("abcdeffffffffffz".ascii_to_upper() === "ABCDEFFFFFFFFFFZ")
+     test("ABCDEFFFFFFFFFFZ".ascii_to_upper() === "ABCDEFFFFFFFFFFZ")
+
+     let string = rnd_string()
+     test(string.map(fn (char) if char.in_range?('a', '{'); (char.to_int() - 32).to_char() else char) === string.ascii_to_upper())
+     test(string.map(_.ascii_to_upper()) === string.ascii_to_upper())
+
+     test(to_const__ascii_to_upper('a').ascii_to_upper() === to_const__ascii_to_upper('A'))
+     test(to_const__ascii_to_upper('Z').ascii_to_upper() === to_const__ascii_to_upper('Z'))
+
+     test(to_custom_const__ascii_to_upper('a').ascii_to_upper() === to_custom_const__ascii_to_upper('A'))
+     test(to_custom_const__ascii_to_upper('Z').ascii_to_upper() === to_custom_const__ascii_to_upper('Z'))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.ascii_to_upper().get_error_id() === :1)
+     test(heap_table().ascii_to_upper().get_error_id() === :invalid_type)
+
+     test(to_broken_const__ascii_to_upper("").ascii_to_upper().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__ascii_to_upper("").ascii_to_upper().get_error_id() === :invalid_type)
+     test(to_error_const__ascii_to_upper("").ascii_to_upper().get_error_id() === :3)
+     test(to_error_custom_const__ascii_to_upper("").ascii_to_upper().get_error_id() === :4)
+}

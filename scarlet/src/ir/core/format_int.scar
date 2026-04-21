@@ -1,0 +1,34 @@
+fn ir__core_fn_format_int(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box num, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box base, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box is_signed, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[2].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ num:code:text ++ ", " ++ base:code:text ++ ", " ++ is_signed:code:text ++ ")")
+
+     num.maybe_has_type!("int")
+     base.maybe_has_type!("int")
+     is_signed.maybe_has_type!("bool")
+
+     if not (base:comptime_val.null?() || base:comptime_val:value.in_range?(2, 37))
+          error__out_of_bounds(base:code)
+     else null
+
+     if num:comptime_val.null?() || base:comptime_val.null?() || is_signed:comptime_val.null?()
+          ir__fn_call(
+               "McoreFNformat_int", [array num, base, is_signed], code
+               if num.has_type?("int") && not base:comptime_val.null?() && is_signed.has_type?("bool"); @main.string_types else @main.string_types__error
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     else {
+          let operand = comptime_string(format_int(num:comptime_val:value, base:comptime_val:value, is_signed:comptime_val:value), code)
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

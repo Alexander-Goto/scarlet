@@ -1,0 +1,13 @@
+`noinline`
+fn test__sleep() {
+     test(sleep(0).null?())
+     test(sleep(10).null?())
+     let start = time()
+     test(sleep(1'000'000'000).null?())
+     test(start < time())
+
+     test(sleep(expected_error(:1, heap_string(), heap_string())).get_error_id() === :1)
+     test(sleep(heap_string()).get_error_id() === :invalid_type)
+     test(sleep(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(sleep(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+}

@@ -1,0 +1,58 @@
+fn ir__core_fn_drop_take(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box array, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box n, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ (array:code:text ++ ", " ++ n:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
+     array.maybe_has_type!(valid_types)
+     n.maybe_has_type!("int")
+
+     if not n:comptime_val.null?() && n:comptime_val:value < 0
+          error__out_of_bounds(n:code)
+     else null
+
+     if array:comptime_val.null?() || n:comptime_val.null?() || array:comptime_val:type == "obj" {
+          if array:comptime_val:type === "obj" && array:comptime_val:value[:_][if fn_ir_name == "McoreFNdrop"; :core_drop else :core_take].null?()
+               error__invalid_type(array:code, if fn_ir_name == "McoreFNdrop"; ".core_drop" else ".core_take", "obj")
+          else null
+
+          let result_possible_types = if array:possible_types.null?()
+               valid_types.append("error")
+          else {
+               let result_possible_types = array:possible_types.filter(_.in?(valid_types)).append("error")
+
+               let result_possible_types = if "string".in?(result_possible_types) && not "short_string".in?(result_possible_types)
+                    result_possible_types.append("short_string")
+               else result_possible_types
+
+               if "byte_array".in?(result_possible_types) && not "short_byte_array".in?(result_possible_types)
+                    result_possible_types.append("short_byte_array")
+               else result_possible_types
+          }
+
+          ir__fn_call(fn_ir_name, [array array, n], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     }
+     else {
+          let n_value = n:comptime_val:value
+          if n_value > array:comptime_val:value.len()
+               error__out_of_bounds(n:code)
+          else null
+
+          let comptime_val = new (array:comptime_val):value => if fn_ir_name == "McoreFNdrop"; _.drop(n_value) else _.take(n_value)
+          let operand      = new (array) {
+               :ir             <= null
+               :code           <= code
+               :comptime_val   <= comptime_val
+               :possible_types <= comptime_val.get_type_for_operand()
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

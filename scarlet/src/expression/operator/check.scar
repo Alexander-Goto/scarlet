@@ -1,0 +1,19 @@
+let t_check = [obj
+     :scar_type = "t_check"
+
+     :keyword = @main.t_token
+     :exp     = :i_expression
+]
+
+fn check_independent?(check, independent_consts) check:exp.independent?(independent_consts)
+
+fn analyze_check(check, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     check:exp.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+fn check_to_operand(check, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box checked_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          check:exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (check:keyword):text <= "check(" ++ checked_operand:code:text ++ ")"
+     ir__check(checked_operand, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

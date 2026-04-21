@@ -1,0 +1,14 @@
+let t_dependencies = [obj
+     :fns       = [set]   # [set full_name:@string]
+     :gconsts   = [set]   # [set full_name:@string]
+     :ir_consts = [array] # [array ir_name:@string]
+]
+
+fn join_dependencies(dst, src) {
+     let [obj src_fns = :fns, src_gconsts = :gconsts, src_ir_consts = :ir_consts] = src
+     new (dst) {
+          :fns       => fn (dst_fns) src_fns.foldl(dst_fns, _.append(_))
+          :gconsts   => fn (dst_gconsts) src_gconsts.foldl(dst_gconsts, _.append(_))
+          :ir_consts => fn (dst_ir_consts) dst_ir_consts ++ src_ir_consts.filter(fn (name) not name.in?(dst_ir_consts))
+     }
+}

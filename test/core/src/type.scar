@@ -1,0 +1,53 @@
+let const__type = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_type = fn (_) "main.type"
+     ]
+]
+
+fn to_const__type(arg) new (@main.const__type):value <= arg
+
+fn to_custom_const__type(arg) custom__create(
+     arg
+     [obj
+          :core_type = fn (_) "main.custom"
+     ]
+)
+
+`noinline`
+fn test__type() {
+     test("".type() === "core.string")
+     test(rnd_string().type() === "core.string")
+     test(null.type() === "core.null")
+     test(rnd_token().type() === "core.token")
+     test(true.type() === "core.bool")
+     test(false.type() === "core.bool")
+     test(rnd_byte().type() === "core.byte")
+     test(rnd_char().type() === "core.char")
+     test(rnd().type() === "core.int")
+     test((rnd() >> 2).int_to_time().type() === "core.time")
+     test(rnd_float().type() === "core.float")
+     test((_ ++ _).type() === "core.fn")
+     test((heap_string() ++ _).type() === "core.fn")
+     test([byte_array].type() === "core.byte_array")
+     test(rnd_byte_array().type() === "core.byte_array")
+     test([box].type() === "core.box")
+     test([box heap_string()].type() === "core.box")
+     test([breaker heap_string()].type() === "core.breaker")
+     test([obj].type() === "core.obj")
+     test(rnd_string_obj().type() === "core.obj")
+     test([table].type() === "core.table")
+     test(rnd_string_table().type() === "core.table")
+     test([set].type() === "core.set")
+     test(rnd_string_set().type() === "core.set")
+     test([array].type() === "core.array")
+     test(rnd_string_array().type() === "core.array")
+     test(thread(fn () null).type() === "core.thread")
+     test(make_channel()[0].type() === "core.channel")
+
+     test(to_const__type(-0.49).type() === "main.type")
+     test(to_custom_const__type(-0.49).type() === "main.custom")
+
+     test(expected_error(:1, heap_string(), heap_string()).type().get_error_id() === :1)
+}

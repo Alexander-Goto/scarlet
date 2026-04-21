@@ -1,0 +1,79 @@
+fn ir__core_fn___get_item__(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:operand.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box key, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:key.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (operand:code):text => _ ++ ("[" ++ key:code:text ++ "]")
+
+     if operand.has_type?([set "short_string", "string", "short_byte_array", "byte_array", "box", "array"]) {
+          key.maybe_has_type!("int")
+
+          if not key:comptime_val.null?() && key:comptime_val:value < 0
+               error__out_of_bounds(key:code)
+          else null
+     } else if operand.has_type?([set "table", "set"])
+          key.maybe_has_type!(@main.all_hash_map_key_types)
+     else {
+          operand.maybe_has_type!([set "short_string", "string", "null", "short_byte_array", "byte_array", "box", "table", "set", "array", "obj", "custom"])
+
+          if key.has_type?("error")
+               error__invalid_type(key:code, "/error", "error")
+          else null
+     }
+
+     if operand:comptime_val.null?() || key:comptime_val.null?() ||
+          not key:comptime_val:type.in?(@main.always_hash_map_key_types) ||
+          operand:comptime_val:type == "obj" && not operand:comptime_val:value[:_][:core___get_item__].null?()
+     {
+          let result_possible_types = if operand.has_type?(@main.string_types)
+               [set "char", "error"]
+          else if operand.has_type?(@main.byte_array_types)
+               [set "byte", "error"]
+          else if operand.has_type?("null")
+               [set "null", "error"]
+          else null
+
+          ir__fn_call("McoreFN__get_item__", [array operand, key], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          switch operand:comptime_val:type
+          case "obj":
+               key.maybe_has_type!("token")
+          case "string", "byte_array", "box", "array":
+               if not key:comptime_val:value.in_range?(0, operand:comptime_val:value.len())
+                    error__out_of_bounds(key:code)
+               else null
+          default:
+               null
+
+          let value = operand:comptime_val:value[if operand:comptime_val:type.in?([set "table", "set"]); key:comptime_val else key:comptime_val:value]
+          let value = switch operand:comptime_val:type
+          case "string":
+               new (@main.t_comptime_val) {
+                    :type  <= "char"
+                    :value <= value
+               }
+          case "byte_array":
+               new (@main.t_comptime_val) {
+                    :type  <= "byte"
+                    :value <= value
+               }
+          case "array", "box":
+               value
+          default:
+               value <? @main.comptime_null_val
+
+          let result = new (operand) {
+               :ir             <= null
+               :code           <= code
+               :comptime_val   <= value
+               :possible_types <= value.get_type_for_operand()
+          }
+
+          if is_last {
+               let [box result, final_data, dependencies] = result.has_ir!(final_data, dependencies)
+
+               [box result, exp_data, ir__raw_return(ir, result:ir), final_data, dependencies, src_gconsts]
+          } else [box result, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

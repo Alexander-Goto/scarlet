@@ -1,0 +1,301 @@
+# fn (exp:@i_expression, independent_consts:[set name:@string]) bool
+fn independent?(exp, independent_consts)
+     switch exp:scar_type
+     case "t_fn_call":
+          fn_call_independent?(exp, independent_consts)
+     case "t_check":
+          check_independent?(exp, independent_consts)
+     case "t_guard":
+          guard_independent?(exp, independent_consts)
+     case "t_test":
+          test_independent?(exp, independent_consts)
+     case "t_unreachable", "t_holder", "t_bool", "t_byte", "t_char", "t_float", "t_gconst_in_exp", "t_hex", "t_int", "t_null", "t_string", "t_token_in_exp":
+          true
+     case "t_grouped_exps":
+          grouped_exps_independent?(exp, independent_consts)
+     case "t_nested_exp":
+          nested_exp_independent?(exp, independent_consts)
+     case "t_operator_new":
+          operator_new_independent?(exp, independent_consts)
+     case "t_operand":
+          operand_independent?(exp)
+     case "t_field":
+          field_independent?(exp, independent_consts)
+     case "t_array":
+          array_independent?(exp, independent_consts)
+     case "t_box":
+          box_independent?(exp, independent_consts)
+     case "t_byte_array":
+          byte_array_independent?(exp, independent_consts)
+     case "t_breaker", "t_error":
+          false
+     case "t_obj":
+          obj_independent?(exp, independent_consts)
+     case "t_set":
+          set_independent?(exp, independent_consts)
+     case "t_table":
+          table_independent?(exp, independent_consts)
+     case "t_default_val":
+          default_val_independent?(exp, independent_consts)
+     case "t_lazy_and":
+          lazy_and_independent?(exp, independent_consts)
+     case "t_lazy_or":
+          lazy_or_independent?(exp, independent_consts)
+     case "t_if_exp":
+          if_exp_independent?(exp, independent_consts)
+     case "t_switch_exp":
+          switch_exp_independent?(exp, independent_consts)
+     case "t_const_in_exp":
+          const_independent?(exp, independent_consts)
+     case "t_lambda_in_exp":
+          lambda_independent?(exp, independent_consts)
+     case "t_add":
+          add_independent?(exp, independent_consts)
+     case "t_and":
+          and_independent?(exp, independent_consts)
+     case "t_ashr":
+          ashr_independent?(exp, independent_consts)
+     case "t_call_from_exp":
+          call_from_exp_independent?(exp, independent_consts)
+     case "t_concat":
+          concat_independent?(exp, independent_consts)
+     case "t_div":
+          div_independent?(exp, independent_consts)
+     case "t_equal":
+          equal_independent?(exp, independent_consts)
+     case "t_get_item":
+          get_item_independent?(exp, independent_consts)
+     case "t_great":
+          great_independent?(exp, independent_consts)
+     case "t_great_or_eq":
+          great_or_eq_independent?(exp, independent_consts)
+     case "t_less":
+          less_independent?(exp, independent_consts)
+     case "t_less_or_eq":
+          less_or_eq_independent?(exp, independent_consts)
+     case "t_mod":
+          mod_independent?(exp, independent_consts)
+     case "t_mtd_call":
+          mtd_call_independent?(exp, independent_consts)
+     case "t_mul":
+          mul_independent?(exp, independent_consts)
+     case "t_not":
+          not_independent?(exp, independent_consts)
+     case "t_not_equal":
+          not_equal_independent?(exp, independent_consts)
+     case "t_or":
+          or_independent?(exp, independent_consts)
+     case "t_shl":
+          shl_independent?(exp, independent_consts)
+     case "t_lshr":
+          lshr_independent?(exp, independent_consts)
+     case "t_slice":
+          slice_independent?(exp, independent_consts)
+     case "t_strong_equal":
+          strong_equal_independent?(exp, independent_consts)
+     case "t_strong_not_equal":
+          strong_not_equal_independent?(exp, independent_consts)
+     case "t_sub":
+          sub_independent?(exp, independent_consts)
+     case "t_xor":
+          xor_independent?(exp, independent_consts)
+     default:
+          unreachable()
+
+#*
+fn (
+     exp:           @i_expression
+     last_use_info: @t_last_use_info
+     lambdas_data:  @t_lambdas_data
+     contexts:      [set @string]
+     name_ids:      [table name:@string = def_id:@int]
+     def_ids:       [set @int]
+) [box $last_use_info, $lambdas_data, $def_ids]
+*#
+fn analyze(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     switch exp:scar_type
+     case "t_fn_call":
+          analyze_fn_call(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_check":
+          analyze_check(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_guard":
+          analyze_guard(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_test":
+          analyze_test(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_unreachable", "t_holder", "t_operand", "t_bool", "t_byte", "t_char", "t_float", "t_gconst_in_exp", "t_hex", "t_int", "t_null", "t_string", "t_token_in_exp":
+          [box last_use_info, lambdas_data, def_ids]
+     case "t_const_def", "t_unpack", "t_unpack_kv":
+          error__not_expected_token(exp:keyword, null)
+     case "t_grouped_exps":
+          analyze_grouped_exps(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_nested_exp":
+          analyze_nested_exp(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_operator_new":
+          analyze_operator_new(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_field":
+          analyze_field(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_array":
+          analyze_array(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_box":
+          analyze_box(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_byte_array":
+          analyze_byte_array(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_breaker":
+          analyze_breaker(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_error":
+          analyze_error(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_obj":
+          analyze_obj(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_set":
+          analyze_set(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_table":
+          analyze_table(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_default_val":
+          analyze_default_val(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_lazy_and":
+          analyze_lazy_and(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_lazy_or":
+          analyze_lazy_or(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_if_exp":
+          analyze_if_exp(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_switch_exp":
+          analyze_switch_exp(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_const_in_exp":
+          analyze_const(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_lambda_in_exp":
+          analyze_lambda(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_add":
+          analyze_add(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_and":
+          analyze_and(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_ashr":
+          analyze_ashr(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_call_from_exp":
+          analyze_call_from_exp(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_concat":
+          analyze_concat(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_div":
+          analyze_div(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_equal":
+          analyze_equal(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_get_item":
+          analyze_get_item(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_great":
+          analyze_great(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_great_or_eq":
+          analyze_great_or_eq(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_less":
+          analyze_less(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_less_or_eq":
+          analyze_less_or_eq(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_mod":
+          analyze_mod(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_mtd_call":
+          analyze_mtd_call(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_mul":
+          analyze_mul(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_not":
+          analyze_not(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_not_equal":
+          analyze_not_equal(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_or":
+          analyze_or(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_shl":
+          analyze_shl(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_lshr":
+          analyze_lshr(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_slice":
+          analyze_slice(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_strong_equal":
+          analyze_strong_equal(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_strong_not_equal":
+          analyze_strong_not_equal(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_sub":
+          analyze_sub(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     case "t_xor":
+          analyze_xor(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     default:
+          unreachable()
+
+#*
+fn (
+     exp:              @i_expression
+     last_use_ids:     [set @int]
+     contexts:         [table context:@string = [set use_id:@int]]
+     lambdas_data:     @t_lambdas_data
+     unused_def_ids:   [set @int]
+     exp_data:         @t_exp_data
+     ir:               @string
+     final_data:       @t_final_data
+     dependencies:     @t_dependencies
+     src_gconsts:      [table name:@string = @t_src_gconst]
+     is_last:          @bool
+     is_linear_alloc:    @bool
+     allow_holder:     @bool
+     is_first_in_chain @bool
+) [box operand:@t_operand, $exp_data, $ir, $final_data, $dependencies, $src_gconsts]
+*#
+fn to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, allow_holder, is_first_in_chain)
+     switch exp:scar_type
+     case "t_fn_call":          fn_call_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_check":            check_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_guard":            guard_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_test":             test_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_unreachable":      unreachable_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts)
+     case "t_grouped_exps":     grouped_exps_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_holder":           holder_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last, allow_holder)
+     case "t_nested_exp":       nested_exp_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_operator_new":     operator_new_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_operand":          operand_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_field":         field_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_array":            array_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_box":              box_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_byte_array":       byte_array_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_breaker":          breaker_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_error":            error_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_obj":              obj_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_set":              set_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_table":            table_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_default_val":      default_val_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_lazy_and":         lazy_and_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_lazy_or":          lazy_or_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_if_exp":           if_exp_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_switch_exp":       switch_exp_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_bool":             bool_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_byte":             byte_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_char":             char_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_const_in_exp":     const_to_operand(exp, last_use_info, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_float":            float_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_gconst_in_exp":    gconst_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_hex":              hex_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_int":              int_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_lambda_in_exp":    lambda_to_operand(exp, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_null":             null_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_string":           string_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_token_in_exp":     token_to_operand(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_add":              add_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_and":              and_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_ashr":             ashr_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_call_from_exp":    call_from_exp_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_concat":           concat_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_div":              div_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_equal":            equal_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_get_item":         get_item_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_great":            great_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_great_or_eq":      great_or_eq_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_less":             less_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_less_or_eq":       less_or_eq_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_mod":              mod_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_mtd_call":         mtd_call_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     case "t_mul":              mul_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_not":              not_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_not_equal":        not_equal_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_or":               or_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_shl":              shl_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_lshr":             lshr_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_slice":            slice_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_strong_equal":     strong_equal_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_strong_not_equal": strong_not_equal_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     case "t_sub":              sub_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     case "t_xor":              xor_to_operand(exp, last_use_info, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc, is_first_in_chain)
+     default:                   unreachable()

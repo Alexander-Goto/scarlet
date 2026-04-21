@@ -1,0 +1,2 @@
+find src -iname "*.scar" -exec scarlet -n main -m ../std/std.mscar -o scarlet.c -s {} + &&
+clang -march=native -pthread -lm -std=c23 -DEXPORT_CORE_BASIC -DEXPORT_CORE_ERROR -DEXPORT_CORE_STRING -O3 -Wno-empty-body scarlet.c ../std/std.o -o scarlet

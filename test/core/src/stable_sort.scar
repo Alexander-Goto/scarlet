@@ -1,0 +1,310 @@
+let array__stable_sort = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_stable_sort = fn (array, is_asc_order) to_array__stable_sort(array:value.stable_sort(is_asc_order))
+          :core___equal__   = fn (array_1, array_2) array_1:value === array_2:value
+     ]
+]
+
+fn to_array__stable_sort(arg) new (@main.array__stable_sort):value <= arg
+
+fn to_custom_array__stable_sort(arg) custom__create(
+     arg
+     [obj
+          :core_stable_sort = fn (array, is_asc_order) to_custom_array__stable_sort(custom__get_data(array).stable_sort(is_asc_order))
+          :core___equal__   = fn (array_1, array_2) array_1.custom__get_data() === array_2.custom__get_data()
+     ]
+)
+
+let broken_array__stable_sort = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_stable_sort = fn (_, _) heap_table()
+     ]
+]
+
+fn to_broken_array__stable_sort(arg) new (@main.broken_array__stable_sort):value <= arg
+
+fn to_broken_custom_array__stable_sort(arg) custom__create(
+     arg
+     [obj
+          :core_stable_sort = fn (_, _) heap_table()
+     ]
+)
+
+let error_array__stable_sort = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_stable_sort = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__stable_sort(arg) new (@main.error_array__stable_sort):value <= arg
+
+fn to_error_custom_array__stable_sort(arg) custom__create(
+     arg
+     [obj
+          :core_stable_sort = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+let t_item__stable_sort = [obj
+     :cmp_value = 0
+     :value     = 0
+
+     :_ = [obj
+          :core_cmp = fn (item_1, item_2) cmp(item_1:cmp_value, item_2:cmp_value)
+     ]
+]
+
+`noinline`
+fn test__stable_sort() {
+     test("".stable_sort(true) === "")
+     test("".stable_sort(false) === "")
+     test("1".stable_sort(true) === "1")
+     test("1".stable_sort(false) === "1")
+     test("01".stable_sort(true) === "01")
+     test("01".stable_sort(false) === "10")
+     test("10".stable_sort(true) === "01")
+     test("10".stable_sort(false) === "10")
+     test("122333444455555".stable_sort(true) === "122333444455555")
+     test("122333444455555".stable_sort(false) === "555554444333221")
+     test("555554444333221".stable_sort(true) === "122333444455555")
+     test("555554444333221".stable_sort(false) === "555554444333221")
+     test("315534253254454".stable_sort(true) === "122333444455555")
+     test("315534253254454".stable_sort(false) === "555554444333221")
+
+     test("\000091".stable_sort(true) === "\000091")
+     test("\000091".stable_sort(false) === "\000091")
+     test("\000090\000091".stable_sort(true) === "\000090\000091")
+     test("\000090\000091".stable_sort(false) === "\000091\000090")
+     test("\000091\000090".stable_sort(true) === "\000090\000091")
+     test("\000091\000090".stable_sort(false) === "\000091\000090")
+     test("0\000093\000093\000094\000095\000096\000097\000098".stable_sort(true) === "0\000093\000093\000094\000095\000096\000097\000098")
+     test("0\000093\000093\000094\000095\000096\000097\000098".stable_sort(false) === "\000098\000097\000096\000095\000094\000093\0000930")
+     test("\000093\000095\0000980\000094\000093\000096\000097".stable_sort(true) === "0\000093\000093\000094\000095\000096\000097\000098")
+     test("\000093\000095\0000980\000094\000093\000096\000097".stable_sort(false) === "\000098\000097\000096\000095\000094\000093\0000930")
+
+     test("1223334444555556".stable_sort(true) === "1223334444555556")
+     test("1223334444555556".stable_sort(false) === "6555554444333221")
+     test("6555554444333221".stable_sort(true) === "1223334444555556")
+     test("6555554444333221".stable_sort(false) === "6555554444333221")
+     test("3155346253254454".stable_sort(true) === "1223334444555556")
+     test("3155346253254454".stable_sort(false) === "6555554444333221")
+
+     test("01\000093\000093\000094\000095\000096\000097\000098".stable_sort(true) === "01\000093\000093\000094\000095\000096\000097\000098")
+     test("01\000093\000093\000094\000095\000096\000097\000098".stable_sort(false) === "\000098\000097\000096\000095\000094\000093\00009310")
+     test("\0000931\000095\0000980\000094\000093\000096\000097".stable_sort(true) === "01\000093\000093\000094\000095\000096\000097\000098")
+     test("\0000931\000095\0000980\000094\000093\000096\000097".stable_sort(false) === "\000098\000097\000096\000095\000094\000093\00009310")
+
+     let string = ("01223334444555556" ++ "0")[1, 17]
+     test(string.stable_sort(true) === "1223334444555556")
+     test(string.stable_sort(false) === "6555554444333221")
+     string.ignore()
+
+     let string = ("06555554444333221" ++ "0")[1, 17]
+     test(string.stable_sort(true) === "1223334444555556")
+     test(string.stable_sort(false) === "6555554444333221")
+     string.ignore()
+
+     let string = ("03155346253254454" ++ "0")[1, 17]
+     test(string.stable_sort(true) === "1223334444555556")
+     test(string.stable_sort(false) === "6555554444333221")
+     string.ignore()
+
+     let string = ("001\000093\000093\000094\000095\000096\000097\000098" ++ "0")[1, 10]
+     test(string.stable_sort(true) === "01\000093\000093\000094\000095\000096\000097\000098")
+     test(string.stable_sort(false) === "\000098\000097\000096\000095\000094\000093\00009310")
+     string.ignore()
+
+     let string = ("0\0000931\000095\0000980\000094\000093\000096\000097" ++ "0")[1, 10]
+     test(string.stable_sort(true) === "01\000093\000093\000094\000095\000096\000097\000098")
+     test(string.stable_sort(false) === "\000098\000097\000096\000095\000094\000093\00009310")
+     string.ignore()
+
+     test(("01223334444555556" ++ "0")[1, 17].stable_sort(true) === "1223334444555556")
+     test(("01223334444555556" ++ "0")[1, 17].stable_sort(false) === "6555554444333221")
+     test(("06555554444333221" ++ "0")[1, 17].stable_sort(true) === "1223334444555556")
+     test(("06555554444333221" ++ "0")[1, 17].stable_sort(false) === "6555554444333221")
+     test(("03155346253254454" ++ "0")[1, 17].stable_sort(true) === "1223334444555556")
+     test(("03155346253254454" ++ "0")[1, 17].stable_sort(false) === "6555554444333221")
+     test(("001\000093\000093\000094\000095\000096\000097\000098" ++ "0")[1, 10].stable_sort(true) === "01\000093\000093\000094\000095\000096\000097\000098")
+     test(("001\000093\000093\000094\000095\000096\000097\000098" ++ "0")[1, 10].stable_sort(false) === "\000098\000097\000096\000095\000094\000093\00009310")
+     test(("0\0000931\000095\0000980\000094\000093\000096\000097" ++ "0")[1, 10].stable_sort(true) === "01\000093\000093\000094\000095\000096\000097\000098")
+     test(("0\0000931\000095\0000980\000094\000093\000096\000097" ++ "0")[1, 10].stable_sort(false) === "\000098\000097\000096\000095\000094\000093\00009310")
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     test(string_1.stable_sort(true).foldl1(fn (prev, curr) if prev <= curr; curr else null).type() === "core.char")
+     test(string_1.stable_sort(false).foldl1(fn (prev, curr) if prev >= curr; curr else null).type() === "core.char")
+     string_2.ignore()
+
+     test(u"".stable_sort(true) === u"")
+     test(u"".stable_sort(false) === u"")
+     test(u"1".stable_sort(true) === u"1")
+     test(u"1".stable_sort(false) === u"1")
+     test(u"01".stable_sort(true) === u"01")
+     test(u"01".stable_sort(false) === u"10")
+     test(u"10".stable_sort(true) === u"01")
+     test(u"10".stable_sort(false) === u"10")
+     test(u"12233344445555".stable_sort(true) === u"12233344445555")
+     test(u"12233344445555".stable_sort(false) === u"55554444333221")
+     test(u"55554444333221".stable_sort(true) === u"12233344445555")
+     test(u"55554444333221".stable_sort(false) === u"55554444333221")
+     test(u"31553425324454".stable_sort(true) === u"12233344445555")
+     test(u"31553425324454".stable_sort(false) === u"55554444333221")
+
+     test(u"1223334444555556".stable_sort(true) === u"1223334444555556")
+     test(u"1223334444555556".stable_sort(false) === u"6555554444333221")
+     test(u"6555554444333221".stable_sort(true) === u"1223334444555556")
+     test(u"6555554444333221".stable_sort(false) === u"6555554444333221")
+     test(u"3155346253254454".stable_sort(true) === u"1223334444555556")
+     test(u"3155346253254454".stable_sort(false) === u"6555554444333221")
+
+     let array = (u"01223334444555556" ++ u"0")[1, 17]
+     test(array.stable_sort(true) === u"1223334444555556")
+     test(array.stable_sort(false) === u"6555554444333221")
+     array.ignore()
+
+     let array = (u"06555554444333221" ++ u"0")[1, 17]
+     test(array.stable_sort(true) === u"1223334444555556")
+     test(array.stable_sort(false) === u"6555554444333221")
+     array.ignore()
+
+     let array = (u"03155346253254454" ++ u"0")[1, 17]
+     test(array.stable_sort(true) === u"1223334444555556")
+     test(array.stable_sort(false) === u"6555554444333221")
+     array.ignore()
+
+     test((u"01223334444555556" ++ u"0")[1, 17].stable_sort(true) === u"1223334444555556")
+     test((u"01223334444555556" ++ u"0")[1, 17].stable_sort(false) === u"6555554444333221")
+     test((u"06555554444333221" ++ u"0")[1, 17].stable_sort(true) === u"1223334444555556")
+     test((u"06555554444333221" ++ u"0")[1, 17].stable_sort(false) === u"6555554444333221")
+     test((u"03155346253254454" ++ u"0")[1, 17].stable_sort(true) === u"1223334444555556")
+     test((u"03155346253254454" ++ u"0")[1, 17].stable_sort(false) === u"6555554444333221")
+
+     let array_1 = rnd_byte_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     test(array_1.stable_sort(true).foldl1(fn (prev, curr) if prev <= curr; curr else null).type() === "core.byte")
+     test(array_1.stable_sort(false).foldl1(fn (prev, curr) if prev >= curr; curr else null).type() === "core.byte")
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test([array 1, 2, 3, 4].stable_sort(true) === [array 1, 2, 3, 4])
+     test([array 1, 2, 3, 4].stable_sort(false) === [array 4, 3, 2, 1])
+     test([array heap_table(), heap_table()].stable_sort(true) === [array heap_table(), heap_table()])
+     test([array heap_table(), heap_table()].stable_sort(false) === [array heap_table(), heap_table()])
+     test([array].stable_sort(true) === [array])
+     test([array].stable_sort(false) === [array])
+     test([array].init(10).stable_sort(true) === [array])
+     test([array].init(10).stable_sort(false) === [array])
+     test([array string_0, string_1, string_0][1, 2].stable_sort(true) === [array string_1])
+     test([array string_0, string_1, string_0][1, 2].stable_sort(false) === [array string_1])
+     test([array string_0, string_0, string_1, string_0][1, 3].stable_sort(true) === [array string_0, string_1])
+     test([array string_0, string_0, string_1, string_0][1, 3].stable_sort(false) === [array string_1, string_0])
+     test([array string_0, string_1, string_0, string_0][1, 3].stable_sort(true) === [array string_0, string_1])
+     test([array string_0, string_1, string_0, string_0][1, 3].stable_sort(false) === [array string_1, string_0])
+     test([array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_0][1, 15].stable_sort(true) === [array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5])
+     test([array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_0][1, 15].stable_sort(false) === [array string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1])
+     test([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15].stable_sort(true) === [array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5])
+     test([array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15].stable_sort(false) === [array string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1])
+     test([array string_0, string_3, string_1, string_5, string_5, string_3, string_4, string_2, string_5, string_3, string_2, string_4, string_4, string_5, string_4, string_0][1, 15].stable_sort(true) === [array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5])
+     test([array string_0, string_3, string_1, string_5, string_5, string_3, string_4, string_2, string_5, string_3, string_2, string_4, string_4, string_5, string_4, string_0][1, 15].stable_sort(false) === [array string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1])
+
+     let array = [array].init(10)
+     test(array.stable_sort(true) === [array])
+     test(array.stable_sort(false) === [array])
+     array.ignore()
+
+     let array = [array string_0, string_1, string_0][1, 2]
+     test(array.stable_sort(true) === [array string_1])
+     test(array.stable_sort(false) === [array string_1])
+     array.ignore()
+
+     let array = [array string_0, string_0, string_1, string_0][1, 3]
+     test(array.stable_sort(true) === [array string_0, string_1])
+     test(array.stable_sort(false) === [array string_1, string_0])
+     array.ignore()
+
+     let array = [array string_0, string_1, string_0, string_0][1, 3]
+     test(array.stable_sort(true) === [array string_0, string_1])
+     test(array.stable_sort(false) === [array string_1, string_0])
+     array.ignore()
+
+     let array = [array string_0, string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5, string_0][1, 15]
+     test(array.stable_sort(true) === [array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5])
+     test(array.stable_sort(false) === [array string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1])
+     array.ignore()
+
+     let array = [array string_0, string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1, string_0][1, 15]
+     test(array.stable_sort(true) === [array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5])
+     test(array.stable_sort(false) === [array string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1])
+     array.ignore()
+
+     let array = [array string_0, string_3, string_1, string_5, string_5, string_3, string_4, string_2, string_5, string_3, string_2, string_4, string_4, string_5, string_4, string_0][1, 15]
+     test(array.stable_sort(true) === [array string_1, string_2, string_2, string_3, string_3, string_3, string_4, string_4, string_4, string_4, string_5, string_5, string_5, string_5])
+     test(array.stable_sort(false) === [array string_5, string_5, string_5, string_5, string_4, string_4, string_4, string_4, string_3, string_3, string_3, string_2, string_2, string_1])
+     array.ignore()
+
+     let array_1 = rnd_string_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     test(array_1.stable_sort(true).foldl1(fn (prev, curr) if prev <= curr; curr else null).type() === "core.string")
+     test(array_1.stable_sort(false).foldl1(fn (prev, curr) if prev >= curr; curr else null).type() === "core.string")
+     array_2.ignore()
+
+     let len     = (rnd() & 1023) + 1;
+     let array_1 = loop([array].init(len), fn (array) {
+          let array = array.append(new (@main.t_item__stable_sort) {
+               :cmp_value <= rnd() % 15
+               :value     <= len(array)
+          })
+          break(len(array) === len, array)
+     })
+     let array_2 = if rnd_bool(); array_1 else null
+     test(array_1.stable_sort(true).foldl1(fn (prev, curr) {
+          if prev:cmp_value > curr:cmp_value || (prev:cmp_value === curr:cmp_value && prev:value > curr:value)
+               null
+          else curr
+     }).type() === "core.obj")
+     test(array_1.stable_sort(false).foldl1(fn (prev, curr) {
+          if prev:cmp_value < curr:cmp_value || (prev:cmp_value === curr:cmp_value && prev:value > curr:value)
+               null
+          else curr
+     }).type() === "core.obj")
+     array_2.ignore()
+
+     test(to_array__stable_sort("aBcD").stable_sort(true) === to_array__stable_sort("BDac"))
+     test(to_array__stable_sort("aBcD").stable_sort(false) === to_array__stable_sort("caDB"))
+     test(to_custom_array__stable_sort("aBcD").stable_sort(true) === to_custom_array__stable_sort("BDac"))
+     test(to_custom_array__stable_sort("aBcD").stable_sort(false) === to_custom_array__stable_sort("caDB"))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.stable_sort(true).get_error_id() === :1)
+     test(heap_string().stable_sort(error_1).get_error_id() === :1)
+     test(error_1.stable_sort(error_2).get_error_id() === :1)
+     test(error_2.stable_sort(error_1).get_error_id() === :2)
+     test(error_1.stable_sort(heap_string()).get_error_id() === :1)
+     test(heap_table().stable_sort(error_1).get_error_id() === :1)
+
+     test(heap_table().stable_sort(true).get_error_id() === :invalid_type)
+     test(heap_string().stable_sort(heap_string()).get_error_id() === :invalid_type)
+     test(heap_table().stable_sort(heap_string()).get_error_id() === :invalid_type)
+
+     test([array 1.0, 2.0, nan()].stable_sort(true).get_error_id() === :nan_cmp)
+     test([array heap_table(), [table heap_string() = [obj]]].stable_sort(true).get_error_id() === :cant_ord)
+     test([array heap_string(), heap_table()].stable_sort(true).get_error_id() === :cant_ord)
+
+     test(to_broken_array__stable_sort("").stable_sort(true).get_error_id() === :invalid_type)
+     test(to_broken_custom_array__stable_sort("").stable_sort(true).get_error_id() === :invalid_type)
+     test(to_error_array__stable_sort("").stable_sort(true).get_error_id() === :3)
+     test(to_error_custom_array__stable_sort("").stable_sort(true).get_error_id() === :4)
+}

@@ -1,0 +1,46 @@
+fn ir__core_fn_to_bool(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
+
+     arg.maybe_has_type!([set "short_string", "string", "bool", "byte", "token", "int", "obj", "custom"])
+
+     if arg.has_type?("bool") {
+          let operand = new (arg):code <= code
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     } else if arg:comptime_val.null?() || arg:comptime_val:type.in?([array "obj", "custom"]) {
+          if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_][:core_to_bool].null?()
+               error__invalid_type(arg:code, ".core_to_bool", "obj")
+          else null
+
+          ir__fn_call(
+               "McoreFNto_bool", [array arg], code
+
+               if arg.has_type?([set "short_string", "string", "bool", "byte", "token", "int"])
+                    [set "bool", "null"]
+               else [set "bool", "null", "error"]
+
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     } else {
+          let operand = switch if arg:comptime_val:type == "string"; arg:comptime_val:value.ascii_to_lower() else arg:comptime_val:value
+          case "false", "no", "off", 0b00, :false, :no, :off, 0:
+               comptime_bool(false, code)
+          case "true", "yes", "on", 0b01, :true, :yes, :on, 1:
+               comptime_bool(true, code)
+          default:
+               comptime_null(code)
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

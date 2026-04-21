@@ -1,0 +1,88 @@
+let new_mod_types = [set "=>", "<=", "=>>", "<<="]
+
+let t_operator_new = [obj
+     :scar_type = "t_operator_new"
+
+     :keyword      = @main.t_token
+     :base_operand = :i_expression
+     :mods         = [array] # [array [obj :keys = [array @i_expression*], :type = @string, :exp = @i_expression]*]
+]
+
+fn operator_new_independent?(operator, independent_consts)
+     if operator:base_operand.independent?(independent_consts)
+          operator:mods.all(true, fn (mod) mod:exp.independent?(independent_consts) && mod:keys.all(true, fn (key) key.independent?(independent_consts)))
+     else false
+
+fn analyze_operator_new(operator, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let [box last_use_info, lambdas_data, def_ids] =
+          operator:mods.foldl([box last_use_info, lambdas_data, def_ids], fn (state, mod) mod:keys.foldl(state, fn (state, key) {
+               let [box last_use_info, lambdas_data, def_ids] = state
+
+               key.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+          }))
+
+     let [box last_use_info, lambdas_data, def_ids] =
+          operator:mods.foldl([box last_use_info, lambdas_data, def_ids], fn (state, mod) {
+               let [box last_use_info, lambdas_data, def_ids] = state
+
+               mod:exp.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+          })
+
+     operator:base_operand.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+}
+
+fn operator_new_to_operand(operator, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box all_keys_operands, all_keys_codes, exp_data, ir, final_data, dependencies, src_gconsts] =
+          operator:mods.foldl([box [array].init(operator:mods.len()), [array].init(operator:mods.len()), exp_data, ir, final_data, dependencies, src_gconsts], fn (state, mod) {
+               let [box all_keys_operands, all_keys_codes, exp_data, ir, final_data, dependencies, src_gconsts] = state
+
+               let [box keys, keys_code, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    mod:keys.foldl([box [array].init(mod:keys.len()), "", exp_data, ir, final_data, dependencies, src_gconsts], fn (state, key) {
+                         let [box keys, keys_code, exp_data, ir, final_data, dependencies, src_gconsts] = state
+
+                         let [box key_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+                              key.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+                         let keys      = keys.append(key_operand)
+                         let keys_code = keys_code ++ if key_operand:comptime_val:value.type() == "core.token" && key_operand:code:text.first() == ':'
+                              key_operand:code:text
+                         else "[" ++ key_operand:code:text ++ "]"
+
+                         [box keys, keys_code, exp_data, ir, final_data, dependencies, src_gconsts]
+                    })
+
+               let all_keys_operands = all_keys_operands.append(keys)
+               let all_keys_codes    = all_keys_codes.append(keys_code ++ " " ++ mod:type ++ " ")
+
+               [box all_keys_operands, all_keys_codes, exp_data, ir, final_data, dependencies, src_gconsts]
+          })
+
+     let [box all_mods, all_mods_codes, exp_data, ir, final_data, dependencies, src_gconsts] =
+          operator:mods.foldl_kv([box [array].init(operator:mods.len()), [array].init(operator:mods.len()), exp_data, ir, final_data, dependencies, src_gconsts], fn (state, idx, mod) {
+               let [box all_mods, all_mods_codes, exp_data, ir, final_data, dependencies, src_gconsts] = state
+
+               let [box mod_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    mod:exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, mod:type.last() == '>', false, true)
+
+               let all_mods_codes    = all_mods_codes.append(mod_operand:code:text ++ "; ")
+               let all_mods          = all_mods.append([obj
+                    :keys    = all_keys_operands[idx]
+                    :type    = mod:type
+                    :operand = mod_operand
+               ])
+
+               [box all_mods, all_mods_codes, exp_data, ir, final_data, dependencies, src_gconsts]
+          })
+
+     let [box base_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          operator:base_operand.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (operator:keyword):text <= "new (" ++
+          base_operand:code:text ++ ")" ++
+          (if operator:mods.len() == 1; "" else " {") ++
+          all_keys_codes.foldl_kv("", fn (keys_and_mods, idx, keys_code) keys_and_mods ++ keys_code ++ all_mods_codes[idx])
+
+     let code = new (code):text => fn (code) code.take(code.len() - 2)
+     let code = if operator:mods.len() == 1; code else new (code):text => _ ++ "}"
+
+     ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

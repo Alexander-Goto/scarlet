@@ -1,0 +1,18 @@
+fn ir__core_fn_each_to_each_each_to_each_kv_map_map_kv(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box container, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box func, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, true, false, false)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ container:code:text ++ ", " ++ func:code:text ++ ")")
+
+     let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "table", "array", "obj", "custom"]
+     container.maybe_has_type!(valid_types)
+     func.maybe_has_type!(@main.fn_types)
+
+     let result_possible_types = if container:possible_types.null?()
+          valid_types.append("error")
+     else container:possible_types.filter(_.in?(valid_types)).prepare_types_for_cmp().append("error")
+
+     ir__fn_call(fn_ir_name, [array container, func], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

@@ -1,0 +1,135 @@
+let t_src_gconst = [obj
+     :scar_type = "t_src_gconst"
+
+     :name        = @main.t_token
+     :value       = :i_expression
+     :attributes  = [table] # [table attribute_id:@string = @i_attribute]
+     :doc_comment = ""
+]
+
+let t_final_gconst = [obj
+     :scar_type = "t_final_gconst"
+
+     :ir_name          = ""
+     :ir               = ""
+     :operand_ir       = ""
+     :possible_types   = null  # ([set @string]|null)
+     :comptime_val     = null  # (@t_comptime_val|null)
+     :attributes       = [table] # [table attribute_id:@string = @i_final_attribute|:no_final_data]
+     :dependencies     = @main.t_dependencies
+     :doc_comment      = ""
+     :name_ir_const    = ""
+]
+
+fn prepare_gconst_to_final(gconst, final_data) {
+     let ir_name = "M" ++ @main.compiled_module_name ++ "GC" ++ gconst:name:text
+
+     let final_data = if @main.compiled_module_name == "main" || not "export".key_of?(gconst:attributes)
+          new (final_data):always_use_gconsts[ir_name] <= @main.compiled_module_name ++ "." ++ gconst:name:text
+     else final_data
+
+     new (final_data):gconsts[gconst:name:text][@main.compiled_module_name] <= new (@main.t_final_gconst) {
+          :ir_name     <= ir_name
+          :attributes  <= gconst:attributes.map(attribute_to_final(_))
+          :doc_comment <= gconst:doc_comment
+     }
+}
+
+fn gconst_to_final(gconst, final_data, src_gconsts) {
+     let [box last_use_info, lambdas_data, def_ids] = gconst:value.analyze(@main.t_last_use_info, @main.t_lambdas_data, [set], [table], [set])
+
+     let [box last_use_ids, contexts, unused_def_ids] = last_use_info.foldl_kv([box [set], [table], def_ids], fn (state, def_id, use_id_and_contexts) {
+          let [box last_use_ids, contexts, unused_def_ids] = state
+
+          let [box last_use_ids, contexts] = use_id_and_contexts.foldl_kv([box last_use_ids, contexts], fn (state, last_use_id, last_use_contexts) {
+               let [box last_use_ids, contexts] = state
+               [box
+                    last_use_ids.append(last_use_id)
+                    last_use_contexts.foldl(contexts, fn (contexts, context) new (contexts)[context] => fn (context_def_ids) (context_def_ids <? [set]).append(def_id))
+               ]
+          })
+
+          [box last_use_ids, contexts, unused_def_ids.remove(def_id)]
+     })
+
+     let owner_name                                          = "constant - " ++ @main.compiled_module_name ++ "." ++ gconst:name:text
+     let [box owner_name_ir_const, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ owner_name ++ "\";\n", final_data, @main.t_dependencies)
+
+     let exp_data = new (@main.t_exp_data) {
+          :owner_id            <= "M" ++ @main.compiled_module_name ++ "GC" ++ gconst:name:text
+          :owner_name_ir_const <= owner_name_ir_const
+     }
+
+     let [box operand, _, ir, final_data, dependencies, src_gconsts] = gconst:value.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box operand, final_data, dependencies]                     = operand.has_ir!(final_data, dependencies)
+
+     let ir = if ir.empty?()
+          "return " ++ operand:ir ++ ";\n"
+     else {
+          if operand.has_type?([set "error", "breaker"])
+               error__gconst_is_error_or_breaker(gconst:name)
+          else null
+
+          "call_stack__push(thrd_data," ++ owner_name_ir_const ++ ");\n" ++ ir ++ "call_stack__pop(thrd_data);\nreturn " ++ operand:ir ++ ";\n"
+     }
+
+     let final_data = if operand:comptime_val.null?() || @main.compiled_module_name /= "main" && "export".key_of?(gconst:attributes)
+          final_data
+     else new (final_data):always_use_gconsts["M" ++ @main.compiled_module_name ++ "GC" ++ gconst:name:text] <= null
+
+     [box
+          new (final_data):gconsts[gconst:name:text][@main.compiled_module_name] => fn (final_gconst) new (final_gconst) {
+               :operand_ir     <= operand:ir
+               :possible_types <= if operand:possible_types.null?(); @main.not_error_types else operand:possible_types.remove("error").remove("breaker")
+               :comptime_val   <= operand:comptime_val
+               :ir             <= ir
+               :dependencies   <= dependencies
+               :name_ir_const  <= owner_name_ir_const
+          }
+
+          src_gconsts
+     ]
+}
+
+fn serialize_gconst(gconst, bytes) {
+     let bytes = gconst:ir_name.serialize(bytes)
+     let bytes = gconst:ir.serialize(bytes)
+     let bytes = gconst:operand_ir.serialize(bytes)
+     let bytes = (gconst:possible_types <? true).serialize(bytes)
+     let bytes = (gconst:comptime_val <? true).serialize(bytes)
+     let bytes = gconst:attributes.serialize(bytes)
+     let bytes = gconst:dependencies.serialize(bytes)
+     let bytes = gconst:doc_comment.serialize(bytes)
+     gconst:name_ir_const.serialize(bytes)
+}
+
+fn deserialize_gconst(bytes) {
+     let [box ir_name, bytes]        = deserialize(bytes)
+     let [box ir, bytes]             = deserialize(bytes)
+     let [box operand_ir, bytes]     = deserialize(bytes)
+     let [box possible_types, bytes] = deserialize(bytes)
+     let [box comptime_val, bytes]   = deserialize(bytes)
+     let [box attributes, bytes]     = deserialize(bytes)
+     let [box dependencies, bytes]   = deserialize(bytes)
+     let [box doc_comment, bytes]    = deserialize(bytes)
+     let [box name_ir_const, bytes]  = deserialize(bytes)
+
+     let possible_types = if possible_types.type() == "core.bool"; null else possible_types
+     let comptime_val   = if comptime_val.type() == "core.bool"; null else comptime_val
+
+     [box
+          new (@main.t_final_gconst) {
+               :ir_name        <= ir_name
+               :ir             <= ir
+               :operand_ir     <= operand_ir
+               :possible_types <= possible_types
+               :comptime_val   <= comptime_val
+               :attributes     <= attributes
+               :dependencies   <= dependencies
+               :doc_comment    <= doc_comment
+               :name_ir_const  <= name_ir_const
+          }
+
+          bytes
+     ]
+}

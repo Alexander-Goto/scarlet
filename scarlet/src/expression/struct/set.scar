@@ -1,0 +1,67 @@
+let t_set = [obj
+     :scar_type = "t_set"
+
+     :open_char = @main.t_token
+     :items     = [array] # [array @i_expression*]
+]
+
+fn set_independent?(set, independent_consts) set:items.all(true, fn (item) item.independent?(independent_consts))
+
+fn analyze_set(set, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     set:items.foldl([box last_use_info, lambdas_data, def_ids], fn (state, item) {
+          let [box last_use_info, lambdas_data, def_ids] = state
+
+          item.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     })
+
+fn set_to_operand(set, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_comptime, is_set] = if set:items.empty?()
+          [box [array], "[set]", exp_data, ir, final_data, dependencies, src_gconsts, true, true]
+     else set:items.foldl([box [array].init(set:items.len()), "[set", exp_data, ir, final_data, dependencies, src_gconsts, true, true, [set].init(set:items.len())], fn (state, item) {
+          let [box items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_comptime, is_set, existed_item_ids] = state
+
+          let [box item, exp_data, ir, final_data, dependencies, src_gconsts] =
+               item.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+          let [box all_item_types_valid, any_item_types_valid] = if item:possible_types.null?()
+               [box false, true]
+          else item:possible_types.foldl([box true, false], fn (result, type) {
+               let [box all_item_types_valid, any_item_types_valid] = result
+
+               let all_item_types_valid = all_item_types_valid && type.in?(@main.always_hash_map_key_types)
+               let any_item_types_valid = any_item_types_valid || type.in?(@main.all_hash_map_key_types)
+
+               break(not all_item_types_valid && any_item_types_valid, [box all_item_types_valid, any_item_types_valid])
+          })
+
+          if not any_item_types_valid
+               error__invalid_type(item:code, "param(hash:arg)", item:possible_types)
+          else null
+
+          let new_item_id = if item:comptime_val.null?()
+               item:ir
+          else item:comptime_val
+
+          let existed_item_ids = existed_item_ids.append_new(new_item_id)
+          if existed_item_ids.null?()
+               error__already_exists(item:code, "set item")
+          else null
+
+          let items       = items.append(item)
+          let code        = code ++ " " ++ item:code:text ++ ","
+          let is_comptime = is_comptime && not item:comptime_val.null?() && all_item_types_valid
+          let is_set      = is_set && all_item_types_valid
+
+          [box items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_comptime, is_set, existed_item_ids]
+     })
+
+     let code = new (set:open_char):text <= if code.last() == ','; new (code)[code.len() - 1] <= ']' else code
+     if is_comptime {
+          let operand = comptime_set(items, code)
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     } else ir__set(items, code, exp_data, ir, final_data, dependencies, src_gconsts, is_set, is_last)
+}

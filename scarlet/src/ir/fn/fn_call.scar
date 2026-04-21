@@ -1,0 +1,25 @@
+fn ir__fn_call(fn_ir_name, args, code, result_type, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box args, final_data, dependencies]                 = operands_have_ir!(args, final_data, dependencies)
+     let [box prepared_args_ir, ir, final_data, dependencies] = ir__prepare_args_to_fn_call(args, ir, final_data, dependencies, is_last)
+     let [box result_reg, exp_data]                           = exp_data.new_reg()
+
+     let must_tail = is_last && not "McoreF".prefix_of?(fn_ir_name) && exp_data:ir_reg_num /= 0
+     let ir        = if must_tail
+          ir ++ "call_stack__next_is_tail_call(thrd_data);\n" ++
+          "[[clang::musttail]] return " ++ fn_ir_name ++ "(thrd_data," ++ prepared_args_ir ++ ");\n"
+     else {
+          let ir = ir ++ "t_any const " ++ result_reg ++ "=" ++ fn_ir_name ++ "(thrd_data," ++ prepared_args_ir ++ ");\n"
+          let ir = ir__assume_type(result_reg, result_type, ir)
+          if is_last; ir__raw_return(ir, result_reg) else ir
+     }
+
+     [box
+          new (@main.t_operand) {
+               :code           <= code
+               :ir             <= result_reg
+               :possible_types <= result_type
+          }
+
+          exp_data, ir, final_data, dependencies, src_gconsts
+     ]
+}

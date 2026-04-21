@@ -1,0 +1,33 @@
+let t_slice = [obj
+     :scar_type = "t_slice"
+
+     :operand = :i_expression
+     :from    = :i_expression
+     :to      = :i_expression
+]
+
+fn slice_independent?(exp, independent_consts)
+     exp:operand.independent?(independent_consts) && exp:from.independent?(independent_consts) && exp:to.independent?(independent_consts)
+
+fn analyze_slice(exp, last_use_info, lambdas_data, contexts, name_ids, def_ids) {
+     let [box last_use_info, lambdas_data, def_ids] = exp:operand.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     let [box last_use_info, lambdas_data, def_ids] = exp:from.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     exp:to.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+}
+
+fn slice_to_operand(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let fn_ir_name = "McoreFN__slice__"
+     if exp:operand:scar_type == "t_holder" || exp:from:scar_type == "t_holder" || exp:to:scar_type == "t_holder" {
+          let [box operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+               exp:operand.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, true, true)
+          let [box from, exp_data, ir, final_data, dependencies, src_gconsts] =
+               exp:from.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, true, true)
+          let [box to, exp_data, ir, final_data, dependencies, src_gconsts] =
+               exp:to.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, true, true)
+
+          let args = [array operand, from, to]
+          let code = new (operand:code):text => _ ++ ("[" ++ from:code:text ++ ", " ++ to:code:text ++ "]")
+          core_fn_partial_app_args_has_correct_types!(fn_ir_name, args, null)
+          ir__partial_application(fn_ir_name, args, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     } else ir__core_fn_call(fn_ir_name, exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false)
+}

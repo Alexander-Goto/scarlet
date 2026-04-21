@@ -1,0 +1,17 @@
+let t_breaker = [obj
+     :scar_type = "t_breaker"
+
+     :open_char = @main.t_token
+     :item      = :i_expression
+]
+
+fn analyze_breaker(breaker, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     breaker:item.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
+
+fn breaker_to_operand(breaker, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box item, exp_data, ir, final_data, dependencies, src_gconsts] =
+          breaker:item.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (breaker:open_char):text <= "[breaker " ++ item:code:text ++ "]"
+     ir__breaker(item, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+}

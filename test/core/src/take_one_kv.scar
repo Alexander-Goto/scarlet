@@ -1,0 +1,96 @@
+let container__take_one_kv = [obj
+     :value = [table]
+
+     :_ = [obj
+          :core_take_one_kv = fn (container) container:value.take_one_kv()
+     ]
+]
+
+fn to_container__take_one_kv(arg) new (@main.container__take_one_kv):value <= arg
+
+fn to_custom_container__take_one_kv(arg) custom__create(
+     arg
+     [obj
+          :core_take_one_kv = fn (container) custom__get_data(container).take_one_kv()
+     ]
+)
+
+let broken_container__take_one_kv = [obj
+     :value = [table]
+
+     :_ = [obj
+          :core_take_one_kv = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_container__take_one_kv(arg) new (@main.broken_container__take_one_kv):value <= arg
+
+fn to_broken_custom_container__take_one_kv(arg) custom__create(
+     arg
+     [obj
+          :core_take_one_kv = fn (_) heap_string()
+     ]
+)
+
+let error_container__take_one_kv = [obj
+     :value = [table]
+
+     :_ = [obj
+          :core_take_one_kv = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__take_one_kv(arg) new (@main.error_container__take_one_kv):value <= arg
+
+fn to_error_custom_container__take_one_kv(arg) custom__create(
+     arg
+     [obj
+          :core_take_one_kv = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__take_one_kv() {
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test([table].take_one_kv().null?())
+     test([table].init(10).take_one_kv().null?())
+     test([table string_0 = string_1].take_one_kv() === [box string_0, string_1])
+     test([table string_0 = string_1, string_2 = string_3, string_4 = string_5].take_one_kv().to_array().in?([array [array string_0, string_1], [array string_2, string_3], [array string_4, string_5]]))
+
+     let table            = rnd_string_table()
+     let [box key, value] = table.take_one_kv()
+     test(table[key] === value)
+
+     test([obj].take_one_kv().null?())
+     test([obj].init(10).take_one_kv().null?())
+     test([obj :_ = [obj :1 = string_1]].take_one_kv().null?())
+     test([obj :1 = string_1].take_one_kv() === [box :1, string_1])
+     test([obj :1 = string_1, :_ = [obj]].take_one_kv() === [box :1, string_1])
+     test([obj :1 = string_1, :3 = string_3, :5 = string_5].take_one_kv().to_array().in?([array [array :1, string_1], [array :3, string_3], [array :5, string_5]]))
+     test([obj :1 = string_1, :3 = string_3, :5 = string_5, :_ = [obj]].take_one_kv().to_array().in?([array [array :1, string_1], [array :3, string_3], [array :5, string_5]]))
+
+     let obj              = rnd_string_obj()
+     let [box key, value] = obj.take_one_kv()
+     test(obj[key] === value)
+
+     test([table].to_container__take_one_kv().take_one_kv().null?())
+     test([table 0 = 1].to_container__take_one_kv().take_one_kv() === [box 0, 1])
+
+     test([table].to_custom_container__take_one_kv().take_one_kv().null?())
+     test([table 0 = 1].to_custom_container__take_one_kv().take_one_kv() === [box 0, 1])
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.take_one_kv().get_error_id() === :1)
+
+     test(heap_string().take_one_kv().get_error_id() === :invalid_type)
+
+     test(to_broken_container__take_one_kv([table]).take_one_kv().get_error_id() === :invalid_type)
+     test(to_broken_custom_container__take_one_kv([table]).take_one_kv().get_error_id() === :invalid_type)
+     test(to_error_container__take_one_kv([table]).take_one_kv().get_error_id() === :3)
+     test(to_error_custom_container__take_one_kv([table]).take_one_kv().get_error_id() === :4)
+}

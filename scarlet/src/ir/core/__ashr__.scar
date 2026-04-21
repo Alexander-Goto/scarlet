@@ -1,0 +1,85 @@
+fn ir__core_fn___ashr__(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_first_in_chain) {
+     let [box exp, exp_data, ir, final_data, dependencies, src_gconsts] = if is_first_in_chain
+          num_chain_items_to_operands(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+
+     if is_first_in_chain && exp:scar_type == "t_operand"
+          [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+     else {
+          let [box left, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:left.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, "", final_data, dependencies, src_gconsts, false, false, false, false)
+          let [box right, exp_data, args_ir, final_data, dependencies, src_gconsts] =
+               exp:right.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, args_ir, final_data, dependencies, src_gconsts, false, false, false, false)
+
+          let code = new (left:code):text => _ ++ (" >>> " ++ right:code:text)
+
+          left.maybe_has_type!([set "int", "obj", "custom"])
+          right.maybe_has_type!([set "byte", "int"])
+
+          let right_comptime_val = right:comptime_val
+          let valid_int_range    = not right_comptime_val.null?() && right_comptime_val:value.to_int().in_range?(0, 65)
+
+          if not (valid_int_range || right_comptime_val.null?()) && left.has_type?("int")
+               error__out_of_bounds(exp:operator)
+          else null
+
+          if right_comptime_val.null?() || left:comptime_val:type =/= "int" {
+               if left:comptime_val:type === "obj" && left:comptime_val:value[:_][:core___ashr__].null?()
+                    error__invalid_type(left:code, ".core___ashr__", "obj")
+               else null
+
+               let left_possible_types = left:possible_types
+
+               let [box result_possible_types, maybe_chain, maybe_error] = if left_possible_types.null?()
+                    [box [set "int", "obj", "custom", "error"], true, true]
+               else if left_possible_types == [set "int"]
+                    [box if valid_int_range; [set "int"] else [set "int", "error"], true, not valid_int_range]
+               else {
+                    let new_left_possible_types = left_possible_types.filter(_.in?([array "int", "obj", "custom"]))
+
+                    if new_left_possible_types.empty?()
+                         error__invalid_type(left:code, [set "int", "obj", "custom"], left_possible_types)
+                    else null
+
+                    let new_left_possible_types = new_left_possible_types.append("error")
+                    [box new_left_possible_types, "int".in?(new_left_possible_types), true]
+               }
+
+               let need_chain = exp:left:scar_type /= "t_operand" && is_first_in_chain && maybe_chain
+
+               let [box not_chain_operand, exp_data, not_chain_ir, final_data, dependencies, src_gconsts] = if maybe_error || not need_chain
+                    ir__fn_call("McoreFN__ashr__", [array left, right], code, result_possible_types, exp_data, args_ir, final_data, dependencies, src_gconsts, is_last)
+               else [box null, exp_data, args_ir, final_data, dependencies, src_gconsts]
+
+               if not need_chain
+                    [box not_chain_operand, exp_data, ir ++ not_chain_ir, final_data, dependencies, src_gconsts]
+               else {
+                    let [box chain_predicate_ir, _, _, int_chain_ir] =
+                         num_chain_creation_prepare(exp, false, true, false, "", "tid__int")
+
+                    num_chain_create(
+                         chain_predicate_ir, "tid__int"
+                         "", int_chain_ir, ""
+                         [box false, true, false]
+                         result_possible_types, code, not_chain_ir, not_chain_operand:ir
+                         exp_data, ir, final_data, dependencies, src_gconsts, is_last
+                    )
+               }
+          } else {
+               right.maybe_has_type!([set "byte", "int"])
+
+               let operand = new (left) {
+                    :ir                 <= null
+                    :code               <= code
+                    :comptime_val:value => _ >>> right:comptime_val:value
+               }
+               let ir = ir ++ args_ir
+
+               if is_last {
+                    let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+                    [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+               } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+          }
+     }
+}

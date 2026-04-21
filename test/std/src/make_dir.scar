@@ -1,0 +1,17 @@
+`noinline`
+fn test__make_dir() {
+     test(make_dir(fs_path("__tmp_dir__")).null?())
+     test("__tmp_dir__D".in?(list_dir(current_dir())))
+
+     test(make_dir(fs_path("/root/1")) == :access)
+     let long_name = fs_path("/" ++ "a".repeat(16777214))
+     test(long_name.type() == "std.fs_path")
+     test(make_dir(long_name) == :long)
+     test(make_dir(fs_path("__tmp_dir__")) == :exists)
+     test(make_dir(fs_path("__tmp_dir__/1/2")) == :not_exist)
+
+     test(make_dir(expected_error(:1, heap_string(), heap_string())).get_error_id() == :1)
+     test(make_dir(heap_string()).get_error_id() == :invalid_type)
+
+     delete_empty_dir(fs_path("__tmp_dir__"))
+}

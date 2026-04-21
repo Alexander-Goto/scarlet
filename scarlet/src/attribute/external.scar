@@ -1,0 +1,4 @@
+let t_external_attr = [obj
+     :scar_type = "t_external_attr"
+     :code      = @main.t_token
+]

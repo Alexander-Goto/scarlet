@@ -1,0 +1,23 @@
+fn ir__breaker(item, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box item, final_data, dependencies] = item.has_ir!(final_data, dependencies)
+     let [box breaker_reg, exp_data]          = exp_data.new_reg()
+
+     let ir = ir ++ "t_any const " ++ breaker_reg ++ "=breaker__new(thrd_data," ++ item:ir ++ "," ++ exp_data:owner_name_ir_const ++ ");\n"
+
+     let type = if item.maybe_has_type?("error"); [set "breaker", "error"] else [set "breaker"]
+     let ir   = ir__assume_type(breaker_reg, type, ir)
+
+     let ir = if is_last
+          ir__raw_return(ir, breaker_reg)
+     else ir
+
+     [box
+          new (@main.t_operand) {
+               :code           <= code
+               :ir             <= breaker_reg
+               :possible_types <= type
+          }
+
+          exp_data, ir, final_data, dependencies, src_gconsts
+     ]
+}

@@ -1,0 +1,88 @@
+let num__reverse_bytes = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_reverse_bytes = fn (num) num:value.reverse_bytes().to_num__reverse_bytes()
+          :core___equal__     = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__reverse_bytes(arg) new (@main.num__reverse_bytes):value <= arg
+
+fn to_custom_num__reverse_bytes(arg) custom__create(
+     arg
+     [obj
+          :core_reverse_bytes = fn (num) num.custom__get_data().reverse_bytes().to_custom_num__reverse_bytes()
+          :core___equal__     = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__reverse_bytes = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_reverse_bytes = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__reverse_bytes(arg) new (@main.broken_num__reverse_bytes):value <= arg
+
+fn to_broken_custom_num__reverse_bytes(arg) custom__create(
+     arg
+     [obj
+          :core_reverse_bytes = fn (_) heap_string()
+     ]
+)
+
+let error_num__reverse_bytes = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_reverse_bytes = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__reverse_bytes(arg) new (@main.error_num__reverse_bytes):value <= arg
+
+fn to_error_custom_num__reverse_bytes(arg) custom__create(
+     arg
+     [obj
+          :core_reverse_bytes = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__reverse_bytes() {
+     test(0.reverse_bytes() === 0)
+     test(-1.reverse_bytes() === -1)
+     test(3.reverse_bytes() === 0x300'0000'0000'0000)
+     test(0xfedc'ba98'7654'3210.reverse_bytes() === 0x1032'5476'98ba'dcfe)
+     test(0x1032'5476'98ba'dcfe.reverse_bytes() === 0xfedc'ba98'7654'3210)
+
+     let int      = rnd()
+     let expected = loop([box 0, 0], fn (state) {
+          let [box result, step] = state
+
+          if step === 8
+               [breaker result]
+          else [box result | (int & (0xff << step * 8)) >> step * 8 << (7 - step) * 8, step + 1]
+     })
+     test(expected === int.reverse_bytes())
+
+     test(to_num__reverse_bytes(3).reverse_bytes() === 0x300'0000'0000'0000.to_num__reverse_bytes())
+     test(to_num__reverse_bytes(0xfedc'ba98'7654'3210).reverse_bytes() === 0x1032'5476'98ba'dcfe.to_num__reverse_bytes())
+     test(to_num__reverse_bytes(0x1032'5476'98ba'dcfe).reverse_bytes() === 0xfedc'ba98'7654'3210.to_num__reverse_bytes())
+
+     test(to_custom_num__reverse_bytes(3).reverse_bytes() === 0x300'0000'0000'0000.to_custom_num__reverse_bytes())
+     test(to_custom_num__reverse_bytes(0xfedc'ba98'7654'3210).reverse_bytes() === 0x1032'5476'98ba'dcfe.to_custom_num__reverse_bytes())
+     test(to_custom_num__reverse_bytes(0x1032'5476'98ba'dcfe).reverse_bytes() === 0xfedc'ba98'7654'3210.to_custom_num__reverse_bytes())
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.reverse_bytes().get_error_id() === :1)
+     test(heap_table().reverse_bytes().get_error_id() === :invalid_type)
+
+     test(to_broken_num__reverse_bytes(0).reverse_bytes().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__reverse_bytes(0).reverse_bytes().get_error_id() === :invalid_type)
+     test(to_error_num__reverse_bytes(0).reverse_bytes().get_error_id() === :3)
+     test(to_error_custom_num__reverse_bytes(0).reverse_bytes().get_error_id() === :4)
+}

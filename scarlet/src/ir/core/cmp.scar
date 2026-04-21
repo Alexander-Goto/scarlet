@@ -1,0 +1,56 @@
+fn ir__core_fn_cmp(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box arg_0, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+     let [box arg_1, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ arg_0:code:text ++ ", " ++ arg_1:code:text ++ ")")
+
+     if arg_0:comptime_val.null?() || arg_1:comptime_val.null?() || not arg_0:comptime_val:type.in?(@main.comptime_eq_types) {
+          let [box arg_0, final_data, dependencies] = arg_0.has_ir!(final_data, dependencies)
+          let [box arg_1, final_data, dependencies] = arg_1.has_ir!(final_data, dependencies)
+
+          let arg_0_ir = arg_0:ir
+          let arg_1_ir = arg_1:ir
+
+          if arg_0.has_type?("error") || arg_1.has_type?("error")
+               error__invalid_type((if arg_0.has_type?("error"); arg_0 else arg_1):code, "/error", "error")
+          else null
+
+          let maybe_error          = arg_0.maybe_has_type?("error") || arg_1.maybe_has_type?("error")
+          let arg_0_has_known_type = not arg_0:possible_types.null?() && arg_0:possible_types.len() == 1
+
+          if not (maybe_error || arg_0:possible_types.filter(_.in?(arg_1:possible_types.prepare_types_for_cmp())).any(true, _.in?(@main.eq_types))) {
+               let ir = dec_ref_cnt(arg_1, dec_ref_cnt(arg_0, ir))
+               [box new (comptime_token(:not_equal, code)):ir <= "tkn__not_equal", exp_data, if is_last; ir__raw_return(ir, "tkn__not_equal") else ir, final_data, dependencies, src_gconsts]
+          } else if not maybe_error && arg_0_has_known_type && arg_0:possible_types == arg_1:possible_types && arg_0:possible_types.take_one().in?(@main.simple_ord_types) {
+               let [box result_reg, exp_data] = exp_data.new_reg()
+
+               let type = arg_0:possible_types.take_one()
+               let ir   = ir ++ "t_any const " ++ result_reg ++ "=" ++
+                    if type == "byte"
+                         arg_0_ir ++ ".bytes[0]==" ++ arg_1_ir ++ ".bytes[0]?tkn__equal:(" ++ arg_0_ir ++ ".bytes[0]>" ++ arg_1_ir ++ ".bytes[0]?tkn__great:tkn__less);\n"
+                    else arg_0_ir ++ ".qwords[0]==" ++ arg_1_ir ++ ".qwords[0]?tkn__equal:((i64)" ++ arg_0_ir ++ ".qwords[0]>(i64)" ++ arg_1_ir ++ ".qwords[0]?tkn__great:tkn__less);\n"
+
+               let operand = new (@main.t_operand) {
+                    :code           <= code
+                    :ir             <= result_reg
+                    :possible_types <= [set "token"]
+               }
+
+               [box operand, exp_data, if is_last; ir__raw_return(ir, result_reg) else ir, final_data, dependencies, src_gconsts]
+          } else ir__fn_call("McoreFNcmp", [array arg_0, arg_1], code, if maybe_error; [set "token", "error"] else [set "token"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let token    = cmp(arg_0:comptime_val:value, arg_1:comptime_val:value)
+          let token_ir = switch token
+          case :equal:     "tkn__equal"
+          case :not_equal: "tkn__not_equal"
+          case :less:      "tkn__less"
+          case :great:     "tkn__great"
+          case :nan_cmp:   "tkn__nan_cmp"
+          default:         unreachable()
+
+          let operand = new (comptime_token(token, code)):ir <= token_ir
+          [box operand, exp_data, if is_last; ir__raw_return(ir, token_ir) else ir, final_data, dependencies, src_gconsts]
+     }
+}

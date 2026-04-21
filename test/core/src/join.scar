@@ -1,0 +1,292 @@
+let array__join = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_join      = fn (parts, separator) to_array__join(parts.map(_[:value]).join(separator:value))
+          :core___equal__ = fn (array_1, array_2) array_1:value === array_2:value
+     ]
+]
+
+fn to_array__join(arg) new (@main.array__join):value <= arg
+
+fn to_custom_array__join(arg) custom__create(
+     arg
+     [obj
+          :core_join      = fn (parts, separator) to_custom_array__join(parts.map(_.custom__get_data()).join(separator.custom__get_data()))
+          :core___equal__ = fn (array_1, array_2) array_1.custom__get_data() === array_2.custom__get_data()
+     ]
+)
+
+let broken_array__join = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_join = fn (_, _) _ ++ heap_table()
+     ]
+]
+
+fn to_broken_array__join(arg) new (@main.broken_array__join):value <= arg
+
+fn to_broken_custom_array__join(arg) custom__create(
+     arg
+     [obj
+          :core_join = fn (_, _) _ ++ heap_table()
+     ]
+)
+
+let error_array__join = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_join = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__join(arg) new (@main.error_array__join):value <= arg
+
+fn to_error_custom_array__join(arg) custom__create(
+     arg
+     [obj
+          :core_join = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__join() {
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     test([array].join("") === "")
+     test([array ""].join("") === "")
+     test([array ""].join("123") === "")
+     test([array "4"].join("123") === "4")
+     test([array "4", "56"].join("123") === "412356")
+     test([array "4", "56"].join("") === "456")
+     test([array "4", "56", "999"].join("123") === "412356123999")
+     test([array "4".scarlet__erase_info(), "56", "999"].join("123") === "412356123999")
+     test([array "0123", "4567", "89ab"].join("11") === "01231145671189ab")
+     test([array "0123", "4567", "89ab"].join("11") === "01231145671189ab")
+     test([array "0123", "4567", "89ab"].join("11") === "01231145671189ab")
+     test([array string_0].join("") === string_0)
+     test([array string_0].join(string_1) === string_0)
+     test([array string_0, string_2].join(string_1) === string_0 ++ string_1 ++ string_2)
+     test([array string_0, "123", "776", string_2, string_3].join(string_1) === string_0 ++ string_1 ++ "123" ++ string_1 ++ "776" ++ string_1 ++ string_2 ++ string_1 ++ string_3)
+     test([array string_0, "\000080", "776", string_2, string_3].join(string_1) === string_0 ++ string_1 ++ "\000080" ++ string_1 ++ "776" ++ string_1 ++ string_2 ++ string_1 ++ string_3)
+
+     let parts           = rnd_string_array()
+     let separator       = rnd_string()
+     let expected_string = parts.foldl1(fn (state, string) state ++ separator ++ string)
+     test(expected_string === parts.join(separator))
+
+     let array_0 = heap_byte_array()
+     let array_1 = heap_byte_array() ++ u"1"
+     let array_2 = heap_byte_array() ++ u"2"
+     let array_3 = heap_byte_array() ++ u"3"
+     test([array].join(u"") === u"")
+     test([array u""].join(u"") === u"")
+     test([array u""].join(u"123") === u"")
+     test([array u"4"].join(u"123") === u"4")
+     test([array u"4", u"56"].join(u"123") === u"412356")
+     test([array u"4", u"56"].join(u"") === u"456")
+     test([array u"4", u"56", u"999"].join(u"123") === u"412356123999")
+     test([array u"4".scarlet__erase_info(), u"56", u"999"].join(u"123") === u"412356123999")
+     test([array u"0123", u"4567", u"89ab"].join(u"11") === u"01231145671189ab")
+     test([array u"0123", u"4567", u"89ab"].join(u"11") === u"01231145671189ab")
+     test([array u"0123", u"4567", u"89ab"].join(u"11") === u"01231145671189ab")
+     test([array array_0].join(u"") === array_0)
+     test([array array_0].join(array_1) === array_0)
+     test([array array_0, array_2].join(array_1) === array_0 ++ array_1 ++ array_2)
+     test([array array_0, u"123", u"776", array_2, array_3].join(array_1) === array_0 ++ array_1 ++ u"123" ++ array_1 ++ u"776" ++ array_1 ++ array_2 ++ array_1 ++ array_3)
+
+     let parts          = rnd_byte_array_array()
+     let separator      = rnd_byte_array()
+     let expected_array = parts.foldl1(fn (state, array) state ++ separator ++ array)
+     test(expected_array === parts.join(separator))
+
+     let array_0 = rnd_string_array()
+     let array_1 = array_0 ++ [array "1"]
+     let array_2 = array_0 ++ [array "2"]
+     let array_3 = array_0 ++ [array "3"]
+     test([array].join([array].init(10)) === [array])
+     test([array [array].init(10)].join([array].init(10)) === [array])
+     test([array [array].init(10)].join([array 1, 2, 3]) === [array])
+     test([array [array 4]].join([array 1, 2, 3]) === [array 4])
+     test([array [array 4], [array 5, 6]].join([array 1, 2, 3]) === [array 4, 1, 2, 3, 5, 6])
+     test([array [array 4], [array 5, 6]].join([array].init(10)) === [array 4, 5, 6])
+     test([array [array 4], [array 5, 6], [array 9, 9, 9]].join([array 1, 2, 3]) === [array 4, 1, 2, 3, 5, 6, 1, 2, 3, 9, 9, 9])
+     test([array array_0].join([array].init(10)) === array_0)
+     test([array array_0].join(array_1) === array_0)
+     test([array array_0, array_2].join(array_1) === array_0 ++ array_1 ++ array_2)
+     test([array array_0, [array 1, 2, 3], [array 7, 7, 6], array_2, array_3].join(array_1) === array_0 ++ array_1 ++ [array 1, 2, 3] ++ array_1 ++ [array 7, 7, 6] ++ array_1 ++ array_2 ++ array_1 ++ array_3)
+
+     let parts          = rnd_string_array_array()
+     let separator      = rnd_string_array()
+     let expected_array = parts.foldl1(fn (state, array) state ++ separator ++ array)
+     test(expected_array === parts.join(separator))
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([set].join("") === "")
+     test([set ""].join("") === "")
+     test([set ""].join("123") === "")
+     test([set "4"].join("123") === "4")
+     test([set "4", "56"].join("123").in?([array "412356", "561234"]))
+     test([set "4", "56"].join("").in?([array "456", "564"]))
+     test([set string_0].join("") === string_0)
+     test([set string_0].join(string_1) === string_0)
+     test([set string_0, string_2].join(string_1).in?([array string_0 ++ string_1 ++ string_2, string_2 ++ string_1 ++ string_0]))
+
+     let array_0 = heap_byte_array()
+     let array_1 = heap_byte_array() ++ u"1"
+     let array_2 = heap_byte_array() ++ u"2"
+     test([set].join(u"") === u"")
+     test([set u""].join(u"") === u"")
+     test([set u""].join(u"123") === u"")
+     test([set u"4"].join(u"123") === u"4")
+     test([set u"4", u"56"].join(u"123").in?([array u"412356", u"561234"]))
+     test([set u"4", u"56"].join(u"").in?([array u"456", u"564"]))
+     test([set array_0].join(u"") === array_0)
+     test([set array_0].join(array_1) === array_0)
+     test([set array_0, array_2].join(array_1).in?([array array_0 ++ array_1 ++ array_2, array_2 ++ array_1 ++ array_0]))
+
+     let array_0 = rnd_string_array()
+     let array_1 = array_0 ++ [array "1"]
+     let array_2 = array_0 ++ [array "2"]
+     test([set].join([array].init(10)) === [array])
+     test([set [array].init(10)].join([array].init(10)) === [array])
+     test([set [array].init(10)].join([array 1, 2, 3]) === [array])
+     test([set [array 4]].join([array 1, 2, 3]) === [array 4])
+     test([set [array 4], [array 5, 6]].join([array 1, 2, 3]).in?([array [array 4, 1, 2, 3, 5, 6], [array 5, 6, 1, 2, 3, 4]]))
+     test([set [array 4], [array 5, 6]].join([array]).in?([array [array 4, 5, 6], [array 5, 6, 4]]))
+     test([set array_0].join([array].init(10)) === array_0)
+     test([set array_0].join(array_1) === array_0)
+     test([set array_0, array_2].join(array_1).in?([array array_0 ++ array_1 ++ array_2, array_2 ++ array_1 ++ array_0]))
+
+     let parts          = rnd_string_set()
+     let separator      = rnd_string()
+     let expected_array = parts.foldl1(fn (state, array) state ++ separator ++ array).sort(true)
+     test(expected_array === parts.join(separator).sort(true))
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([table].join("") === "")
+     test([table 1 = ""].join("") === "")
+     test([table 1 = ""].join("123") === "")
+     test([table 1 = "4"].join("123") === "4")
+     test([table 1 = "4", 2 = "56"].join("123").in?([array "412356", "561234"]))
+     test([table 1 = "4", 2 = "56"].join("").in?([array "456", "564"]))
+     test([table 1 = string_0].join("") === string_0)
+     test([table 1 = string_0].join(string_1) === string_0)
+     test([table 1 = string_0, 2 = string_2].join(string_1).in?([array string_0 ++ string_1 ++ string_2, string_2 ++ string_1 ++ string_0]))
+
+     let array_0 = heap_byte_array()
+     let array_1 = heap_byte_array() ++ u"1"
+     let array_2 = heap_byte_array() ++ u"2"
+     test([table].join(u"") === u"")
+     test([table 1 = u""].join(u"") === u"")
+     test([table 1 = u""].join(u"123") === u"")
+     test([table 1 = u"4"].join(u"123") === u"4")
+     test([table 1 = u"4", 2 = u"56"].join(u"123").in?([array u"412356", u"561234"]))
+     test([table 1 = u"4", 2 = u"56"].join(u"").in?([array u"456", u"564"]))
+     test([table 1 = array_0].join(u"") === array_0)
+     test([table 1 = array_0].join(array_1) === array_0)
+     test([table 1 = array_0, 2 = array_2].join(array_1).in?([array array_0 ++ array_1 ++ array_2, array_2 ++ array_1 ++ array_0]))
+
+     let array_0 = rnd_string_array()
+     let array_1 = array_0 ++ [array "1"]
+     let array_2 = array_0 ++ [array "2"]
+     test([table].join([array].init(10)) === [array])
+     test([table 1 = [array].init(10)].join([array].init(10)) === [array])
+     test([table 1 = [array].init(10)].join([array 1, 2, 3]) === [array])
+     test([table 1 = [array 4]].join([array 1, 2, 3]) === [array 4])
+     test([table 1 = [array 4], 2 = [array 5, 6]].join([array 1, 2, 3]).in?([array [array 4, 1, 2, 3, 5, 6], [array 5, 6, 1, 2, 3, 4]]))
+     test([table 1 = [array 4], 2 = [array 5, 6]].join([array]).in?([array [array 4, 5, 6], [array 5, 6, 4]]))
+     test([table 1 = array_0].join([array].init(10)) === array_0)
+     test([table 1 = array_0].join(array_1) === array_0)
+     test([table 1 = array_0, 2 = array_2].join(array_1).in?([array array_0 ++ array_1 ++ array_2, array_2 ++ array_1 ++ array_0]))
+
+     let parts          = rnd_string_table()
+     let separator      = rnd_string()
+     let expected_array = parts.foldl1(fn (state, array) state ++ separator ++ array).sort(true)
+     test(expected_array === parts.join(separator).sort(true))
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test([obj].join("") === "")
+     test([obj :1 = ""].join("") === "")
+     test([obj :1 = ""].join("123") === "")
+     test([obj :1 = "4"].join("123") === "4")
+     test([obj :1 = "4", :2 = "56"].join("123").in?([array "412356", "561234"]))
+     test([obj :1 = "4", :2 = "56"].join("").in?([array "456", "564"]))
+     test([obj :1 = string_0].join("") === string_0)
+     test([obj :1 = string_0].join(string_1) === string_0)
+     test([obj :1 = string_0, :2 = string_2].join(string_1).in?([array string_0 ++ string_1 ++ string_2, string_2 ++ string_1 ++ string_0]))
+
+     let array_0 = heap_byte_array()
+     let array_1 = heap_byte_array() ++ u"1"
+     let array_2 = heap_byte_array() ++ u"2"
+     test([obj].join(u"") === u"")
+     test([obj :1 = u""].join(u"") === u"")
+     test([obj :1 = u""].join(u"123") === u"")
+     test([obj :1 = u"4"].join(u"123") === u"4")
+     test([obj :1 = u"4", :2 = u"56"].join(u"123").in?([array u"412356", u"561234"]))
+     test([obj :1 = u"4", :2 = u"56"].join(u"").in?([array u"456", u"564"]))
+     test([obj :1 = array_0].join(u"") === array_0)
+     test([obj :1 = array_0].join(array_1) === array_0)
+     test([obj :1 = array_0, :2 = array_2].join(array_1).in?([array array_0 ++ array_1 ++ array_2, array_2 ++ array_1 ++ array_0]))
+
+     let array_0 = rnd_string_array()
+     let array_1 = array_0 ++ [array "1"]
+     let array_2 = array_0 ++ [array "2"]
+     test([obj].join([array].init(10)) === [array])
+     test([obj :1 = [array].init(10)].join([array].init(10)) === [array])
+     test([obj :1 = [array].init(10)].join([array 1, 2, 3]) === [array])
+     test([obj :1 = [array 4]].join([array 1, 2, 3]) === [array 4])
+     test([obj :1 = [array 4], :2 = [array 5, 6]].join([array 1, 2, 3]).in?([array [array 4, 1, 2, 3, 5, 6], [array 5, 6, 1, 2, 3, 4]]))
+     test([obj :1 = [array 4], :2 = [array 5, 6]].join([array]).in?([array [array 4, 5, 6], [array 5, 6, 4]]))
+     test([obj :1 = array_0].join([array].init(10)) === array_0)
+     test([obj :1 = array_0].join(array_1) === array_0)
+     test([obj :1 = array_0, :2 = array_2].join(array_1).in?([array array_0 ++ array_1 ++ array_2, array_2 ++ array_1 ++ array_0]))
+
+     test([obj :_ = [obj]].join([array].init(10)) === [array])
+     test([obj :_ = [obj], :1 = [array].init(10)].join([array].init(10)) === [array])
+     test([obj :_ = [obj], :1 = [array].init(10)].join([array 1, 2, 3]) === [array])
+     test([obj :_ = [obj], :1 = [array 4]].join([array 1, 2, 3]) === [array 4])
+     test([obj :_ = [obj], :1 = [array 4], :2 = [array 5, 6]].join([array 1, 2, 3]).in?([array [array 4, 1, 2, 3, 5, 6], [array 5, 6, 1, 2, 3, 4]]))
+     test([obj :_ = [obj], :1 = [array 4], :2 = [array 5, 6]].join([array]).in?([array [array 4, 5, 6], [array 5, 6, 4]]))
+     test([obj :_ = [obj], :1 = array_0].join([array].init(10)) === array_0)
+     test([obj :_ = [obj], :1 = array_0].join(array_1) === array_0)
+     test([obj :_ = [obj], :1 = array_0, :2 = array_2].join(array_1).in?([array array_0 ++ array_1 ++ array_2, array_2 ++ array_1 ++ array_0]))
+
+     let parts          = rnd_string_obj()
+     let separator      = rnd_string()
+     let expected_array = parts.foldl1(fn (state, array) state ++ separator ++ array).sort(true)
+     test(expected_array === parts.join(separator).sort(true))
+
+     test([array "2".to_array__join(), "1".to_array__join()].join("3".to_array__join()) === "231".to_array__join())
+     test([array "2".to_custom_array__join(), "1".to_custom_array__join()].join("3".to_custom_array__join()) === "231".to_custom_array__join())
+
+     test(heap_string().join(heap_string()).get_error_id() === :invalid_type)
+     test([array u""].join(heap_string()).get_error_id() === :invalid_type)
+     test([array 'a'].join(heap_string()).get_error_id() === :invalid_type)
+     test([array "1", heap_string(), 0].join(heap_string()).get_error_id() === :invalid_type)
+     test((_ ++ heap_string()).scarlet__erase_info().join(heap_string()).get_error_id() === :invalid_type)
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.join(heap_string()).get_error_id() === :1)
+     test([array].init(10).join(error_1).get_error_id() === :1)
+     test(error_1.join(error_2).get_error_id() === :1)
+     test(error_2.join(error_1).get_error_id() === :2)
+     test(error_1.join(heap_table()).get_error_id() === :1)
+     test(heap_string().join(error_1).get_error_id() === :1)
+
+     test([array].init(10).join(to_broken_array__join("")).get_error_id() === :invalid_type)
+     test([array].init(10).join(to_broken_custom_array__join("")).get_error_id() === :invalid_type)
+     test([array].init(10).join(to_error_array__join("")).get_error_id() === :3)
+     test([array].init(10).join(to_error_custom_array__join("")).get_error_id() === :4)
+}

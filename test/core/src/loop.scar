@@ -1,0 +1,25 @@
+`noinline`
+fn test__loop() {
+     let string_0 = heap_string()
+     let string_2 = string_0 ++ "2"
+     test(loop(0, fn (_) [breaker 2]) === 2)
+     test(loop(string_0, fn (_) [breaker string_2]) === string_2)
+     test(loop(string_0, fn (state) break(state === string_2, string_2)) === string_2)
+     let array = rnd_string_array()
+     test(loop([box 0, 0], fn (state) {
+          let [box idx, sum] = state
+
+          let sum = sum + array[idx].len()
+          let idx = idx + 1
+          break(idx === len(array), [box idx, sum])
+     })[1] === array.foldl(0, fn (sum, string) sum + string.len()))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(loop(error_1, _ ++ heap_string()).get_error_id() === :1)
+     test(loop(heap_string(), error_1).get_error_id() === :1)
+     test(loop(error_1, error_2).get_error_id() === :1)
+     test(loop(error_2, error_1).get_error_id() === :2)
+
+     test(loop(heap_string(), heap_string()).get_error_id() === :invalid_type)
+}

@@ -1,0 +1,50 @@
+fn ir__core_fn_append_new(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box set, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+     let [box new_item, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ set:code:text ++ ", " ++ new_item:code:text ++ ")")
+
+     let valid_types = [set "set", "obj", "custom"]
+     set.maybe_has_type!(valid_types)
+     new_item.maybe_has_type!(
+          if set.has_type?("set")
+               @main.all_hash_map_key_types
+          else @main.common_types
+     )
+
+     if set:comptime_val.null?() || new_item:comptime_val.null?() ||
+          set:comptime_val:type == "obj" || not (set:comptime_val:type == "set" && new_item:comptime_val:type.in?(@main.always_hash_map_key_types))
+     {
+          if set:comptime_val:type === "obj" && set:comptime_val:value[:_][:core_append_new].null?()
+               error__invalid_type(set:code, ".core_append_new", "obj")
+          else null
+
+          let result_possible_types = if set:possible_types.null?()
+               valid_types.append("null").append("error")
+          else if set.has_type?("set") && new_item.has_type?(@main.always_hash_map_key_types)
+               [set "set", "null"]
+          else set:possible_types.filter(_.in?(valid_types)).append("null").append("error")
+
+          ir__fn_call("McoreFNappend_new", [array set, new_item], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let [box result, value] = new (set):comptime_val:value <<= :holder
+          let value               = value.append_new(new_item:comptime_val)
+          if value.null?()
+               error__already_exists(new_item:code, "set item")
+          else null
+
+          let result = new (result) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:value <= value
+          }
+
+          if is_last {
+               let [box result, final_data, dependencies] = result.has_ir!(final_data, dependencies)
+
+               [box result, exp_data, ir__raw_return(ir, result:ir), final_data, dependencies, src_gconsts]
+          } else [box result, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

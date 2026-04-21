@@ -1,0 +1,7 @@
+fn ir__make_hash_table_metadata(len, chunks_len, chunk_size) {
+     let metadata = format_int(len | qty_trailing_0_bits(chunks_len) << 40 | chunk_size - 1 << 45, 16, false)
+     let metadata = "0".repeat(14 - metadata.len()) ++ metadata
+
+     "0x" ++ metadata[12, 14] ++ ",0x" ++ metadata[10, 12] ++ ",0x" ++ metadata[8, 10] ++ ",0x" ++ metadata[6, 8] ++
+     ",0x" ++ metadata[4, 6] ++ ",0x" ++ metadata[2, 4] ++ ",0x" ++ metadata[0, 2]
+}

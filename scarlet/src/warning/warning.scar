@@ -1,0 +1,5 @@
+`cold`
+fn warning__constant_not_used(name) println("Warning: " ++ msg__make(name, "The constant \"" ++ name:text ++ "\" was declared but not used."))
+
+`cold`
+fn warning__fn_or_gconst_not_used(name, owner) println("Warning: The \"" ++ name ++ "\" " ++ owner ++ " should have been used in the application, but it wasn't.")

@@ -1,0 +1,5 @@
+`noinline`
+fn test__ok!() {
+     test(true.ok!())
+     test(heap_string().ok!() === heap_string())
+}

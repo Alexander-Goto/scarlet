@@ -1,0 +1,18 @@
+fn comptime_box(items, code) if items.empty?()
+     new (@main.t_operand) {
+          :code           <= code
+          :ir             <= "empty_box"
+          :possible_types <= [set "box"]
+          :comptime_val   <= new (@main.t_comptime_val) {
+               :type  <= "box"
+               :value <= [array]
+          }
+     }
+else new (@main.t_operand) {
+     :code           <= code
+     :possible_types <= [set "box"]
+     :comptime_val   <= new (@main.t_comptime_val) {
+          :type  <= "box"
+          :value <= items.map(_:comptime_val)
+     }
+}

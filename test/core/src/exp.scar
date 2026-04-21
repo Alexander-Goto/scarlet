@@ -1,0 +1,83 @@
+let num__exp = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_exp       = fn (num) to_num__exp(num:value.exp())
+          :core___equal__ = fn (num_1, num_2) num_1:value === num_2:value
+     ]
+]
+
+fn to_num__exp(arg) new (@main.num__exp):value <= arg
+
+fn to_custom_num__exp(arg) custom__create(
+     arg
+     [obj
+          :core_exp       = fn (num) to_custom_num__exp(num.custom__get_data().exp())
+          :core___equal__ = fn (num_1, num_2) num_1.custom__get_data() === num_2.custom__get_data()
+     ]
+)
+
+let broken_num__exp = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_exp = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_num__exp(arg) new (@main.broken_num__exp):value <= arg
+
+fn to_broken_custom_num__exp(arg) custom__create(
+     arg
+     [obj
+          :core_exp = fn (_) heap_string()
+     ]
+)
+
+let error_num__exp = [obj
+     :value = 0.0
+
+     :_ = [obj
+          :core_exp = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_num__exp(arg) new (@main.error_num__exp):value <= arg
+
+fn to_error_custom_num__exp(arg) custom__create(
+     arg
+     [obj
+          :core_exp = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__exp() {
+     test(0.0.exp().in_range?(0.99, 1.01))
+     test(-0.0.exp().in_range?(0.99, 1.01))
+     test(0.1.exp().in_range?(1.1, 1.11))
+     test(-0.1.exp().in_range?(0.90, 0.91))
+     test(1.0.exp().in_range?(2.71, 2.72))
+     test(-1.0.exp().in_range?(0.36, 0.37))
+     test(1.3.exp().in_range?(3.66, 3.67))
+     test(-1.3.exp().in_range?(0.27, 0.28))
+     test(inf().exp().inf?())
+     test(neg_inf().exp().scarlet__split!!!()[0] === 0.0.scarlet__split!!!()[0])
+     test(nan().exp().nan?())
+
+     test(to_num__exp(0.0).exp():value.in_range?(0.99, 1.01))
+     test(to_num__exp(-1.0).exp():value.in_range?(0.36, 0.37))
+
+     test(to_custom_num__exp(0.0).exp().custom__get_data().in_range?(0.99, 1.01))
+     test(to_custom_num__exp(-1.0).exp().custom__get_data().in_range?(0.36, 0.37))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     let string  = heap_string()
+     test(error.exp().get_error_id() === :1)
+     test(string.exp().get_error_id() === :invalid_type)
+
+     test(to_broken_num__exp(1.0).exp().get_error_id() === :invalid_type)
+     test(to_broken_custom_num__exp(1.0).exp().get_error_id() === :invalid_type)
+     test(to_error_num__exp(1.0).exp().get_error_id() === :3)
+     test(to_error_custom_num__exp(1.0).exp().get_error_id() === :4)
+}

@@ -1,0 +1,705 @@
+fn num_chain_items_to_operands(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     switch exp:scar_type
+     case "t_add", "t_and", "t_mul", "t_or", "t_sub", "t_xor": {
+          let [box left, exp_data, ir, final_data, dependencies, src_gconsts] =
+               num_chain_items_to_operands(exp:left, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+          let [box right, exp_data, ir, final_data, dependencies, src_gconsts] =
+               num_chain_items_to_operands(exp:right, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+
+          let exp = new (exp) {
+               :left  <= left
+               :right <= right
+          }
+
+          if left:comptime_val.null?() || right:comptime_val.null?()
+               [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+          else exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, false)
+     }
+     case "t_ashr", "t_div", "t_lshr", "t_mod", "t_shl": {
+          let [box left, exp_data, ir, final_data, dependencies, src_gconsts] =
+               num_chain_items_to_operands(exp:left, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+          let [box right, exp_data, ir, final_data, dependencies, src_gconsts] =
+               exp:right.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+          let exp = new (exp) {
+               :left  <= left
+               :right <= right
+          }
+
+          if left:comptime_val.null?() || right:comptime_val.null?()
+               [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+          else exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, false)
+     }
+     case "t_nested_exp": {
+          let [box nested_exp, exp_data, ir, final_data, dependencies, src_gconsts] =
+               num_chain_items_to_operands(exp:exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+
+          let exp = new (exp):exp <= nested_exp
+
+          if nested_exp:comptime_val.null?()
+               [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+          else exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, false)
+     }
+     case "t_fn_call":
+          switch final_data.get_fn(exp:name):ir_name
+          case "McoreFNabs", "McoreFNacos", "McoreFNasin", "McoreFNatan", "McoreFNceil", "McoreFNcos", "McoreFNexp", "McoreFNexp2", "McoreFNfloor", "McoreFNlog"
+                    "McoreFNlog2", "McoreFNlog10", "McoreFNmax_val", "McoreFNmin_val", "McoreFNneg", "McoreFNneg_bits", "McoreFNreverse_bits", "McoreFNreverse_bytes"
+                    "McoreFNround", "McoreFNsin", "McoreFNsqr", "McoreFNtan", "McoreFNtrunc": {
+               let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    num_chain_items_to_operands(exp:args.first(), last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+
+               let exp = new (exp):args[0] <= arg
+
+               if arg:comptime_val.null?()
+                    [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+               else exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, false)
+          }
+          case "McoreFNmax", "McoreFNmin": {
+               let [box arg_0, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+               let [box arg_1, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+               let exp = new (exp) {
+                    :args[0] <= arg_0
+                    :args[1] <= arg_1
+               }
+
+               if arg_0:comptime_val.null?() || arg_1:comptime_val.null?()
+                    [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+               else exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, false)
+          }
+          case "McoreFNpower": {
+               let [box arg_0, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    num_chain_items_to_operands(exp:args.first(), last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+               let [box arg_1, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    num_chain_items_to_operands(exp:args[1], last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+
+               let exp = new (exp) {
+                    :args[0] <= arg_0
+                    :args[1] <= arg_1
+               }
+
+               if arg_0:comptime_val.null?() || arg_1:comptime_val.null?()
+                    [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+               else exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, false)
+          }
+          case "McoreFNrotate_left", "McoreFNrotate_right": {
+               let [box arg_0, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    num_chain_items_to_operands(exp:args.first(), last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false)
+               let [box arg_1, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+               let exp = new (exp) {
+                    :args[0] <= arg_0
+                    :args[1] <= arg_1
+               }
+
+               if arg_0:comptime_val.null?() || arg_1:comptime_val.null?()
+                    [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+               else exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, false)
+          }
+          case "McoreFNsqrt": {
+               let [box arg, exp_data, ir, final_data, dependencies, src_gconsts] =
+                    exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+               let exp = new (exp):args[0] <= arg
+
+               if arg:comptime_val.null?()
+                    [box exp, exp_data, ir, final_data, dependencies, src_gconsts]
+               else exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, false)
+          }
+          default:
+               exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, true)
+     default:
+          exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, false, false, true)
+
+fn num_chain_creation_prepare(exp, maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir) {
+     let exp_type = exp:scar_type
+
+     switch exp_type
+     case "t_add", "t_mul", "t_sub": {
+          let [box chain_predicate_ir, chain_type_ir, left_byte_chain_ir, left_int_chain_ir, left_float_chain_ir] =
+               num_chain_creation_prepare(exp:left, maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+          let [box chain_predicate_ir, chain_type_ir, right_byte_chain_ir, right_int_chain_ir, right_float_chain_ir] =
+               num_chain_creation_prepare(exp:right, maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+
+          let ir_operator = switch exp_type
+          case "t_add": "+"
+          case "t_mul": "*"
+          case "t_sub": "-"
+          default:
+               unreachable()
+
+          let byte_chain_ir  = if maybe_byte; left_byte_chain_ir ++ ir_operator ++ right_byte_chain_ir else ""
+          let int_chain_ir   = if maybe_int; left_int_chain_ir ++ ir_operator ++ right_int_chain_ir else ""
+          let float_chain_ir = if maybe_float; left_float_chain_ir ++ ir_operator ++ right_float_chain_ir else ""
+
+          [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir]
+     }
+     case "t_and", "t_or", "t_xor": {
+          let [box chain_predicate_ir, chain_type_ir, left_byte_chain_ir, left_int_chain_ir] =
+               num_chain_creation_prepare(exp:left, maybe_byte, maybe_int, false, chain_predicate_ir, chain_type_ir)
+          let [box chain_predicate_ir, chain_type_ir, right_byte_chain_ir, right_int_chain_ir] =
+               num_chain_creation_prepare(exp:right, maybe_byte, maybe_int, false, chain_predicate_ir, chain_type_ir)
+
+          let ir_operator = switch exp_type
+          case "t_and": "&"
+          case "t_or":  "|"
+          case "t_xor": "^"
+          default:
+               unreachable()
+
+          let byte_chain_ir = if maybe_byte; left_byte_chain_ir ++ ir_operator ++ right_byte_chain_ir else ""
+          let int_chain_ir  = if maybe_int; left_int_chain_ir ++ ir_operator ++ right_int_chain_ir else ""
+
+          [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, ""]
+     }
+     case "t_ashr": {
+          let [box chain_predicate_ir, _, _, left_int_chain_ir] =
+               num_chain_creation_prepare(exp:left, false, true, false, chain_predicate_ir, "tid__int")
+          let right    = exp:right
+          let right_ir = right:ir
+
+          let new_predicate = if right.has_type?([set "byte", "int", "error"])
+               if "error".in?(right:possible_types)
+                    right_ir ++ ".bytes[15]!=tid__error&&" ++ right_ir ++ ".qwords[0]<65"
+               else if right:comptime_val.null?()
+                    right_ir ++ ".qwords[0]<65"
+               else ""
+          else "(" ++ right_ir ++ ".bytes[15]==tid__int||" ++ right_ir ++ ".bytes[15]==tid__byte)&&" ++ right_ir ++ ".qwords[0]<65"
+
+          let chain_predicate_ir = if chain_predicate_ir.empty?()
+               new_predicate
+          else if new_predicate.empty?()
+               chain_predicate_ir
+          else chain_predicate_ir ++ "&&" ++ new_predicate
+
+          let int_chain_ir = "int__chain_ashr(" ++ left_int_chain_ir ++ "," ++
+               if right:comptime_val.null?(); right_ir ++ ".qwords[0])" else right:comptime_val:value.to_int().to_ir_num() ++ ")"
+
+          [box chain_predicate_ir, "tid__int", "", int_chain_ir, ""]
+     }
+     case "t_div", "t_mod": {
+          let [box chain_predicate_ir, chain_type_ir, left_byte_chain_ir, left_int_chain_ir, left_float_chain_ir] =
+               num_chain_creation_prepare(exp:left, maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+          let right                = exp:right
+          let right_ir             = right:ir
+          let right_possible_types = right:possible_types
+
+          let new_predicate = if maybe_float && not (maybe_byte || maybe_int)
+               ""
+          else if not maybe_float
+               if right:comptime_val.null?()
+                    right_ir ++ ".qwords[0]!=0"
+               else ""
+          else "(" ++ right_ir ++ ".bytes[15]==tid__float||" ++ right_ir ++ ".qwords[0]!=0)"
+
+          let chain_predicate_ir = if chain_predicate_ir.empty?()
+               new_predicate
+          else if new_predicate.empty?()
+               chain_predicate_ir
+          else chain_predicate_ir ++ "&&" ++ new_predicate
+
+          let [box chain_predicate_ir, chain_type_ir] = if right_possible_types.null?() || right_possible_types.len() /= 1
+               [box (if chain_predicate_ir.empty?(); "" else chain_predicate_ir ++ "&&") ++ right_ir ++ ".bytes[15]==" ++ chain_type_ir, chain_type_ir]
+          else [box chain_predicate_ir, chain_type_ir]
+
+          let [box ir_operator, int_fn_name] = if exp_type[2] == 'd'; [box "/", "int__chain_div("] else [box "%", "int__chain_mod("]
+
+          let byte_chain_ir = if maybe_byte
+               left_byte_chain_ir ++ ir_operator ++
+               if right:comptime_val:type === "byte"
+                    "(u8)0x" ++ right:comptime_val:value.to_string()
+               else right_ir ++ ".bytes[0]"
+          else ""
+          let int_chain_ir = if maybe_int
+               int_fn_name ++ left_int_chain_ir ++ "," ++
+               if right:comptime_val:type === "int"
+                    "(u64)" ++ right:comptime_val:value.to_ir_num() ++ ")"
+               else right_ir ++ ".qwords[0])"
+          else ""
+          let float_chain_ir = if maybe_float
+               left_float_chain_ir ++ ir_operator ++
+               if right:comptime_val:type === "float"
+                    "cast_u64_to_double(" ++ right:comptime_val:value.scarlet__split!!!()[0].to_ir_num() ++ ")"
+               else right_ir ++ ".floats[0]"
+          else ""
+
+          [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir]
+     }
+     case "t_lshr", "t_shl": {
+          let [box chain_predicate_ir, chain_type_ir, left_byte_chain_ir, left_int_chain_ir] =
+               num_chain_creation_prepare(exp:left, maybe_byte, maybe_int, false, chain_predicate_ir, chain_type_ir)
+          let right    = exp:right
+          let right_ir = right:ir
+
+          let new_predicate = if right.has_type?([set "byte", "int", "error"])
+               if "error".in?(right:possible_types)
+                    right_ir ++ ".bytes[15]!=tid__error"
+               else ""
+          else "(" ++ right_ir ++ ".bytes[15]==tid__int||" ++ right_ir ++ ".bytes[15]==tid__byte)"
+
+          let chain_predicate_ir = if chain_predicate_ir.empty?()
+               new_predicate
+          else if new_predicate.empty?()
+               chain_predicate_ir
+          else chain_predicate_ir ++ "&&" ++ new_predicate
+
+          let shifts = right:comptime_val:value
+          let shifts = if shifts.null?(); 65 else shifts.to_int()
+
+          let new_predicate = if shifts < 9 || maybe_int && not maybe_byte && shifts < 65
+               ""
+          else {
+               let int_predicate = if maybe_int
+                    (if chain_type_ir == "tid__int"; "" else chain_type_ir ++ "==tid__int&&") ++
+                    right_ir ++ ".qwords[0]<65"
+               else ""
+
+               let byte_predicate = if maybe_byte
+                    (if chain_type_ir == "tid__byte"; "" else chain_type_ir ++ "==tid__byte&&") ++
+                    right_ir ++ ".qwords[0]<9"
+               else ""
+
+               if maybe_int && maybe_byte
+                    "(" ++ int_predicate ++ "||" ++ byte_predicate ++ ")"
+               else int_predicate ++ byte_predicate
+          }
+
+          let chain_predicate_ir = if chain_predicate_ir.empty?()
+               new_predicate
+          else if new_predicate.empty?()
+               chain_predicate_ir
+          else chain_predicate_ir ++ "&&" ++ new_predicate
+
+          let fn_suffix             = exp_type.drop(2) ++ "("
+          let right_ir_comptime_val = if right:comptime_val.null?(); "" else shifts.to_string()
+
+          let byte_chain_ir = if maybe_byte
+               "byte__chain_" ++ fn_suffix ++ left_byte_chain_ir ++ "," ++ (if right_ir_comptime_val.empty?(); right_ir ++ ".bytes[0])" else right_ir_comptime_val ++ ")")
+          else ""
+          let int_chain_ir = if maybe_int
+               "int__chain_" ++ fn_suffix ++ left_int_chain_ir ++ "," ++ (if right_ir_comptime_val.empty?(); right_ir ++ ".qwords[0])" else right_ir_comptime_val ++ ")")
+          else ""
+
+          [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, ""]
+     }
+     case "t_nested_exp": {
+          let [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir] =
+               num_chain_creation_prepare(exp:exp, maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+
+          [box
+               chain_predicate_ir, chain_type_ir
+               if maybe_byte; "(" ++ byte_chain_ir ++ ")" else ""
+               if maybe_int; "(" ++ int_chain_ir ++ ")" else ""
+               if maybe_float; "(" ++ float_chain_ir ++ ")" else ""
+          ]
+     }
+     case "t_fn_call": {
+          let fn_name = exp:name:text
+          let fn_name = if fn_name.first() == '@'; fn_name.drop(6) else fn_name
+          switch fn_name
+          case "abs": {
+               let [box chain_predicate_ir, chain_type_ir, _, int_chain_ir, float_chain_ir] =
+                    num_chain_creation_prepare(exp:args.first(), false, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+
+               let int_chain_ir   = if maybe_int; "int__chain_abs(" ++ int_chain_ir ++ ")" else ""
+               let float_chain_ir = if maybe_float; "__builtin_fabs(" ++ float_chain_ir ++ ")" else ""
+
+               [box chain_predicate_ir, chain_type_ir, "", int_chain_ir, float_chain_ir]
+          }
+          case "acos", "asin", "atan", "ceil", "cos", "exp", "floor", "log", "log2", "log10", "round", "sin", "tan", "trunc": {
+               let [box chain_predicate_ir, _, _, _, float_chain_ir] =
+                    num_chain_creation_prepare(exp:args.first(), false, false, maybe_float, chain_predicate_ir, "tid__float")
+
+               let float_chain_ir = if maybe_float; "__builtin_" ++ fn_name ++ "(" ++ float_chain_ir ++ ")" else ""
+
+               [box chain_predicate_ir, "tid__float", "", "", float_chain_ir]
+          }
+          case "exp2": {
+               let [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir] =
+                    num_chain_creation_prepare(exp:args.first(), maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+
+               let byte_chain_ir  = if maybe_byte; "byte__chain_exp2(" ++ byte_chain_ir ++ ")" else ""
+               let int_chain_ir   = if maybe_int; "int__chain_exp2(" ++ int_chain_ir ++ ")" else ""
+               let float_chain_ir = if maybe_float; "__builtin_exp2(" ++ float_chain_ir ++ ")" else ""
+
+               [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir]
+          }
+          case "max", "min": {
+               let arg_0 = exp:args.first()
+               let arg_1 = exp:args[1]
+
+               let [box chain_predicate_ir, chain_type_ir, arg_0_byte_ir, arg_0_int_ir, arg_0_float_ir] =
+                    num_chain_creation_prepare(arg_0, maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+               let [box chain_predicate_ir, chain_type_ir, arg_1_byte_ir, arg_1_int_ir, arg_1_float_ir] =
+                    num_chain_creation_prepare(arg_1, maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+
+               let new_predicate = if not maybe_float
+                    ""
+               else {
+                    let arg_0_is_not_nan = if arg_0:comptime_val.null?()
+                         "!__builtin_isnan(" ++ arg_0_float_ir ++ ".floats[0])"
+                    else ""
+                    let arg_1_is_not_nan = if arg_1:comptime_val.null?()
+                         "!__builtin_isnan(" ++ arg_0_float_ir ++ ".floats[0])"
+                    else ""
+
+                    let args_is_not_nan = if arg_0_is_not_nan.empty?()
+                         arg_1_is_not_nan
+                    else if arg_1_is_not_nan.empty?()
+                         arg_0_is_not_nan
+                    else arg_0_is_not_nan ++ "&&" ++ arg_1_is_not_nan
+
+                    if arg_0:comptime_val.null?() && maybe_byte || maybe_int
+                         "(" ++ arg_0:ir ++ ".bytes[15]!=tid__float||" ++ args_is_not_nan ++ ")"
+                    else args_is_not_nan
+               }
+
+               let chain_predicate_ir = if chain_predicate_ir.empty?()
+                    new_predicate
+               else if new_predicate.empty?()
+                    chain_predicate_ir
+               else chain_predicate_ir ++ "&&" ++ new_predicate
+
+               let byte_chain_ir = if maybe_byte
+                    "byte__chain_" ++ fn_name ++ "(" ++ arg_0_byte_ir ++ "," ++ arg_1_byte_ir ++ ")"
+               else ""
+               let int_chain_ir = if maybe_int
+                    "int__chain_" ++ fn_name ++ "(" ++ arg_0_int_ir ++ "," ++ arg_1_int_ir ++ ")"
+               else ""
+               let float_chain_ir = if maybe_float
+                    "float__chain_" ++ fn_name ++ "(" ++ arg_0_float_ir ++ "," ++ arg_1_float_ir ++ ")"
+               else ""
+
+               [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir]
+          }
+          case "max_val", "min_val": {
+               let [box chain_predicate_ir, chain_type_ir, _, _, _] =
+                    num_chain_creation_prepare(exp:args.first(), maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+
+               let [box byte_chain_ir, int_chain_ir, float_chain_ir] = if fn_name == "max_val"
+                    [box
+                         if maybe_byte; "(u8)255" else ""
+                         if maybe_int; "(u64)9223372036854775807ull" else ""
+                         if maybe_float; "__builtin_inf()" else ""
+                    ]
+               else [box
+                    if maybe_byte; "(u8)0" else ""
+                    if maybe_int; "(u64)-9223372036854775808ll" else ""
+                    if maybe_float; "(-__builtin_inf())" else ""
+               ]
+
+               [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir]
+          }
+          case "neg": {
+               let [box chain_predicate_ir, chain_type_ir, _, int_chain_ir, float_chain_ir] =
+                    num_chain_creation_prepare(exp:args.first(), false, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+
+               let int_chain_ir   = if maybe_int; "(0-(" ++ int_chain_ir ++ "))" else ""
+               let float_chain_ir = if maybe_float; "(0.0-(" ++ float_chain_ir ++ "))" else ""
+
+               [box chain_predicate_ir, chain_type_ir, "", int_chain_ir, float_chain_ir]
+          }
+          case "neg_bits": {
+               let [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir] =
+                    num_chain_creation_prepare(exp:args.first(), maybe_byte, maybe_int, false, chain_predicate_ir, chain_type_ir)
+
+               let byte_chain_ir = if maybe_byte; "((" ++ byte_chain_ir ++ ")^(u8)255)" else ""
+               let int_chain_ir  = if maybe_int; "((" ++ int_chain_ir ++ ")^(u64)-1)" else ""
+
+               [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, ""]
+          }
+          case "power": {
+               let [box chain_predicate_ir, chain_type_ir, arg_0_byte_chain_ir, arg_0_int_chain_ir, arg_0_float_chain_ir] =
+                    num_chain_creation_prepare(exp:args.first(), maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+               let [box chain_predicate_ir, chain_type_ir, arg_1_byte_chain_ir, arg_1_int_chain_ir, arg_1_float_chain_ir] =
+                    num_chain_creation_prepare(exp:args[1], maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+
+               let byte_chain_ir  = if maybe_byte; "byte__chain_power(" ++ arg_0_byte_chain_ir ++ "," ++ arg_1_byte_chain_ir ++ ")" else ""
+               let int_chain_ir   = if maybe_int; "int__chain_power(" ++ arg_0_int_chain_ir ++ "," ++ arg_1_int_chain_ir ++ ")" else ""
+               let float_chain_ir = if maybe_float; "__builtin_pow(" ++ arg_0_float_chain_ir ++ "," ++ arg_1_float_chain_ir ++ ")" else ""
+
+               [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir]
+          }
+          case "reverse_bits": {
+               let [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir] =
+                    num_chain_creation_prepare(exp:args.first(), maybe_byte, maybe_int, false, chain_predicate_ir, chain_type_ir)
+
+               let byte_chain_ir = if maybe_byte; "__builtin_bitreverse8(" ++ byte_chain_ir ++ ")" else ""
+               let int_chain_ir  = if maybe_int; "__builtin_bitreverse64(" ++ int_chain_ir ++ ")" else ""
+
+               [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, ""]
+          }
+          case "reverse_bytes": {
+               let [box chain_predicate_ir, _, _, int_chain_ir] =
+                    num_chain_creation_prepare(exp:args.first(), false, maybe_int, false, chain_predicate_ir, "tid__int")
+
+               let int_chain_ir = "__builtin_bswap64(" ++ int_chain_ir ++ ")"
+
+               [box chain_predicate_ir, "tid__int", "", int_chain_ir, ""]
+          }
+          case "rotate_left", "rotate_right": {
+               let [box chain_predicate_ir, chain_type_ir, num_byte_chain_ir, num_int_chain_ir] =
+                    num_chain_creation_prepare(exp:args.first(), maybe_byte, maybe_int, false, chain_predicate_ir, chain_type_ir)
+
+               let shifts_operand = exp:args[1]
+               let shifts_ir      = shifts_operand:ir
+
+               let new_predicate = if shifts_operand.has_type?([set "byte", "int", "error"])
+                    if "error".in?(shifts_operand:possible_types)
+                         shifts_ir ++ ".bytes[15]!=tid__error"
+                    else ""
+               else "(" ++ shifts_ir ++ ".bytes[15]==tid__int||" ++ shifts_ir ++ ".bytes[15]==tid__byte)"
+
+               let chain_predicate_ir = if chain_predicate_ir.empty?()
+                    new_predicate
+               else if new_predicate.empty?()
+                    chain_predicate_ir
+               else chain_predicate_ir ++ "&&" ++ new_predicate
+
+               let shifts = shifts_operand:comptime_val:value
+               let shifts = if shifts.null?(); 65 else shifts.to_int()
+
+               let new_predicate = if shifts < 9 || maybe_int && not maybe_byte && shifts < 65
+                    ""
+               else {
+                    let int_predicate = if maybe_int
+                         (if chain_type_ir == "tid__int"; "" else chain_type_ir ++ "==tid__int&&") ++
+                         shifts_ir ++ ".qwords[0]<65"
+                    else ""
+
+                    let byte_predicate = if maybe_byte
+                         (if chain_type_ir == "tid__byte"; "" else chain_type_ir ++ "==tid__byte&&") ++
+                         shifts_ir ++ ".qwords[0]<9"
+                    else ""
+
+                    if maybe_int && maybe_byte
+                         "(" ++ int_predicate ++ "||" ++ byte_predicate ++ ")"
+                    else int_predicate ++ byte_predicate
+               }
+
+               let chain_predicate_ir = if chain_predicate_ir.empty?()
+                    new_predicate
+               else if new_predicate.empty?()
+                    chain_predicate_ir
+               else chain_predicate_ir ++ "&&" ++ new_predicate
+
+               let left_or_right          = fn_name.drop(7)
+               let shifts_ir_comptime_val = if shifts_operand:comptime_val.null?(); "" else shifts.to_ir_num()
+
+               let byte_chain_ir = if maybe_byte
+                    "__builtin_rotate" ++ left_or_right ++ "8(" ++ num_byte_chain_ir ++ "," ++ (if shifts_ir_comptime_val.empty?(); shifts_ir ++ ".bytes[0])" else shifts_ir_comptime_val ++ ")")
+               else ""
+               let int_chain_ir = if maybe_int
+                    "__builtin_rotate" ++ left_or_right ++ "64(" ++ num_int_chain_ir ++ "," ++ (if shifts_ir_comptime_val.empty?(); shifts_ir ++ ".qwords[0])" else shifts_ir_comptime_val ++ ")")
+               else ""
+
+               [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, ""]
+          }
+          case "sqr": {
+               let [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir] =
+                    num_chain_creation_prepare(exp:args.first(), maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+
+               let byte_chain_ir  = if maybe_byte; "byte__chain_sqr(" ++ byte_chain_ir ++ ")" else ""
+               let int_chain_ir   = if maybe_int; "int__chain_sqr((" ++ int_chain_ir ++ ")" else ""
+               let float_chain_ir = if maybe_float; "float__chain_sqr(" ++ float_chain_ir ++ ")" else ""
+
+               [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir]
+          }
+          case "sqrt": {
+               let arg = exp:args.first()
+
+               let [box chain_predicate_ir, chain_type_ir, byte_ir, int_ir, float_ir] =
+                    num_chain_creation_prepare(arg, maybe_byte, maybe_int, maybe_float, chain_predicate_ir, chain_type_ir)
+
+               let new_predicate = if not maybe_int
+                    ""
+               else if not (maybe_byte || maybe_float)
+                    if arg:comptime_val.null?()
+                         int_ir ++ ">=0"
+                    else ""
+               else "(" ++ arg:ir ++ ".bytes[15]!=tid__int||" ++ int_ir ++ ">=0)"
+
+               let chain_predicate_ir = if chain_predicate_ir.empty?()
+                    new_predicate
+               else if new_predicate.empty?()
+                    chain_predicate_ir
+               else chain_predicate_ir ++ "&&" ++ new_predicate
+
+               let byte_chain_ir = if maybe_byte
+                    "byte__sqrt(" ++ byte_ir ++ ")"
+               else ""
+               let int_chain_ir = if maybe_int
+                    "int__sqrt(" ++ int_ir ++ ")"
+               else ""
+               let float_chain_ir = if maybe_float
+                    "__builtin_sqrt(" ++ float_ir ++ ")"
+               else ""
+
+               [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir]
+          }
+          default:
+               unreachable()
+     }
+     default: {
+          let exp_ir             = exp:ir
+          let exp_possible_types = exp:possible_types
+          let exp_comptime_val   = exp:comptime_val
+
+          let [box chain_predicate_ir, chain_type_ir] = if exp_possible_types.null?() || exp_possible_types.len() /= 1 {
+               let exp_type_ir = exp_ir ++ ".bytes[15]"
+               if chain_type_ir.null?() || exp_type_ir == chain_type_ir
+                    [box chain_predicate_ir, exp_type_ir]
+               else [box (if chain_predicate_ir.empty?(); "" else chain_predicate_ir ++ "&&") ++ exp_type_ir ++ "==" ++ chain_type_ir, chain_type_ir]
+          } else [box chain_predicate_ir, chain_type_ir]
+
+          let byte_chain_ir = if maybe_byte
+               if exp_comptime_val:type === "byte"
+                    "(u8)0x" ++ exp_comptime_val:value.to_string()
+               else exp_ir ++ ".bytes[0]"
+          else ""
+          let int_chain_ir = if maybe_int
+               if exp_comptime_val:type === "int"
+                    "(u64)" ++ exp_comptime_val:value.to_ir_num()
+               else exp_ir ++ ".qwords[0]"
+          else ""
+          let float_chain_ir = if maybe_float
+               if exp_comptime_val:type === "float"
+                    "cast_u64_to_double(" ++ exp_comptime_val:value.scarlet__split!!!()[0].to_ir_num() ++ ")"
+               else exp_ir ++ ".floats[0]"
+          else ""
+
+          [box chain_predicate_ir, chain_type_ir, byte_chain_ir, int_chain_ir, float_chain_ir]
+     }
+}
+
+fn num_chain_create(
+     predicate, type
+     byte_chain, int_chain, float_chain
+     maybe_byte_int_float
+     result_possible_types, code, default_ir, default_result_ir
+     exp_data, ir, final_data, dependencies, src_gconsts, is_last
+) {
+     let [box maybe_byte, maybe_int, maybe_float] = maybe_byte_int_float
+
+     let maybe_other = not result_possible_types.all(true, _.in?(@main.num_types__error))
+     let maybe_error = "error".in?(result_possible_types)
+     let cases_qty   = (if maybe_byte; 1 else 0) + (if maybe_int; 1 else 0) + (if maybe_float; 1 else 0)
+
+     let [box result_reg, exp_data] = if is_last
+          [box "NO REG", exp_data]
+     else exp_data.new_reg()
+
+     let byte_value  = if maybe_byte; "(const t_any){.bytes={" ++ byte_chain ++ ",[15]=tid__byte}}" else ""
+     let int_value   = if maybe_int; "(const t_any){.structure={.value=" ++ int_chain ++ ",.type=tid__int}}" else ""
+     let float_value = if maybe_float; "(const t_any){.structure={.value=cast_double_to_u64(" ++ float_chain ++ "),.type=tid__float}}" else ""
+
+     let ir = if cases_qty == 1 {
+          let value = if maybe_int
+               int_value
+          else if maybe_float
+               float_value
+          else byte_value
+
+          if maybe_other || maybe_error {
+               if is_last
+                    ir__raw_if(
+                         ir
+
+                         predicate
+                         if maybe_error && not maybe_other; :likely else :unknown
+
+                         ir__raw_return("", value)
+                         null
+                    ) ++ default_ir
+               else ir__raw_if(
+                    ir ++ "t_any " ++ result_reg ++ ";\n"
+
+                    predicate
+                    if maybe_error && not maybe_other; :likely else :unknown
+
+                    result_reg ++ "=" ++ value ++ ";\n"
+                    default_ir ++ result_reg ++ "=" ++ default_result_ir ++ ";\n"
+               )
+          } else if is_last
+               ir__raw_return(ir, value)
+          else ir ++ "t_any const " ++ result_reg ++ "=" ++ value.drop(13) ++ ";\n"
+     } else if cases_qty == 2 && not (maybe_other || maybe_error) {
+          let [box first_type, first_value] = if maybe_byte
+               [box "tid__byte", byte_value]
+          else null
+
+          let [box first_type, first_value, second_value] = if maybe_float
+               [box "tid__float", float_value, first_value]
+          else [box first_type, first_value, ""]
+
+          let [box first_type, first_value, second_value] = if maybe_int
+               [box "tid__int", int_value, first_value]
+          else [box first_type, first_value, second_value]
+
+          let predicate = if predicate.empty?(); "" else predicate ++ "&&"
+          if is_last {
+               let ir = ir__raw_if(
+                    ir
+
+                    predicate ++ type ++ "==" ++ first_type
+                    :unknown
+
+                    ir__raw_return("", first_value)
+                    null
+               )
+
+               ir__raw_return(ir, second_value)
+          } else ir__raw_if(
+               ir ++ "t_any " ++ result_reg ++ ";\n"
+
+               predicate ++ type ++ "==" ++ first_type
+               :unknown
+
+               result_reg ++ "=" ++ first_value ++ ";\n"
+               result_reg ++ "=" ++ second_value ++ ";\n"
+          )
+     } else {
+          let ir = ir ++ (if is_last; "" else "t_any " ++ result_reg ++ ";\n") ++ (if predicate.empty?(); "switch(" else "switch((u8)(" ++ predicate ++ ")*") ++ type ++ "){\n"
+
+          let ir = if maybe_int
+               ir ++ "case tid__int:" ++
+               if is_last
+                    ir__raw_return("", int_value)
+               else result_reg ++ "=" ++ int_value ++ ";break;\n"
+          else ir
+
+          let ir = if maybe_float
+               ir ++ "case tid__float:" ++
+               if is_last
+                    ir__raw_return("", float_value)
+               else result_reg ++ "=" ++ float_value ++ ";break;\n"
+          else ir
+
+          let ir = if maybe_byte
+               ir ++ "case tid__byte:" ++
+               if is_last
+                    ir__raw_return("", byte_value)
+               else result_reg ++ "=" ++ byte_value ++ ";break;\n"
+          else ir
+
+          ir ++ if maybe_error || maybe_other {
+               (if maybe_error && not maybe_other; "[[clang::unlikely]]\ndefault:{\n" else "default:{\n") ++
+               default_ir ++ if is_last
+                    "}\n}\n"
+               else result_reg ++ "=" ++ default_result_ir ++ ";\n}\n}\n"
+          } else "default:unreachable;\n}\n"
+     }
+
+     [box
+          new (@main.t_operand) {
+               :code           <= code
+               :ir             <= result_reg
+               :possible_types <= result_possible_types
+          }
+
+          exp_data, ir, final_data, dependencies, src_gconsts
+     ]
+}

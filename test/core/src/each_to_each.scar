@@ -1,0 +1,325 @@
+let container__each_to_each = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_each_to_each = fn (container, func) to_container__each_to_each(container:value.each_to_each(func))
+          :core___equal__    = fn (container_1, container_2) container_1:value === container_2:value
+     ]
+]
+
+fn to_container__each_to_each(arg) new (@main.container__each_to_each):value <= arg
+
+fn to_custom_container__each_to_each(arg) custom__create(
+     arg
+     [obj
+          :core_each_to_each = fn (container, func) to_custom_container__each_to_each(custom__get_data(container).each_to_each(func))
+          :core___equal__    = fn (container_1, container_2) container_1.custom__get_data() === container_2.custom__get_data()
+     ]
+)
+
+let broken_container__each_to_each = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_each_to_each = fn (_, _) _ ++ heap_table()
+     ]
+]
+
+fn to_broken_container__each_to_each(arg) new (@main.broken_container__each_to_each):value <= arg
+
+fn to_broken_custom_container__each_to_each(arg) custom__create(
+     arg
+     [obj
+          :core_each_to_each = fn (_, _) _ ++ heap_table()
+     ]
+)
+
+let error_container__each_to_each = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_each_to_each = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__each_to_each(arg) new (@main.error_container__each_to_each):value <= arg
+
+fn to_error_custom_container__each_to_each(arg) custom__create(
+     arg
+     [obj
+          :core_each_to_each = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__each_to_each() {
+     let items = "3".to_array()
+     test("".each_to_each(fn (char_1, char_2) if items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "")
+     test("0".each_to_each(fn (char_1, char_2) if items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "0")
+     test("01".each_to_each(fn (char_1, char_2) if items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "10")
+     test("10".each_to_each(fn (char_1, char_2) if items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "10")
+     test("110".each_to_each(fn (char_1, char_2) if items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "110")
+     test("101".each_to_each(fn (char_1, char_2) if items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "110")
+     test("9a03712e8dcb546".each_to_each(fn (char_1, char_2) if items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "9a13702e8dcb546")
+     test("9a03712fe8dcb546".each_to_each(fn (char_1, char_2) if items[0] == 'z'; null else if char_1 == '0' && char_2 == '1'; [box char_2, char_1] else [box char_1, char_2]) === "9a13702fe8dcb546")
+
+     test("".each_to_each(fn (char_1, char_2) [box char_1, char_2]) === "")
+     test("0".each_to_each(fn (char_1, char_2) [box char_1, char_2]) === "0")
+     test("01".each_to_each(fn (char_1, char_2) [box char_1, char_2]) === "01")
+     test("0123456789abcde".each_to_each(fn (char_1, char_2) [box char_1, char_2]) === "0123456789abcde")
+     test("0123456789abcdef".each_to_each(fn (char_1, char_2) [box char_1, char_2]) === "0123456789abcdef")
+
+     let string_1 = loop(rnd_string(), fn (string) {
+          let uniq = string.foldl([set], _.append(_))
+
+          if uniq.len() < 3
+               rnd_string()
+          else [breaker uniq.foldl("", _.append(_))]
+     })
+     let string_2        = if rnd_bool(); string_1 else null
+     let right_idx       = (rnd() >> 1) % string_1.len()
+     let left_idx        = (rnd() >> 1) % (right_idx + 1)
+     let left_char       = string_1[left_idx]
+     let right_char      = string_1[right_idx]
+     let expected_string = new (string_1) {
+          [left_idx]  <= right_char
+          [right_idx] <= left_char
+     }
+     let have_string = string_1.each_to_each(fn (char_1, char_2) if char_1 == left_char && char_2 == right_char; [box char_2, char_1] else [box char_1, char_2])
+     test(expected_string === have_string)
+     string_2.ignore()
+
+     let items = u"3".to_array()
+     test(u"".each_to_each(fn (byte_1, byte_2) if items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"")
+     test(u"0".each_to_each(fn (byte_1, byte_2) if items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"0")
+     test(u"01".each_to_each(fn (byte_1, byte_2) if items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"10")
+     test(u"10".each_to_each(fn (byte_1, byte_2) if items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"10")
+     test(u"110".each_to_each(fn (byte_1, byte_2) if items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"110")
+     test(u"101".each_to_each(fn (byte_1, byte_2) if items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"110")
+     test(u"9a03712e8dcb46".each_to_each(fn (byte_1, byte_2) if items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"9a13702e8dcb46")
+     test(u"9a03712fe8dcb46".each_to_each(fn (byte_1, byte_2) if items[0] == 0bff; null else if byte_1 == u"0"[0] && byte_2 == u"1"[0]; [box byte_2, byte_1] else [box byte_1, byte_2]) === u"9a13702fe8dcb46")
+
+     test(u"".each_to_each(fn (byte_1, byte_2) [box byte_1, byte_2]) === u"")
+     test(u"0".each_to_each(fn (byte_1, byte_2) [box byte_1, byte_2]) === u"0")
+     test(u"01".each_to_each(fn (byte_1, byte_2) [box byte_1, byte_2]) === u"01")
+     test(u"0123456789abcde".each_to_each(fn (byte_1, byte_2) [box byte_1, byte_2]) === u"0123456789abcde")
+     test(u"0123456789abcdef".each_to_each(fn (byte_1, byte_2) [box byte_1, byte_2]) === u"0123456789abcdef")
+
+     let array_1 = loop(rnd_byte_array(), fn (array) {
+          let uniq = array.foldl([set], _.append(_))
+
+          if uniq.len() < 3
+               rnd_byte_array()
+          else [breaker uniq.foldl(u"", _.append(_))]
+     })
+     let array_2        = if rnd_bool(); array_1 else null
+     let right_idx       = (rnd() >> 1) % array_1.len()
+     let left_idx        = (rnd() >> 1) % (right_idx + 1)
+     let left_byte       = array_1[left_idx]
+     let right_byte      = array_1[right_idx]
+     let expected_array = new (array_1) {
+          [left_idx]  <= right_byte
+          [right_idx] <= left_byte
+     }
+     let have_array = array_1.each_to_each(fn (byte_1, byte_2) if byte_1 == left_byte && byte_2 == right_byte; [box byte_2, byte_1] else [box byte_1, byte_2])
+     test(expected_array === have_array)
+     array_2.ignore()
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([array].each_to_each(fn (item_1, item_2) if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array])
+     test([array].init(10).each_to_each(fn (item_1, item_2) if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array])
+     test([array string_1].each_to_each(fn (item_1, item_2) if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_1])
+     test([array string_1, string_2].each_to_each(fn (item_1, item_2) if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_1, string_2])
+     test([array string_2, string_1].each_to_each(fn (item_1, item_2) if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_1, string_2])
+     test([array string_3, string_1, string_2].each_to_each(fn (item_1, item_2) if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_3, string_1, string_2])
+     test([array string_3, string_2, string_1].each_to_each(fn (item_1, item_2) if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_3, string_1, string_2])
+     test([array string_1, string_2, string_3].each_to_each(fn (item_1, item_2) if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_1, string_2, string_3])
+     test([array string_2, string_1, string_3].each_to_each(fn (item_1, item_2) if item_1 == string_2 && item_2 == string_1; [box item_2, item_1] else [box item_1, item_2]) === [array string_1, string_2, string_3])
+
+     test([array].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [array])
+     test([array].init(10).each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [array])
+     test([array string_1].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [array string_1])
+     test([array string_1, string_2].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [array string_1, string_2])
+     test([array string_1, string_2, string_3].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [array string_1, string_2, string_3])
+
+     let array_1 = loop(rnd_string_array(), fn (array) {
+          let uniq = array.foldl([set], _.append(_))
+
+          if uniq.len() < 3
+               rnd_string_array()
+          else [breaker uniq.foldl([array].init(uniq.len()), _.append(_))]
+     })
+     let array_2        = if rnd_bool(); array_1 else null
+     let right_idx      = (rnd() >> 1) % array_1.len()
+     let left_idx       = (rnd() >> 1) % (right_idx + 1)
+     let left_item      = array_1[left_idx]
+     let right_item     = array_1[right_idx]
+     let expected_array = new (array_1) {
+          [left_idx]  <= right_item
+          [right_idx] <= left_item
+     }
+     let have_array = array_1.each_to_each(fn (item_1, item_2) if item_1 == left_item && item_2 == right_item; [box item_2, item_1] else [box item_1, item_2])
+     test(expected_array === have_array)
+     array_2.ignore()
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([table].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [table])
+     test([table].init(10).each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [table])
+     test([table string_1 = string_1].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_1])
+     test([table string_1 = string_2, string_2 = string_1].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_1, string_2 = string_2])
+     test([table string_1 = string_1, string_2 = string_2].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_2, string_2 = string_1])
+     test([table string_1 = string_3, string_2 = string_1, string_3 = string_2].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_3, string_2 = string_2, string_3 = string_1])
+     test([table string_1 = string_3, string_2 = string_2, string_3 = string_1].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_3, string_2 = string_1, string_3 = string_2])
+     test([table string_1 = string_1, string_2 = string_2, string_3 = string_3].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_2, string_2 = string_1, string_3 = string_3])
+     test([table string_1 = string_2, string_2 = string_1, string_3 = string_3].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [table string_1 = string_1, string_2 = string_2, string_3 = string_3])
+
+     test([table].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [table])
+     test([table].init(10).each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [table])
+     test([table string_1 = string_2].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [table string_1 = string_2])
+     test([table string_1 = string_2, string_2 = string_1].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [table string_1 = string_2, string_2 = string_1])
+     test([table string_1 = string_3, string_2 = string_1, string_3 = string_2].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [table string_1 = string_3, string_2 = string_1, string_3 = string_2])
+
+     let array = loop(rnd_string_array(), fn (array) {
+          let uniq = array.foldl([set], _.append(_))
+
+          if uniq.len() < 3
+               rnd_string_array()
+          else [breaker uniq.foldl([array].init(uniq.len()), _.append(_))]
+     })
+     let right_idx      = (rnd() >> 1) % array.len()
+     let left_idx       = (rnd() >> 1) % (right_idx + 1)
+     let left_item      = array[left_idx]
+     let right_item     = array[right_idx]
+     let table_1        = array.foldl_kv([table].init(array.len()), fn (table, idx, item) new (table)[idx] <= item)
+     let table_2        = if rnd_bool(); table_1 else null
+     let expected_table = new (table_1) {
+          [left_idx]  <= right_item
+          [right_idx] <= left_item
+     }
+     let have_table = table_1.each_to_each(fn (item_1, item_2) if item_1 == left_item && item_2 == right_item || item_1 == right_item && item_2 == left_item; [box item_2, item_1] else [box item_1, item_2])
+     test(expected_table === have_table)
+     table_2.ignore()
+
+     let string_1 = heap_string()
+     let string_2 = string_1 ++ "2"
+     let string_3 = string_1 ++ "3"
+     test([obj].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj])
+     test([obj].init(10).each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj])
+     test([obj :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj])
+     test([obj :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_1].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1])
+     test([obj :1 = string_1, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1])
+     test([obj :1 = string_1, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_2, :2 = string_1].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2])
+     test([obj :1 = string_2, :2 = string_1, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2])
+     test([obj :1 = string_2, :2 = string_1, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_1, :2 = string_2].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_2, :2 = string_1])
+     test([obj :1 = string_1, :2 = string_2, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_2, :2 = string_1])
+     test([obj :1 = string_1, :2 = string_2, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_3, :2 = string_1, :3 = string_2].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_3, :2 = string_2, :3 = string_1])
+     test([obj :1 = string_3, :2 = string_1, :3 = string_2, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_3, :2 = string_2, :3 = string_1])
+     test([obj :1 = string_3, :2 = string_1, :3 = string_2, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_3, :2 = string_2, :3 = string_1].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_3, :2 = string_1, :3 = string_2])
+     test([obj :1 = string_3, :2 = string_2, :3 = string_1, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_3, :2 = string_1, :3 = string_2])
+     test([obj :1 = string_3, :2 = string_2, :3 = string_1, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_1, :2 = string_2, :3 = string_3].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_2, :2 = string_1, :3 = string_3])
+     test([obj :1 = string_1, :2 = string_2, :3 = string_3, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_2, :2 = string_1, :3 = string_3])
+     test([obj :1 = string_1, :2 = string_2, :3 = string_3, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+     test([obj :1 = string_2, :2 = string_1, :3 = string_3].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2, :3 = string_3])
+     test([obj :1 = string_2, :2 = string_1, :3 = string_3, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]) === [obj :1 = string_1, :2 = string_2, :3 = string_3])
+     test([obj :1 = string_2, :2 = string_1, :3 = string_3, :_ = [obj :1 = 2]].each_to_each(fn (value_1, value_2) if value_1 == string_2 && value_2 == string_1 || value_2 == string_2 && value_1 == string_1; [box value_2, value_1] else [box value_1, value_2]):_ === [obj :1 = 2])
+
+     test([obj].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [obj])
+     test([obj].init(10).each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [obj])
+     test([obj :1 = string_2].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [obj :1 = string_2])
+     test([obj :1 = string_2, :2 = string_1].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [obj :1 = string_2, :2 = string_1])
+     test([obj :1 = string_3, :2 = string_1, :3 = string_2].each_to_each(fn (item_1, item_2) [box item_1, item_2]) === [obj :1 = string_3, :2 = string_1, :3 = string_2])
+
+     let array = loop(rnd_string_array(), fn (array) {
+          let uniq = array.foldl([set], _.append(_))
+
+          if uniq.len() < 3
+               rnd_string_array()
+          else [breaker uniq.foldl([array].init(uniq.len()), _.append(_))]
+     })
+     let right_idx    = (rnd() >> 1) % array.len()
+     let left_idx     = (rnd() >> 1) % (right_idx + 1)
+     let left_item    = array[left_idx]
+     let right_item   = array[right_idx]
+     let obj_1        = array.foldl_kv([obj].init(array.len()), fn (obj, idx, item) new (obj)[idx.to_string().str_to_tkn()] <= item)
+     let obj_2        = if rnd_bool(); obj_1 else null
+     let expected_obj = new (obj_1) {
+          [left_idx.to_string().str_to_tkn()]  <= right_item
+          [right_idx.to_string().str_to_tkn()] <= left_item
+     }
+     let have_obj = obj_1.each_to_each(fn (item_1, item_2) if item_1 == left_item && item_2 == right_item || item_1 == right_item && item_2 == left_item; [box item_2, item_1] else [box item_1, item_2])
+     test(expected_obj === have_obj)
+     obj_2.ignore()
+
+     test(to_container__each_to_each("abcd").each_to_each(fn (char_1, char_2) if char_1 == 'a' && char_2 == 'b'; [box 'f', 'g'] else [box char_1, char_2]) === to_container__each_to_each("fgcd"))
+     test(to_container__each_to_each("abcd").each_to_each(fn (char_1, char_2) if char_1 == 'a' && char_2 == 'd'; [box 'f', 'g'] else [box char_1, char_2]) === to_container__each_to_each("fbcg"))
+     test(to_custom_container__each_to_each("abcd").each_to_each(fn (char_1, char_2) if char_1 == 'a' && char_2 == 'b'; [box 'f', 'g'] else [box char_1, char_2]) === to_custom_container__each_to_each("fgcd"))
+     test(to_custom_container__each_to_each("abcd").each_to_each(fn (char_1, char_2) if char_1 == 'a' && char_2 == 'd'; [box 'f', 'g'] else [box char_1, char_2]) === to_custom_container__each_to_each("fbcg"))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.each_to_each(heap_string().insert_to(_, _)).get_error_id() === :1)
+     test(heap_string().each_to_each(error_1).get_error_id() === :1)
+     test(error_1.each_to_each(error_2).get_error_id() === :1)
+     test(error_2.each_to_each(error_1).get_error_id() === :2)
+     test(error_1.each_to_each(heap_string()).get_error_id() === :1)
+     test((_ === heap_string()).scarlet__erase_info().each_to_each(error_1).get_error_id() === :1)
+
+     test((_ === heap_string()).scarlet__erase_info().each_to_each(heap_string().insert_to(_, _)).get_error_id() === :invalid_type)
+     test(heap_string().each_to_each(heap_table()).get_error_id() === :invalid_type)
+     test((_ === heap_string()).scarlet__erase_info().each_to_each(heap_table()).get_error_id() === :invalid_type)
+
+     test(to_broken_container__each_to_each("").each_to_each(_ === heap_string()).get_error_id() === :invalid_type)
+     test(to_broken_custom_container__each_to_each("").each_to_each(_ === heap_string()).get_error_id() === :invalid_type)
+     test(to_error_container__each_to_each("").each_to_each(_ === heap_string()).get_error_id() === :3)
+     test(to_error_custom_container__each_to_each("").each_to_each(_ === heap_string()).get_error_id() === :4)
+
+     test("".each_to_each(fn (_) string_1) === "")
+     test(u"".each_to_each(fn (_) string_1) === u"")
+     test([array].each_to_each(fn (_) string_1) === [array])
+     test([table].each_to_each(fn (_) string_1) === [table])
+     test([obj].each_to_each(fn (_) string_1) === [obj])
+     test([obj :_ = [obj]].each_to_each(fn (_) string_1) === [obj])
+     test([obj :_ = [obj]].each_to_each(fn (_) string_1):_ === [obj])
+
+     test("01".each_to_each(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().each_to_each(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"01".each_to_each(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().each_to_each(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array 0, heap_string()].each_to_each(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table 0 = 1, heap_string() = heap_string()].each_to_each(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :0 = 0, :1 = heap_string()].each_to_each(fn (_) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test("01".each_to_each(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_string().each_to_each(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(u"01".each_to_each(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test(heap_byte_array().each_to_each(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([array 0, heap_string()].each_to_each(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([table 0 = 1, heap_string() = heap_string()].each_to_each(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+     test([obj :0 = 0, :1 = heap_string()].each_to_each(fn (_, _, _) string_1).get_error_id() === :wrong_num_fn_args)
+
+     test("01".each_to_each(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test(heap_string().each_to_each(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test(u"01".each_to_each(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test(heap_byte_array().each_to_each(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test([array 0, heap_string()].each_to_each(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test([table 0 = 1, heap_string() = heap_string()].each_to_each(fn (_, _) string_1).get_error_id() === :invalid_type)
+     test([obj :0 = 0, :1 = heap_string()].each_to_each(fn (_, _) string_1).get_error_id() === :invalid_type)
+
+     test("01".each_to_each(fn (_, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test(heap_string().each_to_each(fn (_, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test(u"01".each_to_each(fn (_, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test(heap_byte_array().each_to_each(fn (_, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test([array 0, heap_string()].each_to_each(fn (_, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test([table 0 = 1, heap_string() = heap_string()].each_to_each(fn (_, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+     test([obj :0 = 0, :1 = heap_string()].each_to_each(fn (_, _) [box heap_string()]).get_error_id() === :unpk_not_enough_items)
+}

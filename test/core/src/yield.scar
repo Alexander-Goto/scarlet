@@ -1,0 +1,2 @@
+`noinline`
+fn test__yield() test(yield().null?())

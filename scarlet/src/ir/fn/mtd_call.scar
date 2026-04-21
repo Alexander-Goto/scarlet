@@ -1,0 +1,99 @@
+fn ir__mtd_call(mtd_tkn, mtd_const, args, args_calc_ir, code, call_contexts_consts, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let valid_types = [set "null", "obj", "custom"]
+     mtd_const.maybe_has_type!(valid_types)
+
+     let [box mtd_const, final_data, dependencies] = mtd_const.has_ir!(final_data, dependencies)
+     let [box args, final_data, dependencies]      = operands_have_ir!(args, final_data, dependencies)
+
+     let name_ids           = exp_data:name_ids
+     let named_consts       = exp_data:named_consts
+     let not_call_free_code = call_contexts_consts.foldl("", fn (not_call_free_code, constant_id) {
+          let name = name_ids[constant_id]
+          if name.null?()
+               not_call_free_code
+          else named_consts[name]:operand.dec_ref_cnt(not_call_free_code)
+     })
+
+     if mtd_const.has_type?("null") {
+          let ir      = ir ++ not_call_free_code
+          let operand = comptime_null(code)
+
+          [box operand, exp_data, if is_last; ir__raw_return(ir, "null") else ir, final_data, dependencies, src_gconsts]
+     } else {
+          let args = mtd_const.insert_to(args, 0)
+
+          let [box prepared_args_ir, args_calc_ir, final_data, dependencies] = ir__prepare_args_to_fn_call(args, args_calc_ir, final_data, dependencies, false)
+          let [box result_reg, exp_data]                                     = exp_data.new_reg()
+
+          let mtd_tkn_ir_num = mtd_tkn.to_ir_u128()
+          let args_len_ir    = args.len().to_ir_num()
+          let ir             = if not mtd_const:possible_types.null?() && mtd_const:possible_types.len() == 1 {
+               let is_obj = mtd_const:possible_types.take_one() == "obj"
+               ir ++ args_calc_ir ++ "t_any const " ++ result_reg ++
+                    (if is_obj; "obj__call__any_result__own(thrd_data,(const t_any){.raw_bits=" else "custom__call__any_result__own(thrd_data,(const t_any){.raw_bits=") ++
+                    mtd_tkn_ir_num ++ "}," ++ mtd_const:ir ++ "," ++ prepared_args_ir ++ "," ++ args_len_ir ++
+                    "," ++ exp_data:owner_name_ir_const ++ ");\n"
+          } else {
+               let correct_possible_types = if mtd_const:possible_types.null?(); [array "null", "obj", "custom"] else mtd_const:possible_types.filter(_.in?(valid_types)).to_array()
+               let type_predicate         = correct_possible_types.map(mtd_const:ir ++ ".bytes[15]==tid__" ++ _).join("||")
+
+               let maybe_null   = "null".in?(correct_possible_types)
+               let maybe_obj    = "obj".in?(correct_possible_types)
+               let maybe_custom = "custom".in?(correct_possible_types)
+
+               let not_null_code = args_calc_ir ++
+                    if maybe_obj && maybe_custom
+                         result_reg ++ "=" ++ mtd_const:ir ++ ".bytes[15]==tid__obj?" ++ "obj__call__any_result__own(thrd_data,(const t_any){.raw_bits=" ++
+                              mtd_tkn_ir_num ++ "}," ++ mtd_const:ir ++ "," ++ prepared_args_ir ++ "," ++ args_len_ir ++ "," ++ exp_data:owner_name_ir_const ++ "):" ++
+                              "custom__call__any_result__own(thrd_data,(const t_any){.raw_bits=" ++ mtd_tkn_ir_num ++ "}," ++ mtd_const:ir ++ "," ++ prepared_args_ir ++ "," ++ args_len_ir ++ "," ++ exp_data:owner_name_ir_const ++ ");\n"
+                    else result_reg ++ (if maybe_obj; "=obj__call__any_result__own(thrd_data,(const t_any){.raw_bits=" else "=custom__call__any_result__own(thrd_data,(const t_any){.raw_bits=") ++
+                         mtd_tkn_ir_num ++ "}," ++ mtd_const:ir ++ "," ++ prepared_args_ir ++ "," ++ args_len_ir ++ "," ++ exp_data:owner_name_ir_const ++ ");\n"
+
+               ir__raw_if(
+                    ir ++ "t_any " ++ result_reg ++ ";\n"
+
+                    "!(" ++ type_predicate ++ ")"
+                    :unlikely
+
+                    ir__raw_if(
+                         not_call_free_code
+
+                         mtd_const:ir ++ ".bytes[15]==tid__error"
+                         :unknown
+
+                         result_reg ++ "=" ++ mtd_const:ir ++ ";\n"
+
+                         mtd_const.dec_ref_cnt("") ++
+                         result_reg ++ "=error__invalid_type(thrd_data," ++ exp_data:owner_name_ir_const ++ ");\n"
+                    )
+
+                    if maybe_null
+                         ir__raw_if(
+                              ""
+
+                              mtd_const:ir ++ ".bytes[15]!=tid__null"
+                              :unknown
+
+                              not_null_code
+
+                              not_call_free_code ++
+                              result_reg ++ "=null;\n"
+                         )
+                    else not_null_code
+               )
+          }
+
+          let ir = if is_last
+               ir__raw_return(ir, result_reg)
+          else ir
+
+          [box
+               new (@main.t_operand) {
+                    :ir   <= result_reg
+                    :code <= code
+               }
+
+               exp_data, ir, final_data, dependencies, src_gconsts
+          ]
+     }
+}

@@ -1,0 +1,14 @@
+let version = "0.1"
+
+let msg__version = "scarlet " ++ @main.version
+let msg__help    = "scarlet - compiler for scar programming language.\n" ++
+     "\t-n or --name NAME          - name of the built module. (\"main\" - for applications)\n" ++
+     "\t-m or --modules FILE_NAMES - list of files with modules. (file names are separated by a space)\n" ++
+     "\t-s or --sources FILE_NAMES - list of files with source code. (file names are separated by a space)\n" ++
+     "\t-o or --out FILE_NAME      - the file with the built project.\n\n" ++
+
+     "\t-h or --help    - show help.\n" ++
+     "\t-v or --version - show version."
+
+
+fn msg__make(token, msg) "File - " ++ token:file ++ ", line - " ++ token:line.to_string() ++ ", row - " ++ token:row.to_string() ++ ". " ++ msg

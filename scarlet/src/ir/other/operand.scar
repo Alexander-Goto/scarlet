@@ -1,0 +1,12 @@
+fn operands_have_ir!(operands, final_data, dependencies) {
+     let [box operands, state] = operands.map_with_state([box final_data, dependencies], fn (state, operand) {
+          let [box final_data, dependencies] = state
+
+          let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+          [box [box final_data, dependencies], operand]
+     })
+     let [box final_data, dependencies] = state
+
+     [box operands, final_data, dependencies]
+}

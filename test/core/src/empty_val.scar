@@ -1,0 +1,111 @@
+let container__empty_val = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_empty_val = fn (container) to_container__empty_val(container:value.empty_val())
+          :core___equal__ = fn (container_1, container_2) container_1:value === container_2:value
+     ]
+]
+
+fn to_container__empty_val(arg) new (@main.container__empty_val):value <= arg
+
+fn to_custom_container__empty_val(arg) custom__create(
+     arg
+     [obj
+          :core_empty_val = fn (container) to_custom_container__empty_val(container.custom__get_data().empty_val())
+          :core___equal__ = fn (container_1, container_2) container_1.custom__get_data() === container_2.custom__get_data()
+     ]
+)
+
+let broken_container__empty_val = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_empty_val = fn (_) _ ++ heap_string()
+     ]
+]
+
+fn to_broken_container__empty_val(arg) new (@main.broken_container__empty_val):value <= arg
+
+fn to_broken_custom_container__empty_val(arg) custom__create(
+     arg
+     [obj
+          :core_empty_val = fn (_) _ ++ heap_string()
+     ]
+)
+
+let error_container__empty_val = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_empty_val = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__empty_val(arg) new (@main.error_container__empty_val):value <= arg
+
+fn to_error_custom_container__empty_val(arg) custom__create(
+     arg
+     [obj
+          :core_empty_val = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__empty_val() {
+     test("".empty_val() === "")
+     test("1".empty_val() === "")
+     test("0123456789abcde".empty_val() === "")
+     test("0123456789abcdef".empty_val() === "")
+     test("0123456789abcde".append('f').empty_val() === "")
+
+     test(u"".empty_val() === u"")
+     test([byte_array].empty_val() === u"")
+     test([byte_array 0b00].empty_val() === u"")
+     test(u"1".empty_val() === u"")
+     test(u"0123456789abcd".empty_val() === u"")
+     test(u"0123456789abcde".empty_val() === u"")
+     test(u"0123456789abcd".append(0b00).empty_val() === u"")
+
+     test([obj].empty_val() === [obj])
+     test([obj].init(10).empty_val() === [obj])
+     test([obj :_ = [obj]].empty_val() === [obj])
+     test([obj :_ = [obj]].empty_val():_ === [obj])
+     test([obj :_ = [obj :1 = heap_string()]].empty_val() === [obj])
+     test([obj :_ = [obj :1 = heap_string()]].empty_val():_ === [obj :1 = heap_string()])
+     test([obj :1 = heap_string()].empty_val() === [obj])
+     test([obj :1 = heap_string(), :_ = [obj]].empty_val() === [obj])
+     test([obj :1 = heap_string(), :_ = [obj]].empty_val():_ === [obj])
+     test([obj :1 = heap_string(), :_ = [obj :1 = heap_string()]].empty_val() === [obj])
+     test([obj :1 = heap_string(), :_ = [obj :1 = heap_string()]].empty_val():_ === [obj :1 = heap_string()])
+
+     test([table].empty_val() === [table])
+     test([table].init(10).empty_val() === [table])
+     test([table heap_string() = heap_string()].empty_val() === [table])
+     test([table heap_string() = heap_string(), 1 = 2].empty_val() === [table])
+
+     test([set].empty_val() === [set])
+     test([set].init(10).empty_val() === [set])
+     test([set heap_string()].empty_val() === [set])
+     test([set heap_string(), 1].empty_val() === [set])
+
+     test([array].empty_val() === [array])
+     test([array].init(10).empty_val() === [array])
+     test([array heap_string()].empty_val() === [array])
+     test([array heap_string(), 1].empty_val() === [array])
+
+     test(to_container__empty_val("").empty_val() === to_container__empty_val(""))
+     test(to_container__empty_val("1").empty_val() === to_container__empty_val(""))
+
+     test(to_custom_container__empty_val("").empty_val() === to_custom_container__empty_val(""))
+     test(to_custom_container__empty_val("1").empty_val() === to_custom_container__empty_val(""))
+
+     let error = expected_error(:1, heap_string(), heap_string())
+     test(error.empty_val().get_error_id() === :1)
+     test((_ ++ heap_string()).scarlet__erase_info().empty_val().get_error_id() === :invalid_type)
+
+     test(to_broken_container__empty_val("").empty_val().get_error_id() === :invalid_type)
+     test(to_broken_custom_container__empty_val("").empty_val().get_error_id() === :invalid_type)
+     test(to_error_container__empty_val("").empty_val().get_error_id() === :3)
+     test(to_error_custom_container__empty_val("").empty_val().get_error_id() === :4)
+}

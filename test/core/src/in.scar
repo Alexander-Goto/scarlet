@@ -1,0 +1,194 @@
+let container__in = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_look_in = fn (item, container) item.look_in(container:value)
+     ]
+]
+
+fn to_container__in(arg) new (@main.container__in):value <= arg
+
+fn to_custom_container__in(arg) custom__create(
+     arg
+     [obj
+          :core_look_in = fn (item, container) item.look_in(container.custom__get_data())
+     ]
+)
+
+let error_container__in = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_look_in = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_container__in(arg) new (@main.error_container__in):value <= arg
+
+fn to_error_custom_container__in(arg) custom__create(
+     arg
+     [obj
+          :core_look_in = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__in?() {
+     test(not '2'.in?(""))
+     test(not '1'.in?(""))
+     test(not '2'.in?("1"))
+     test('1'.in?("1"))
+     test('0'.in?("0123456789abcde"))
+     test('3'.in?("0123456789abcde"))
+     test('a'.in?("0123456789abcde"))
+     test('e'.in?("0123456789abcde"))
+     test(not 'f'.in?("0123456789abcde"))
+     test(not '_'.in?("0123456789abcde"))
+
+     test(not '_'.in?(("_0123456789abcdef" ++ "g")[1, 17]))
+     test(not 'g'.in?(("_0123456789abcdef" ++ "g")[1, 17]))
+     test('0'.in?(("_0123456789abcdef" ++ "g")[1, 17]))
+     test('4'.in?(("_0123456789abcdef" ++ "g")[1, 17]))
+     test('e'.in?(("_0123456789abcdef" ++ "g")[1, 17]))
+     test('f'.in?(("_0123456789abcdef" ++ "g")[1, 17]))
+
+     test(not '\000092'.in?(""))
+     test(not '\000091'.in?(""))
+     test(not '\000092'.in?("\000091"))
+     test('\000091'.in?("\000091"))
+     test('\000090'.in?("\000090\0000912\000093\000094\000095\000096\000097"))
+     test('\000093'.in?("\000090\0000912\000093\000094\000095\000096\000097"))
+     test('\000097'.in?("\000090\0000912\000093\000094\000095\000096\000097"))
+
+     test(not 'g'.in?(("_\000090\000091\000092\000093456\00009789a\00009bcdef" ++ "g")[1, 17]))
+     test('\000090'.in?(("_\000090\000091\000092\000093456\00009789a\00009bcdef" ++ "g")[1, 17]))
+     test('\000094'.in?(("_01\0000923\00009456789abcd\00009ef" ++ "g")[1, 17]))
+     test('\00009e'.in?(("_\000090123\00009456789abcd\00009e\00009f" ++ "g")[1, 17]))
+     test('\00009f'.in?(("_0123456789abcde\00009f" ++ "g")[1, 17]))
+
+     let string = rnd_string()
+     let char   = rnd_char()
+     test(char.in?(string) === not string.filter(_ === char).empty?())
+
+     test(not u"2"[0].in?(u""))
+     test(not u"1"[0].in?(u""))
+     test(not u"2"[0].in?(u"1"))
+     test(u"1"[0].in?(u"1"))
+     test(u"0"[0].in?(u"0123456789abcd"))
+     test(u"3"[0].in?(u"0123456789abcd"))
+     test(u"a"[0].in?(u"0123456789abcd"))
+     test(u"d"[0].in?(u"0123456789abcd"))
+     test(not u"f"[0].in?(u"0123456789abcd"))
+     test(not u"_"[0].in?(u"0123456789abcd"))
+
+     test(not u"_"[0].in?((u"_0123456789abcdef" ++ u"g")[1, 17]))
+     test(not u"g"[0].in?((u"_0123456789abcdef" ++ u"g")[1, 17]))
+     test(u"0"[0].in?((u"_0123456789abcdef" ++ u"g")[1, 17]))
+     test(u"4"[0].in?((u"_0123456789abcdef" ++ u"g")[1, 17]))
+     test(u"e"[0].in?((u"_0123456789abcdef" ++ u"g")[1, 17]))
+     test(u"f"[0].in?((u"_0123456789abcdef" ++ u"g")[1, 17]))
+
+     let array = rnd_byte_array()
+     let byte  = rnd_byte()
+     test(byte.in?(array) === not array.filter(_ === byte).empty?())
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     let string_4 = string_0 ++ "4"
+     let string_5 = string_0 ++ "5"
+     test(not string_0.in?([array]))
+     test(not string_0.in?([array].init(10)))
+     test(not string_0.in?([array string_1]))
+     test(not string_0.in?([array string_0, string_1, string_2, string_3, string_4, string_5][1, 5]))
+     test(not string_5.in?([array string_0, string_1, string_2, string_3, string_4, string_5][1, 5]))
+     test(string_1.in?([array string_0, string_1, string_2, string_3, string_4, string_5][1, 5]))
+     test(string_2.in?([array string_0, string_1, string_2, string_3, string_4, string_5][1, 5]))
+     test(string_3.in?([array string_0, string_1, string_2, string_3, string_4, string_5][1, 5]))
+     test(string_4.in?([array string_0, string_1, string_2, string_3, string_4, string_5][1, 5]))
+     test(string_1.in?([array string_1]))
+
+     let array  = rnd_string_array()
+     let string = if rnd_bool(); array[rnd() & (len(array) - 1)] else rnd_string()
+     test(string.in?(array) === not array.filter(_ === string).empty?())
+
+     test(not string_0.in?([table]))
+     test(not string_0.in?([table].init(10)))
+     test(not string_0.in?([table string_0 = string_1]))
+     test(string_0.in?([table string_1 = string_0]))
+     test(string_0.in?([table string_0 = string_0]))
+     test(not string_0.in?([table string_0 = string_1, string_2 = string_3, string_4 = string_5]))
+     test(string_1.in?([table string_0 = string_1, string_2 = string_3, string_4 = string_5]))
+     test(not string_2.in?([table string_0 = string_1, string_2 = string_3, string_4 = string_5]))
+     test(string_3.in?([table string_0 = string_1, string_2 = string_3, string_4 = string_5]))
+     test(not string_4.in?([table string_0 = string_1, string_2 = string_3, string_4 = string_5]))
+     test(string_5.in?([table string_0 = string_1, string_2 = string_3, string_4 = string_5]))
+
+     let table  = rnd_string_table()
+     let string = if rnd_bool(); table.take_one() else rnd_string()
+     test(string.in?(table) === not table.filter(_ === string).empty?())
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     test(not string_0.in?([set]))
+     test(string_0.in?([set string_0]))
+     test(string_0.in?([set string_1, string_0]))
+     test(string_1.in?([set string_0, string_1]))
+     test(string_1.in?([set string_0, string_1]))
+     test(not string_2.in?([set string_0, string_1]))
+
+     let array = rnd_string_array()
+     let set   = array.foldl([set], _.append(_))
+     let string = if rnd_bool(); array[rnd() & (len(array) - 1)] else rnd_string()
+     test(string.in?(set) === not set[string].null?())
+
+     test(not string_0.in?([obj]))
+     test(not string_0.in?([obj].init(10)))
+     test(not string_0.in?([obj :0 = string_1]))
+     test(not :0.in?([obj :0 = string_1]))
+     test(string_0.in?([obj :1 = string_0]))
+     test(string_0.in?([obj :0 = string_0]))
+     test(not string_0.in?([obj :0 = string_1, :2 = string_3, :4 = string_5]))
+     test(string_1.in?([obj :0 = string_1, :2 = string_3, :4 = string_5]))
+     test(not string_2.in?([obj :0 = string_1, :2 = string_3, :4 = string_5]))
+     test(string_3.in?([obj :0 = string_1, :2 = string_3, :4 = string_5]))
+     test(not string_4.in?([obj :0 = string_1, :2 = string_3, :4 = string_5]))
+     test(string_5.in?([obj :0 = string_1, :2 = string_3, :4 = string_5]))
+     test(not string_4.in?([obj :0 = string_1, :2 = string_3, :4 = string_5, :_ = [obj :4 = string_4]]))
+     test(string_5.in?([obj :0 = string_1, :2 = string_3, :4 = string_5, :_ = [obj :4 = string_4]]))
+
+     let obj    = rnd_string_obj()
+     let string = if rnd_bool(); obj.take_one() else rnd_string()
+     test(string.in?(obj) === not obj.filter(_ === string).empty?())
+
+     test('1'.in?("123".to_container__in()))
+     test(not '0'.in?("123".to_container__in()))
+     test('1'.in?("123".to_custom_container__in()))
+     test(not '0'.in?("123".to_custom_container__in()))
+
+     let error_1 = expected_error(:1, heap_string(), heap_string())
+     let error_2 = expected_error(:2, heap_string(), heap_string())
+     test(error_1.in?(heap_string()).get_error_id() === :1)
+     test(heap_string().in?(error_1).get_error_id() === :1)
+     test(error_1.in?(error_2).get_error_id() === :1)
+     test(error_2.in?(error_1).get_error_id() === :2)
+
+     test([box heap_string()].scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
+     test([box heap_string()].scarlet__erase_info().in?([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test(null.scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
+     test((_ ++ _).scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
+     test((_ ++ heap_string()).scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
+     test([breaker heap_string()].scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
+     test(thread(fn() null).scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
+     test(make_channel()[0].scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
+
+     test(heap_string().in?("").get_error_id() === :invalid_type)
+     test(heap_string().in?(heap_string()).get_error_id() === :invalid_type)
+     test(heap_string().in?(u"").get_error_id() === :invalid_type)
+     test(heap_string().in?(heap_byte_array()).get_error_id() === :invalid_type)
+
+     test(heap_string().in?(to_error_container__in([set])).get_error_id() === :3)
+     test(heap_string().in?(to_error_custom_container__in([set])).get_error_id() === :4)
+}

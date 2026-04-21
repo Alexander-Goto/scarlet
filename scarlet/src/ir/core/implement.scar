@@ -1,0 +1,50 @@
+fn ir__core_fn_implement(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box obj, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+     let [box interface, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ obj:code:text ++ ", " ++ interface:code:text ++ ")")
+
+     obj.maybe_has_type!("obj")
+     interface.maybe_has_type!([set "obj", "array"])
+
+     if obj:comptime_val.null?() || interface:comptime_val.null?()
+          ir__fn_call(
+               "McoreFNimplement", [array obj, interface], code
+               if obj.has_type?("obj") && interface.has_type?("obj"); [set "obj"] else [set "obj", "error"]
+               exp_data, ir, final_data, dependencies, src_gconsts, is_last
+          )
+     else {
+          let new_obj = if interface:comptime_val:type == "obj"
+               comptime_implement(obj:comptime_val:value, interface:comptime_val:value)
+          else interface.foldl(obj:comptime_val:value, fn (new_obj, one_interface)
+               if one_interface:type == "obj"
+                    comptime_implement(new_obj, one_interface:comptime_val:value)
+               else error__invalid_item_type(interface:code, "obj", one_interface:type)
+          )
+
+          let operand = new (obj){
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:value <= new_obj
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}
+
+fn comptime_implement(obj, interface)
+     if interface.empty?() || interface.len() == 1 && :_.key_of?(interface)
+          obj
+     else if obj[:_].null?()
+          new (obj)[:_] <= new (@main.t_comptime_val) {:type <= "obj"; :value <= new (interface)[:_] <= null}
+     else new (obj)[:_] => interface.foldl_kv(_, fn (mtds, mtd_name, mtd)
+          if mtd_name == :_
+               mtds
+          else new (mtds)[mtd_name] => fn (existed_mtd) if existed_mtd.null?() || existed_mtd:type === "null"; mtd else existed_mtd
+     )

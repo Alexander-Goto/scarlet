@@ -1,0 +1,40 @@
+fn ir__core_fn_remove(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box set, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, false)
+     let [box item, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args[1].to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
+
+     let code = new (exp:name):text => _ ++ ("(" ++ set:code:text ++ ", " ++ item:code:text ++ ")")
+
+     let valid_types = [set "set", "obj", "custom"]
+     set.maybe_has_type!(valid_types)
+     item.maybe_has_type!(@main.all_hash_map_key_types)
+
+     if set:comptime_val.null?() || item:comptime_val.null?() ||
+          set:comptime_val:type == "obj" || not (set:comptime_val:type == "set" && item:comptime_val:type.in?(@main.always_hash_map_key_types))
+     {
+          if set:comptime_val:type === "obj" && set:comptime_val:value[:_][:core_remove].null?()
+               error__invalid_type(set:code, ".core_remove", "obj")
+          else null
+
+          let result_possible_types = if set:possible_types.null?()
+               valid_types.append("error")
+          else if set.has_type?("set") && item.has_type?(@main.always_hash_map_key_types)
+               [set "set"]
+          else set:possible_types.filter(_.in?(valid_types)).append("error")
+
+          ir__fn_call("McoreFNremove", [array set, item], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     } else {
+          let operand = new (set) {
+               :ir                 <= null
+               :code               <= code
+               :comptime_val:value => _.remove(item:comptime_val)
+          }
+
+          if is_last {
+               let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
+
+               [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
+          } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     }
+}

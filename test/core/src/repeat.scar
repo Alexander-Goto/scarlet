@@ -1,0 +1,259 @@
+let array__repeat = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_repeat    = fn (array, count) to_array__repeat(array:value.repeat(count))
+          :core___equal__ = fn (array_1, array_2) array_1:value === array_2:value
+     ]
+]
+
+fn to_array__repeat(arg) new (@main.array__repeat):value <= arg
+
+fn to_custom_array__repeat(arg) custom__create(
+     arg
+     [obj
+          :core_repeat    = fn (array, count) to_custom_array__repeat(custom__get_data(array).repeat(count))
+          :core___equal__ = fn (array_1, array_2) array_1.custom__get_data() === array_2.custom__get_data()
+     ]
+)
+
+let broken_array__repeat = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_repeat    = fn (_, _) heap_table()
+     ]
+]
+
+fn to_broken_array__repeat(arg) new (@main.broken_array__repeat):value <= arg
+
+fn to_broken_custom_array__repeat(arg) custom__create(
+     arg
+     [obj
+          :core_repeat    = fn (_, _) heap_table()
+     ]
+)
+
+let error_array__repeat = [obj
+     :value = [array]
+
+     :_ = [obj
+          :core_repeat    = fn (_, _) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_array__repeat(arg) new (@main.error_array__repeat):value <= arg
+
+fn to_error_custom_array__repeat(arg) custom__create(
+     arg
+     [obj
+          :core_repeat    = fn (_, _) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__repeat() {
+     test("".repeat(0) === "")
+     test("".repeat(1) === "")
+     test("".repeat(2) === "")
+     test("".repeat(9223372036854775807) === "")
+     test("1".repeat(0) === "")
+     test("1".repeat(1) === "1")
+     test("1".repeat(2) === "11")
+     test("1".repeat(15) === "111111111111111")
+     test("1".repeat(16) === "1111111111111111")
+     test("1".repeat(17) === "11111111111111111")
+     test("123".repeat(0) === "")
+     test("123".repeat(1) === "123")
+     test("123".repeat(2) === "123123")
+     test("123".repeat(3) === "123123123")
+     test("123".repeat(4) === "123123123123")
+     test("123".repeat(5) === "123123123123123")
+     test("123".repeat(6) === "123123123123123123")
+     test("1234".repeat(0) === "")
+     test("1234".repeat(1) === "1234")
+     test("1234".repeat(2) === "12341234")
+     test("1234".repeat(3) === "123412341234")
+     test("1234".repeat(4) === "1234123412341234")
+     test("0123456789abcde".repeat(0) === "")
+     test("0123456789abcde".repeat(1) === "0123456789abcde")
+     test("0123456789abcde".repeat(2) === "0123456789abcde0123456789abcde")
+
+     test("0123456789abcdef".repeat(0) === "")
+     test("0123456789abcdef".repeat(1) === "0123456789abcdef")
+     test("0123456789abcdef".repeat(2) === "0123456789abcdef0123456789abcdef")
+     test("0123456789abcdef".repeat(3) === "0123456789abcdef0123456789abcdef0123456789abcdef")
+
+     test(("00123456789abcdef" ++ "g")[1, 17].repeat(0) === "")
+     test(("00123456789abcdef" ++ "g")[1, 17].repeat(1) === "0123456789abcdef")
+     test(("00123456789abcdef" ++ "g")[1, 17].repeat(2) === "0123456789abcdef0123456789abcdef")
+     test(("00123456789abcdef" ++ "g")[1, 17].repeat(3) === "0123456789abcdef0123456789abcdef0123456789abcdef")
+
+     let string = ("00123456789abcdef" ++ "g")[1, 17]
+     test(string.repeat(0) === "")
+     test(string.repeat(1) === "0123456789abcdef")
+     test(string.repeat(2) === "0123456789abcdef0123456789abcdef")
+     test(string.repeat(3) === "0123456789abcdef0123456789abcdef0123456789abcdef")
+     string.ignore()
+
+     let string_1 = rnd_string()
+     let string_2 = if rnd_bool(); string_1 else null
+     let count    = rnd() & 0x1f;
+     let expected = loop([box "", count], fn (state) {
+          let [box string, count] = state
+
+          if count === 0
+               [breaker string]
+          else [box string ++ string_1, count - 1]
+     })
+     test(expected === string_1.repeat(count))
+     string_2.ignore()
+
+     test(u"".repeat(0) === u"")
+     test(u"".repeat(1) === u"")
+     test(u"".repeat(2) === u"")
+     test(u"".repeat(9223372036854775807) === u"")
+     test(u"1".repeat(0) === u"")
+     test(u"1".repeat(1) === u"1")
+     test(u"1".repeat(2) === u"11")
+     test(u"1".repeat(15) === u"111111111111111")
+     test(u"1".repeat(16) === u"1111111111111111")
+     test(u"1".repeat(17) === u"11111111111111111")
+     test(u"123".repeat(0) === u"")
+     test(u"123".repeat(1) === u"123")
+     test(u"123".repeat(2) === u"123123")
+     test(u"123".repeat(3) === u"123123123")
+     test(u"123".repeat(4) === u"123123123123")
+     test(u"123".repeat(5) === u"123123123123123")
+     test(u"123".repeat(6) === u"123123123123123123")
+     test(u"1234".repeat(0) === u"")
+     test(u"1234".repeat(1) === u"1234")
+     test(u"1234".repeat(2) === u"12341234")
+     test(u"1234".repeat(3) === u"123412341234")
+     test(u"1234".repeat(4) === u"1234123412341234")
+     test(u"1234567".repeat(0) === u"")
+     test(u"1234567".repeat(1) === u"1234567")
+     test(u"1234567".repeat(2) === u"12345671234567")
+     test(u"1234567".repeat(3) === u"123456712345671234567")
+     test(u"0123456789abcd".repeat(0) === u"")
+     test(u"0123456789abcd".repeat(1) === u"0123456789abcd")
+     test(u"0123456789abcd".repeat(2) === u"0123456789abcd0123456789abcd")
+
+     test(u"0123456789abcde".repeat(0) === u"")
+     test(u"0123456789abcde".repeat(1) === u"0123456789abcde")
+     test(u"0123456789abcde".repeat(2) === u"0123456789abcde0123456789abcde")
+     test(u"0123456789abcde".repeat(3) === u"0123456789abcde0123456789abcde0123456789abcde")
+
+     test((u"00123456789abcde" ++ u"f")[1, 16].repeat(0) === u"")
+     test((u"00123456789abcde" ++ u"f")[1, 16].repeat(1) === u"0123456789abcde")
+     test((u"00123456789abcde" ++ u"f")[1, 16].repeat(2) === u"0123456789abcde0123456789abcde")
+     test((u"00123456789abcde" ++ u"f")[1, 16].repeat(3) === u"0123456789abcde0123456789abcde0123456789abcde")
+
+     let array = (u"00123456789abcde" ++ u"f")[1, 16]
+     test(array.repeat(0) === u"")
+     test(array.repeat(1) === u"0123456789abcde")
+     test(array.repeat(2) === u"0123456789abcde0123456789abcde")
+     test(array.repeat(3) === u"0123456789abcde0123456789abcde0123456789abcde")
+     array.ignore()
+
+     let array_1 = rnd_byte_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     let count    = rnd() & 0x1f;
+     let expected = loop([box u"", count], fn (state) {
+          let [box array, count] = state
+
+          if count === 0
+               [breaker array]
+          else [box array ++ array_1, count - 1]
+     })
+     test(expected === array_1.repeat(count))
+     array_2.ignore()
+
+     let string_0 = heap_string()
+     let string_1 = string_0 ++ "1"
+     let string_2 = string_0 ++ "2"
+     let string_3 = string_0 ++ "3"
+     test([array].repeat(0) === [array])
+     test([array].repeat(1) === [array])
+     test([array].repeat(2) === [array])
+     test([array].repeat(9223372036854775807) === [array])
+     test([array].init(10).repeat(0) === [array])
+     test([array].init(10).repeat(1) === [array])
+     test([array].init(10).repeat(2) === [array])
+     test([array].init(10).repeat(9223372036854775807) === [array])
+     test([array 1].repeat(0) === [array])
+     test([array 1].repeat(1) === [array 1])
+     test([array 1].repeat(2) === [array 1, 1])
+     test([array 1].repeat(3) === [array 1, 1, 1])
+     test([array 1, 2, 3].repeat(0) === [array])
+     test([array 1, 2, 3].repeat(1) === [array 1, 2, 3])
+     test([array 1, 2, 3].repeat(2) === [array 1, 2, 3, 1, 2, 3])
+     test([array 1, 2, 3].repeat(3) === [array 1, 2, 3, 1, 2, 3, 1, 2, 3])
+
+     test([array string_0, string_1, string_0][1, 2].repeat(0) === [array])
+     test([array string_0, string_1, string_0][1, 2].repeat(1) === [array string_1])
+     test([array string_0, string_1, string_0][1, 2].repeat(2) === [array string_1, string_1])
+     test([array string_0, string_1, string_0][1, 2].repeat(3) === [array string_1, string_1, string_1])
+     test([array string_0, string_1, string_2, string_3, string_0][1, 4].repeat(0) === [array])
+     test([array string_0, string_1, string_2, string_3, string_0][1, 4].repeat(1) === [array string_1, string_2, string_3])
+     test([array string_0, string_1, string_2, string_3, string_0][1, 4].repeat(2) === [array string_1, string_2, string_3, string_1, string_2, string_3])
+     test([array string_0, string_1, string_2, string_3, string_0][1, 4].repeat(3) === [array string_1, string_2, string_3, string_1, string_2, string_3, string_1, string_2, string_3])
+
+     let array = [array string_0, string_1, string_0][1, 2]
+     test(array.repeat(0) === [array])
+     test(array.repeat(1) === [array string_1])
+     test(array.repeat(2) === [array string_1, string_1])
+     test(array.repeat(3) === [array string_1, string_1, string_1])
+     array.ignore()
+
+     let array = [array string_0, string_1, string_2, string_3, string_0][1, 4]
+     test(array.repeat(0) === [array])
+     test(array.repeat(1) === [array string_1, string_2, string_3])
+     test(array.repeat(2) === [array string_1, string_2, string_3, string_1, string_2, string_3])
+     test(array.repeat(3) === [array string_1, string_2, string_3, string_1, string_2, string_3, string_1, string_2, string_3])
+     array.ignore()
+
+     let array_1 = rnd_string_array()
+     let array_2 = if rnd_bool(); array_1 else null
+     let count    = rnd() & 0x1f;
+     let expected = loop([box [array].init(len(array_1) * count), count], fn (state) {
+          let [box array, count] = state
+
+          if count === 0
+               [breaker array]
+          else [box array ++ array_1, count - 1]
+     })
+     test(expected === array_1.repeat(count))
+     array_2.ignore()
+
+     test("123".to_array__repeat().repeat(1) === "123".to_array__repeat())
+     test("123".to_array__repeat().repeat(2) === "123123".to_array__repeat())
+     test("123".to_custom_array__repeat().repeat(1) === "123".to_custom_array__repeat())
+     test("123".to_custom_array__repeat().repeat(2) === "123123".to_custom_array__repeat())
+
+     let error_1    = expected_error(:1, heap_string(), heap_string())
+     let error_2    = expected_error(:2, heap_string(), heap_string())
+     test(error_1.repeat(10).get_error_id() === :1)
+     test(heap_string().repeat(error_1).get_error_id() === :1)
+     test(error_1.repeat(error_2).get_error_id() === :1)
+     test(error_2.repeat(error_1).get_error_id() === :2)
+     test(error_1.repeat(heap_string()).get_error_id() === :1)
+     test(heap_table().repeat(error_1).get_error_id() === :1)
+
+     test(heap_table().repeat(0).get_error_id() === :invalid_type)
+     test(heap_string().repeat(heap_string()).get_error_id() === :invalid_type)
+     test(heap_table().repeat(heap_string()).get_error_id() === :invalid_type)
+
+     test(heap_string().repeat(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(heap_string().repeat(-2.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(heap_string().repeat(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test(heap_string().repeat(9223372036854775807.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("".repeat(-1.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("".repeat(-2.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+     test("".repeat(-9223372036854775808.scarlet__erase_info()).get_error_id() === :out_of_bounds)
+
+     test(to_broken_array__repeat("").repeat(0).get_error_id() === :invalid_type)
+     test(to_broken_custom_array__repeat("").repeat(0).get_error_id() === :invalid_type)
+     test(to_error_array__repeat("").repeat(0).get_error_id() === :3)
+     test(to_error_custom_array__repeat("").repeat(0).get_error_id() === :4)
+}

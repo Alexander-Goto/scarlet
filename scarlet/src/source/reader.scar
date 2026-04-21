@@ -1,0 +1,1119 @@
+let t_reader = [obj
+     :file_name = ""
+     :position  = 0
+     :tokens    = [array] # [array @t_token*]
+]
+
+fn eof?(reader) reader:position >= reader:tokens.len()
+fn skip_spaces(reader) new (reader):position => _ + reader:tokens.drop(reader:position).take_while(fn (token) token:text.first().in?(";\n")).len()
+fn back_one(reader) new (reader):position => _ - 1
+
+fn read_token(reader) {
+     if reader.eof?()
+          error__unexpected_eof(reader:file_name)
+     else null
+
+     let token = reader:tokens[reader:position]
+     [box token, new (reader):position => _ + 1]
+}
+
+fn one_of?(reader, variants)
+     if reader.eof?()
+          [box null, reader]
+     else {
+          let token = reader:tokens[reader:position]
+          if token:text === variants || variants.type() /= "core.string" && token:text.in?(variants)
+               [box token, new (reader):position => _ + 1]
+          else [box null, reader]
+     }
+
+fn one_of!(reader, variants, return_token) {
+     let [box token, reader] = reader.read_token()
+     if not (token:text === variants || variants.type() /= "core.string" && token:text.in?(variants))
+          error__not_expected_token(token, variants)
+     else if return_token
+          [box token, reader]
+     else reader
+}
+
+fn read_name(reader, owner) {
+     if reader.eof?()
+          error__unexpected_eof(reader:file_name)
+     else null
+
+     let name = reader:tokens[reader:position]
+     name!(name, owner)
+
+     [box name, new (reader):position => _ + 1]
+}
+
+fn read_structs(reader) loop([box [array], reader, "", [table]], fn (state) {
+     let [box structs, reader, doc_comment, attributes] = state
+
+     let reader = reader.skip_spaces()
+     if reader.eof?()
+          [breaker structs]
+     else {
+          let [box keyword, reader] = reader.read_token()
+
+          switch keyword:text
+          case "let": {
+               let [box gconst, reader] = reader.read_gconst(doc_comment, attributes)
+               [box structs.append(gconst), reader, "", [table]]
+          }
+          case "fn": {
+               let [box func, reader] = reader.read_fn(doc_comment, attributes)
+               [box structs.append(func), reader, "", [table]]
+          }
+          case "`": {
+               if not attributes.empty?()
+                    error__not_expected_token(keyword, [set "let", "fn"])
+               else null
+
+               let [box attributes, reader] = reader.read_attributes(keyword)
+               [box structs, reader, "", attributes]
+          }
+          default: {
+               if keyword:text.first() /= '#' || not doc_comment.empty?()
+                    error__not_expected_token(keyword, [set "let", "fn"])
+               else null
+
+               [box structs, reader, keyword:text, [table]]
+          }
+     }
+})
+
+fn read_gconst(reader, doc_comment, attributes) {
+     gconst_attributes!(attributes)
+
+     let [box const_name, reader] = reader.read_name("global constant")
+     let [box value, reader]      = reader.one_of!("=", false).skip_spaces().read_exp()
+
+     [box
+          new (@main.t_src_gconst) {
+               :name        <= const_name
+               :value       <= value
+               :attributes  <= attributes
+               :doc_comment <= if doc_comment.empty?(); "" else doc_comment[2, doc_comment.len() - 2].trim()
+          }
+
+          reader
+     ]
+}
+
+fn read_fn(reader, doc_comment, attributes) {
+     fn_attributes!(attributes)
+
+     let [box fn_name, reader] = reader.read_name("function")
+     let [box params, reader]  = reader.read_fn_params()
+     let [box body, reader]    = if "external".key_of?(attributes); [box null, reader.one_of!([set "\n", ";"], false)] else reader.skip_spaces().read_exp()
+
+     [box
+          new (@main.t_src_fn) {
+               :name        <= fn_name
+               :params      <= params
+               :body        <= body
+               :attributes  <= attributes
+               :doc_comment <= if doc_comment.empty?(); "" else doc_comment[2, doc_comment.len() - 2].trim()
+          }
+
+          reader
+     ]
+}
+
+fn read_attributes(reader, open_char) loop([box [table], reader], fn (state) {
+     let [box attributes, reader] = state
+
+     let reader = reader.skip_spaces()
+     if reader.eof?()
+          error__no_end_id(open_char, "`")
+     else null
+
+     let [box first_attr_token, reader] = reader.read_token()
+     let attribute                      =
+          switch first_attr_token:text
+          case "`":        null
+          case "cold":     new (@main.t_cold_attr):code <= first_attr_token
+          case "export":   new (@main.t_export_attr):code <= first_attr_token
+          case "external": new (@main.t_external_attr):code <= first_attr_token
+          case "hot":      new (@main.t_hot_attr):code <= first_attr_token
+          case "noinline": new (@main.t_noinline_attr):code <= first_attr_token
+          default:         error__not_expected_token(first_attr_token, null)
+
+     if attribute.null?()
+          [breaker [box attributes, reader]]
+     else {
+          let attribute_id = get_attribute_id(attribute)
+          let attributes   = new (attributes)[attribute_id] => fn (existed_attr)
+               if existed_attr.null?()
+                    attribute
+               else error__already_exists(get_attribute_code(attribute), "attribute")
+
+          [box attributes, reader]
+     }
+})
+
+fn read_fn_params(reader) {
+     let [box open_char, reader]  = reader.one_of!("(", true)
+     let [box close_char, reader] = reader.skip_spaces().one_of?(")")
+     if not close_char.null?()
+          [box [array], reader]
+     else loop([box [array], reader], fn (state) {
+          let [box params, reader] = state
+
+          if reader.eof?()
+               error__no_end_id(open_char, ")")
+          else null
+
+          let [box param, reader] = reader.read_token()
+          if param:text /= "_" {
+               name!(param, "function parameter")
+
+               if params.any(false, fn (existed_param) existed_param:text == param:text)
+                    error__already_exists(param, "function parameter")
+               else null
+          } else null
+
+          let params = params.append(param)
+          if params.len() > 16
+               error__fn_params_num_exceeded(param)
+          else null
+
+          let [box next_token, reader] = reader.read_token()
+          switch next_token:text
+          case ",":
+               [box params, reader]
+          case "\n", ";": {
+               let [box close_char, reader] = reader.skip_spaces().one_of?(")")
+               break(not close_char.null?(), [box params, reader])
+          }
+          case ")":
+               [breaker [box params, reader]]
+          default: error__not_expected_token(next_token, [set ",", "\n", ";", ")"])
+     })
+}
+
+fn read_exp(reader) loop([box [array], false, reader], fn (state) {
+     let [box exp_array, prev_is_operand, reader] = state
+
+     if reader.eof?() {
+          if not prev_is_operand
+               error__unexpected_eof(reader:file_name)
+          else null
+
+          [breaker [box exp_array__to_tree(exp_array), reader]]
+     } else {
+          let [box first_token, reader] = reader.read_token()
+          switch first_token:text
+          case ",", ":", ";", "\n", ")", "]", "}", "=", "else", "case", "default": {
+               if not prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               let reader = reader.back_one()
+               [breaker [box exp_array__to_tree(exp_array), reader]]
+          }
+          case "*", "/", "%", "+", "++", "-", "<<", ">>", ">>>", "<", ">", "<=", ">=", "==", "/=", "===", "=/=", "&", "^", "|", "||", "&&", "<?": {
+               if not prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               [box exp_array.append(first_token), false, reader.skip_spaces()]
+          }
+          case ".": {
+               if not prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               let [box fn_name, reader] = reader.skip_spaces().read_token()
+               let [box fn_name, reader] = if fn_name:text.first() == '@' {
+                    let [box short_fn_name, reader] = reader.one_of!(".", false).read_token()
+                    [box new (fn_name):text => _ ++ ("." ++ short_fn_name:text), reader]
+               } else [box fn_name, reader]
+
+               let [box open_char, reader] = reader.one_of!("(", true)
+               switch fn_name:text
+               case "test": {
+                    let exp_array = new (exp_array)[exp_array.len() - 1] => fn (last_exp) new (@main.t_test) {
+                         :keyword <= fn_name
+                         :exp     <= last_exp
+                    }
+                    [box exp_array, true, reader.one_of!(")", false)]
+               }
+               case "guard": {
+                    let exp_array = new (exp_array)[exp_array.len() - 1] => fn (last_exp) new (@main.t_guard) {
+                         :keyword <= fn_name
+                         :exp     <= last_exp
+                    }
+                    [box exp_array, true, reader.one_of!(")", false)]
+               }
+               case "check": {
+                    let exp_array = new (exp_array)[exp_array.len() - 1] => fn (last_exp) new (@main.t_check) {
+                         :keyword <= fn_name
+                         :exp     <= last_exp
+                    }
+                    [box exp_array, true, reader.one_of!(")", false)]
+               }
+               default: {
+                    let [box fn_call, reader] = reader.read_fn_call(fn_name, open_char)
+                    let fn_call               = new (fn_call):args => fn (args) exp_array.last().insert_to(args, 0)
+                    let exp_array             = new (exp_array)[exp_array.len() - 1] <= fn_call
+
+                    [box exp_array, true, reader]
+               }
+          }
+          case "->": {
+               if not prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               let [box mtd_call, reader] = reader.read_mtd_call(exp_array.last())
+               let exp_array              = new (exp_array)[exp_array.len() - 1] <= mtd_call
+
+               [box exp_array, true, reader]
+          }
+          case "(":
+               if prev_is_operand {
+                    let [box call, reader] = reader.read_call_from_exp(exp_array.last(), first_token)
+                    let exp_array          = new (exp_array)[exp_array.len() - 1] <= call
+
+                    [box exp_array, true, reader]
+               } else {
+                    let [box exp, reader] = reader.skip_spaces().read_exp()
+                    let exp_array         = exp_array.append(new (@main.t_nested_exp) {
+                         :open_char <= first_token
+                         :exp       <= exp
+                    })
+
+                    [box exp_array, true, reader.skip_spaces().one_of!(")", false)]
+               }
+          case "{":
+               if prev_is_operand {
+                    let reader = reader.back_one()
+                    [breaker [box exp_array__to_tree(exp_array), reader]]
+               } else {
+                    let [box exp, reader] = reader.read_exps(first_token)
+                    [box exp_array.append(exp), true, reader]
+               }
+          case "[":
+               if prev_is_operand {
+                    let [box exp, reader] = reader.read_get_item_or_slice(exp_array.last())
+                    let exp_array         = new (exp_array)[exp_array.len() - 1] <= exp
+
+                    [box exp_array, true, reader]
+               } else {
+                    let [box struct, reader] = reader.read_struct_in_exp(first_token)
+                    [box exp_array.append(struct), true, reader]
+               }
+          case "_": {
+               if prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               [box exp_array.append(new (@main.t_holder):keyword <= first_token), true, reader]
+          }
+          case "fn": {
+               if prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               let [box lambda, reader] = reader.read_lambda(first_token)
+               [box exp_array.append(lambda), true, reader]
+          }
+          case "if": {
+               if prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               let [box if_exp, reader] = reader.read_if(first_token)
+               [box exp_array.append(if_exp), true, reader]
+          }
+          case "let": {
+               if prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               let [box open_char, reader] = reader.one_of?("[")
+               let [box exp, reader]       = if open_char.null?()
+                    reader.read_const_def(first_token)
+               else reader.read_unpack(first_token, open_char)
+
+               [box exp_array.append(exp), true, reader]
+          }
+          case "new": {
+               if prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               let [box new_exp, reader] = reader.read_operator_new(first_token)
+               [box exp_array.append(new_exp), true, reader]
+          }
+          case "not": {
+               if prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               [box exp_array.append(first_token), false, reader.skip_spaces()]
+          }
+          case "switch": {
+               if prev_is_operand
+                    error__not_expected_token(first_token, null)
+               else null
+
+               let [box switch_exp, reader] = reader.read_switch(first_token)
+               [box exp_array.append(switch_exp), true, reader]
+          }
+          default:
+               switch first_token:text.first()
+               case ':':
+                    if prev_is_operand {
+                         if not first_token:text.drop(1).src_token_valid?()
+                              error__invalid_token(first_token)
+                         else null
+
+                         let field = new (@main.t_field) {
+                              :object   <= exp_array.last()
+                              :field <= first_token
+                         }
+                         let exp_array = new (exp_array)[exp_array.len() - 1] <= field
+
+                         [box exp_array, true, reader]
+                    } else {
+                         if first_token:text.len() == 1
+                              error__not_expected_token(first_token, null)
+                         else null
+
+                         [box exp_array.append(new (@main.t_token_in_exp):value <= first_token), true, reader]
+                    }
+               case '@': {
+                    if prev_is_operand
+                         error__not_expected_token(first_token, null)
+                    else null
+
+                    let [box short_name, reader] = reader.one_of!(".", false).read_token()
+                    let full_name                = new (first_token):text => _ ++ ("." ++ short_name:text)
+
+                    let [box open_char, reader] = reader.one_of?("(")
+                    if open_char.null?()
+                         [box exp_array.append(new (@main.t_gconst_in_exp):name <= full_name), true, reader]
+                    else {
+                         let [box fn_call, reader] = reader.read_fn_call(full_name, open_char)
+                         [box exp_array.append(fn_call), true, reader]
+                    }
+               }
+               case '-', '+': {
+                    if not first_token:text[1].in_range?('0', ':' #*('9'.to_int() + 1).to_char()*#)
+                         error__not_expected_token(first_token, null)
+                    else null
+
+                    let [box num, exp_array] = if prev_is_operand {
+                         let operator = new (first_token):text => _.take(1)
+                         let num      = new (first_token) {
+                              :text => _.drop(1)
+                              :row  => _ + 1
+                         }
+
+                         [box num, exp_array.append(operator)]
+                    } else [box first_token, exp_array]
+
+                    let exp_array = exp_array.append(new (if '.'.in?(num:text); @main.t_float else if 'x'.in?(num:text); @main.t_hex else @main.t_int):value <= num)
+                    [box exp_array, true, reader]
+               }
+               case '\'': {
+                    if prev_is_operand
+                         error__not_expected_token(first_token, null)
+                    else null
+
+                    [box exp_array.append(new (@main.t_char):value <= first_token), true, reader]
+               }
+               case '"': {
+                    if prev_is_operand
+                         error__not_expected_token(first_token, null)
+                    else null
+
+                    [box exp_array.append(new (@main.t_string):value <= first_token), true, reader]
+               }
+               case '0': {
+                    if prev_is_operand
+                         error__not_expected_token(first_token, null)
+                    else null
+
+                    let token_text = first_token:text
+                    let type       = if "0x".prefix_of?(token_text)
+                         @main.t_hex
+                    else if "0b".prefix_of?(token_text)
+                         @main.t_byte
+                    else if '.'.in?(token_text)
+                         @main.t_float
+                    else @main.t_int
+
+                    [box exp_array.append(new (type):value <= first_token), true, reader]
+               }
+               case '1', '2', '3', '4', '5', '6', '7', '8', '9': {
+                    if prev_is_operand
+                         error__not_expected_token(first_token, null)
+                    else null
+
+                    let exp_array = exp_array.append(new (if '.'.in?(first_token:text); @main.t_float else @main.t_int):value <= first_token)
+                    [box exp_array, true, reader]
+               }
+               case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '_': {
+                    if prev_is_operand
+                         error__not_expected_token(first_token, null)
+                    else null
+
+                    let token_text = first_token:text
+                    let str_idx    = '\"'.look_in(token_text) <? 0.max_val()
+                    let chr_idx    = '\''.look_in(token_text) <? 0.max_val()
+
+                    let [box exp, prev_is_operand, reader] = if str_idx /= chr_idx
+                         if str_idx < chr_idx
+                              [box new (@main.t_string):value <= first_token, true, reader]
+                         else [box new (@main.t_char):value <= first_token, true,reader]
+                    else {
+                         let [box open_char, reader] = reader.one_of?("(")
+                         if open_char.null?()
+                              switch token_text
+                              case "true", "false": [box new (@main.t_bool):value <= first_token, true, reader]
+                              case "null":          [box new (@main.t_null):keyword <= first_token, true, reader]
+                              default:              [box new (@main.t_const_in_exp):name <= first_token, true, reader]
+                         else switch token_text
+                         case "test": {
+                              let [box exp, reader] = reader.skip_spaces().read_exp()
+                              [box
+                                   new (@main.t_test) {
+                                        :keyword <= first_token
+                                        :exp     <= exp
+                                   }
+
+                                   true, reader.skip_spaces().one_of!(")", false)
+                              ]
+                         }
+                         case "guard": {
+                              let [box exp, reader] = reader.skip_spaces().read_exp()
+                              [box
+                                   new (@main.t_guard) {
+                                        :keyword <= first_token
+                                        :exp     <= exp
+                                   }
+
+                                   true, reader.skip_spaces().one_of!(")", false)
+                              ]
+                         }
+                         case "check": {
+                              let [box exp, reader] = reader.skip_spaces().read_exp()
+                              [box
+                                   new (@main.t_check) {
+                                        :keyword <= first_token
+                                        :exp     <= exp
+                                   }
+
+                                   true, reader.skip_spaces().one_of!(")", false)
+                              ]
+                         }
+                         case "unreachable":
+                              [box new (@main.t_unreachable):keyword <= first_token, true, reader.skip_spaces().one_of!(")", false)]
+                         default: {
+                              let [box exp, reader] = reader.read_fn_call(first_token, open_char)
+                              [box exp, true, reader]
+                         }
+                    }
+
+                    [box exp_array.append(exp), prev_is_operand, reader]
+               }
+               default: error__not_expected_token(first_token, null)
+     }
+})
+
+fn read_fn_call(reader, fn_name, open_char) {
+     let [box args, reader] = reader.read_comma_exps(open_char)
+     [box
+          new (@main.t_fn_call) {
+               :name <= fn_name
+               :args <= args
+          }
+          reader
+     ]
+}
+
+fn read_comma_exps(reader, open_char) {
+     let close_char                      = if open_char:text == "("; ")" else "]"
+     let [box readed_close_char, reader] = reader.skip_spaces().one_of?(close_char)
+     if not readed_close_char.null?()
+          [box [array], reader]
+     else loop([box [array], reader], fn (state) {
+          let [box exps, reader] = state
+
+          if reader.eof?()
+               error__no_end_id(open_char, close_char)
+          else null
+
+          let [box exp, reader] = reader.read_exp()
+          let exps              = exps.append(exp)
+
+          let [box separator, reader] = reader.read_token()
+          switch separator:text
+          case ",":
+               [box exps, reader]
+          case "\n", ";": {
+               let [box readed_close_char, reader] = reader.skip_spaces().one_of?(close_char)
+               break(not readed_close_char.null?(), [box exps, reader])
+          }
+          case "]", ")": {
+               if close_char /= separator:text
+                    error__not_expected_token(separator, [set ",", "\n", ";", close_char])
+               else null
+
+               [breaker [box exps, reader]]
+          }
+          default: error__not_expected_token(separator, [set ",", "\n", ";", close_char])
+     })
+}
+
+fn read_kv_exps(reader, open_char) {
+     let [box close_char, reader] = reader.skip_spaces().one_of?("]")
+     if not close_char.null?()
+          [box [array], reader]
+     else loop([box [array], reader], fn (state) {
+          let [box kvs, reader] = state
+
+          if reader.eof?()
+               error__no_end_id(open_char, "]")
+          else null
+
+          let [box key, reader]   = reader.read_exp()
+          let [box value, reader] = reader.one_of!("=", false).skip_spaces().read_exp()
+          let kvs                 = kvs.append([obj :key = key, :value = value])
+
+          let [box separator, reader] = reader.read_token()
+          switch separator:text
+          case ",":
+               [box kvs, reader]
+          case "\n", ";": {
+               let [box close_char, reader] = reader.skip_spaces().one_of?("]")
+               break(not close_char.null?(), [box kvs, reader])
+          }
+          case "]":
+               [breaker [box kvs, reader]]
+          default: error__not_expected_token(separator, [set ",", "\n", ";", "]"])
+     })
+}
+
+fn read_mtd_call(reader, mtd_const) {
+     let [box name, reader] = reader.skip_spaces().read_token()
+     if not name:text.src_token_valid?()
+          error__invalid_token(name)
+     else null
+
+     let [box open_char, reader] = reader.one_of!("(", true)
+     let [box args, reader]      = reader.read_comma_exps(open_char)
+
+     [box
+          new (@main.t_mtd_call) {
+               :mtd_const <= mtd_const
+               :mtd_name  <= name
+               :args      <= args
+          }
+          reader
+     ]
+}
+
+fn read_call_from_exp(reader, exp, open_char) {
+     if exp:scar_type =/= "t_nested_exp"
+          error__not_expected_token(open_char, null)
+     else null
+
+     let [box args, reader] = reader.read_comma_exps(open_char)
+
+     [box
+          new (@main.t_call_from_exp) {
+               :exp  <= exp
+               :args <= args
+          }
+          reader
+     ]
+}
+
+fn read_exps(reader, open_char) loop([box [array], reader.skip_spaces()], fn (state) {
+     let [box exps, reader] = state
+
+     if reader.eof?()
+          error__no_end_id(open_char, "}")
+     else null
+
+     let [box exp, reader] = reader.read_exp()
+     let exps              = exps.append(exp)
+
+     let [box close_char, reader] = reader.skip_spaces().one_of?("}")
+     if close_char.null?()
+          [box exps, reader]
+     else [breaker [box
+          new (@main.t_grouped_exps) {
+               :open_char <= open_char
+               :exps      <= exps
+          }
+          reader
+     ]]
+})
+
+fn read_get_item_or_slice(reader, operand) {
+     let [box first_exp, reader] = reader.skip_spaces().read_exp()
+     let [box separator, reader] = reader.one_of?(",")
+     if separator.null?() {
+          let [box close_char, reader] = reader.skip_spaces().one_of?("]")
+          if close_char.null?() {
+               let [box second_exp, reader] = reader.read_exp()
+               let reader                   = reader.skip_spaces().one_of!("]", false)
+               [box
+                    new (@main.t_slice) {
+                         :operand <= operand
+                         :from    <= first_exp
+                         :to      <= second_exp
+                    }
+                    reader
+               ]
+          } else [box
+               new (@main.t_get_item) {
+                    :operand <= operand
+                    :key     <= first_exp
+               }
+               reader
+          ]
+     } else {
+          let [box second_exp, reader] = reader.read_exp()
+          let reader                   = reader.skip_spaces().one_of!("]", false)
+          [box
+               new (@main.t_slice) {
+                    :operand <= operand
+                    :from    <= first_exp
+                    :to      <= second_exp
+               }
+               reader
+          ]
+     }
+}
+
+fn read_struct_in_exp(reader, open_char) {
+     let [box type, reader] = reader.read_token()
+     switch type:text
+     case "array": {
+          let [box items, reader] = reader.read_comma_exps(open_char)
+          [box
+               new (@main.t_array) {
+                    :open_char <= open_char
+                    :items     <= items
+               }
+
+               reader
+          ]
+     }
+     case "box": {
+          let [box items, reader] = reader.read_comma_exps(open_char)
+          if items.len() > 16
+               error__box_items_num_exceeded(open_char)
+          else null
+
+          [box
+               new (@main.t_box) {
+                    :open_char <= open_char
+                    :items     <= items
+               }
+
+               reader
+          ]
+     }
+     case "breaker": {
+          let [box items, reader] = reader.read_comma_exps(open_char)
+          if items.len() /= 1
+               error__invalid_breaker_items_num(open_char)
+          else null
+
+          [box
+               new (@main.t_breaker) {
+                    :open_char <= open_char
+                    :item      <= items.first()
+               }
+
+               reader
+          ]
+     }
+     case "error": {
+          let [box items, reader] = reader.read_comma_exps(open_char)
+          if items.len() /= 3
+               error__invalid_error_items_num(open_char)
+          else null
+
+          [box
+               new (@main.t_error) {
+                    :open_char <= open_char
+                    :id        <= items.first()
+                    :msg       <= items[1]
+                    :data      <= items[2]
+               }
+
+               reader
+          ]
+     }
+     case "byte_array": {
+          let [box items, reader] = reader.read_comma_exps(open_char)
+          [box
+               new (@main.t_byte_array) {
+                    :open_char <= open_char
+                    :items     <= items
+               }
+
+               reader
+          ]
+     }
+     case "set": {
+          let [box items, reader] = reader.read_comma_exps(open_char)
+          [box
+               new (@main.t_set) {
+                    :open_char <= open_char
+                    :items     <= items
+               }
+
+               reader
+          ]
+     }
+     case "obj": {
+          let [box kvs, reader] = reader.read_kv_exps(open_char)
+          [box
+               new (@main.t_obj) {
+                    :open_char <= open_char
+                    :kvs       <= kvs
+               }
+
+               reader
+          ]
+     }
+     case "table": {
+          let [box kvs, reader] = reader.read_kv_exps(open_char)
+          [box
+               new (@main.t_table) {
+                    :open_char <= open_char
+                    :kvs       <= kvs
+               }
+
+               reader
+          ]
+     }
+     default: error__not_expected_token(type, [set "array", "box", "byte_array", "table", "error", "obj", "set"])
+}
+
+fn read_lambda(reader, keyword) {
+     let [box params, reader] = reader.read_fn_params()
+     let [box body, reader]   = reader.skip_spaces().read_exp()
+
+     [box
+          new (@main.t_lambda_in_exp) {
+               :keyword <= keyword
+               :params  <= params
+               :body    <= body
+          }
+
+          reader
+     ]
+}
+
+fn read_if(reader, keyword) {
+     let [box predicate, reader] = reader.skip_spaces().read_exp()
+     let [box then__exp, reader] = reader.skip_spaces().read_exp()
+     let [box else__exp, reader] = reader.skip_spaces().one_of!("else", false).skip_spaces().read_exp()
+
+     [box
+          new (@main.t_if_exp) {
+               :keyword   <= keyword
+               :predicate <= predicate
+               :then      <= then__exp
+               :else      <= else__exp
+          }
+
+          reader
+     ]
+}
+
+fn read_const_def(reader, keyword) {
+     let [box name, reader]  = reader.read_name("constant")
+     let [box value, reader] = reader.one_of!("=", false).skip_spaces().read_exp()
+
+     [box
+          new (@main.t_const_def) {
+               :keyword <= keyword
+               :name    <= name
+               :value   <= value
+          }
+
+          reader
+     ]
+}
+
+fn read_unpack(reader, keyword, open_char) {
+     let valid_types        = [set "box", "obj", "array", "error", "table", "byte_array", "set"]
+     let [box type, reader] = reader.read_token()
+     if not type:text.in?(valid_types)
+          error__not_expected_token(type, valid_types)
+     else null
+
+     let reader               = reader.skip_spaces()
+     let [box result, reader] = if type:text.in?([array "table", "obj", "set"])
+          loop([box [array], [set], reader], fn (state) {
+               let [box names_and_keys, existed_names, reader] = state
+
+               if reader.eof?()
+                    error__no_end_id(open_char, "]")
+               else null
+
+               let [box name, reader] = reader.read_name("constant")
+               let existed_names      = existed_names.append_new(name:text)
+               if existed_names.null?()
+                    error__already_exists(name, "constant")
+               else null
+
+               let [box key, reader] = reader.one_of!("=", false).skip_spaces().read_exp()
+               let names_and_keys    = names_and_keys.append([obj :name = name, :key = key])
+
+               let [box separator, reader] = reader.read_token()
+               switch separator:text
+               case ",":
+                    [box names_and_keys, existed_names, reader]
+               case "\n", ";": {
+                    let [box close_char, reader] = reader.skip_spaces().one_of?("]")
+                    if close_char.null?()
+                         [box names_and_keys, existed_names, reader]
+                    else [breaker [box
+                         new (@main.t_unpack_kv) {
+                              :keyword        <= keyword
+                              :type           <= type:text
+                              :names_and_keys <= names_and_keys
+                         }
+
+                         reader
+                    ]]
+               }
+               case "]":
+                    [breaker [box
+                         new (@main.t_unpack_kv) {
+                              :keyword        <= keyword
+                              :type           <= type:text
+                              :names_and_keys <= names_and_keys
+                         }
+
+                         reader
+                    ]]
+               default: error__not_expected_token(separator, [set ",", "\n", ";", "]"])
+          })
+     else {
+          let [box result, reader, no_names] = loop([box [array], [set], reader], fn (state) {
+               let [box names, existed_names, reader] = state
+
+               if reader.eof?()
+                    error__no_end_id(open_char, "]")
+               else null
+
+               let [box name, reader] = reader.read_token()
+               let existed_names      = if name:text == "_"
+                    existed_names
+               else {
+                    name!(name, "constant")
+
+                    let existed_names = existed_names.append_new(name:text)
+                    if existed_names.null?()
+                         error__already_exists(name, "constant")
+                    else null
+
+                    existed_names
+               }
+
+               let names = append(names, name)
+               if type:text == "error" && len(names) == 3 || type:text == "box" && len(names) == 16
+                    [breaker [box
+                         new (@main.t_unpack) {
+                              :keyword <= keyword
+                              :type    <= type:text
+                              :names   <= names
+                         }
+
+                         reader.skip_spaces().one_of!("]", false)
+                         existed_names.empty?()
+                    ]]
+               else {
+                    let [box separator, reader] = reader.read_token()
+                    switch separator:text
+                    case ",":
+                         [box names, existed_names, reader]
+                    case "\n", ";": {
+                         let [box close_char, reader] = reader.skip_spaces().one_of?("]")
+                         if close_char.null?()
+                              [box names, existed_names, reader]
+                         else [breaker [box
+                              new (@main.t_unpack) {
+                                   :keyword <= keyword
+                                   :type    <= type:text
+                                   :names   <= names
+                              }
+
+                              reader
+                              existed_names.empty?()
+                         ]]
+                    }
+                    case "]":
+                         [breaker [box
+                              new (@main.t_unpack) {
+                                   :keyword <= keyword
+                                   :type    <= type:text
+                                   :names   <= names
+                              }
+
+                              reader
+                              existed_names.empty?()
+                         ]]
+                    default: error__not_expected_token(separator, [set ",", "\n", ";", "]"])
+               }
+          })
+
+          if no_names
+               error__not_names_in_unpack(keyword)
+          else null
+
+          [box result, reader]
+     }
+
+     let [box operand, reader] = reader.one_of!("=", false).skip_spaces().read_exp()
+     [box new (result):operand <= operand, reader]
+}
+
+fn read_operator_new(reader, keyword) {
+     let [box base_operand, reader]   = reader.one_of!("(", false).skip_spaces().read_exp()
+     let [box mods_open_char, reader] = reader.skip_spaces().one_of!(")", false).one_of?("{")
+     if mods_open_char.null?() {
+          let [box keys, reader, mod_type] = loop([box [array], reader], fn (state) {
+               let [box keys, reader] = state
+
+               let [box token, reader] = reader.read_token()
+               if token:text.first() == ':' {
+                    if not token:text.drop(1).src_token_valid?()
+                         error__invalid_token(token)
+                    else null
+
+                    [box keys.append(new (@main.t_token_in_exp):value <= token), reader]
+               } else if token:text == "[" {
+                    let [box key, reader] = reader.skip_spaces().read_exp()
+                    [box keys.append(key), reader.skip_spaces().one_of!("]", false)]
+               } else [breaker [box keys, reader, token]]
+          })
+
+          if keys.empty?()
+               error__not_expected_token(mod_type, "[")
+          else null
+
+          if not mod_type:text.in?(@main.new_mod_types)
+               error__not_expected_token(mod_type, @main.new_mod_types)
+          else null
+
+          let [box mod_exp, reader] = reader.skip_spaces().read_exp()
+          [box
+               new (@main.t_operator_new) {
+                    :keyword      <= keyword
+                    :base_operand <= base_operand
+                    :mods         <= [array [obj
+                         :keys = keys
+                         :type = mod_type:text
+                         :exp  = mod_exp
+                    ]]
+               }
+
+               reader
+          ]
+     } else loop([box [array], reader.skip_spaces()], fn (state) {
+          let [box mods, reader] = state
+
+          let [box keys, reader, mod_type] = loop([box [array], reader], fn (state) {
+               let [box keys, reader] = state
+
+               let [box token, reader] = reader.read_token()
+               if token:text.first() == ':' {
+                    if not token:text.drop(1).src_token_valid?()
+                         error__invalid_token(token)
+                    else null
+
+                    [box keys.append(new (@main.t_token_in_exp):value <= token), reader]
+               } else if token:text == "[" {
+                    let [box key, reader] = reader.skip_spaces().read_exp()
+                    [box keys.append(key), reader.skip_spaces().one_of!("]", false)]
+               } else [breaker [box keys, reader, token]]
+          })
+
+          if keys.empty?()
+               error__not_expected_token(mod_type, "[")
+          else null
+
+          if not mod_type:text.in?(@main.new_mod_types)
+               error__not_expected_token(mod_type, @main.new_mod_types)
+          else null
+
+          let [box mod_exp, reader] = reader.skip_spaces().read_exp()
+          let mods = mods.append([obj
+               :keys = keys
+               :type = mod_type:text
+               :exp  = mod_exp
+          ])
+
+          let [box mods_close_char, reader] = reader.skip_spaces().one_of?("}")
+          if mods_close_char.null?() {
+               if mod_type:text.len() == 3
+                    error__not_expected_token(mod_type, [set "<=", "=>"])
+               else null
+
+               [box mods, reader]
+          } else [breaker [box
+               new (@main.t_operator_new) {
+                    :keyword      <= keyword
+                    :base_operand <= base_operand
+                    :mods         <= mods
+               }
+
+               reader
+          ]]
+     })
+}
+
+fn read_switch(reader, keyword) {
+     let [box switch_exp, reader] = reader.skip_spaces().read_exp()
+     loop([box [array], reader.skip_spaces()], fn (state) {
+          let [box cases, reader] = state
+
+          let [box variants, reader] = loop([box [array], reader.one_of!("case", false).skip_spaces()], fn (state) {
+               let [box variants, reader] = state
+
+               let [box variant, reader]   = reader.read_exp()
+               let variants                = variants.append(variant)
+               let [box separator, reader] = reader.one_of?(",")
+               if separator.null?() {
+                    let [box end_variants_char, reader] = reader.skip_spaces().one_of?(":")
+                    break(not end_variants_char.null?(), [box variants, reader])
+               } else [box variants, reader]
+          })
+
+          let [box case_exp, reader] = reader.skip_spaces().read_exp()
+          let cases                  = cases.append([obj :variants = variants, :case_exp = case_exp])
+
+          let [box default_word, reader] = reader.skip_spaces().one_of?("default")
+          if default_word.null?()
+               [box cases, reader]
+          else {
+               let [box default_exp, reader] = reader.one_of!(":", false).skip_spaces().read_exp()
+
+               [breaker [box
+                    new (@main.t_switch_exp) {
+                         :keyword     <= keyword
+                         :switch_exp  <= switch_exp
+                         :cases       <= cases
+                         :default_exp <= default_exp
+                    }
+
+                    reader
+               ]]
+          }
+     })
+}

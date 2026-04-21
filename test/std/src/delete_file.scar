@@ -1,0 +1,15 @@
+`noinline`
+fn test__delete_file() {
+     open_file(fs_path("__tmp_file__"), @std.fom__write | @std.fom__new)
+     test(delete_file(fs_path("__tmp_file__")).null?())
+
+     test(delete_file(fs_path("__tmp_file__")) == :not_exist)
+     test(delete_file(fs_path("/root/1.txt")) == :access)
+     let long_name = fs_path("/" ++ "a".repeat(16777214))
+     test(long_name.type() == "std.fs_path")
+     test(delete_file(long_name) == :long)
+     test(delete_file(fs_path("src/helpers")) == :not_file)
+
+     test(delete_file(expected_error(:1, heap_string(), heap_string())).get_error_id() == :1)
+     test(delete_file(heap_string()).get_error_id() == :invalid_type)
+}

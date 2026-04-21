@@ -1,0 +1,147 @@
+let const__to_byte = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_byte = fn (const) const:value.to_byte()
+     ]
+]
+
+fn to_const__to_byte(arg) new (@main.const__to_byte):value <= arg
+
+fn to_custom_const__to_byte(arg) custom__create(
+     arg
+     [obj
+          :core_to_byte = fn (const) custom__get_data(const).to_byte()
+     ]
+)
+
+let broken_const__to_byte = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_byte = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_const__to_byte(arg) new (@main.broken_const__to_byte):value <= arg
+
+fn to_broken_custom_const__to_byte(arg) custom__create(
+     arg
+     [obj
+          :core_to_byte = fn (_) heap_string()
+     ]
+)
+
+let error_const__to_byte = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_byte = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__to_byte(arg) new (@main.error_const__to_byte):value <= arg
+
+fn to_error_custom_const__to_byte(arg) custom__create(
+     arg
+     [obj
+          :core_to_byte = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__to_byte() {
+     test("00".to_byte() === 0b00)
+     test("ff".to_byte() === 0bff)
+     test("01".to_byte() === 0b01)
+     test("10".to_byte() === 0b10)
+     test("fe".to_byte() === 0bfe)
+     test("ef".to_byte() === 0bef)
+
+     test(0b00.to_byte() === 0b00)
+     test(0bff.to_byte() === 0bff)
+     test(0b01.to_byte() === 0b01)
+     test(0b10.to_byte() === 0b10)
+     test(0bfe.to_byte() === 0bfe)
+     test(0bef.to_byte() === 0bef)
+
+     test('\0000ff'.to_byte() === 0bff)
+     test('\000001'.to_byte() === 0b01)
+     test('\000010'.to_byte() === 0b10)
+     test('\0000fe'.to_byte() === 0bfe)
+     test('\0000ef'.to_byte() === 0bef)
+
+     test(0.to_byte() === 0b00)
+     test(255.to_byte() === 0bff)
+     test(1.to_byte() === 0b01)
+     test(16.to_byte() === 0b10)
+     test(254.to_byte() === 0bfe)
+     test(239.to_byte() === 0bef)
+
+     test(0.0.to_byte() === 0b00)
+     test(-0.0.to_byte() === 0b00)
+     test(0.9.to_byte() === 0b00)
+     test(-0.9.to_byte() === 0b00)
+     test(255.99.to_byte() === 0bff)
+     test(255.0.to_byte() === 0bff)
+     test(1.0.to_byte() === 0b01)
+     test(1.9.to_byte() === 0b01)
+     test(16.0.to_byte() === 0b10)
+     test(16.1.to_byte() === 0b10)
+     test(254.0.to_byte() === 0bfe)
+     test(254.01.to_byte() === 0bfe)
+     test(239.0.to_byte() === 0bef)
+     test(239.001.to_byte() === 0bef)
+
+     test([byte_array 0b00].to_byte() === 0b00)
+     test([byte_array 0bff].to_byte() === 0bff)
+     test([byte_array 0b01].to_byte() === 0b01)
+     test([byte_array 0b10].to_byte() === 0b10)
+     test([byte_array 0bfe].to_byte() === 0bfe)
+     test([byte_array 0bef].to_byte() === 0bef)
+
+     test(255.99.to_const__to_byte().to_byte() === 0bff)
+     test(1.0.to_const__to_byte().to_byte() === 0b01)
+
+     test(255.99.to_custom_const__to_byte().to_byte() === 0bff)
+     test(1.0.to_custom_const__to_byte().to_byte() === 0b01)
+
+     test(expected_error(:1, heap_string(), heap_string()).to_byte().get_error_id() === :1)
+
+     test(heap_table().to_byte().get_error_id() === :invalid_type)
+
+     test("".to_byte().null?())
+     test("0".to_byte().null?())
+     test("f".to_byte().null?())
+     test("0g".to_byte().null?())
+     test("gg".to_byte().null?())
+     test("g0".to_byte().null?())
+     test("000".to_byte().null?())
+     test("0\000100".to_byte().null?())
+     test(heap_string().to_byte().null?())
+     test(("0000000000000000000" ++ "0").to_byte().null?())
+
+     test('\000100'.to_byte().null?())
+
+     test(256.to_byte().null?())
+     test(-1.to_byte().null?())
+     test(-9223372036854775808.to_byte().null?())
+     test(9223372036854775807.to_byte().null?())
+
+     test([byte_array].to_byte().null?())
+     test([byte_array 0b00, 0b00].to_byte().null?())
+     test([byte_array 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00].append(0b00).to_byte().null?())
+
+     test(256.0.to_byte().null?())
+     test(256.1.to_byte().null?())
+     test(-1.0.to_byte().null?())
+     test(-1.1.to_byte().null?())
+     test(nan().to_byte().null?())
+     test(neg_inf().to_byte().null?())
+     test(inf().to_byte().null?())
+
+     test(to_broken_const__to_byte("").to_byte().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__to_byte("").to_byte().get_error_id() === :invalid_type)
+     test(to_error_const__to_byte("").to_byte().get_error_id() === :3)
+     test(to_error_custom_const__to_byte("").to_byte().get_error_id() === :4)
+}

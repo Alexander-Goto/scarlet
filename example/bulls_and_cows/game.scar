@@ -1,0 +1,78 @@
+fn main() {
+     let digits_len = get_digits_len()
+     let secret_num = get_secret_num(digits_len)
+     loop(0, fn (attempts) {
+          let attempts          = attempts + 1
+          let variant           = get_variant(digits_len)
+          let [box bulls, cows] = get_bulls_and_cows(variant, secret_num)
+          if bulls == digits_len {
+               println("You win! Number of attempts - " ++ attempts.to_string())
+               [breaker null]
+          } else {
+               show_bulls_and_cows(bulls, cows)
+               attempts
+          }
+     })
+}
+
+fn get_digits_len() {
+     println("Enter the number of digits (4-10):")
+     let digit_num = read_cli_line()
+     if digit_num.null?()
+          fail("Failed to read from command line interface.")
+     else null
+
+     let digit_num = parse_int(digit_num, 10)
+     if digit_num.type() == "core.int" && digit_num.in_range?(4, 11)
+          digit_num
+     else {
+          println("The number of digits must be greater than 3 and less than 11.")
+          get_digits_len()
+     }
+}
+
+fn get_secret_num(digits_len)
+     get_secret_num__helper(digits_len, "", "0123456789")
+
+     fn get_secret_num__helper(digits_len, secret_num, remain_digits) {
+          let digit_idx  = (rnd() >> 1) % remain_digits.len()
+          let one_digit  = remain_digits[digit_idx]
+          let secret_num = secret_num.append(one_digit)
+          if secret_num.len() == digits_len
+               secret_num
+          else get_secret_num__helper(digits_len, secret_num, remain_digits.delete(digit_idx, digit_idx + 1))
+     }
+
+fn get_variant(digits_len) {
+     println("Your variant:")
+     let variant = read_cli_line()
+     if variant.null?()
+          fail("Failed to read from command line interface.")
+     else null
+
+     if variant.len() == digits_len && uniq_and_digits?(variant)
+          variant
+     else {
+          println("The variant must contain unique decimal digits in the number you specified earlier.")
+          get_variant(digits_len)
+     }
+}
+
+fn uniq_and_digits?(string)
+     string.foldl([byte_array 0b00].repeat(10), fn (qtys, char)
+          if char.digit?()
+               new (qtys)[char.to_int() - '0'.to_int()] => _ + 0b01
+          else [breaker false]
+     ).all(false, _ < 0b02)
+
+fn get_bulls_and_cows(variant, secret_num)
+     variant.foldl_kv([box 0, 0], fn (state, idx, digit) {
+          let [box bulls, cows] = state
+
+          if digit == secret_num[idx]
+               [box bulls + 1, cows]
+          else [box bulls, cows + if digit.in?(secret_num); 1 else 0]
+     })
+
+fn show_bulls_and_cows(bulls, cows)
+     (bulls.to_string() ++ (if bulls == 1; " bull, " else " bulls, ") ++ cows.to_string() ++ (if cows == 1; " cow." else " cows.")).println()

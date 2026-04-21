@@ -1,0 +1,330 @@
+# type       | value
+# string     | @string
+# null       | null
+# token      | @token
+# bool       | @bool
+# byte       | @byte
+# char       | @char
+# int        | @int
+# time       | @time
+# float      | @float
+# holder     | null
+# fn         | [obj :ir_name = @string, :args = [array @t_comptime_val*], :borrowed_items = [array @t_comptime_val*]]
+# byte_array | @byte_array
+# box        | [array @t_comptime_val*]
+# obj        | [table @token = @t_comptime_val]
+# table      | [table @t_comptime_val = @t_comptime_val]
+# set        | [set @t_comptime_val]
+# array      | [array @t_comptime_val*]
+let t_comptime_val = [obj
+     :type  = ""
+     :value = null
+]
+
+fn get_type_for_operand(comptime_val)
+     switch comptime_val:type
+     case "string":     if comptime_val:value.short_type?(); [set "short_string"] else [set "string"]
+     case "null":       [set "null"]
+     case "token":      [set "token"]
+     case "bool":       [set "bool"]
+     case "byte":       [set "byte"]
+     case "char":       [set "char"]
+     case "int":        [set "int"]
+     case "time":       [set "time"]
+     case "float":      [set "float"]
+     case "holder":     [set "holder"]
+     case "fn":         [set "fn" ]
+     case "byte_array": if comptime_val:value.short_type?(); [set "short_byte_array"] else [set "byte_array"]
+     case "box":        [set "box"]
+     case "obj":        [set "obj" ]
+     case "table":      [set "table"]
+     case "set":        [set "set"]
+     case "array":      [set "array"]
+     default: unreachable()
+
+fn comptime_val_to_ir(comptime_val, need_type, final_data, dependencies) {
+     let value = comptime_val:value
+
+     let [box ir_value, final_data, dependencies] = switch comptime_val:type
+     case "string":
+          if value.short_type?()
+               [box "(const t_any){.raw_bits=" ++ value.to_ir_u128() ++ "}", final_data, dependencies]
+          else {
+               let len  = value.len()
+               let data = value.foldl("[" ++ (len * 3 + 16).to_ir_num() ++ "]={" ++ ir__make_array_fields_u8_version(0, len, len), fn (data, char) data ++ ir__char_to_bytes(char)) ++ "};\n"
+
+               let [box data_ir_name, final_data, dependencies] = ir__raw_const("static u8 const ", data, final_data, dependencies)
+               [box "(const t_any){.structure={.value=(u64)" ++ data_ir_name ++ ",.data={" ++ ir__make_slice_metadata(0, len) ++ "},.type=tid__string}}", final_data, dependencies]
+          }
+     case "null":
+          [box "null", final_data, dependencies]
+     case "token", "float":
+          [box "(const t_any){.raw_bits=" ++ value.to_ir_u128() ++ "}", final_data, dependencies]
+     case "bool":
+          [box if value; "bool__true" else "bool__false", final_data, dependencies]
+     case "byte":
+          [box "(const t_any){.bytes={0x" ++ value.to_string() ++ ",[15]=tid__byte}}", final_data, dependencies]
+     case "char":
+          [box "(const t_any){.bytes={" ++ ir__char_to_bytes(value).drop(1) ++ ",[15]=tid__char}}", final_data, dependencies]
+     case "int":
+          [box "(const t_any){.structure={.value=" ++ value.to_ir_num() ++ ",.type=tid__int}}", final_data, dependencies]
+     case "time":
+          [box "(const t_any){.structure={.value=" ++ value.to_int().to_ir_num() ++ ",.type=tid__time}}", final_data, dependencies]
+     case "fn": {
+          let [obj fn_ir_name = :ir_name, args = :args, borrowed_items = :borrowed_items] = value
+
+          let [box args, holders_qty, holders_mask, final_data, dependencies] = args.foldl_kv([box [array].init(args.len()), 0, 0, final_data, dependencies], fn (state, idx, arg) {
+               let [box args, holders_qty, holders_mask, final_data, dependencies] = state
+
+               if arg:type == "holder"
+                    [box args.append("{.bytes={ht__fn_arg,[15]=tid__holder}}"), holders_qty + 1, holders_mask | 1 << idx, final_data, dependencies]
+               else {
+                    let [box arg, final_data, dependencies] = comptime_val_to_ir(arg, false, final_data, dependencies)
+                    [box args.append(arg), holders_qty, holders_mask, final_data, dependencies]
+               }
+          })
+
+          let [box borrowed_items, final_data, dependencies] = borrowed_items.foldl([box [array].init(borrowed_items.len()), final_data, dependencies], fn (state, item) {
+               let [box borrowed_items, final_data, dependencies] = state
+               let [box item, final_data, dependencies]           = comptime_val_to_ir(item, false, final_data, dependencies)
+               [box borrowed_items.append(item), final_data, dependencies]
+          })
+
+          if args.len() == holders_qty && borrowed_items.empty?()
+               [box "(const t_any){.structure={.value=(u64)&" ++ fn_ir_name ++ ",.data={" ++ holders_qty.to_string() ++ "},.type=tid__short_fn}}", final_data, dependencies]
+          else {
+               let data = "[" ++ (args.len() + borrowed_items.len() + 1).to_ir_num() ++ "]={{.qwords={0,(u64)&" ++ fn_ir_name ++ "}}"
+               let data = args.foldl(data, fn (data, arg) data ++ "," ++ arg)
+               let data = borrowed_items.foldl(data, fn (data, item) data ++ "," ++ item) ++ "};\n"
+
+               let [box data_ir_name, final_data, dependencies] = ir__raw_const("static t_any const ", data, final_data, dependencies)
+
+               [box
+                    "(const t_any){.structure={.value=(u64)" ++ data_ir_name ++ ",.data={" ++
+                         ir__make_fn_metadata(holders_qty, args.len(), borrowed_items.len(), false, holders_mask) ++ "},.type=tid__fn}}"
+
+                    final_data, dependencies
+               ]
+          }
+     }
+     case "byte_array":
+          if value.short_type?()
+               [box "(const t_any){.raw_bits=" ++ value.to_ir_u128() ++ "}", final_data, dependencies]
+          else {
+               let len  = value.len()
+               let data = value.foldl("[" ++ (len + 16).to_ir_num() ++ "]={" ++ ir__make_array_fields_u8_version(0, len, len), fn (data, byte) data ++ ",0x" ++ byte.to_string()) ++ "};\n"
+
+               let [box data_ir_name, final_data, dependencies] = ir__raw_const("static u8 const ", data, final_data, dependencies)
+
+               [box "(const t_any){.structure={.value=(u64)" ++ data_ir_name ++ ",.data={" ++ ir__make_slice_metadata(0, len) ++ "},.type=tid__byte_array}}", final_data, dependencies]
+          }
+     case "box": {
+          let len = value.len()
+          if len == 0
+               [box "empty_box", final_data, dependencies]
+          else {
+               let [box data, final_data, dependencies] = value.foldl([box "[" ++ len.to_string() ++ "]={", final_data, dependencies], fn (state, item) {
+                    let [box data, final_data, dependencies] = state
+
+                    let [box item_ir, final_data, dependencies] = comptime_val_to_ir(item, false, final_data, dependencies)
+
+                    [box data ++ item_ir ++ ",", final_data, dependencies]
+               })
+
+               let data = data.take(data.len() - 1) ++ "};\n"
+
+               let [box data_ir_name, final_data, dependencies] = ir__raw_const("static t_any const ", data, final_data, dependencies)
+
+               [box "(const t_any){.structure={.value=(u64)"++ data_ir_name ++ ",.data={" ++ (len | 32).to_string() ++ "},.type=tid__box}}", final_data, dependencies]
+          }
+     }
+     case "obj": {
+          let obj          = value
+          let all_keys_len = obj.len()
+
+          let [box obj, mtds] = new (obj)[:_] <<= null
+
+          let [box mtds_ir, final_data, dependencies] = if mtds.null?()
+               [box "null", final_data, dependencies]
+          else comptime_val_to_ir(mtds, false, final_data, dependencies)
+
+          let fields_len                      = if mtds.null?(); all_keys_len else all_keys_len - 1
+          let placeholders_len                = obj.foldl(0, fn (len, item) len + if item:type == "null"; 1 else 0)
+          let obj_len                         = all_keys_len - placeholders_len
+          let fields_without_placeholders_len = fields_len - placeholders_len
+
+          if all_keys_len == 0
+               [box "empty_obj", final_data, dependencies]
+          else if fields_len == 0 {
+               let data = "[4]={{.qwords={0xf000000000000000ull,0}}," ++ mtds_ir ++ ",null,null};\n"
+
+               let [box data_ir_name, final_data, dependencies] = ir__raw_const("static t_any const ", data, final_data, dependencies)
+               [box "(const t_any){.structure={.value=(u64)" ++ data_ir_name ++ ",.data={1},.type=tid__obj}}", final_data, dependencies]
+          } else {
+               let [box values, final_data, dependencies] = obj.foldl_kv([box [table].init(fields_without_placeholders_len), final_data, dependencies], fn (state, key, value) {
+                    let [box values, final_data, dependencies] = state
+
+                    if value:type == "null"
+                         [box values, final_data, dependencies]
+                    else {
+                         let [box value, final_data, dependencies] = comptime_val_to_ir(value, false, final_data, dependencies)
+                         [box new (values)[key] <= value, final_data, dependencies]
+                    }
+               })
+
+               let [box fix_offset, fix_size] = fix_obj__get_idx_offset_and_size(obj.foldl_kv([array].init(fields_len), fn (keys, key, _) keys.append(key)))
+               if fix_offset.null?() {
+                    let [box chunk_size, chunks_len, virtual_hash_set] = create_virtual_hash_set(fields_without_placeholders_len)
+
+                    let keys             = obj.foldl_kv([array].init(fields_without_placeholders_len), fn (keys, key, value) if value:type == "null"; keys else keys.append(key))
+                    let virtual_hash_set = keys.sort(true).foldl(virtual_hash_set, virtual_hash_set__add(_, _, chunk_size, chunks_len))
+                    let data             = "[" ++ (chunk_size * chunks_len * 2 + 2).to_ir_num() ++ "]={{.qwords={0xf000000000000000ull," ++ @main.comptime_seed ++ "}}," ++ mtds_ir
+                    let data             = virtual_hash_set.foldl(data, fn (data, key)
+                         if key.type() == "core.float"
+                              data ++ ",null,null"
+                         else data ++ ",{.raw_bits=" ++ key.to_ir_u128() ++ "}," ++ values[key]
+                    ) ++ "};\n"
+                    let [box data_ir_name, final_data, dependencies] = ir__raw_const("static t_any const ", data, final_data, dependencies)
+
+                    [box "(const t_any){.structure={.value=(u64)" ++ data_ir_name ++ ",.data={" ++ ir__make_hash_table_metadata(obj_len, chunks_len, chunk_size) ++ "},.type=tid__obj}}", final_data, dependencies]
+               } else {
+                    let chunks_len  = 1 << fix_size
+                    let idx_edge    = fix_offset + fix_size
+                    let in_low      = idx_edge <= 64
+                    let in_high     = fix_offset >= 64
+                    let virtual_set = obj.foldl_kv([array 0.0].repeat(chunks_len), fn (virtual_set, key, _) {
+                         let [box low, high] = key.scarlet__split!!!()
+
+                         let idx = if in_low
+                              low >> fix_offset & (1 << fix_size) - 1
+                         else if in_high
+                              high >> fix_offset - 64 & (1 << fix_size) - 1
+                         else low >> fix_offset | high << (64 - fix_offset) & (1 << fix_size) - 1
+
+                         new (virtual_set)[idx] <= key
+                    })
+
+                    let data = "[" ++ (chunks_len * 2 + 2).to_ir_num() ++ "]={{.qwords={" ++ (fix_offset << 57).to_ir_num() ++ "," ++ @main.comptime_seed ++ "}}," ++ mtds_ir
+                    let data = virtual_set.foldl(data, fn (data, key)
+                         if key.type() == "core.float"
+                              data ++ ",null,null"
+                         else {
+                              let value = values[key]
+                              let key   = key.to_ir_u128()
+                              if value.null?()
+                                   data ++ ",{.raw_bits=" ++ copy(key, 0, "0xb") ++ "}," ++ "{.bytes={[15]=tid__holder}}"
+                              else data ++ ",{.raw_bits=" ++ key ++ "}," ++ value
+                         }
+                    ) ++ "};\n"
+                    let [box data_ir_name, final_data, dependencies] = ir__raw_const("static t_any const ", data, final_data, dependencies)
+
+                    [box "(const t_any){.structure={.value=(u64)" ++ data_ir_name ++ ",.data={" ++ ir__make_hash_table_metadata(obj_len, chunks_len, 1) ++ "},.type=tid__obj}}", final_data, dependencies]
+               }
+          }
+     }
+     case "table": {
+          let table = value
+          let len   = table.len()
+
+          if len == 0
+               [box "empty_table", final_data, dependencies]
+          else {
+               let [box kvs_ir, keys, final_data, dependencies] = table.foldl_kv([box [table].init(len), [array].init(len), final_data, dependencies], fn (state, key, value) {
+                    let [box kvs_ir, keys, final_data, dependencies] = state
+
+                    let [box key_ir, final_data, dependencies]   = comptime_val_to_ir(key, false, final_data, dependencies)
+                    let [box value_ir, final_data, dependencies] = comptime_val_to_ir(value, false, final_data, dependencies)
+
+                    let key_value = key:value
+
+                    [box new (kvs_ir)[key_value] <= [obj :key = key_ir, :value = value_ir], keys.append(key_value), final_data, dependencies]
+               })
+
+               let [box chunk_size, chunks_len, virtual_hash_set] = create_virtual_hash_set(len)
+
+               let virtual_hash_set = keys.sort_fn(fn (left, right) {
+                    let left_type  = left.type()
+                    let right_type = right.type()
+                    if left_type == right_type
+                         cmp(left, right)
+                    else cmp(left_type, right_type)
+               }).foldl(virtual_hash_set, virtual_hash_set__add(_, _, chunk_size, chunks_len))
+               let data = "[" ++ (chunk_size * chunks_len * 2 + 1).to_ir_num() ++ "]={{.qwords={0," ++ @main.comptime_seed ++ "}}"
+               let data = virtual_hash_set.foldl(data, fn (data, key)
+                    if key.type() == "core.float"
+                         data ++ ",null,null"
+                    else {
+                         let [obj key_ir = :key, value_ir = :value] = kvs_ir[key]
+                         data ++ "," ++ key_ir ++ "," ++ value_ir
+                    }
+               ) ++ "};\n"
+               let [box data_ir_name, final_data, dependencies] = ir__raw_const("static t_any const ", data, final_data, dependencies)
+
+               [box "(const t_any){.structure={.value=(u64)" ++ data_ir_name ++ ",.data={" ++ ir__make_hash_table_metadata(len, chunks_len, chunk_size) ++ "},.type=tid__table}}", final_data, dependencies]
+          }
+     }
+     case "set": {
+          let set = value
+          let len = set.len()
+
+          if len == 0
+               [box "empty_set", final_data, dependencies]
+          else {
+               let [box items_ir, items, final_data, dependencies] = set.foldl([box [table].init(len), [array].init(len), final_data, dependencies], fn (state, item) {
+                    let [box items_ir, items, final_data, dependencies] = state
+
+                    let [box item_ir, final_data, dependencies] = comptime_val_to_ir(item, false, final_data, dependencies)
+
+                    let item_value = item:value
+
+                    [box new (items_ir)[item_value] <= item_ir, items.append(item_value), final_data, dependencies]
+               })
+
+               let [box chunk_size, chunks_len, virtual_hash_set] = create_virtual_hash_set(len)
+
+               let virtual_hash_set = items.sort_fn(fn (left, right) {
+                    let left_type  = left.type()
+                    let right_type = right.type()
+                    if left_type == right_type
+                         cmp(left, right)
+                    else cmp(left_type, right_type)
+               }).foldl(virtual_hash_set, virtual_hash_set__add(_, _, chunk_size, chunks_len))
+               let data = "[" ++ (chunk_size * chunks_len + 1).to_ir_num() ++ "]={{.qwords={0," ++ @main.comptime_seed ++ "}}"
+               let data = virtual_hash_set.foldl(data, fn (data, item)
+                    if item.type() == "core.float"
+                         data ++ ",null"
+                    else data ++ "," ++ items_ir[item]
+               ) ++ "};\n"
+               let [box data_ir_name, final_data, dependencies] = ir__raw_const("static t_any const ", data, final_data, dependencies)
+
+               [box "(const t_any){.structure={.value=(u64)" ++ data_ir_name ++ ",.data={" ++ ir__make_hash_table_metadata(len, chunks_len, chunk_size) ++ "},.type=tid__set}}", final_data, dependencies]
+          }
+     }
+     case "array":  {
+          let len = value.len()
+          if len == 0
+               [box "empty_array", final_data, dependencies]
+          else {
+               let [box data, final_data, dependencies] = value.foldl(
+                    [box "[" ++ (len + 1).to_string() ++ "]={{.qwords={" ++ ir__make_array_fields(0, len, len) ++ "}}", final_data, dependencies]
+
+                    fn (state, item) {
+                         let [box data, final_data, dependencies] = state
+
+                         let [box item_ir, final_data, dependencies] = comptime_val_to_ir(item, false, final_data, dependencies)
+
+                         [box data ++ "," ++ item_ir, final_data, dependencies]
+                    }
+               )
+               let data = data ++ "};\n"
+
+               let [box data_ir_name, final_data, dependencies] = ir__raw_const("static t_any const ", data, final_data, dependencies)
+
+               [box "(const t_any){.structure={.value=(u64)" ++ data_ir_name ++ ",.data={" ++ ir__make_slice_metadata(0, len) ++ "},.type=tid__array}}", final_data, dependencies]
+          }
+     }
+     default:
+          unreachable()
+
+     [box if need_type || ir_value.first() /= '('; ir_value else ir_value.drop(13), final_data, dependencies]
+}

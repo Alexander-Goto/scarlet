@@ -1,0 +1,129 @@
+let const__to_char = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_char = fn (const) const:value.to_char()
+     ]
+]
+
+fn to_const__to_char(arg) new (@main.const__to_char):value <= arg
+
+fn to_custom_const__to_char(arg) custom__create(
+     arg
+     [obj
+          :core_to_char = fn (const) custom__get_data(const).to_char()
+     ]
+)
+
+let broken_const__to_char = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_char = fn (_) heap_string()
+     ]
+]
+
+fn to_broken_const__to_char(arg) new (@main.broken_const__to_char):value <= arg
+
+fn to_broken_custom_const__to_char(arg) custom__create(
+     arg
+     [obj
+          :core_to_char = fn (_) heap_string()
+     ]
+)
+
+let error_const__to_char = [obj
+     :value = 0
+
+     :_ = [obj
+          :core_to_char = fn (_) expected_error(:3, heap_string(), null)
+     ]
+]
+
+fn to_error_const__to_char(arg) new (@main.error_const__to_char):value <= arg
+
+fn to_error_custom_const__to_char(arg) custom__create(
+     arg
+     [obj
+          :core_to_char = fn (_) expected_error(:4, heap_string(), null)
+     ]
+)
+
+`noinline`
+fn test__to_char() {
+     test("0".to_char() === '0')
+     test("z".to_char() === 'z')
+     test("\000001".to_char() === '\000001')
+     test("\000100".to_char() === '\000100')
+
+     test(0bff.to_char() === '\0000ff')
+     test(0b01.to_char() === '\000001')
+     test(0b10.to_char() === '\000010')
+     test(0bfe.to_char() === '\0000fe')
+     test(0bef.to_char() === '\0000ef')
+
+     test('\0000ff'.to_char() === '\0000ff')
+     test('\000001'.to_char() === '\000001')
+     test('\000010'.to_char() === '\000010')
+     test('\0000fe'.to_char() === '\0000fe')
+     test('\0000ef'.to_char() === '\0000ef')
+     test('\000100'.to_char() === '\000100')
+
+     test(255.to_char() === '\0000ff')
+     test(256.to_char() === '\000100')
+     test(1.to_char() === '\000001')
+     test(16.to_char() === '\000010')
+     test(254.to_char() === '\0000fe')
+     test(239.to_char() === '\0000ef')
+
+     test(255.0.to_char() === '\0000ff')
+     test(255.9.to_char() === '\0000ff')
+     test(256.0.to_char() === '\000100')
+     test(256.9.to_char() === '\000100')
+     test(1.0.to_char() === '\000001')
+     test(1.01.to_char() === '\000001')
+     test(16.0.to_char() === '\000010')
+     test(16.7.to_char() === '\000010')
+     test(254.0.to_char() === '\0000fe')
+     test(254.5.to_char() === '\0000fe')
+     test(239.0.to_char() === '\0000ef')
+     test(239.1.to_char() === '\0000ef')
+
+     test(256.9.to_const__to_char().to_char() === '\000100')
+     test(1.0.to_const__to_char().to_char() === '\000001')
+
+     test(256.9.to_custom_const__to_char().to_char() === '\000100')
+     test(1.0.to_custom_const__to_char().to_char() === '\000001')
+
+     test(expected_error(:1, heap_string(), heap_string()).to_char().get_error_id() === :1)
+
+     test(heap_table().to_char().get_error_id() === :invalid_type)
+
+     test("".to_char().null?())
+     test("01".to_char().null?())
+     test("000".to_char().null?())
+     test(heap_string().to_char().null?())
+     test(("0000000000000000000" ++ "0").to_char().null?())
+
+     test(0.to_char().null?())
+     test(-1.to_char().null?())
+     test(-9223372036854775808.to_char().null?())
+     test(9223372036854775807.to_char().null?())
+
+     test(0.0.to_char().null?())
+     test(0.1.to_char().null?())
+     test(0.9.to_char().null?())
+     test(-0.0.to_char().null?())
+     test(-0.1.to_char().null?())
+     test(-0.9.to_char().null?())
+     test(-1.0.to_char().null?())
+     test(-1.1.to_char().null?())
+     test(nan().to_char().null?())
+     test(neg_inf().to_char().null?())
+     test(inf().to_char().null?())
+
+     test(to_broken_const__to_char("").to_char().get_error_id() === :invalid_type)
+     test(to_broken_custom_const__to_char("").to_char().get_error_id() === :invalid_type)
+     test(to_error_const__to_char("").to_char().get_error_id() === :3)
+     test(to_error_custom_const__to_char("").to_char().get_error_id() === :4)
+}
