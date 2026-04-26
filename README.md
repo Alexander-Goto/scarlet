@@ -16,7 +16,9 @@ Compiler for the Scar programming language.
 The clang compiler is required for build.
 
 `git clone https://github.com/Alexander-Goto/scarlet`
+
 `cd scarlet/release/0.1`
+
 `sh build.sh`
 
 The `sh build.sh` command takes a few minutes.
