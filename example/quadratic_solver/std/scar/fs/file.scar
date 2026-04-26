@@ -1,0 +1,13 @@
+`export`
+let fom__read  = 1
+`export`
+let fom__begin = 2
+`export`
+let fom__write = 4
+`export`
+let fom__end = 8
+`export`
+let fom__new = 16
+
+`export external`
+fn open_file(file_name, mode)

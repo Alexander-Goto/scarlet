@@ -1,0 +1,9 @@
+`export`
+let raf__stdout = 1
+`export`
+let raf__stdin  = 2
+`export`
+let raf__stderr = 4
+
+`export external`
+fn run_app(app_file, args, env_vars, flags)

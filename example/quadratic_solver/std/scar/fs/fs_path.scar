@@ -1,0 +1,67 @@
+let path_separator     = '/'
+let path_separator_str = "/"
+let path_2_separators  = "//"
+let current_dir        = "."
+let parent_dir         = ".."
+let current_dir_prefix = "./"
+let parent_dir_prefix  = "../"
+let max_path_len       = 0xff'ffff
+
+let current_and_parent_dirs = [array ".", ".."]
+
+`external`
+fn fs_path_from_string!!!(string)
+
+`export`
+fn fs_path(path)
+     switch path.type()
+     case "core.string": {
+          let path = if
+                    path.empty?() || path.first() == @std.path_separator ||
+                    @std.current_dir_prefix.prefix_of?(path) || @std.parent_dir_prefix.prefix_of?(path) ||
+                    @std.current_dir == path || @std.parent_dir == path
+               path
+          else @std.current_dir_prefix ++ path
+
+          let has_2_separators = @std.path_2_separators.part_of?(path)
+          let path             = if path.empty?() || has_2_separators || path == @std.path_separator_str || path.last() /= @std.path_separator; path else path.take(path.len() - 1)
+
+          if path.len().in_range?(1, @std.max_path_len + 1) && not has_2_separators
+               fs_path_from_string!!!(path)
+          else if path.len().in_range?(1, @std.max_path_len + 1)
+               :separator
+          else if path.empty?()
+               :empty
+          else :long
+     }
+     case "core.array": {
+          let str_path_len = if path.empty?()
+               :empty
+          else {
+               let str_path_len = path.foldl(0, fn (str_path_len, path_item)
+                    if path_item.type() == "core.string" && not (path_item.empty?() || @std.path_separator.in?(path_item))
+                         str_path_len + path_item.len()
+                    else if path_item.type() /= "core.string"
+                         [error :invalid_type, "Invalid_type.", null]
+                    else if path_item.empty?()
+                         :empty
+                    else :separator
+               )
+
+               if str_path_len.type() == "core.int"; str_path_len + path.len() - 1 else str_path_len
+          }
+
+          if str_path_len.type() /= "core.int"
+               str_path_len
+          else {
+               let path_is_abs  = not path.first().in?(@std.current_and_parent_dirs)
+               let str_path_len = str_path_len + if path_is_abs; 1 else 0
+               let path         = if path_is_abs; new (path)[0] => @std.path_separator_str ++ _ else path
+
+               if str_path_len.in_range?(1, @std.max_path_len + 1)
+                    fs_path_from_string!!!(path.join(@std.path_separator_str))
+               else :long
+          }
+     }
+     default:
+          [error :invalid_type, "Invalid_type", null]

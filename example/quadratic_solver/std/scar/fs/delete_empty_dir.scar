@@ -1,0 +1,2 @@
+`export external`
+fn delete_empty_dir(path)

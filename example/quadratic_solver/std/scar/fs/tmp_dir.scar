@@ -1,0 +1,5 @@
+`external`
+fn tmp_dir()
+
+`export`
+let tmp_dir = tmp_dir()

@@ -1,0 +1,22 @@
+fn main() {
+     println("Enter a, b, c.")
+     let [array a, b, c] = read_cli_line().
+          split(',').
+          map(trim(_)).
+          map(fn (num) if '.'.in?(num); num else num ++ ".0").
+          map(_.to_float())
+
+     if a.error?()
+          fail("Invalid input.")
+     else null
+
+     let discriminant = b.sqr() - 4.0 * a * c
+     if discriminant > 0.0 {
+          let x1 = (discriminant.sqrt() - b) / 2.0 * a
+          let x2 = (discriminant.sqrt().neg() - b) / 2.0 * a
+          println("x1: " ++ x1.to_string())
+          println("x2: " ++ x2.to_string())
+     } else if discriminant == 0.0
+          println("x: " ++ (b / (-2.0 * a)).to_string())
+     else println("No roots.")
+}
