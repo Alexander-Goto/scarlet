@@ -15,6 +15,9 @@ Compiler for the Scar programming language.
 # Build
 The clang compiler is required for build.
 
+Supported platforms:
+* linux x86_64
+
 `git clone https://github.com/Alexander-Goto/scarlet`
 
 `cd scarlet/release/0.1`
