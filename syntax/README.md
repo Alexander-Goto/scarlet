@@ -1,0 +1,2 @@
+scar.xml is a file that adds syntax highlighting for the Scar language to the Kate text editor.\
+To install, copy this file to the /home/*user_name*/.local/share/org.kde.syntax-highlighting/syntax/ directory (if this directory does not exist, create it).
