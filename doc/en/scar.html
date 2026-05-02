@@ -1,0 +1,1081 @@
+<html style='color:#eaeaea;background-color:#1f1f1f;'>
+     <head>
+          <meta charset="UTF-8">
+          <title>The Scar Programming Language</title>
+     </head>
+     <body>
+          <h1>The Scar Programming Language</h1>
+
+          <h2>Program Structure</h2>
+          Programs in the Scar language consist of modules.<br>
+          Each module has a name and consists of global constants and functions.<br>
+          The module name must begin with a lowercase Latin letter, and the remaining characters (if any) must be either lowercase Latin letters, digits (0-9),
+               or underscores (_).<br>
+          If the module name is <b>main</b>, then that module must contain a function named <b>main</b>, which is the one executed in the resulting program.<br>
+          To create a module using the <b>scarlet</b> compiler, the following must be executed:<br><br>
+          <code>scarlet -n <i>module_name</i> -s <i>source_code_file_1</i> <i>source_code_file_2</i> <i>source_code_file_n</i> -o <i>output_module_file</i></code><br><br>
+          If the module being created uses other modules, the already created module files are passed using the -m flag, for example:<br><br>
+          <code>scarlet -n <i>module_name</i> -m <i>module_file_1</i> <i>module_file_2</i> <i>module_file_n</i> -s <i>source_code_file</i> -o <i>output_module_file</i></code><br><br>
+          Source code files have the extension <b>scar</b>, and module files have the extension <b>mscar</b>.<br>
+          If the module has the name <b>main</b>, then instead of a module file, an intermediate representation file is saved.
+               Currently, this is source code in the language <b>C</b> intended only for the <b>clang</b> compiler.<br>
+
+          <h2>Structure of Source Code Files</h2>
+          A source code file may contain the following elements:
+          <ul>
+               <li>Single-line comment. Starts with the <b>#</b> character and ends at the end of the line.</li>
+               <li>Multi-line comment. Starts with the <b>#*</b> characters and ends with the <b>*#</b> characters.</li>
+               <li>Documentation comment. Starts with the <b>#@</b> characters and ends with the <b>@#</b> characters. It is placed before a global constant or function (but before its attributes).</li>
+               <li>Function or global constant attributes. Placed before the global constant or function.</li>
+               <li>Global constant. (Details in the <a style='color:#1a5fb4;' href="#global_const">Global Constants</a> section)</li>
+               <li>Function. (Details in the <a style='color:#1a5fb4;' href="#functions">Functions</a> section)</li>
+          </ul>
+
+          Tab characters are not allowed for code formatting.<br>
+          Source code must be in ctf8 encoding. (ASCII compatible)<br>
+
+          <h2 id="global_const">Global Constants</h2>
+          A global constant is a constant with a name, the value of which is accessible by that name in expressions of other constants and functions.
+               (For details on expressions, see the <a style='color:#1a5fb4;' href="#expressions">Expressions</a> section)<br>
+          Declaration of a constant in source code:
+
+<pre style='color:#9f73ff;background-color:#1f1f1f;'>
+`<i>attributes</i>`
+<b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> <i>constant_name</i> = <i>value</i></span></pre>
+
+          Specifying attributes is not mandatory.<br>
+          <!--If it is necessary to list several attributes, they are separated by one or more spaces.<br>-->
+          Attributes:
+          <ul>
+               <li><b>export</b> - the constant is accessible from any module; without this attribute it is only accessible within the module where it is declared.</li>
+          </ul>
+
+          The constant name must begin with a lowercase Latin letter or an underscore (_), and the remaining characters (if any) must be either lowercase Latin letters,
+               digits (0-9), or underscores.<br>
+          A constant name cannot consist of a single underscore.<br>
+          Within one module, two constants cannot have the same name.<br><br>
+
+          The value is specified as an expression whose result is the value of the constant.<br>
+          If the expression cannot be evaluated at compile time, it is evaluated before the execution of the <b>main</b> function from the <b>main</b> module.<br>
+          The expression cannot use threads.<br>
+          The value of a global constant is evaluated only if the <b>main</b> function from the <b>main</b> module, directly or indirectly, uses that constant.<br>
+          If the value of a global constant has type <b>error</b>, the program immediately stops with a message about this error.<br>
+
+          <h2 id="functions">Functions</h2>
+          A function is an expression in which constants can be referenced by name, and the values of these constants will be specified when the function is called. (Example: <code><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> y(x) x + </span><span style='color:#dcb058;'>1</span></code>)
+               (For details on expressions, see the <a style='color:#1a5fb4;' href="#expressions">Expressions</a> section)<br>
+          The constants whose values are specified when calling the function are called function arguments, and their names inside the function are called function parameters.<br>
+          The expression is called the function body.<br>
+          The function body is evaluated when the function is called, replacing the function parameters with the evaluated argument values.<br>
+          Arguments are evaluated in the same order they are passed to the function.<br>
+          Declaring a function in source code:
+
+<pre style='color:#9f73ff;background-color:#1f1f1f;'>
+`<i>attributes</i>`
+<b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> <i>function_name</i>(<i>parameter_1</i>, <i>parameter_2</i>, <i>parameter_n</i>) <i>expression</i></span></pre>
+
+          Specifying attributes is not mandatory.<br>
+          If it is necessary to list several attributes, they are separated by one or more spaces.<br>
+          Attributes:
+          <ul>
+               <li><b>cold</b> - the function is optimized as if it will never be executed, but if it does execute, it will work correctly.</li>
+               <li><b>export</b> - the function is accessible from any module; without this attribute it is only accessible within the module where it is declared.</li>
+               <li><b>external</b> - the implementation of this function is made in another programming language. In this case, the function body is not specified.</li>
+               <li><b>hot</b> - the program is optimized as if this function will be executed frequently.
+                    Specifying this attribute on a function that is rarely called may lead to degraded program performance.</li>
+               <li><b>noinline</b> - sometimes a function call can be replaced with the function body with the arguments substituted; this attribute disables such behavior for this function.</li>
+          </ul>
+          The <b>hot</b> and <b>cold</b> attributes cannot be specified simultaneously.<br><br>
+
+          The function name must begin with a lowercase Latin letter or an underscore (_), and the remaining characters (if any) must be either lowercase Latin letters,
+               digits (0-9), or underscores.<br>
+          Also, one of the following suffixes is allowed in the function name - <b>!</b>, <b>!!!</b>, <b>?</b>.<br>
+          Meaning of suffixes in function names:
+          <ul>
+               <li><b>?</b> - the function name is a question, and the result of the function evaluation will give an answer to it.</li>
+               <li><b>!</b> - the function name is an assertion, and if the assertion is not true, the function will change the state of the application so that it becomes true,
+                    or return an error.</li>
+               <li><b>!!!</b> - the function is unsafe and should be used with caution.</li>
+          </ul>
+          The function name cannot be one of the names from the following list:<code>
+               <b>case</b>, <b>default</b>, <b>else</b>, <b>fn</b>, <b>guard</b>, <b>if</b>, <b>let</b>, <b>new</b>, <b>not</b>,
+               <b>scarlet__erase_info</b>, <b>scarlet__erase_value</b>, <b>switch</b>, <b>test</b>, <b>unreachable</b>, <b>_</b></code><br>
+          Within one module, two functions cannot have the same name.<br><br>
+
+          A function parameter name must begin with a lowercase Latin letter or an underscore (_), and the remaining characters (if any) must be either lowercase Latin letters,
+               digits (0-9), or underscores.<br>
+          A function parameter name cannot be one of the names from the following list:
+               <code><b>case</b>, <b>default</b>, <b>else</b>, <b>false</b>, <b>fn</b>, <b>if</b>, <b>let</b>, <b>new</b>, <b>not</b>, <b>null</b>, <b>switch</b>, <b>true</b></code><br>
+          If <code>_</code> is specified instead of a parameter name, it means that the function does not need the value of that argument.<br>
+          Within one function, two parameters cannot have the same name.<br>
+          The number of parameters in a function must not exceed 16.<br>
+
+          <h2 id="expressions">Expressions</h2>
+          An expression is a computation or an action that returns a result.<br>
+          If an expression is expected somewhere in the source code, any number of newline characters or <b>;</b> characters may precede it (except when these characters replace a comma). (Example:
+          <code><span style='color:#dcb058;'>2</span><span style='color:#eaeaea;'> + ;; </span><span style='color:#dcb058;'>2</span></code>
+          , the same as
+          <code><span style='color:#dcb058;'>2</span><span style='color:#eaeaea;'> + </span><span style='color:#dcb058;'>2</span></code>
+          )<br>
+          Expressions have a precedence (a number from 0 to 10).<br>
+          If an expression consists of several expressions, then that expression is the one with the higher precedence.<br>
+          If there are two expressions with the same precedence, the expression closer to the beginning of the source expression is considered to have lower precedence.<br>
+          For simplicity, further in the text, the process of determining which expression a given expression is will be called "determining the root expression".
+          Example:<br>
+          <code><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'> + </span><span style='color:#dcb058;'>2</span><span style='color:#eaeaea;'> + </span><span style='color:#dcb058;'>4</span></code><br>
+          This expression is a binary function <b>+</b> (on binary functions, further), which takes two arguments:
+          the first <code><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'> + </span><span style='color:#dcb058;'>2</span></code>, the second <code><span style='color:#dcb058;'>4</span></code>.<br><br>
+
+          List of possible expressions:
+          <ul>
+               <li>
+                    Binary function<br>
+                    Binary functions are functions that take two arguments, with the function name placed between them.<br>
+                    It is not necessary to pass all arguments to the function at once; you can pass part of the arguments, and in place of the rest pass <code>_</code>,
+                         in which case the function call returns a function that takes as many arguments as the number of <code>_</code> passed,
+                         and then executes the original function replacing <code>_</code> with the passed arguments in the same order. Such application of a function is called partial.<br>
+                    In partial application, the passed arguments cannot be of the following types: <b>box</b>, <b>breaker</b>, <b>thread</b>, <b>error</b>. (Details on types in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+                    Examples:<br>
+                    <code><span style='color:#eaeaea;'>_ + </span><span style='color:#dcb058;'>1</span></code>
+                    , the same as
+                    <code><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (a) a + </span><span style='color:#dcb058;'>1</span></code><br>
+                    <code><span style='color:#eaeaea;'>_ + _</span></code>
+                    , the same as
+                    <code><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (a, b) a + b</span></code><br><br>
+                    List of binary functions and their precedence:
+                    <code><table border="1">
+                         <th>Functions</th>
+                         <th>Precedence</th>
+                         <tr>
+                              <td>[] : [,]</td>
+                              <td>0</td>
+                         </tr>
+                         <tr>
+                              <td>* / %</td>
+                              <td>3</td>
+                         </tr>
+                         <tr>
+                              <td>+ ++ -</td>
+                              <td>4</td>
+                         </tr>
+                         <tr>
+                              <td>&lt;&lt; &gt;&gt; &gt;&gt;&gt;</td>
+                              <td>5</td>
+                         </tr>
+                         <tr>
+                              <td>&lt; &gt; &lt;= &gt;=</td>
+                              <td>6</td>
+                         </tr>
+                         <tr>
+                              <td>== /= === =/=</td>
+                              <td>7</td>
+                         </tr>
+                         <tr>
+                              <td>&amp;</td>
+                              <td>8</td>
+                         </tr>
+                         <tr>
+                              <td>^</td>
+                              <td>9</td>
+                         </tr>
+                         <tr>
+                              <td>|</td>
+                              <td>10</td>
+                         </tr>
+                    </table></code>
+                    The actions performed by these functions are described in the documentation for the <b>core</b> module.<br><br>
+               </li>
+
+               <li>
+                    Binary operator<br>
+                    Binary operators are the same as binary functions, but without the possibility of partial application and with lazy evaluation of arguments.<br>
+                    List of binary operators and their precedence:
+                    <table border="1">
+                         <th>Operator</th>
+                         <th>Precedence</th>
+                         <th>Action performed</th>
+                         <tr>
+                              <td><code>&lt;?</code></td>
+                              <td><code>1</code></td>
+                              <td>
+                                   Evaluates the left expression; if it is <b>null</b>, evaluates the right expression and its result is the result of the entire expression,
+                                   otherwise does not evaluate the right expression and the result of the entire expression is the result of the left expression.
+                                   (Details on <b>null</b> in the <a style='color:#1a5fb4;' href="#types">Types</a> section)
+                              </td>
+                         </tr>
+                         <tr>
+                              <td><code>&amp;&amp;</code></td>
+                              <td><code>8</code></td>
+                              <td>
+                                   Evaluates the left expression; if it equals <b>true</b>, evaluates the right expression and its result is the result of the entire expression,
+                                   otherwise does not evaluate the right expression and the result of the entire expression is <b>false</b>.
+                                   Both expressions must have type <b>bool</b>.
+                                   (Details on <b>false</b>, <b>true</b> and the type <b>bool</b> in the <a style='color:#1a5fb4;' href="#types">Types</a> section)
+                              </td>
+                         </tr>
+                         <tr>
+                              <td><code>||</code></td>
+                              <td><code>10</code></td>
+                              <td>
+                                   Evaluates the left expression; if it equals <b>false</b>, evaluates the right expression and its result is the result of the entire expression,
+                                   otherwise does not evaluate the right expression and the result of the entire expression is <b>true</b>.
+                                   Both expressions must have type <b>bool</b>.
+                                   (Details on <b>false</b>, <b>true</b> and the type <b>bool</b> in the <a style='color:#1a5fb4;' href="#types">Types</a> section)
+                              </td>
+                         </tr>
+                    </table></code><br>
+               </li>
+
+               <li>
+                    Function call<br>
+                    A function can be called in source code in two ways:
+                    <ol>
+                         <li><code><i>function_name</i>(<i>argument_1</i>, <i>argument_2</i>, <i>argument_n</i>)</code></li>
+                         <li><code><i>argument_1</i>.<i>function_name</i>(<i>argument_2</i>, <i>argument_n</i>)</code></li>
+                    </ol>
+                    The function name can be specified in two ways:
+                    <ol>
+                         <li>short - simply the function name. Allowed only if there is a function with the specified name in exactly one module.</li>
+                         <li>full - the function name is specified in the format <code><span style='color:#d33f3f;'>@<i>module_name</i></span>.<i>function_name</i></code>.</li>
+                    </ol>
+                    As with binary functions, partial application can be used.<br>
+                    If there are multiple arguments, the comma between them can be replaced by a newline character or a <b>;</b> character.<br>
+                    Example:<br>
+                    <pre><span style='color:#eaeaea;'>foo(</span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>2</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>3</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>4</span><span style='color:#eaeaea;'>)</span></pre>
+                    the same as
+<pre>
+<span style='color:#eaeaea;'>foo(</span>
+     <span style='color:#dcb058;'>1</span>
+     <span style='color:#dcb058;'>2</span><span style='color:#eaeaea;'>; </span><span style='color:#dcb058;'>3</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>4</span>
+<span style='color:#eaeaea;'>)</span>
+</pre>
+                    Arguments passed after specifying the function name (in parentheses) do not participate in the same root expression determination as the function call itself.<br>
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    <b>check</b> operator<br>
+                    The operator works like a function, but without the possibility of partial application.<br>
+                    The operator takes one argument, and if it is of type <b>error</b>, the application immediately stops with information about where in the source code the operator was used and
+                         what the error in the argument was; otherwise, the result of the operator is its argument.
+                    (Details on the type <b>error</b> in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    <b>guard</b> operator<br>
+                    The operator works like a function, but without the possibility of partial application.<br>
+                    The operator takes one argument, and if it equals <b>true</b>, the result of the operator is <b>true</b>, otherwise the application immediately stops with information about where in the source code the operator was used.
+                    (Details on <b>true</b> in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    <b>test</b> operator<br>
+                    The operator works like a function, but without the possibility of partial application.<br>
+                    The operator takes one argument.<br>
+                    If there has been at least one use of the <b>test</b> operator, then after the application finishes, information is displayed about how many times the operator was called,
+                    how many times the argument was equal to <b>true</b>, as well as information about where in the source code the operator was used with an argument other than <b>true</b>.
+                    The result of the operator is <b>null</b>.
+                    Details on <b>true</b> and <b>null</b> in the <a style='color:#1a5fb4;' href="#types">Types</a> section.<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    <b>unreachable</b> operator<br>
+                    The operator takes no arguments.<br>
+                    When the operator is called, the application immediately stops with information about where in the source code the operator was used.<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Constants <b>true</b> and <b>false</b>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Numeric constant<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Character<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    <b>null</b> constant<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    String<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Token<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Global constant<br>
+                    Obtaining the value of a global constant in source code:<br>
+                    <code><span style='color:#d33f3f;'>@<i>module_name</i></span><span style='color:#eaeaea;'>.<i>constant_name</i></span></code><br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Grouped expression<br>
+                    Several expressions can be grouped into a single expression; in this case, the expressions are executed in the order they are specified,
+                         and the result of the grouped expressions is the result of the last expression.<br>
+                    To group expressions, all expressions must be enclosed in curly braces (<b>{}</b>), separating expressions with a newline character or a <b>;</b> character.<br>
+
+                    In grouped expressions, you can bind a name to a constant by writing as one of the expressions <code><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> <i>constant_name</i> = <i>value</i></span></code>,
+                         after which, until the end of the grouped expression, the result of the <i>expression</i> will be accessible by that name.<br>
+                    If another constant was already bound to that name, or that name is a function parameter, then until the end of the grouped expression, the new constant will be accessible by that name.<br>
+                    The rules for constant names are the same as for function parameters.<br>
+                    Names cannot be bound to constants in the last expression.<br>
+                    You can also bind constants to names using unpacking; details on unpacking in the <a style='color:#1a5fb4;' href="#types">Types</a> section.<br><br>
+
+                    Grouped expressions participate in determining the root expression as a single whole.<br>
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Local constant<br>
+                    A local constant is a constant bound to some name, but not belonging to any module.<br>
+                    Function arguments within functions themselves are local constants.<br>
+                    Constants that were bound to a name in grouped expressions are local constants.<br>
+                    To access the value of a constant, you simply specify its name.<br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Nested expression<br>
+                    An expression can be wrapped in parentheses <b>()</b>, in which case the expression participates in determining the root expression as a single whole.<br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    <b>new</b> operator<br>
+                    If some constant stores other constants within it, then using the <b>new</b> operator you can create a new constant, the same as that constant,
+                         but with new values for the inner constants.<br>
+                    The <b>new</b> operator has two forms:<br>
+                    <ol>
+                         <li>
+                         <code><b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (<i>constant</i>)[<i>key_1</i>][<i>key_2</i>][<i>key_3</i>] <i>modifier</i> <i>value</i></span></code>
+                         </li>
+
+                         <li>
+                         <code><b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (<i>constant</i>) {[<i>key_1</i>][<i>key_2</i>][<i>key_3</i>] modifier_1 value_1; [<i>key_4</i>][<i>key_5</i>][<i>key_6</i>] modifier_2 value_2}</span></code>
+                         </li>
+                    </ol>
+
+                    The constant on the basis of which the result will be created is written in parentheses after <b>new</b>.<br>
+                    Keys are values with which it is determined which part of the constant will be changed; exactly how this happens depends on the type to which the key is applied.<br>
+                         (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br>
+                    If a token is used as a key for the <b>new</b> operator directly in the form :<i>token</i>, the square brackets (<b>[]</b>) may be omitted.<br>
+                         (Details on tokens in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br>
+                    <i>key_1</i> indicates which part of the constant will be changed, and <i>key_2</i> which part of the constant pointed to by <i>key_1</i> will be changed, etc.<br><br>
+                    Modifier types:
+                    <table border="1">
+                         <th>Modifier</th>
+                         <th>Purpose</th>
+                         <tr>
+                              <td><b><code>&lt;=</code></b></td>
+                              <td>replaces the old value with the new one</td>
+                         </tr>
+
+                         <tr>
+                              <td><b><code>&lt;&lt;=</code></b></td>
+                              <td>same as <b><code>&lt;=</code></b>, but the operator returns not only the new value of the constant, but also the old value of the changed part (values wrapped in type <b>box</b>, details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)</td>
+                         </tr>
+
+                         <tr>
+                              <td><b><code>=&gt;</code></b></td>
+                              <td>same as <b><code>&lt;=</code></b>, but as the new value a function is specified which takes the old value of the part being changed as an argument and returns its new value</td>
+                         </tr>
+
+                         <tr>
+                              <td><b><code>=&gt;&gt;</code></b></td>
+                              <td>same as <b><code>=&gt;</code></b>, but the operator returns not only the new value of the constant, but also the old value of the changed part (values wrapped in type <b>box</b>, details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)</td>
+                         </tr>
+                    </table><br>
+
+                    The expression whose result is the new value of the inner constant is taken as long as it is valid. Example:<br>
+                    <code><b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> ([</span><b><span style='color:#cbcc87;'>array</span></b><span style='color:#eaeaea;'> x])[</span><span style='color:#dcb058;'>0</span><span style='color:#eaeaea;'>] &lt;= </span><span style='color:#dcb058;'>12</span><span style='color:#eaeaea;'> + </span><span style='color:#dcb058;'>1</span></code><br>
+                    This expression will return <code>[<b><span style='color:#cbcc87;'>array</span></b> <span style='color:#dcb058;'>13</span><span style='color:#eaeaea;'>]</span></code><br><br>
+                    Evaluation order of expressions:<br>
+                    <ol>
+                         <li>keys</li>
+                         <li>new values</li>
+                         <li>constant</li>
+                    </ol><br>
+
+                    In the second form of the operator, the semicolon can be replaced by a newline character.<br>
+                    The second form of the operator is a convenient form for writing several consecutive uses of the first form of the operator. Example:
+<pre>
+<b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (a) {</span>
+<span style='color:#eaeaea;'>     [</span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>] &lt;= </span><span style='color:#dcb058;'>2</span>
+<span style='color:#eaeaea;'>     [f][x][</span><span style='color:#dcb058;'>13</span><span style='color:#eaeaea;'>] &lt;= f</span>
+<span style='color:#eaeaea;'>}</span>
+</pre>
+                    the same as
+<pre>
+<b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (</span><b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (a)[</span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>] &lt;= </span><span style='color:#dcb058;'>12</span><span style='color:#eaeaea;'>)[f][x][</span><span style='color:#dcb058;'>13</span><span style='color:#eaeaea;'>] &lt;= f</span>
+</pre>
+
+                    In the second form of the operator, the modifiers <b><code>&lt;&lt;=</code></b> and <b><code>=&gt;&gt;</code></b> can only be used in the last modification.<br><br>
+
+                    The <b>new</b> operator participates in determining the root expression as a single whole.<br>
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Array<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Several values grouped into one<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Loop breaker<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Error<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Object<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Set<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Table<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    <b>if</b> operator<br>
+
+                    The <b>if</b> operator is used to evaluate one of two expressions.<br>
+                    Operator in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>if</span></b><span style='color:#eaeaea;'> <i>predicate</i> <i>expression_1</i> </span><b><span style='color:#cbcc87;'>else</span></b><span style='color:#eaeaea;'> <i>expression_2</i></span><br><br></code>
+                    To separate the <i>predicate</i> and <i>expression_1</i>, a newline character or a <b>;</b> character must be used.<br>
+                    If <i>expression_1</i> is a grouped expression, separating <i>predicate</i> and <i>expression_1</i> is not necessary.<br>
+                    Any number of newline or <b>;</b> characters may appear before <b>else</b>.<br>
+                    The expression after <b>else</b> is taken as long as it is valid.<br><br>
+                    The operator evaluates the <i>predicate</i>; if its result equals <b>true</b>, then <i>expression_1</i> is evaluated and its result is the result of the entire expression,
+                         otherwise <i>expression_2</i> is evaluated and its result is the result of the entire expression. The predicate must have type <b>bool</b>.
+                         (Details on <b>true</b> and the type <b>bool</b> in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    The <b>if</b> operator participates in determining the root expression as a single whole.<br>
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    <b>switch</b> operator<br>
+
+                    The <b>switch</b> operator is used to evaluate one of several expressions.<br>
+                    Operator in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>switch</span></b><span style='color:#eaeaea;'> <i>expression_0</i> </span><b><span style='color:#cbcc87;'>case</span></b><span style='color:#eaeaea;'> <i>value_1</i>, <i>value_2</i>: <i>expression_1</i> </span><b><span style='color:#cbcc87;'>case</span></b><span style='color:#eaeaea;'> <i>value_m</i>: <i>expression_n</i>: </span><b><span style='color:#cbcc87;'>default</span></b><span style='color:#eaeaea;'>: <i>expression_d</i></span></code><br><br>
+
+                    The operator evaluates <i>expression_0</i>; if its result equals one of the values following <b>case</b> up to the colon, then the expression after the colon is evaluated and its result
+                         is the result of the entire expression; otherwise the expression after <b>default</b>: is evaluated and its result is the result of the entire expression.<br>
+                    After <b>case</b>, several expressions may appear in a row, separated by a comma (which can be replaced by a newline character or a <b>;</b> character).<br>
+                    The expression after <b>default</b>: is taken as long as it is valid.<br>
+                    For all expressions after <b>case</b>, it must be possible to compute a hash sum using the <b>hash</b> function from the <b>core</b> module,
+                         and equality comparison is performed using the binary function <b>===</b>.<br>
+                    Within one <b>switch</b> operator, for any two expressions after any <b>case</b>, the binary function <b>===</b> must return <b>false</b>. (Details on <b>false</b> in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br>
+                    If the expression after <b>case</b> cannot be evaluated at compile time, it is evaluated before the execution of the <b>main</b> function from the <b>main</b> module.<br><br>
+
+                    The <b>switch</b> operator participates in determining the root expression as a single whole.<br>
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Lambda function<br>
+                    A lambda function is a function without a name.<br>
+                    A lambda function differs from a regular function only in the absence of a name and the absence of belonging to any module.<br>
+                    Lambda functions in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (<i>parameter_1</i>, <i>parameter_2</i>, <i>parameter_n</i>) <i>expression</i></span></code><br><br>
+
+                    Calling a lambda function in source code:<br>
+                    <code>(<i>expression</i>)(<i>argument_1</i>, <i>argument_2</i>, <i>argument_n</i>)</code><br><br>
+                    For lambda functions, as for regular functions, partial application can be used.<br>
+                    In the body of a lambda function, you can refer to local constants that were declared outside the lambda function; such constants cannot be of the following types: <b>box</b>, <b>breaker</b>, <b>thread</b>, <b>error</b>. (Details on types in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br>
+                    If the body of a lambda function references local constants that were declared outside the lambda function and there is a parameter of that lambda function with the same name, then in that case the name will be interpreted as the function parameter.<br>
+                    The expression is taken as long as it is valid.<br><br>
+
+                    A lambda function participates in determining the root expression as a single whole.<br>
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    Method call<br>
+                    (Details in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 0.<br><br>
+               </li>
+
+               <li>
+                    <b>not</b> function
+                    The function in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>not</span></b><span style='color:#eaeaea;'> <i>expression</i></span></code><br><br>
+
+                    The function evaluates the expression; if its result equals <b>true</b>, the function result is <b>false</b>,
+                         and if the expression result equals <b>false</b>, the function result is <b>true</b>.<br>
+                    The function accepts only arguments of type <b>bool</b>. (Details on <b>false</b>, <b>true</b> and the type <b>bool</b> in the <a style='color:#1a5fb4;' href="#types">Types</a> section)<br><br>
+
+                    Precedence - 1.
+               </li>
+          </ul>
+
+          <h2 id="types">Types</h2>
+          A type is a characteristic of a constant, based on which the program determines what that constant is and how to work with it.<br>
+          List of types:<br>
+          <ul>
+               <li>
+                    <b>string</b><br>
+                    <b>string</b> - text.<br>
+                    The text may contain no characters, such a string is called empty.<br>
+                    Strings in the <b>scar</b> language use their own character encoding called <b>corsar</b>.<br>
+                    A string begins and ends with the <b>"</b> character.<br>
+                    Strings support escape sequences, which begin with the <b>\</b> character.<br>
+                    Escape sequences:
+                    <table border="1">
+                         <th>escape sequence</th>
+                         <th>meaning</th>
+                         <tr>
+                              <td>\n</td>
+                              <td>newline character</td>
+                         </tr>
+
+                         <tr>
+                              <td>\t</td>
+                              <td>tab character</td>
+                         </tr>
+
+                         <tr>
+                              <td>\'</td>
+                              <td>the <b>'</b> character</td>
+                         </tr>
+
+                         <tr>
+                              <td>\"</td>
+                              <td>the <b>"</b> character</td>
+                         </tr>
+
+                         <tr>
+                              <td>\\</td>
+                              <td>the <b>\</b> character</td>
+                         </tr>
+
+                         <tr>
+                              <td>\<i>xxxxxx</i></td>
+                              <td>character with code <i>xxxxxx</i>, where <i>xxxxxx</i> is the hexadecimal character code in the corsar encoding</td>
+                         </tr>
+                    </table><br>
+                    Before the opening quote, the letter <b>r</b> can be specified, in which case escape sequences will be ignored.<br>
+                    Before the opening quote, the letter <b>u</b> can be specified, in which case the string will have type <b>byte_array</b> (on that later), and not <b>string</b>,
+                         and will store bytes of the string analogous to this one but in the <b>utf8</b> encoding, and the escape sequence \<i>xxxxxx</i> will mean the code in Unicode.<br>
+                    If the letter <b>u</b> is specified, the letter <b>z</b> can be specified after it, in which case a byte 0 (zero) will be added to the end of the string.<br>
+                    Before <b>u</b> or <b>uz</b>, <b>r</b> can be specified, in which case escape sequences will be ignored.<br><br>
+
+                    String examples:
+<pre>
+<span style='color:#ee7d7d;'>&quot;&quot;</span>
+<span style='color:#ee7d7d;'>&quot;Hello !!!&quot;</span>
+<span style='color:#ee7d7d;'>&quot;Char </span><span style='color:#95e6cb;'>\000100</span><span style='color:#ee7d7d;'>&quot;</span>
+<span style='color:#ee7d7d;'>&quot;New line </span><span style='color:#95e6cb;'>\n</span><span style='color:#ee7d7d;'>&quot;</span>
+<span style='color:#ee7d7d;'>r&quot;not new line \n&quot;</span>
+<span style='color:#ee7d7d;'>&quot;</span><span style='color:#95e6cb;'>\&quot;</span><span style='color:#ee7d7d;'>&quot;</span>
+<span style='color:#ee7d7d;'>u&quot;&quot;</span>
+<span style='color:#ee7d7d;'>uz&quot;&quot;</span>
+<span style='color:#ee7d7d;'>u&quot;Hello&quot;</span>
+<span style='color:#ee7d7d;'>u&quot;</span><span style='color:#95e6cb;'>\000100</span><span style='color:#ee7d7d;'>&quot;</span>
+<span style='color:#ee7d7d;'>ru&quot;\000100&quot;</span>
+<span style='color:#ee7d7d;'>ruz&quot;\000100&quot;</span>
+</pre>
+                    To change a character, the <b>new</b> operator is used; the index of the character (starting from 0) is passed as the key,
+                         and the new character is passed as the value.<br><br>
+               </li>
+
+               <li>
+                    <b>char</b> (character)<br>
+                    <b>char</b> - a single text character.<br>
+                    A character begins and ends with the <b>'</b> character.<br>
+                    Characters support escape sequences in the same way as strings.<br>
+                    Before the opening quote, the letter <b>u</b> can be specified, in which case the character will have type <b>int</b> (on that later), and not <b>char</b>,
+                         and stores the Unicode code point of a character analogous to this one, and the escape sequence \<i>xxxxxx</i> will mean the code in Unicode.<br>
+                    Character examples:
+<pre>
+<span style='color:#00a7f4;'>'a'</span>
+<span style='color:#00a7f4;'>'z'</span>
+<span style='color:#00a7f4;'>' '</span>
+<span style='color:#00a7f4;'>'</span><span style='color:#95e6cb;'>\000100</span><span style='color:#00a7f4;'>'</span>
+<span style='color:#00a7f4;'>'</span><span style='color:#95e6cb;'>\n</span><span style='color:#00a7f4;'>'</span>
+<span style='color:#00a7f4;'>'</span><span style='color:#95e6cb;'>\'</span><span style='color:#00a7f4;'>'</span>
+<span style='color:#00a7f4;'>u'a'</span>
+<span style='color:#00a7f4;'>u'H'</span>
+<span style='color:#00a7f4;'>u'</span><span style='color:#95e6cb;'>\000100</span><span style='color:#00a7f4;'>'</span>
+</pre>
+               </li>
+
+               <li>
+                    <b>int</b><br>
+                    <b>int</b> - an integer from the set [-9'223'372'036'854'775'808 - 9'223'372'036'854'775'807] (-2^63 - 2^63-1).<br>
+                    When writing a number, the <b>'</b> character can be used as a digit separator.<br>
+                    A positive number may be preceded by the <b>+</b> character.<br>
+                    If during calculations a number goes outside the set of allowed numbers, arithmetic overflow occurs.<br>
+                    A number can be written in hexadecimal notation, for which <b>0x</b> must be written before the number (after the <b>-</b> or <b>+</b> characters, if present).<br>
+                    Hexadecimal notation can have values from -0xffff'ffff'ffff'ffff to 0xffff'ffff'ffff'ffff (-(2^64-1) - 2^64-1),
+                         but if the number does not belong to the set [-9'223'372'036'854'775'808 - 9'223'372'036'854'775'807], arithmetic overflow occurs.<br>
+                    Integer examples:
+<pre>
+<span style='color:#dcb058;'>0</span>
+<span style='color:#eaeaea;'>-</span><span style='color:#dcb058;'>1</span>
+<span style='color:#dcb058;'>1'024</span>
+<span style='color:#eaeaea;'>-</span><span style='color:#dcb058;'>900</span>
+<span style='color:#eaeaea;'>+</span><span style='color:#dcb058;'>4899</span>
+<span style='color:#dcb058;'>4'899</span>
+<span style='color:#dcb058;'>0xffda'34aa</span>
+<span style='color:#dcb058;'>0xffff'ffff'ffff'ffff</span><span style='color:#eaeaea;'> </span><i><span style='color:#5c6773;'># equals -1</span></i>
+</pre>
+               </li>
+
+               <li>
+                    <b>float</b><br>
+                    <b>float</b> - double-precision floating-point numbers.<br>
+                    When writing a number, the <b>'</b> character can be used as a digit separator.<br>
+                    A positive number may be preceded by the <b>+</b> character.<br>
+                    Exponential notation can be used.<br>
+                    Number examples:
+<pre>
+<span style='color:#dcb058;'>0.0</span>
+<span style='color:#dcb058;'>0.1</span>
+<span style='color:#eaeaea;'>-</span><span style='color:#dcb058;'>0.0</span>
+<span style='color:#eaeaea;'>+</span><span style='color:#dcb058;'>0.2</span>
+<span style='color:#dcb058;'>153.444</span>
+<span style='color:#dcb058;'>0.1e-10</span>
+<span style='color:#dcb058;'>0.1e+10</span>
+<span style='color:#dcb058;'>100'000'000.0</span>
+</pre>
+               </li>
+
+               <li>
+                    <b>bool</b><br>
+                    <b>bool</b> - the values <b>true</b> or <b>false</b>.<br><br>
+               </li>
+
+               <li>
+                    <b>null</b><br>
+                    <b>null</b> - the absence of a value.<br>
+                    Used when it is necessary to indicate that there is no value, for example if a function returns nothing as a result, it must return <b>null</b>.<br>
+                    Methods can be called on a constant of type <b>null</b> (more on methods in the <b>obj</b> type), such a call does not evaluate its arguments and always returns <b>null</b>.<br>
+                    <b>null</b> can be used as the constant for the <b>new</b> operator; in this case, if the key is a token, <b>null</b> will become an object with no fields,
+                         otherwise a table with no entries.<br><br>
+                    <b>null</b> can be unpacked; when unpacking, specifying any type, in that case all local constants have the value <b>null</b>.
+               </li>
+
+               <li>
+                    <b>byte</b><br>
+                    <b>byte</b> - a byte of size 8 bits (architectures with a different byte size are not supported).<br>
+                    A byte represents a number from the set [0..255].
+                    If during calculations a number goes outside the set of allowed numbers, arithmetic overflow occurs.<br>
+                    A byte is written as <code><b>0b<i>xx</i></b></code>, where <i>xx</i> is the hexadecimal representation of the number.<br>
+                    Byte examples:
+<pre>
+<span style='color:#dcb058;'>0b00</span>
+<span style='color:#dcb058;'>0bff</span>
+<span style='color:#dcb058;'>0bfe</span>
+</pre>
+               </li>
+
+               <li>
+                    <b>byte_array</b><br>
+                    <b>byte_array</b> - an indexed array whose elements are bytes.<br>
+                    Array in source code:<br>
+                    <code><span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>byte_array</span></b><span style='color:#eaeaea;'> <i>byte_1</i>, <i>byte_2</i>, <i>byte_n</i>]</span></code><br>
+                    Indices start from 0.<br>
+                    An array can have no elements, such an array is called empty.<br>
+                    Expressions whose result returns a constant of type <b>byte</b> are used as elements.<br>
+                    The comma between elements can be replaced by a newline character or a <b>;</b> character.<br>
+                    Before the closing bracket (<b>]</b>), any number of newline or <b>;</b> characters can be specified.<br>
+                    Array examples:
+<pre>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>byte_array</span></b><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>byte_array</span></b><span style='color:#eaeaea;'> </span><span style='color:#dcb058;'>0b00</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>byte_array</span></b><span style='color:#eaeaea;'> </span><span style='color:#dcb058;'>0b00</span><span style='color:#eaeaea;'>, foo(a), </span><span style='color:#dcb058;'>0b01</span><span style='color:#eaeaea;'> + </span><span style='color:#dcb058;'>0bf1</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>byte_array</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#dcb058;'>0b00</span>
+<span style='color:#eaeaea;'>     foo(a)</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#dcb058;'>0b01</span><span style='color:#eaeaea;'> + </span><span style='color:#dcb058;'>0bf1</span>
+<span style='color:#eaeaea;'>]</span>
+</pre>
+                    Individual elements of the array can be bound to names, thus creating local constants.<br>
+                    This process is called unpacking.<br>
+                    Unpacking can only be done in grouped expressions.<br>
+                    Local constants created through unpacking follow the same rules as local constants created by the method described in grouped expressions.<br>
+                    Unpacking in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> [</span><b><span style='color:#cbcc87;'>byte_array</span></b><span style='color:#eaeaea;'> <i>name_bound_to_element_with_index_0</i>, <i>name_bound_to_element_with_index_1</i>, <i>name_bound_to_element_with_index_2</i>] = byte_array</span></code><br>
+                    The number of names must not exceed the number of elements in the array.<br>
+                    Instead of a name, the <b>_</b> character can be specified; for an element with such an index, no binding to a name will be created.<br>
+                    To change a byte, the <b>new</b> operator is used; the byte index is passed as the key,
+                         and the new byte is passed as the value.<br><br>
+               </li>
+
+               <li>
+                    <b>time</b><br>
+                    <b>time</b> - a type used for working with time.<br><br>
+               </li>
+
+               <li>
+                    <b>token</b><br>
+                    <b>token</b> - identifiers representing a set of characters from 1 to 22, which can be a lowercase Latin letter, a digit (0-9), or an underscore (_).<br>
+                    After the characters mentioned above, the token may end with one of the following suffixes: <b>!</b>, <b>!!!</b>, <b>?</b>.<br>
+                    Token examples:
+<pre>
+<span style='color:#4e9fea;'>:_</span>
+<span style='color:#4e9fea;'>:a</span>
+<span style='color:#4e9fea;'>:z</span>
+<span style='color:#4e9fea;'>:hello_0123</span>
+<span style='color:#4e9fea;'>:some!!!</span>
+<span style='color:#4e9fea;'>:0123456789_abcdefghijk!!!</span>
+</pre>
+               </li>
+
+               <li>
+                    <b>fn</b> (function)<br>
+                    <b>fn</b> - the type for lambda functions; partial application returns a constant of this type.<br><br>
+               </li>
+
+               <li>
+                    <b>obj</b> (object)<br>
+                    <b>obj</b> - object in object-oriented programming terminology.<br>
+                    Objects in source code:<br>
+                    <code><span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>obj</span></b><span style='color:#eaeaea;'> </span><span style='color:#4e9fea;'>:<i>field_name_1</i></span><span style='color:#eaeaea;'> = <i>field_1</i>, </span><span style='color:#4e9fea;'>:<i>field_name_2</i></span><span style='color:#eaeaea;'> = <i>field_2</i>, </span><span style='color:#4e9fea;'>:<i>field_name_n</i></span><span style='color:#eaeaea;'> = <i>field_n</i>]</span></code><br>
+                    An object represents an associative array in which the keys have type <b>token</b> and are field names,
+                         and the values of the associative array are the field values.<br>
+                    An object can have no fields, such an object is called empty.<br>
+                    The comma between fields can be replaced by a newline character or a <b>;</b> character.<br>
+                    Before the closing bracket (<b>]</b>), any number of newline or <b>;</b> characters can be specified.<br>
+                    Fields cannot be of types from the list: <b>null</b>, <b>box</b>, <b>error</b>, <b>breaker</b>.<br>
+                    If the field name is known at compile time, <b>null</b> can be used as the value; the field will be absent in that case,
+                         but subsequent addition of a field with that name to the object will be more efficient.<br>
+                    The field with the name <b>_</b> has a special meaning; such a field (if present) can only be of type <b>obj</b>, and its fields are methods for the object.<br>
+                    Methods are functions that take as their first argument the object whose method is called,
+                         and method arguments start from the second argument of the function.<br>
+                    If the object from which the method is called has a type other than <b>obj</b> or <b>custom</b>, the arguments of such a method are not evaluated when the method is called.<br>
+                    If the object from which the method is called has type <b>obj</b> or <b>custom</b> but does not have the specified method, such a situation is an error.<br>
+                    Unlike functions, methods do not support partial application.<br>
+                    Method call in source code: <code><i>object</i>-><i>method_name</i>(<i>argument_1</i>, <i>argument_2</i>, <i>argument_n</i>)</code><br>
+                    To add or change a field, the <b>new</b> operator is used; the field name in the form of a token is passed as the key,
+                         and the new value is passed as the value.<br>
+                    If a field with the specified name already existed, the new value replaces the old one; if such a field did not exist, a new field with the specified name is created,
+                         and the old value is considered to be <b>null</b>.<br>
+                    To delete a field, <b>null</b> must be specified as the new field value.<br>
+                    Object examples:
+<pre>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>obj</span></b><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>obj</span></b><span style='color:#eaeaea;'> </span><span style='color:#4e9fea;'>:1</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>213</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:x</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0.0</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:y</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0.0</span>
+<span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:r</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0b00</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:g</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0b00</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:b</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0b00</span>
+<span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:a</span><span style='color:#eaeaea;'> = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:x</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>11.3</span>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:y</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>7.4</span>
+<span style='color:#eaeaea;'>     ]</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:b</span><span style='color:#eaeaea;'> = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:x</span><span style='color:#eaeaea;'> = -</span><span style='color:#dcb058;'>1.8</span>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:y</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>9.11</span>
+<span style='color:#eaeaea;'>     ]</span>
+
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:_</span><span style='color:#eaeaea;'> = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:len</span><span style='color:#eaeaea;'> = </span><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (line) ((line</span><span style='color:#4e9fea;'>:a:x</span><span style='color:#eaeaea;'> - line</span><span style='color:#4e9fea;'>:b:x</span><span style='color:#eaeaea;'>).sqr() + (line</span><span style='color:#4e9fea;'>:a:y</span><span style='color:#eaeaea;'> - line</span><span style='color:#4e9fea;'>:b:y</span><span style='color:#eaeaea;'>).sqr()).sqrt()</span>
+<span style='color:#eaeaea;'>     ]</span>
+<span style='color:#eaeaea;'>]</span>
+</pre>
+
+                    Individual fields of an object can be bound to names, thus creating local constants.<br>
+                    This process is called unpacking.<br>
+                    Unpacking can only be done in grouped expressions.<br>
+                    Local constants created through unpacking follow the same rules as local constants created by the method described in grouped expressions.<br>
+                    Unpacking in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> [</span><b><span style='color:#cbcc87;'>obj</span></b><span style='color:#eaeaea;'> <i>name_1</i> = <span style='color:#4e9fea;'>:<i>field_name_1</i></span>, <i>name_2</i> = <span style='color:#4e9fea;'>:<i>field_name_2</i></span>, <i>name_n</i> = <span style='color:#4e9fea;'>:<i>field_name_n</i></span>] = obj</span></code><br>
+                    If the field with the name specified during unpacking is absent, the specified name will be bound to the constant <b>null</b>.<br><br>
+               </li>
+
+               <li>
+                    <b>array</b><br>
+                    <b>array</b> - an indexed array.<br>
+                    Array in source code:<br>
+                    <code><span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>array</span></b><span style='color:#eaeaea;'> <i>element_1</i>, <i>element_2</i>, <i>element_n</i>]</span></code><br>
+                    Indices start from 0.<br>
+                    An array can have no elements, such an array is called empty.<br>
+                    The comma between elements can be replaced by a newline character or a <b>;</b> character.<br>
+                    Elements cannot be of types from the list: <b>null</b>, <b>box</b>, <b>error</b>, <b>breaker</b>.<br>
+                    Before the closing bracket (<b>]</b>), any number of newline or <b>;</b> characters can be specified.<br>
+                    Array examples:
+<pre>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>array</span></b><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>array</span></b><span style='color:#eaeaea;'> </span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>array</span></b><span style='color:#eaeaea;'> </span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>10.2</span><span style='color:#eaeaea;'>, </span><span style='color:#ee7d7d;'>&quot;Hello&quot;</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>array</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:hello</span>
+<span style='color:#eaeaea;'>     [</span><b><span style='color:#cbcc87;'>array</span></b><span style='color:#eaeaea;'> </span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>2</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>3</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>     [</span><b><span style='color:#cbcc87;'>obj</span></b><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>]</span>
+</pre>
+                    Individual elements of the array can be bound to names, thus creating local constants.<br>
+                    This process is called unpacking.<br>
+                    Unpacking can only be done in grouped expressions.<br>
+                    Local constants created through unpacking follow the same rules as local constants created by the method described in grouped expressions.<br>
+                    Unpacking in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> [</span><b><span style='color:#cbcc87;'>array</span></b><span style='color:#eaeaea;'> <i>name_bound_to_element_with_index_0</i>, <i>name_bound_to_element_with_index_1</i>, <i>name_bound_to_element_with_index_2</i>] = array</span></code><br>
+                    The number of names must not exceed the number of elements in the array.<br>
+                    Instead of a name, the <b>_</b> character can be specified; for an element with such an index, no binding to a name will be created.<br>
+                    To change elements, the <b>new</b> operator is used; the element index is passed as the key,
+                         and the new element is passed as the value.<br><br>
+               </li>
+
+               <li>
+                    <b>table</b><br>
+                    <b>table</b> - an associative array.<br>
+                    Table in source code:<br>
+                    <code><span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>table</span></b><span style='color:#eaeaea;'> <i>key_1</i> = <i>value_1</i>, <i>key_2</i> = <i>value_2</i>, <i>key_n</i> = <i>value_n</i>]</span></code><br>
+                    For all keys, it must be possible to compute a hash sum using the <b>hash</b> function from the <b>core</b> module,
+                         and equality comparison is performed using the binary function <b>===</b>.<br>
+                    Values cannot be of types from the list: <b>null</b>, <b>box</b>, <b>error</b>, <b>breaker</b>.<br>
+                    A table can have no entries, such a table is called empty.<br>
+                    The comma between multiple keys and values can be replaced by a newline character or a <b>;</b> character.<br>
+                    Before the closing bracket (<b>]</b>), any number of newline or <b>;</b> characters can be specified.<br>
+                    To add or change a value, the <b>new</b> operator is used; the key is passed as the key,
+                         and the new value is passed as the value.<br>
+                    If a value with the specified key already existed, the new value replaces the old one; if a value with that key did not exist, a new value with the specified key is created,
+                         and the old value is considered to be <b>null</b>.<br>
+                    To delete a value, <b>null</b> must be specified as the new value.<br>
+                    Table examples:
+<pre>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>table</span></b><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>table</span></b><span style='color:#eaeaea;'> </span><span style='color:#ee7d7d;'>&quot;hello&quot;</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>table</span></b><span style='color:#eaeaea;'> </span><span style='color:#ee7d7d;'>&quot;hello&quot;</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>1.0</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>table</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#ee7d7d;'>&quot;A&quot;</span><span style='color:#eaeaea;'>   = </span><span style='color:#00a7f4;'>'a'</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#ee7d7d;'>&quot;b&quot;</span><span style='color:#eaeaea;'>   = </span><span style='color:#00a7f4;'>'B'</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:some</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>13</span>
+<span style='color:#eaeaea;'>]</span>
+</pre>
+                    Individual values of the table can be bound to names, thus creating local constants.<br>
+                    This process is called unpacking.<br>
+                    Unpacking can only be done in grouped expressions.<br>
+                    Local constants created through unpacking follow the same rules as local constants created by the method described in grouped expressions.<br>
+                    Unpacking in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> [</span><b><span style='color:#cbcc87;'>table</span></b><span style='color:#eaeaea;'> <i>name_1</i> = <i>key_1</i>, <i>name_2</i> = <i>key_2</i>, <i>name_n</i> = <i>key_n</i>] = table</span></code><br>
+                    If the value with the specified key during unpacking is absent, the specified name will be bound to the constant <b>null</b>.<br><br>
+               </li>
+
+               <li>
+                    <b>set</b><br>
+                    Set in source code:<br>
+                    <code><span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>set</span></b><span style='color:#eaeaea;'> <i>element_1</i>, <i>element_2</i>, <i>element_n</i>]</span></code><br>
+                    For all elements, it must be possible to compute a hash sum using the <b>hash</b> function from the <b>core</b> module,
+                         and equality comparison is performed using the binary function <b>===</b>.<br>
+                    A set can have no elements, such a set is called empty.<br>
+                    The comma between multiple elements can be replaced by a newline character or a <b>;</b> character.<br>
+                    Before the closing bracket (<b>]</b>), any number of newline or <b>;</b> characters can be specified.<br>
+                    Set examples:
+<pre>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>set</span></b><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>set</span></b><span style='color:#eaeaea;'> </span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>set</span></b><span style='color:#eaeaea;'> </span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>, </span><span style='color:#ee7d7d;'>&quot;hello&quot;</span><span style='color:#eaeaea;'>, </span><span style='color:#4e9fea;'>:hello</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>set</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#ee7d7d;'>&quot;A&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#ee7d7d;'>&quot;b&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#dcb058;'>17</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:some</span>
+<span style='color:#eaeaea;'>]</span>
+</pre>
+                    Individual elements of the set can be bound to names, thus creating local constants.<br>
+                    This process is called unpacking.<br>
+                    Unpacking can only be done in grouped expressions.<br>
+                    Local constants created through unpacking follow the same rules as local constants created by the method described in grouped expressions.<br>
+                    Unpacking in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> [</span><b><span style='color:#cbcc87;'>set</span></b><span style='color:#eaeaea;'> <i>name_1</i> = <i>element_1</i>, <i>name_2</i> = <i>element_2</i>, <i>name_n</i> = <i>element_n</i>] = set</span></code><br>
+                    If the element with the specified value during unpacking is absent, the specified name will be bound to the constant <b>null</b>.<br><br>
+               </li>
+
+               <li>
+                    <b>custom</b><br>
+                    <b>custom</b> - a type created using another programming language.<br>
+                    Such types, similarly to objects, may support methods.<br><br>
+               </li>
+
+               <li>
+                    <b>box</b><br>
+                    <b>box</b> - several constants (elements) grouped into one.<br>
+                    A box in source code:<br>
+                    <code><span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>box</span></b><span style='color:#eaeaea;'> <i>element_1</i>, <i>element_2</i>, <i>element_n</i>]</span></code><br>
+                    A box is structured like an indexed array.<br>
+                    Indices start from 0.<br>
+                    A box can have no elements, such a box is called empty.<br>
+                    The maximum number of elements is 16.<br>
+                    A box cannot be duplicated (stored in several places simultaneously) or reused.<br>
+                    At any time, a limited number (currently 4) of boxes can exist in the program; therefore, when receiving a box, it is almost always advisable to unpack it.<br>
+                    The last two points do not apply to boxes that are global constants and empty boxes.<br>
+                    The main purpose of a box is to pass multiple arguments as one, or to return several constants from a function.<br>
+                    When creating a box, memory is never allocated on the heap.<br>
+                    The comma between elements can be replaced by a newline character or a <b>;</b> character.<br>
+                    Elements cannot be of type <b>error</b>.<br>
+                    Before the closing bracket (<b>]</b>), any number of newline or <b>;</b> characters can be specified.<br>
+                    Box examples:
+<pre>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>box</span></b><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>box</span></b><span style='color:#eaeaea;'> </span><b><span style='color:#ba75df;'>null</span></b><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>box</span></b><span style='color:#eaeaea;'> </span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>2</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>3</span><span style='color:#eaeaea;'>, </span><b><span style='color:#ba75df;'>null</span></b><span style='color:#eaeaea;'>, [</span><b><span style='color:#cbcc87;'>box</span></b><span style='color:#eaeaea;'>], </span><span style='color:#ee7d7d;'>&quot;hello&quot;</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>box</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#dcb058;'>14</span><span style='color:#eaeaea;'>,</span><span style='color:#dcb058;'>1</span>
+<span style='color:#eaeaea;'>     </span><b><span style='color:#ba75df;'>null</span></b>
+<span style='color:#eaeaea;'>     [</span><b><span style='color:#cbcc87;'>box</span></b><span style='color:#eaeaea;'> </span><span style='color:#dcb058;'>1</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>2</span><span style='color:#eaeaea;'>]</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#ee7d7d;'>&quot;hello&quot;</span>
+<span style='color:#eaeaea;'>]</span>
+</pre>
+                    Individual elements of a box can be bound to names, thus creating local constants.<br>
+                    This process is called unpacking.<br>
+                    Unpacking can only be done in grouped expressions.<br>
+                    Local constants created through unpacking follow the same rules as local constants created by the method described in grouped expressions.<br>
+                    Unpacking in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> [</span><b><span style='color:#cbcc87;'>box</span></b><span style='color:#eaeaea;'> <i>name_bound_to_element_with_index_0</i>, <i>name_bound_to_element_with_index_1</i>, <i>name_bound_to_element_with_index_2</i>] = box</span></code><br>
+                    The number of names must not exceed the number of elements in the box.<br>
+                    Instead of a name, the <b>_</b> character can be specified; for an element with such an index, no binding to a name will be created.<br><br>
+               </li>
+
+               <li>
+                    <b>channel</b><br>
+                    <b>channel</b> - a type created for passing constants from one thread to another.<br>
+                    A channel cannot be a global constant.<br>
+                    A channel cannot be written to a channel.<br><br>
+               </li>
+
+               <li>
+                    <b>thread</b><br>
+                    <b>thread</b> - constants of this type are associated with a running thread, and through them it is possible to interact with that thread.<br>
+                    Constants of this type cannot be duplicated (stored in several places simultaneously) or reused; also, they cannot be global constants,
+                         and they cannot be passed from thread to thread.<br><br>
+               </li>
+
+               <li>
+                    <b>breaker</b><br>
+                    <b>breaker</b> - a type designed for breaking certain functions with which loops are organized (loop, foldl, foldr ...).<br>
+                    Details on these functions in the documentation for the <b>core</b> module.<br>
+                    Breaker in source code:<br>
+                    <code><span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>breaker</span></b><span style='color:#eaeaea;'> <i>constant</i>]</span></code><br>
+                    Constants of this type cannot be duplicated (stored in several places simultaneously) or reused; also, they cannot be global constants,
+                         and they cannot be passed from thread to thread.<br>
+                    At any time, a limited number (currently 8) of breakers can exist in the program.<br>
+                    When creating a breaker, memory is never allocated on the heap.<br>
+                    The constant inside the breaker cannot be of type <b>error</b>.<br>
+                    Before the closing bracket (<b>]</b>), any number of newline or <b>;</b> characters can be specified.<br><br>
+               </li>
+
+               <li>
+                    <b>error</b><br>
+                    <b>error</b> - constants of this type store information about an error that has occurred.<br>
+                    Creating an error in source code:<br>
+                    <code><span style='color:#eaeaea;'>[</span><b><span style='color:#cbcc87;'>error</span></b><span style='color:#eaeaea;'> <i>identifier</i>, <i>message</i>, <i>data</i>]</span></code><br>
+                    <i>identifier</i> - a token carrying information about what kind of error occurred.<br>
+                    <i>message</i> - a string carrying a human-readable error message.<br>
+                    <i>data</i> - data with technical information about the error; the data must not be of types from the list: <b>box</b>, <b>error</b>, <b>breaker</b>.<br>
+                    Errors also store information about where they occurred, and in <b>DEBUG</b> mode, additionally information about the sequence of function calls that led to this error.<br><br>
+
+                    If an error occurs in a program, it signals the need to modify the source code; there are only three exceptions to this rule:
+                    <ol>
+                         <li>if the error that has occurred will lead to the termination of the application</li>
+                         <li>
+                              if for some reason you need to call a function that returns an error, but checking that the function will work correctly is
+                                   extremely difficult or impossible
+                         </li>
+                         <li>an incredibly small probability of the error occurring</li>
+                    </ol><br>
+
+                    When creating a function, one must be guided by the idea that an error occurs only if the developer used it incorrectly.<br>
+                    For example, if a certain function that accepts flags that affect how the function works receives a flag value that makes no sense,
+                         such a situation is an error; whereas if a function that converts a textual representation of a number into a number
+                         receives a string that does not contain a textual representation of a number, this is not an error, since such a function can be used on a user-supplied string,
+                         and therefore it should return information that the function could not convert the string into a number, without creating an error.<br>
+                    During development, to determine in which situations a function returns an error and in which it does not, one must be guided by how exactly the function will be used.<br>
+                    <b>A CORRECTLY WORKING FUNCTION MUST NEVER RETURN AN ERROR!!!</b><br><br>
+
+                    The program is optimized as if errors never occur in the program, but if one does occur, the program will work correctly.<br>
+                    If an error is written into any data structure, that structure becomes that error.<br>
+                    If in the <b>new</b> operator an error is passed as the constant, key, or value, the operator returns that error.<br>
+                    If in the <b>if</b> operator an error is passed as the predicate, the operator returns that error.<br>
+                    If in the <b>switch</b> operator an error is passed as the expression on the basis of which the choice is made, the operator returns that error.<br>
+                    If a method is called on an error, the arguments are not evaluated, and the result is that error.<br>
+                    If unpacking is performed on a type that is not an error, but the constant being unpacked is an error, then all created local constants become that error.<br>
+                    If multiple errors are passed to places where the expression would return an error, the error whose expression should have been evaluated first is returned.<br>
+                    If the <b>main</b> function from the <b>main</b> module returns an error, the program displays that error on the screen.<br><br>
+
+                    The <i>identifier</i>, <i>message</i>, and <i>data</i> can be bound to names, thus creating local constants.<br>
+                    This process is called unpacking.<br>
+                    Unpacking can only be done in grouped expressions.<br>
+                    Local constants created through unpacking follow the same rules as local constants created by the method described in grouped expressions.<br>
+                    Unpacking in source code:<br>
+                    <code><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> [</span><b><span style='color:#cbcc87;'>error</span></b><span style='color:#eaeaea;'> <i>identifier</i>, <i>message</i>, <i>data</i>] = error</span></code><br>
+                    Instead of a name, the <b>_</b> character can be specified, meaning that this component is not needed.<br><br>
+               </li>
+          </ul>
+     </body>
+</html>

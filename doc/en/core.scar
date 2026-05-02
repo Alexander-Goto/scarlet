@@ -1,0 +1,2983 @@
+#*
+Errors:
+Any function from this module, by default (unless otherwise specified), has the following behavioral characteristics:
+- if at least one argument of the function is an error, the function returns the error from that argument
+- if several arguments of the function are errors, the error from the argument that was passed first is returned
+- if an argument is passed to the function whose value causes an error (for example, an argument of an incorrect type),
+     but there is another argument with an error, the function returns the error from that argument
+- if at least one argument of the function is an error, the function will terminate before any action affecting the application state is performed
+- if a function argument has an incorrect type, the function may return an error with code ':invalid_type'
+- if a function argument is a function that accepts a number of arguments different from the one specified in the signature, the function may return an error with code ':wrong_num_fn_args'.
+- if a function argument is a function and calling the function from the argument returns an error, then the function itself returns that error.
+- if a function signature specifies an argument with some method and there is also an argument with type !$'name of the argument with the method', it is implied that their types (.core_type) are equal,
+     but the actual type checking is deferred to the method.
+- functions are thread-safe
+
+Notations used in type descriptions:
+@ustring                   - a string in utf-8 encoding, the type in the real program is 'byte_array'
+@sysstr                    - a string obtained from the system encoding, all characters with code \00001a are replaced by two such characters,
+     and non-ASCII characters may be replaced by \00001a and the hexadecimal code of the character in Unicode (6 digits), the type in the real program is 'string'.
+@type                      - the specified type
+(type)                     - instead of type, several types separated by the | symbol can be specified,
+     this syntax means that the constant can have one of the specified types,
+     if the constant matches the description of several types, it is considered to have the type that was specified first
+(types)                    - instead of types, several types separated by the & symbol must be specified,
+     this syntax means that the constant matches the description of all specified types
+name:type                  - a type assigned a name
+$name                      - the type that was assigned a name, if the type describes a set of types, this type can be any of the set
+!$name                     - the same as $name, but if the type describes a set of types,
+     this type equals the type of the constant used when assigning the name
+param(fn:param)            - the same type as the parameter 'param' of the function 'fn'
+[container item]           - where container is one of the types: array, box, set or obj; and 'item' is the type of the container's elements.
+     If the container is of type array or box:
+     Instead of a single type 'item', you can list several types separated by commas.
+     This means that the array contains exactly as many elements as the number of types specified, and each element has its corresponding type.
+     If only one type is specified, the array consists of a single element of that type.
+
+     If the container is of type set or obj:
+     A single 'item' type is specified, meaning the container can contain any number of elements, but all elements must be of that type.
+type{min,max}              - in cases where instead of a single type several can be specified (e.g., [container item]),
+     this syntax means no fewer than 'min' and no more than 'max' elements of the specified type; if the type 'type' describes a set of types,
+     the elements can have different types, but only from the specified set
+type{min,}                 - the same as type{min,max}, but without a maximum limit
+type{n}                    - the same as type{n,n}
+type*                      - the same as type{0,}
+type+                      - the same as type{1,}
+!type                      - in cases where instead of a single type several can be specified (e.g., [container item]),
+     this syntax means that all elements must be of the same type
+/type                      - any type except 'type' and error
+[table key=value]          - a table in which keys have type 'key' and values have type 'value'
+     if the type 'key' or 'value' describes a set of types, keys or values can have different types, but from the specified set
+fn(param)result            - a function that takes one argument of type 'param', and the return value has type 'result'
+     several argument types can be specified separated by commas, which will mean that the function takes the specified number of arguments of the specified types
+     the parameter can be omitted, meaning the function takes no arguments
+.name                      - the constant has a method with the specified name
+(?constraint)type          - 'type' but only if the constraint 'constraint' holds; if no type results,
+     the current signature variant is considered unsuitable
+any                        - any type except error
+common                     - any type except error, null, box, breaker
+nan                        - not a number (float)
+inf                        - infinity (float)
+-inf                       - minus infinity (float)
+$=name                     - the constant from the place where the name 'name' was declared
+!!!noreturn                - this notation can be used instead of the function result type and means that the function will never complete its work.
+value                      - not a type, but the specifically specified value 'value'
+
+Signatures:
+If the documentation lists several function signatures, in cases where several signatures fit certain arguments,
+     the one specified first is used.
+
+Additionally:
+All functions in this module work with objects as a table that does not have the key :_ (methods), but can still use methods.
+If a function description specifies that it works with methods as values, it means that methods are treated as values (i.e., as if it is not an object but a table).
+Many functions that work with indexed arrays also work with strings, treating them as an array of characters.
+     Whether a given function works with strings can be determined from its signature.
+If a function can accept both a string and an array as an argument, but does not treat the string as an array of characters, this is indicated in the function description.
+*#
+
+#@
+Arguments passed to the application via the command line.
+
+type: [array @sysstr*]
+@#
+let cli_args = null
+
+#@
+Number of processor cores available in the system.
+
+type: @int
+@#
+let cpu_cores_num = null
+
+#@
+Environment variables.
+
+type: [table name:@sysstr=value:@sysstr]
+@#
+let env_vars = null
+
+#@
+A constant used when interacting with the message log (details in the documentation for the function set_log_level).
+
+type: @int
+@#
+let log_lvl__hint = null
+
+#@
+A constant used when interacting with the message log (details in the documentation for the function set_log_level).
+
+type: @int
+@#
+let log_lvl__important = null
+
+#@
+A constant used when interacting with the message log (details in the documentation for the function set_log_level).
+
+type: @int
+@#
+let log_lvl__maximum = null
+
+#@
+A constant used when interacting with the message log (details in the documentation for the function set_log_level).
+
+type: @int
+@#
+let log_lvl__may_require_attention = null
+
+#@
+A constant used when interacting with the message log (details in the documentation for the function set_log_level).
+
+type: @int
+@#
+let log_lvl__minimum = null
+
+#@
+A constant used when interacting with the message log (details in the documentation for the function set_log_level).
+
+type: @int
+@#
+let log_lvl__require_attention = null
+
+#@
+A constant used when interacting with the message log (details in the documentation for the function set_log_level).
+
+type: @int
+@#
+let log_lvl__very_important = null
+
+#@
+The mathematical constant Pi. (3.1415...)
+
+type: @float
+@#
+let pi = null
+
+#@
+The platform on which the application is running.
+Example: "linux x86_64"
+
+type: @string
+@#
+let platform = null
+
+#@
+A pseudo-random number.
+The number is generated every time the application starts.
+The number is generated in the range [-9223372036854775808, 9223372036854775807]
+
+type: @int
+@#
+let static_rnd = null
+
+#@
+The language of the system on which the application is running.
+Example: "en", "ru", "be"
+
+type: @string
+@#
+let sys_lang = null
+
+#@
+Addition of two numbers.
+
+signature:
+fn (left:nan, right:@float) nan
+fn (left:@float, right:nan) nan
+fn (left:inf, right:-inf) nan
+fn (left:-inf, right:inf) nan
+fn (left:inf, right:@float) inf
+fn (left:@float, right:inf) inf
+fn (left:-inf, right:@float) -inf
+fn (left:@float, right:-inf) -inf
+fn (left:(@byte|@int|@float|.core___add__), right:!$left) !$left
+@#
+fn (+)(left, right) null
+
+#@
+Bitwise logical "and".
+
+signature:
+fn (left:(@byte|@int|.core___and__), right:!$left) !$left
+@#
+fn (&)(left, right) null
+
+#@
+Arithmetic right shift.
+
+signature:
+fn (num:(@int|.core___ashr__), shifts:(@int|@byte)) !$num
+
+error:
+:bits_shift - if (shifts < 0) | (shifts > number of bits in 'num')
+@#
+fn (>>>)(num, shifts) null
+
+#@
+Concatenation of two indexed arrays into one.
+
+signature:
+fn (left:(@string|@byte_array|@array|.core___concat__), right:!$left) !$left
+@#
+fn (++)(left, right) null
+
+#@
+Division of one number by another.
+
+signature:
+fn (left:nan, right:@float) nan
+fn (left:@float, right:nan) nan
+fn (left:(0.0|-0.0), right:$left) nan
+fn (left:(?left>0.0)@float, right:0.0) inf
+fn (left:(?left>0.0)@float, right:-0.0) -inf
+fn (left:(?left<0.0)@float, right:0.0) -inf
+fn (left:(?left<0.0)@float, right:-0.0) inf
+fn (left:(@byte|@int|@float|.core___div__), right:!$left) !$left
+
+error:
+:div_by_0 - if type(left) == type(right) & (right == 0 | right == 0b00)
+@#
+fn (/)(left, right) null
+
+#@
+Comparison of two constants for equality.
+If the arguments of the function are not errors, the function does not return an error.
+If the function returns 'true', cmp(left, right) must return :equal,
+     if the function returns 'false', cmp(left, right) must not return :equal.
+
+signature:
+fn (left:null, right:null) false
+fn (left:any, right:/!$left) false
+fn (left:nan, right:@float) false
+fn (left:@float, right:nan) false
+fn (left:(0.0|-0.0), right:$left) true
+fn (left:.core___equal__, right:any) @bool
+fn (left:any, right:!$left) @bool
+@#
+fn (===)(left, right) null
+
+#@
+Retrieving a value by key (for associative arrays and sets) or by index (for indexed arrays).
+If the first argument of the function is an associative array and there is no value for the specified key, the function returns 'null'.
+If the first argument of the function is a set, the result is taken from the element inside it, not from the second argument of the function.
+If 'container' does not have the 'core___get_item__' method, the function works with methods as values.
+
+signature:
+fn (string:@string, idx:@int) @char
+fn (null, any) null
+fn (array:@byte_array, idx:@int) @byte
+fn (box:@box, idx:@int) any
+fn (table:@table, key:param(hash:arg)) (common|null)
+fn (set:@set, key:param(hash:arg)) (!$key|null)
+fn (array:@array, idx:@int) common
+fn (container:.core___get_item__, key:common) (common|null)
+fn (obj:@obj, key:@token) (common|null)
+
+error:
+:out_of_bounds - if type(container) == (@string|@byte_array|@box|@array) & key >= len(container)
+@#
+fn ([])(container, key) null
+
+#@
+The function is analogous to the function [], but works with methods as values.
+The function is invoked when using the syntax value:token. Example - obj:name
+The value 'name' must be known at compile time.
+When partially applying the function, 'name' must be specified. obj:_ - access to methods, _:_ - equivalent to fn (obj) obj:_.
+
+signature:
+fn (null, any) null
+fn (obj:@obj, name:@token) (common|null)
+@#
+fn (:)(obj, name) null
+
+#@
+The function returns 'true' if 'left' > 'right', otherwise 'false'.
+Comparison of arrays is performed element by element and stops as soon as one element is not equal to the other.
+If the end of one array is reached during comparison, the array with more elements is considered larger.
+The function uses the function 'cmp'.
+
+signature:
+fn (left:(inf|-inf), right:$=left) false
+fn (left:inf, right:@float) true
+fn (left:@float, right:inf) false
+fn (left:-inf, right:@float) false
+fn (left:@float, right:-inf) true
+fn (left:(-0.0|0.0), right:$left) false
+fn (left:(@string|@token|@byte|@char|@int|@time|@float|@byte_array|.core_cmp|[array $left*]), right:!$left) @bool
+
+error:
+:nan_cmp - if a comparison of two constants of type 'float' occurred, but one of them is not a number (nan).
+@#
+fn (>)(left, right) null
+
+#@
+The function returns 'true' if 'left' >= 'right', otherwise 'false'.
+Comparison of arrays is performed element by element and stops as soon as one element is not equal to the other.
+If the end of one array is reached during comparison, the array with more elements is considered larger.
+The function uses the function 'cmp'.
+
+signature:
+fn (left:(inf|-inf), right:$=left) true
+fn (left:inf, right:@float) true
+fn (left:@float, right:inf) false
+fn (left:-inf, right:@float) false
+fn (left:@float, right:-inf) true
+fn (left:(-0.0|0.0), right:$left) true
+fn (left:(@string|@token|@byte|@char|@int|@time|@float|@byte_array|.core_cmp|[array $left*]), right:!$left) @bool
+
+error:
+:nan_cmp - if a comparison of two constants of type 'float' occurred, but one of them is not a number (nan).
+@#
+fn (>=)(left, right) null
+
+#@
+The function returns 'true' if 'left' < 'right', otherwise 'false'.
+Comparison of arrays is performed element by element and stops as soon as one element is not equal to the other.
+If the end of one array is reached during comparison, the array with fewer elements is considered smaller.
+The function uses the function 'cmp'.
+
+signature:
+fn (left:(inf|-inf), right:$=left) false
+fn (left:inf, right:@float) false
+fn (left:@float, right:inf) true
+fn (left:-inf, right:@float) true
+fn (left:@float, right:-inf) false
+fn (left:(-0.0|0.0), right:$left) false
+fn (left:(@string|@token|@byte|@char|@int|@time|@float|@byte_array|.core_cmp|[array $left*]), right:!$left) @bool
+
+error:
+:nan_cmp - if a comparison of two constants of type 'float' occurred, but one of them is not a number (nan).
+@#
+fn (<)(left, right) null
+
+#@
+The function returns 'true' if 'left' <= 'right', otherwise 'false'.
+Comparison of arrays is performed element by element and stops as soon as one element is not equal to the other.
+If the end of one array is reached during comparison, the array with fewer elements is considered smaller.
+The function uses the function 'cmp'.
+
+signature:
+fn (left:(inf|-inf), right:$=left) true
+fn (left:inf, right:@float) false
+fn (left:@float, right:inf) true
+fn (left:-inf, right:@float) true
+fn (left:@float, right:-inf) false
+fn (left:(-0.0|0.0), right:$left) true
+fn (left:(@string|@token|@byte|@char|@int|@time|@float|@byte_array|.core_cmp|[array $left*]), right:!$left) @bool
+
+error:
+:nan_cmp - if a comparison of two constants of type 'float' occurred, but one of them is not a number (nan).
+@#
+fn (<=)(left, right) null
+
+#@
+Logical right shift.
+
+signature:
+fn (num:(@int|@byte|.core___lshr__), shifts:(@int|@byte)) !$num
+
+error:
+:bits_shift - if (shifts < 0) | (shifts > number of bits in 'num')
+@#
+fn (>>)(num, shifts) null
+
+#@
+Remainder of division of one number by another.
+The result has the same sign as left.
+
+signature:
+fn (left:nan, right:@float) nan
+fn (left:@float, right:nan) nan
+fn (left:(inf|-inf), right:@float) nan
+fn (left:@float, right:(0.0|-0.0)) nan
+fn (left:(0.0|-0.0), right:@float) $=left
+fn (left:@float, right:(inf|-inf)) $=left
+fn (left:(@byte|@int|@float|.core___mod__), right:!$left) !$left
+
+error:
+:div_by_0 - if type(left) == type(right) & (right == 0 | right == 0b00)
+@#
+fn (%)(left, right) null
+
+#@
+Multiplication of two numbers.
+
+signature:
+fn (left:nan, right:@float) nan
+fn (left:@float, right:nan) nan
+fn (left:(inf|-inf), right:(0.0|-0.0)) nan
+fn (left:(0.0|-0.0), right:(inf|-inf)) nan
+fn (left:inf, right:(?right>0.0)@float) inf
+fn (left:(?left>0.0)@float, right:inf) inf
+fn (left:inf, right:(?right<0.0)@float) -inf
+fn (left:(?left<0.0)@float, right:inf) -inf
+fn (left:-inf, right:(?right>0.0)@float) -inf
+fn (left:(?left>0.0)@float, right:-inf) -inf
+fn (left:-inf, right:(?right<0.0)@float) inf
+fn (left:(?left<0.0)@float, right:-inf) inf
+fn (left:(@byte|@int|@float|.core___mul__), right:!$left) !$left
+@#
+fn (*)(left, right) null
+
+#@
+Comparison of two constants for inequality.
+If the arguments of the function are not errors, the function does not return an error.
+The function uses the function (===).
+
+signature:
+fn (left:null, right:null) true
+fn (left:any, right:/!$left) true
+fn (left:nan, right:@float) true
+fn (left:@float, right:nan) true
+fn (left:(0.0|-0.0), right:$left) false
+fn (left:.core___equal__, right:any) @bool
+fn (left:any, right:!$left) @bool
+@#
+fn (=/=)(left, right) null
+
+#@
+Bitwise logical "or".
+
+signature:
+fn (left:(@byte|@int|.core___or__), right:!$left) !$left
+@#
+fn (|)(left, right) null
+
+#@
+Logical left shift.
+
+signature:
+fn (num:(@int|@byte|.core___shl__), shifts:(@int|@byte)) !$num
+
+error:
+:bits_shift - if (shifts < 0) | (shifts > number of bits in 'num')
+@#
+fn (<<)(num, shifts) null
+
+#@
+Creates an indexed array from the elements of 'array' with index >= 'from' and < 'to'.
+The order of elements is preserved.
+
+signature:
+fn (array:(@string|@byte_array|@box|.core___slice__|@array), from:@int, to:@int) !$array
+
+error:
+:invalid_range - if (from < 0) | (from > to)
+:out_of_bounds - if to > len(array)
+@#
+fn ([,])(array, from, to) null
+
+#@
+The function is analogous to the function (===), but has stricter type constraints on arguments.
+If the arguments have the following types: 'box', 'table', 'set', 'array'; the function (===) is used for element comparison.
+
+signature:
+fn (left:nan, right:@float) false
+fn (left:@float, right:nan) false
+fn (left:(0.0|-0.0), right:$left) true
+fn (left:(@string|@token|@bool|@byte|@char|@int|@time|@float|@byte_array|@box|@table|@set|@array|.core___strong_equal__), right:!$left) @bool
+@#
+fn (==)(left, right) null
+
+#@
+The function is analogous to the function (=/=), but has stricter type constraints on arguments.
+The function uses the function (==).
+
+signature:
+fn (left:nan, right:@float) true
+fn (left:@float, right:nan) true
+fn (left:(0.0|-0.0), right:$left) false
+fn (left:(@string|@token|@bool|@byte|@char|@int|@time|@float|@byte_array|@box|@table|@set|@array|.core___strong_equal__), right:!$left) @bool
+@#
+fn (/=)(left, right) null
+
+#@
+Subtraction of one number from another.
+
+signature:
+fn (left:nan, right:@float) nan
+fn (left:@float, right:nan) nan
+fn (left:inf, right:inf) nan
+fn (left:-inf, right:-inf) nan
+fn (left:inf, right:@float) inf
+fn (left:@float, right:inf) -inf
+fn (left:-inf, right:@float) -inf
+fn (left:@float, right:-inf) inf
+fn (left:(@byte|@int|@float|.core___sub__), right:!$left) !$left
+@#
+fn (-)(left, right) null
+
+#@
+Bitwise exclusive "or".
+
+signature:
+fn (left:(@byte|@int|.core___xor__), right:!$left) !$left
+@#
+fn (^)(left, right) null
+
+#@
+Absolute value of a number.
+
+signature:
+fn (num:nan) nan
+fn (num:(@int|@float|.core_abs)) !$num
+@#
+fn abs(num) null
+
+#@
+Arc cosine of a number in radians.
+
+signature:
+fn (arg:nan) nan
+fn (arg:(?arg < -1.0 | arg > 1.0)@float) nan
+fn (arg:(@float|.core_acos)) !$arg
+@#
+fn acos(arg) null
+
+#@
+The function applies the function 'func' to each element of 'container' and returns true if every application of 'func' returned true, otherwise false.
+The function executes 'func' until the result can be determined.
+The function returns 'default' if the container is empty.
+The function may use 'func' only for calling.
+In indexed arrays, the order of taking elements to apply 'func' is from beginning to end.
+
+signature:
+fn (string:@string, default:@bool, func:fn(@char)@bool) @bool
+fn (array:@byte_array, default:@bool, func:fn(@byte)@bool) @bool
+fn (container:.core_all, default:@bool, func:fn(any)) @bool
+fn (container:([obj item:common]|[table param(hash:arg) = item:common]|[set item:param(hash:arg)]|[array item:common*]), default:@bool, func:fn($item)@bool) @bool
+@#
+fn all(container, default, func) null
+
+#@
+The function is analogous to the function 'all', but 'func' takes both the key (index) and the value.
+The function cannot be applied to a set.
+
+signature:
+fn (string:@string, default:@bool, func:fn(idx:@int, @char)@bool) @bool
+fn (array:@byte_array, default:@bool, func:fn(idx:@int, @byte)@bool) @bool
+fn (container:.core_all_kv, default:@bool, func:fn(key:any, item:any)) @bool
+fn (container:[obj item:common], default:@bool, func:fn(key:@token, $item)@bool) @bool
+fn (container:[table key:param(hash:arg) = item:common], default:@bool, func:fn($key, $item)@bool) @bool
+fn (container:[array item:common*], default:@bool, func:fn(idx:@int, $item)@bool) @bool
+@#
+fn all_kv(container, default, func) null
+
+#@
+The function applies the function 'func' to each element of 'container' and returns false if every application of 'func' returned false, otherwise true.
+The function executes 'func' until the result can be determined.
+The function returns 'default' if the container is empty.
+The function may use 'func' only for calling.
+In indexed arrays, the order of taking elements to apply 'func' is from beginning to end.
+
+signature:
+fn (string:@string, default:@bool, func:fn(@char)@bool) @bool
+fn (array:@byte_array, default:@bool, func:fn(@byte)@bool) @bool
+fn (container:.core_any, default:@bool, func:fn(any)) @bool
+fn (container:([obj item:common]|[table param(hash:arg) = item:common]|[set item:param(hash:arg)]|[array item:common*]), default:@bool, func:fn($item)@bool) @bool
+@#
+fn any(arg, default, func) null
+
+#@
+The function is analogous to the function 'any', but 'func' takes both the key (index) and the value.
+The function cannot be applied to a set.
+
+signature:
+fn (string:@string, default:@bool, func:fn(idx:@int, @char)@bool) @bool
+fn (array:@byte_array, default:@bool, func:fn(idx:@int, @byte)@bool) @bool
+fn (container:.core_any_kv, default:@bool, func:fn(key:any, item:any)) @bool
+fn (container:[obj item:common], default:@bool, func:fn(key:@token, $item)@bool) @bool
+fn (container:[table key:param(hash:arg) = item:common], default:@bool, func:fn($key, $item)@bool) @bool
+fn (container:[array item:common*], default:@bool, func:fn(idx:@int, $item)@bool) @bool
+@#
+fn any_kv(container, default, func) null
+
+#@
+The function adds one element to the end of an array, and also adds an element to a set.
+When adding an element to a set, the new element overwrites the existing one (if any).
+
+signature:
+fn (string:@string, char:@char) @string
+fn (array:@byte_array, byte:@byte) @byte_array
+fn (array:@array, item:common) @array
+fn (set:@set, item:param(hash:arg)) @set
+fn (container:.core_append, item:common) !$container
+@#
+fn append(container, item) null
+
+#@
+The function adds a new element to a set.
+The function returns null if the element was already in the set.
+
+signature:
+fn (set:@set, item:param(hash:arg)) (null|@set)
+fn (set:.core_append_new, item:common) (null|!$set)
+@#
+fn append_new(set, item) null
+
+#@
+The function returns 'true' if all characters conform to the ASCII standard, otherwise 'false'.
+
+signature:
+fn (arg:(@string|@char|.core_ascii?)) @bool
+@#
+fn ascii?(arg) null
+
+#@
+The function returns 'true' if the character conforms to the ASCII standard and is a control character, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_ctrl?)) @bool
+@#
+fn ascii_ctrl?(char) null
+
+#@
+The function returns 'true' if the character conforms to the ASCII standard and is a decimal digit, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_digit?)) @bool
+@#
+fn ascii_digit?(char) null
+
+#@
+The function returns 'true' if the character conforms to the ASCII standard and occupies a character space when displayed, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_graphic?)) @bool
+@#
+fn ascii_graphic?(char) null
+
+#@
+The function returns 'true' if the character conforms to the ASCII standard and is a letter, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_letter?)) @bool
+@#
+fn ascii_letter?(char) null
+
+#@
+The function returns 'true' if the character conforms to the ASCII standard and is a lowercase letter, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_lower?)) @bool
+@#
+fn ascii_lower?(char) null
+
+#@
+The function returns 'true' if the character conforms to the ASCII standard and occupies a character space when displayed, but has no visual representation, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_space?)) @bool
+@#
+fn ascii_space?(char) null
+
+#@
+The function returns 'true' if the character conforms to the ASCII standard and occupies a character space when displayed and has a visual representation, but is not a letter or digit, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_symbol?)) @bool
+@#
+fn ascii_symbol?(char) null
+
+#@
+The function converts all characters conforming to the ASCII standard and being uppercase letters to the corresponding lowercase letters.
+
+signature:
+fn (arg:(@string|@char|.core_ascii_to_lower)) !$arg
+@#
+fn ascii_to_lower(arg) null
+
+#@
+The function converts all characters conforming to the ASCII standard and being lowercase letters to the corresponding uppercase letters.
+
+signature:
+fn (arg:(@string|@char|.core_ascii_to_upper)) !$arg
+@#
+fn ascii_to_upper(arg) null
+
+#@
+The function returns 'true' if the character conforms to the ASCII standard and is an uppercase letter, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_ascii_upper?)) @bool
+@#
+fn ascii_upper?(char) null
+
+#@
+Arc sine of a number in radians.
+
+signature:
+fn (arg:nan) nan
+fn (arg:(-0.0|0.0)) $=arg
+fn (arg:(?arg < -1.0 | arg > 1.0)@float) nan
+fn (arg:(@float|.core_asin)) !$arg
+@#
+fn asin(arg) null
+
+#@
+Creates a constant with the specified time.
+The function returns null if
+     (month    < 1) | (month    > 12) |
+     (day      < 1) | (day      > 31) |
+     (hour     < 0) | (hour     > 23) |
+     (minute   < 0) | (minute   > 59) |
+     (second   < 0) | (second   > 59) |
+     (day      > number of days in the specified year and month)
+     or if at the specified time in UTC the year was outside the range [1970-292277026595]
+
+signature:
+fn (timezone:@int, year:@int, month:@int, day:@int, hour:@int, minute:@int, second:@int) (null|@time)
+
+error:
+:out_of_bounds - if (timezone < -86400) | (timezone > 86400)
+@#
+fn assemble_time(timezone, year, month, day, hour, minute, second) null
+
+#@
+Arc tangent of a number in radians.
+In the signature, for 'inf' and '-inf' an approximate value is given.
+
+signature:
+fn (arg:nan) nan
+fn (arg:(-0.0|0.0)) $=arg
+fn (arg:inf) 1.570796326794897
+fn (arg:-inf) -1.570796326794897
+fn (arg:(@float|.core_atan)) !$arg
+@#
+fn atan(arg) null
+
+#@
+The function returns the length of a constant of type 'box' and that constant itself.
+
+signature:
+fn (box:@box) [box @int, $=box]
+@#
+fn box_len(box) null
+
+#@
+The function returns [breaker result] if 'predicate' is true, otherwise 'result'.
+
+signature:
+fn (false, result:any) $=result
+fn (true, result:any) [breaker $=result]
+@#
+fn break(predicate, result) null
+
+#@
+If the call stack was activated, the function returns it, otherwise returns null.
+
+signature:
+fn () ([array @string*]|null)
+@#
+fn call_stack() null
+
+#@
+The function returns 'true' if the call stack was activated, otherwise 'false'.
+
+signature:
+fn () @bool
+@#
+fn call_stack_on?() null
+
+#@
+The function returns the number of elements that an indexed array can hold before a memory allocation is needed.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_cap)) @int
+@#
+fn cap(array) null
+
+#@
+The smallest integer not less than 'num'.
+
+signature:
+fn (num:nan) nan
+fn (num:(-0.0|0.0|inf|-inf)) $=num
+fn (num:(@float|.core_ceil)) !$num
+@#
+fn ceil(num) null
+
+#@
+The function determines which language the specified letter belongs to.
+If a non-letter is passed to the function, the function returns null.
+Example languages: "en", "ru", "be"
+
+signature:
+fn (char:(@char|.core_char_lang)) (@string|null)
+@#
+fn char_lang(char) null
+
+#@
+The Unicode code of the specified character.
+If there is no equivalent character in Unicode, the function returns null.
+
+signature:
+fn (char:(@char|.core_char_to_uchar)) (@int|null)
+@#
+fn char_to_uchar(char) null
+
+#@
+The function removes all elements from the container and returns an empty container, but does not reduce the memory that was allocated for these elements.
+
+signature:
+fn (container:(.core_clear|@obj|@table|@set|@array)) !$container
+@#
+fn clear(container) null
+
+#@
+Comparison of two constants.
+The function returns the following values:
+:equal     - if arg_1 == arg_2
+:less      - if arg_1 < arg_2
+:great     - if arg_1 > arg_2
+:not_equal - if arg_1 != arg_2 and the arguments cannot be compared as 'greater' or 'less'.
+:nan_cmp   - if during comparison of arg_1 and arg_2, a comparison of two constants of type 'float' occurred, but one of them is not a number (nan).
+If the arguments of the function have the type @set, @table or @obj (not .core_cmp), they are compared only for equality/inequality. (:equal, :not_equal)
+If the arguments of the function are not errors, the function does not return an error.
+If the function returns :equal, left === right must return 'true',
+     otherwise left === right must return 'false'.
+
+signature:
+fn (arg_1:null, arg_2:null) :not_equal
+fn (arg_1:any, arg_2:/!$arg_1) :not_equal
+fn (arg_1:nan, arg_2:@float) :nan_cmp
+fn (arg_1:@float, arg_2:nan) :nan_cmp
+fn (left:(inf|-inf), right:$=left) :equal
+fn (left:inf, right:@float) :great
+fn (left:@float, right:inf) :less
+fn (left:-inf, right:@float) :less
+fn (left:@float, right:-inf) :great
+fn (arg_1:.core_cmp, arg_2:any) (:equal|:less|:great|:not_equal|:nan_cmp)
+fn (arg_1:any, arg_2:!$arg_1) (:equal|:less|:great|:not_equal|:nan_cmp)
+@#
+fn cmp(arg_1, arg_2) null
+
+#@
+Copies elements of one indexed array to a specified position in another array.
+The function overwrites existing elements.
+The function does not change the number of elements in the target array.
+
+signature:
+fn (dst:(@string|@byte_array|@array|.core_copy), idx:@int, src:!$dst) result:!$dst
+
+error:
+:out_of_bounds - if (idx < 0) | (len(dst) < idx + len(src))
+@#
+fn copy(dst, idx, src) null
+
+#@
+Cosine of an angle.
+The angle is measured in radians.
+
+signature:
+fn (angle:nan) nan
+fn (angle:(-inf|inf)) nan
+fn (angle:(-0.0|0.0)) 1.0
+fn (angle:(@float|.core_cos)) !$arg
+@#
+fn cos(angle) null
+
+#@
+The function returns 'true' if the character is a control character, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_ctrl?)) @bool
+@#
+fn ctrl?(char) null
+
+#@
+The function returns the day number in the month at the specified time.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - if (timezone < -86400) | (timezone > 86400)
+@#
+fn day(time, timezone) null
+
+#@
+The function returns 'true' if debug mode was activated, otherwise 'false'.
+
+signature:
+fn () @bool
+@#
+fn debug?() null
+
+#@
+Deletes elements of an indexed array with index >= 'from' and < 'to'.
+
+signature:
+fn (array:(@string|@byte_array|@box|.core_delete|@array), from:@int, to:@int) !$array
+
+error:
+:invalid_range - if (from < 0) | (from > to)
+:out_of_bounds - if to > len(array)
+@#
+fn delete(array, from, to) null
+
+#@
+The function deserializes a value from 'src', returning the value and the data from 'src' that was not used for deserialization of the specified value.
+
+signature:
+fn (src:@byte_array) [box result:param(serialize:arg), new_src:@byte_array]
+
+error:
+:out_of_bounds          - if bytes in 'src' ended before a complete result was formed.
+:incorrect_data         - if a complete result was read but has an incorrect structure.
+@#
+fn deserialize(src) null
+
+#@
+The function returns 'true' if the character is a decimal digit, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_digit?)) @bool
+@#
+fn digit?(char) null
+
+#@
+The function breaks down time data into components.
+
+signature:
+fn (time:@time, timezone:@int) [box year:@int, month:@int, day:@int, hour:@int, minute:@int, second:@int]
+
+error:
+:out_of_bounds - if (timezone < -86400) | (timezone > 86400)
+@#
+fn disassemble_time(time, timezone) null
+
+#@
+Creates an indexed array from the elements of 'array' with index >= 'n'.
+The order of elements is preserved.
+
+signature:
+fn (array:(@string|@byte_array|.core_drop|@array), n:@int) !$array
+
+error:
+:out_of_bounds - if (n > len(array)) | (n < 0)
+@#
+fn drop(array, n) null
+
+#@
+Creates an indexed array from the elements of 'array' with index >= n, where n is the index of the first element to which the application of 'func' returned 'false',
+     if there are no such elements, then n = len(array)
+The order of taking elements to apply 'func' is from beginning to end.
+The application of 'func' continues as long as it returns 'true'.
+The order of elements is preserved.
+The function may use 'func' only for calling.
+
+signature:
+fn (array:(@string|@byte_array|.core_drop_while|@array), func:fn(item:common) @bool) !$array
+@#
+fn drop_while(array, func) null
+
+#@
+The function returns a string with information about the constant's value.
+Used for debugging.
+Does not return an error.
+Can accept an error as an argument and works with it as a value.
+The function works with methods as values.
+
+signature:
+fn (arg:(any|@error)) @string
+@#
+fn dump(arg) null
+
+#@
+Number of seconds between two dates.
+
+signature:
+fn (time_1:@time, time_2:@time) @int
+@#
+fn duration(time_1, time_2) null
+
+#@
+The function applies the function 'func' to all possible pairs of container elements,
+      and returns a container with the new elements returned by 'func'.
+If the container contains fewer than 2 elements, the container is returned unchanged.
+Each pair of elements is processed only once.
+If the container is an indexed array, the first argument of 'func' will always have a smaller index in the array than the second argument.
+If an element was processed by 'func', subsequent processing uses the value of the element from the result of the previous application.
+
+signature:
+fn (string:@string, func:fn(char_1:@char, char_2:@char) [box new_char_1:@char, new_char_2:@char]) @string
+fn (byte_array:@byte_array, fn(byte_1:@byte, byte_2:@byte) [box new_byte_1:@byte, new_byte_2:@byte]) @byte_array
+fn (container:(@table|@array|.core_each_to_each|@obj), func:fn(item_1:common, item_2:common) [box new_item_1:common, new_item_2:common]) !$container
+
+error:
+:unpk_not_enough_items - if 'func' returned a @box, but with fewer than two elements.
+@#
+fn each_to_each(container, func) null
+
+#@
+The function is analogous to each_to_each, but 'func' takes not only the elements but also their indices or keys.
+
+signature:
+fn (string:@string, func:fn(idx_1:@int, char_1:@char, idx_2:@int, char_2:@char) [box new_char_1:@char, new_char_2:@char]) @string
+fn (byte_array:@byte_array, fn(idx_1:@int, byte_1:@byte, idx_2:@int, byte_2:@byte) [box new_byte_1:@byte, new_byte_2:@byte]) @byte_array
+fn (array:@array, func:fn(idx_1:@int, item_1:common, idx_2:@int, item_2:common) [box new_item_1:common, new_item_2:common]) @array
+fn (container:(.core_each_to_each_kv|@table), func:fn(key_1:param(hash:arg), item_1:common, key_2:param(hash:arg), item_2:common) [box new_item_1:common, new_item_2:common]) !$container
+fn (obj:@obj, func:fn(key_1:@token, item_1:common, key_2:@token, item_2:common) [box new_item_1:common, new_item_2:common]) @obj
+
+error:
+:unpk_not_enough_items - if 'func' returned a @box, but with fewer than two elements.
+@#
+fn each_to_each_kv(container, func) null
+
+#@
+The function returns 'true' if the container is empty, otherwise 'false'.
+
+signature:
+fn (container:(@string|@byte_array|@box|@obj|@table|@set|@array|.core_empty?)) @bool
+@#
+fn empty?(container) null
+
+#@
+The function returns an empty variant of the container of the same type as 'arg'.
+The function preserves the object's methods.
+
+signature:
+fn (container:(@string|@byte_array|.core_empty_val|@obj|@table|@set|@array)) !$container
+@#
+fn empty_val(container) null
+
+#@
+The function returns 'true' if 'arg' has the type 'error', otherwise 'false'.
+
+signature:
+fn (arg:@error) true
+fn (arg:any) false
+@#
+fn error?(arg) null
+
+#@
+The function returns 'true' if the number is even, otherwise 'false'.
+
+signature:
+fn (num:(@byte|@int|.core_even?)) @bool
+@#
+fn even?(num) null
+
+#@
+The function terminates the application without an error status.
+
+signature:
+fn () !!!noreturn
+@#
+fn exit() null
+
+#@
+The function computes e^power, where e is Euler's number.
+
+signature:
+fn (power:nan) nan
+fn (power:(0.0|-0.0)) 1.0
+fn (power:-inf) 0.0
+fn (power:inf) inf
+fn (power:(@float|.core_exp)) !$power
+@#
+fn exp(power) null
+
+#@
+The function computes 2^power.
+
+signature:
+fn (power:nan) nan
+fn (power:(0.0|-0.0)) 1.0
+fn (power:-inf) 0.0
+fn (power:inf) inf
+fn (power:(@byte|@int|@float|.core_exp2)) !$power
+@#
+fn exp2(power) null
+
+#@
+The function creates an error, but such creation is not considered unlikely.
+This function is used when a program needs to create an error, even though the program is working correctly.
+
+signature:
+fn (id:@token, msg:@string, data:(common|null)) @error
+@#
+fn expected_error(id, msg, data) null
+
+#@
+The function prints a message to the command line interface and terminates the application with an error status.
+The message is printed as an error message (stderr).
+If an error is passed instead of a message, the program terminates with that error.
+
+signature:
+fn (msg:(@string|@error)) !!!noreturn
+@#
+`cold`
+fn fail(msg) null
+
+#@
+The function keeps only those elements in the container for which the application of 'func' returned 'true'.
+The function may use 'func' only for calling.
+For indexed arrays:
+     the order of taking elements to apply 'func' is from beginning to end
+     the order of elements is preserved
+
+signature:
+fn (string:@string, func:fn(char:@char) @bool) @string
+fn (array:@byte_array, func:fn(byte:@byte) @bool) @byte_array
+fn (container:(.core_filter|@obj|@table|@set|@array), func:fn(item:common) @bool) !$container
+@#
+fn filter(container, func) null
+
+#@
+The function keeps only those elements in the container for which the application of 'func' returned 'true'.
+The function may use 'func' only for calling.
+For indexed arrays:
+     the order of taking elements to apply 'func' is from beginning to end
+     the order of elements is preserved
+
+signature:
+fn (string:@string, func:fn(idx:@int, char:@char) @bool) @string
+fn (array:@byte_array, func:fn(idx:@int, byte:@byte) @bool) @byte_array
+fn (array:@array, func:fn(idx:@int, item:common) @bool) @array
+fn (table:@table, func:fn(key:param(hash:arg), item:common) @bool) @table
+fn (container:.core_filter_kv, func:fn(key:common, item:common) @bool) !$container
+fn (obj:@obj, func:fn(key:@token, value:common) @bool) @obj
+@#
+fn filter_kv(container, func) null
+
+#@
+The function returns the first element in the indexed array.
+
+signature:
+fn (string:@string) @char
+fn (byte_array:@string) @byte
+fn (array:(@array|.core_first)) common
+
+error:
+:out_of_bounds - if the array is empty.
+@#
+fn first(array) null
+
+#@
+The largest integer not greater than 'num'.
+
+signature:
+fn (num:nan) nan
+fn (num:(-0.0|0.0|inf|-inf)) $=num
+fn (num:(@float|.core_floor)) !$num
+@#
+fn floor(num) null
+
+#@
+The foldl function applies the function 'func' to 'state' and to an element from the container that has not yet been processed by 'func',
+     the result of 'func' becomes the new 'state',
+     the last two steps are repeated until there are no elements in the container left to process,
+     the result of the foldl function is the last 'state'.
+If the function 'func' returns a breaker, the element from the breaker becomes the result of the foldl function.
+If the container is empty, the function simply returns 'state'.
+The function may use 'func' only for calling.
+For indexed arrays, the order of taking elements to apply 'func' is from beginning to end.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, init_state:any, func:fn(in_state:any, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|@set|@array|.core_foldl|@obj), init_state:any, func:fn(in_state:any, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+@#
+fn foldl(container, state, func) null
+
+#@
+The foldl1 function is analogous to the foldl function, but instead of 'state', one of the elements of 'container' is used.
+The element that was taken as the state is not considered an element of the container for the use of 'func'.
+For indexed arrays, the first element of 'container' is used as 'state'.
+
+signature:
+fn (string:@string, func:fn(in_state:any, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, func:fn(in_state:any, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|@set|@array|.core_foldl1|@obj), func:fn(in_state:any, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+
+error:
+:out_of_bounds - if the container is empty.
+@#
+fn foldl1(container, func) null
+
+#@
+The function is analogous to the foldl function, but passes not only the element but also the key or index of that element to 'func'.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, idx:@int, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, init_state:any, func:fn(in_state:any, idx:@int, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (array:@array, init_state:any, func:fn(in_state:any, idx:@int, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|.core_foldl_kv), init_state:any, func:fn(in_state:any, key:param(hash:arg), value:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (obj:@obj, init_state:any, func:fn(in_state:any, key:@token, value:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+@#
+fn foldl_kv(container, state, func) null
+
+#@
+The function is analogous to the foldl function, but for indexed arrays, the order of taking elements to apply 'func' is from end to beginning.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, init_state:any, func:fn(in_state:any, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|@set|@array|.core_foldr|@obj), init_state:any, func:fn(in_state:any, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+@#
+fn foldr(container, state, func) null
+
+#@
+The function is analogous to the foldl1 function, but for indexed arrays, the last element is used as 'state',
+     and the order of taking elements to apply 'func' is from end to beginning.
+
+signature:
+fn (string:@string, func:fn(in_state:any, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, func:fn(in_state:any, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|@set|@array|.core_foldr1|@obj), func:fn(in_state:any, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+
+error:
+:out_of_bounds - if the container is empty.
+@#
+fn foldr1(container, func) null
+
+#@
+The function is analogous to the foldl_kv function, but for indexed arrays, the order of taking elements to apply 'func' is from end to beginning.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, idx:@int, char:@char) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (byte_array:@byte_array, init_state:any, func:fn(in_state:any, idx:@int, byte:@byte) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (array:@array, init_state:any, func:fn(in_state:any, idx:@int, item:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (container:(@table|.core_foldr_kv), init_state:any, func:fn(in_state:any, key:param(hash:arg), value:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+fn (obj:@obj, init_state:any, func:fn(in_state:any, key:@token, value:common) (out_state:any|[breaker result:any])) (result_state:any|$=result)
+@#
+fn foldr_kv(container, state, func) null
+
+#@
+The function returns a string with the number 'num' written in the 'base' numeral system.
+If 'signed' is 'false', the function treats the number 'num' as an unsigned 64-bit number.
+
+signature:
+fn (num:@int, base:@int, signed:bool) @string
+
+error:
+:out_of_bounds - if (base < 2) | (base > 36).
+@#
+fn format_int(num, base, signed) null
+
+#@
+The function takes an error and returns the additional data from that error.
+
+signature:
+fn (error:@error) common
+@#
+fn get_error_data(error) null
+
+#@
+The function takes an error and returns the identifier of that error.
+
+signature:
+fn (error:@error) @token
+@#
+fn get_error_id(error) null
+
+#@
+The function takes an error and returns the text of the message of that error.
+
+signature:
+fn (error:@error) @string
+@#
+fn get_error_msg(error) null
+
+#@
+The function returns 'true' if the character occupies a character space when displayed, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_graphic?)) @bool
+@#
+fn graphic?(char) null
+
+#@
+The function computes the hash sum of its argument.
+'seed' - a number used for hash randomization.
+If seed_1 /= seed_2, it is highly likely that hash(arg, seed_1) /= hash(arg, seed_2).
+If seed_1 /= seed_2, arg_1 /= arg_2 and hash(arg_1, seed_1) == hash(arg_2, seed_1), it is highly likely that hash(arg_1, seed_2) /= hash(arg_2, seed_2).
+
+signature:
+fn (arg:(@string|@token|@bool|@byte|@char|@int|@time|@byte_array|[array $arg*]|[set $arg]|[table $arg = $arg]|.core_hash|[obj $arg]), seed:@int) @int
+@#
+fn hash(arg, seed) null
+
+#@
+The function returns the hour at the specified time and in the specified time zone.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - if (timezone < -86400) | (timezone > 86400)
+@#
+fn hour(time, timezone) null
+
+#@
+The function copies values from 'interface' to the methods of 'obj' with the same key.
+Only those values whose corresponding key is absent in the methods of 'obj' are copied.
+If 'interface' has the type @array, the function performs actions similar to the following code: interface.foldl(obj, _.implement(_)).
+
+signature:
+fn (obj:@obj, interface:(@obj|[array @obj*])) @obj
+@#
+fn implement(obj, interface) null
+
+#@
+The function returns 'true' if 'item' is in 'container', otherwise 'false'.
+In associative arrays, 'item' is searched only among values, not among keys.
+The function uses the function 'look_in'.
+
+signature:
+fn (char:@char, string:@string) @bool
+fn (byte:@byte, array:@byte_array) @bool
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:(@array|@table|@set|.core_look_in|@obj)) @bool
+@#
+fn in?(item, container) null
+
+#@
+The function returns 'true' if 'arg' >= 'from' and 'arg' < 'to', otherwise 'false'.
+The function uses the function 'cmp'.
+
+signature:
+fn (arg:param((<):left), from:!$arg, to:!$arg) @bool
+
+error:
+:nan_cmp - if a comparison of two constants of type 'float' occurred, but one of them is not a number (nan).
+@#
+fn in_range?(arg, from, to) null
+
+#@
+The function returns 'true' if 'num' == inf, otherwise 'false'.
+
+signature:
+fn (num:inf) true
+fn (num:@float) false
+fn (num:.core_inf?) @bool
+@#
+fn inf?(num) null
+
+#@
+The function copies fields and methods from 'parent' to 'child'.
+Only those fields and methods that are absent in 'child' are copied.
+If 'parent' has the type @array, the function performs actions similar to the following code: parent.foldl(child, _.inherits_from(_)).
+
+signature:
+fn (child:@obj, parent:(@obj|[array @obj*])) $child
+@#
+fn inherits_from(child, parent) null
+
+#@
+The function reserves memory in the container for 'cap' elements.
+
+signature:
+fn (container:(@array|@table|@set|.core_init|@obj), cap:@int) !$container
+
+error:
+:out_of_bounds - if cap < 0 | cap > maximum array length.
+@#
+fn init(container, cap) null
+
+#@
+The function inserts the elements of 'part' into 'array' at position 'idx'.
+
+signature:
+fn (part:(@string|@byte_array|@array|.core_insert_part_to), array:!$part, idx:@int) !$part
+
+error:
+:out_of_bounds - if (idx < 0) | (idx > len(array))
+@#
+fn insert_part_to(part, array, idx) null
+
+#@
+The function inserts 'item' into 'array' at position 'idx'.
+
+signature:
+fn (char:@char, string:@string, idx:@int) @string
+fn (byte:@byte, array:@byte_array, idx:@int) @byte_array
+fn (item:common, array:(@array|.core_insert_to), idx:@int) !$array
+
+error:
+:out_of_bounds - if (idx < 0) | (idx > len(array))
+@#
+fn insert_to(item, array, idx) null
+
+#@
+Converts the number of seconds elapsed since 01.01.1970 00:00:00 +0.0 to the corresponding time.
+
+signature:
+fn (seconds:@int) @time
+
+error:
+:out_of_bounds - if the number of seconds does not fit in the time type.
+@#
+fn int_to_time(seconds) null
+
+#@
+The function creates an array by adding elements from 'parts', inserting elements from the 'separator' array between them.
+If 'parts' is of type array, the order of taking elements is from beginning to end.
+
+signature:
+fn (parts:([obj !$separator]|[table param(hash:arg) = !$separator]|[set !$separator]|[array !$separator*]), separator:(@string|@byte_array|@array|.core_join)) !$separator
+@#
+fn join(parts, separator) null
+
+#@
+The function returns 'true' if there is a value with key 'key' in 'container', otherwise 'false'.
+The function uses the function ([]).
+If 'container' does not have the 'core___get_item__' method, the function works with methods as values.
+
+signature:
+fn (key:param(hash:arg), container:(@table|@set|.core___get_item__)) @bool
+fn (key:@token, obj:@obj) @bool
+@#
+fn key_of?(key, container) null
+
+#@
+The function returns the last element in the indexed array.
+
+signature:
+fn (string:@string) @char
+fn (byte_array:@string) @byte
+fn (array:(@array|.core_last)) common
+
+error:
+:out_of_bounds - if the array is empty.
+@#
+fn last(array) null
+
+#@
+Number of elements in the container.
+
+signature:
+fn (container:(@string|@byte_array|@array|@table|@set|@box|.core_len|@obj)) @int
+@#
+fn len(container) null
+
+#@
+The function returns 'true' if the character is a letter, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_letter?)) @bool
+@#
+fn letter?(char) null
+
+#@
+Natural logarithm of a number.
+
+signature:
+fn (number:nan) nan
+fn (number:(0.0|-0.0)) -inf
+fn (number:1.0) 0.0
+fn (number:inf) inf
+fn (number:(?number<0.0)@float) nan
+fn (number:(@float|.core_log)) !$number
+@#
+fn log(number) null
+
+#@
+Base-10 logarithm of a number.
+
+signature:
+fn (number:nan) nan
+fn (number:(0.0|-0.0)) -inf
+fn (number:1.0) 0.0
+fn (number:inf) inf
+fn (number:(?number<0.0)@float) nan
+fn (number:(@float|.core_log10)) !$number
+@#
+fn log10(number) null
+
+#@
+Base-2 logarithm of a number.
+
+signature:
+fn (number:nan) nan
+fn (number:(0.0|-0.0)) -inf
+fn (number:1.0) 0.0
+fn (number:inf) inf
+fn (number:(?number<0.0)@float) nan
+fn (number:(@float|.core_log10)) !$number
+@#
+fn log2(number) null
+
+#@
+The function is analogous to the function 'log__msg', but the message is written to the log only if debug mode is enabled.
+
+signature:
+fn (level:@int, msg:@string) null
+
+error:
+:out_of_bounds - if (level < core.log_lvl__minimum) | (level > core.log_lvl__maximum).
+@#
+fn log__debug_msg(level, msg) null
+
+#@
+The function writes the message 'msg' to the message log, but only if the message has a level higher than the set logging level. (details in the documentation for the function set_log_level).
+
+signature:
+fn (level:@int, msg:@string) null
+
+error:
+:out_of_bounds - if (level < core.log_lvl__minimum) | (level > core.log_lvl__maximum).
+@#
+fn log__msg(level, msg) null
+
+#@
+The function returns the largest index of the element from 'array' that equals 'item'.
+If there is no element equal to 'item' in 'array', the function returns null.
+
+signature:
+fn (char:@char, string:@string) (@int|null)
+fn (byte:@byte, array:@byte_array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), array:(@array|.core_look_from_end_in)) (@int|null)
+@#
+fn look_from_end_in(item, array) null
+
+#@
+The function returns the index or key of the element from 'container' that equals 'item'.
+If there is no element equal to 'item' in 'container', the function returns null.
+If 'container' is an indexed array and contains several elements equal to 'item', the smallest index is returned.
+
+signature:
+fn (char:@char, string:@string) (@int|null)
+fn (byte:@byte, array:@byte_array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:@array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:(@table|@set|.core_look_in|@obj)) (param(hash:arg)|null)
+@#
+fn look_in(item, container) null
+
+#@
+The function is analogous to look_from_end_in, but searches for any element not equal to 'item'.
+
+signature:
+fn (char:@char, string:@string) (@int|null)
+fn (byte:@byte, array:@byte_array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), array:(@array|.core_lofei)) (@int|null)
+@#
+fn look_other_from_end_in(item, array) null
+
+#@
+The function is analogous to look_in, but searches for any element not equal to 'item'.
+
+signature:
+fn (char:@char, string:@string) (@int|null)
+fn (byte:@byte, array:@byte_array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:@array) (@int|null)
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:(@table|@set|.core_look_other_in|@obj)) (param(hash:arg)|null)
+@#
+fn look_other_in(item, container) null
+
+#@
+The function searches for all elements of 'part' arranged in the same sequence within the elements of 'array'
+     and if such elements are found, returns the index of the first element of 'part' in the found elements of 'array', otherwise returns 'null'.
+The search is performed from end to beginning.
+If 'part' is an empty array, the function returns the number of elements in 'array'.
+
+signature:
+fn (part:!$array, array:(@string|@byte_array|@array|.core_lpfei)) (@int|null)
+@#
+fn look_part_from_end_in(part, array) null
+
+#@
+The function searches for all elements of 'part' arranged in the same sequence within the elements of 'array'
+     and if such elements are found, returns the index of the first element of 'part' in the found elements of 'array', otherwise returns 'null'.
+The search is performed from beginning to end.
+If 'part' is an empty array, the function returns 0.
+
+signature:
+fn (part:!$array, array:(@string|@byte_array|@array|.core_look_part_in)) (@int|null)
+@#
+fn look_part_in(part, array) null
+
+#@
+'func' is applied to 'state'; if the result is a breaker, then the element from the breaker becomes the result of the loop function, otherwise 'func' is applied to the result of the execution,
+     and this continues until 'func' returns a breaker.
+
+signature:
+fn (init_state:any, func:fn(in_state:any) ([breaker result:any]|out_state:any)) $result
+@#
+fn loop(state, func) null
+
+#@
+The function returns 'true' if the character is a lowercase letter, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_lower?)) @bool
+@#
+fn lower?(char) null
+
+#@
+The function creates a channel and returns its input and output.
+
+signature:
+fn () [box in:@channel, out:@channel]
+@#
+fn make_channel() null
+
+#@
+The function applies 'func' to each element of 'container'.
+The function may use 'func' only for calling.
+
+signature:
+fn (string:@string, func:fn(char:@char) @char) @string
+fn (array:@byte_array, func:fn(byte:@byte) @byte) @byte_array
+fn (container:(.core_map|@obj|@table|@array), func:fn(item:common) common) !$container
+@#
+fn map(container, func) null
+
+#@
+The function is analogous to the function 'map', but 'func' takes not only the element but also its corresponding key or index.
+
+signature:
+fn (string:@string, func:fn(idx:@int, char:@char) @char) @string
+fn (array:@byte_array, func:fn(idx:@int, byte:@byte) @byte) @byte_array
+fn (array:@array, func:fn(idx:@int, item:common) common) @array
+fn (container:(.core_map_kv|@table), func:fn(key:param(hash:arg), item:common) common) !$container
+fn (obj:@obj, func:fn(key:@token, item:common) common) @obj
+@#
+fn map_kv(container, func) null
+
+#@
+The function is analogous to the function 'map', but has a state that can be replaced with a new one on each call of 'func'.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, char:@char) [box out_state:any, @char]) [box @string, result_state:any]
+fn (array:@byte_array, init_state:any, func:fn(in_state:any, byte:@byte) [box out_state:any, @byte]) [box @byte_array, result_state:any]
+fn (container:(.core_map_with_state|@obj|@table|@array), init_state:any, func:fn(in_state:any, item:common) [box out_state:any, common]) [box !$container, result_state:any]
+
+error:
+:unpk_not_enough_items - if 'func' returned a @box, but with fewer than two elements.
+@#
+fn map_with_state(container, state, func) null
+
+#@
+The function is analogous to the function 'map_with_state', but 'func' takes not only the element but also its corresponding key or index.
+
+signature:
+fn (string:@string, init_state:any, func:fn(in_state:any, idx:@int, char:@char) [box out_state:any, @char]) [box @string, result_state:any]
+fn (array:@byte_array, init_state:any, func:fn(in_state:any, idx:@int, byte:@byte) [box out_state:any, @byte]) [box @byte_array, result_state:any]
+fn (array:@array, init_state:any, func:fn(in_state:any, idx:@int, item:common) [box out_state:any, common]) [box @array, result_state:any]
+fn (container:(.core_map_kv_with_state|@table), init_state:any, func:fn(in_state:any, key:param(hash:arg), item:common) [box out_state:any, common]) [box !$container, result_state:any]
+fn (obj:@obj, init_state:any, func:fn(in_state:any, key:@token, item:common) [box out_state:any, common]) [box @obj, result_state:any]
+
+error:
+:unpk_not_enough_items - if 'func' returned a @box, but with fewer than two elements.
+@#
+fn map_kv_with_state(container, state, func) null
+
+#@
+The function returns the largest of its arguments; if the arguments are equal, it returns the first.
+The function uses the function 'cmp'.
+
+signature:
+fn (arg_1:param((<):left), arg_2:!$arg_1) !$arg_1
+
+error:
+:nan_cmp - if a comparison of two constants of type 'float' occurred, but one of them is not a number (nan).
+@#
+fn max(arg_1, arg_2) null
+
+#@
+The function returns the largest possible value of the same type as 'arg'.
+
+signature:
+fn (@token) :zzzzzzzzzzzzzzzzzzzzzz?
+fn (@byte) 0bff
+fn (@int) 9223372036854775807
+fn (@float) inf
+fn (arg:(@time|.core_max_val)) !$arg
+@#
+fn max_val(arg) null
+
+#@
+The function returns the smallest of its arguments; if the arguments are equal, it returns the first.
+The function uses the function 'cmp'.
+
+signature:
+fn (arg_1:param((<):left), arg_2:!$arg_1) !$arg_1
+
+error:
+:nan_cmp - if a comparison of two constants of type 'float' occurred, but one of them is not a number (nan).
+@#
+fn min(arg_1, arg_2) null
+
+#@
+The function returns the smallest possible value of the same type as 'arg'.
+
+signature:
+fn (@token) :0
+fn (@byte) 0b00
+fn (@int) -9223372036854775808
+fn (@float) -inf
+fn (arg:(@time|.core_min_val)) !$arg
+@#
+fn min_val(arg) null
+
+#@
+The function returns the minute at the specified time.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - if (timezone < -86400) | (timezone > 86400)
+@#
+fn minute(time, timezone) null
+
+#@
+The function returns the month at the specified time.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - if (timezone < -86400) | (timezone > 86400)
+@#
+fn month(time, timezone) null
+
+#@
+The function moves elements of the array 'array', starting from index 'from', to the position with index 'to', in the amount of 'len'.
+The function does not change the elements of the array or their number, only their arrangement.
+For the actual move, the function guarantees no memory allocation on the heap.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_move), from:@int, to:@int, len:@int) !$array
+
+error:
+:out_of_bounds - if
+     (from       < 0) || (from > len(array)) ||
+     (to         < 0) || (to   > len(array)) ||
+     (len        < 0)                        ||
+     (from + len > len(array))               ||
+     (to   + len > len(array))
+@#
+fn move(array, from, to, len) null
+
+#@
+The function returns 'true' if 'num' is 'not a number', otherwise 'false'.
+
+signature:
+fn (num:nan) true
+fn (num:@float) false
+fn (num:.core_nan?) @bool
+@#
+fn nan?(num) null
+
+#@
+Changes the sign of a number to the opposite.
+
+signature:
+fn (num:nan) nan
+fn (num:(@int|@float|.core_neg)) !$num
+@#
+fn neg(num) null
+
+#@
+Flips the bits of the argument: 1 becomes 0, 0 becomes 1.
+
+signature:
+fn (arg:(@byte|@int|.core_neg_bits)) !$arg
+@#
+fn neg_bits(arg) null
+
+#@
+The function returns 'true' if 'num' == -inf, otherwise 'false'.
+
+signature:
+fn (num:-inf) true
+fn (num:@float) false
+fn (num:.core_inf?) @bool
+@#
+fn neg_inf?(num) null
+
+#@
+The function returns 'true' if 'bool' == false, otherwise 'false'.
+
+signature:
+fn (bool:true) false
+fn (bool:false) true
+@#
+fn not(bool) null
+
+#@
+The function returns 'true' if 'arg' has the type 'null', otherwise 'false'.
+
+signature:
+fn (arg:null) true
+fn (arg:any) false
+@#
+fn null?(arg) null
+
+#@
+The function turns an object into a table.
+The function works with methods as values.
+
+signature:
+fn (obj:@obj) [table @token = common]
+@#
+fn obj_to_table(obj) null
+
+#@
+The function returns 'true' if the number is odd, otherwise 'false'.
+The function uses the function 'even?'.
+
+signature:
+fn (num:(@byte|@int|.core_even?)) @bool
+@#
+fn odd?(num) null
+
+#@
+The function returns its argument if it is not an error, otherwise an expression similar to fail(arg.get_error_msg()) is executed.
+
+signature:
+fn (arg:any) $=arg
+fn (error:@error) !!!noreturn
+@#
+fn ok!(arg) null
+
+#@
+The function takes a string with a number written in the numeral system with base 'base' and returns that number.
+The digits used for writing the number are 0-9, a-z, A-Z.
+The number may be preceded by a + or - sign.
+The function returns :invalid_str_fmt if 'num' does not contain a number in the specified numeral system.
+The function returns :64_bits_is_not_enough if 64 bits are not enough to store the resulting number.
+     Positive numbers are treated as unsigned, i.e., the function will return -1 if 'num' == "18446744073709551615" and 'base' == 10,
+     since 64 bits are enough to store the unsigned number 18446744073709551615.
+     However, for numbers 18446744073709551616 or -9223372036854775809, 64 bits are no longer enough.
+
+signature:
+fn (num:@string, base:@int) (:invalid_str_fmt|:64_bits_is_not_enough|@int)
+
+error:
+:out_of_bounds - if (base < 2) | (base > 36)
+@#
+fn parse_int(num, base) null
+
+#@
+The function returns 'true' if all elements of 'part' are present in 'array' in the same sequence, otherwise 'false'.
+The function returns 'true' if 'part' is an empty array.
+The function uses the function 'look_part_in'.
+
+signature:
+fn (part:!$array, array:(@string|@byte_array|@array|.core_look_part_in)) @bool
+@#
+fn part_of?(part, array) null
+
+#@
+The function reads one element from a channel.
+If there are no elements in the channel, the function suspends the current thread until an element is read.
+
+signature:
+fn (channel:@channel) /(@breaker|null|@channel|@thread)
+
+error:
+:cant_read_from_channel - if 'channel' is the input end of the channel, not the output.
+:no_writing_channel     - if there are no elements in the channel and the channel no longer has an input end, and therefore no more elements will appear in it.
+@#
+fn pop(channel) null
+
+#@
+The function raises 'num' to the power 'power'.
+
+signature:
+fn (num:@int, power:0) 1
+fn (num:@int, power:(?power<0)@int) 0
+fn (num:@byte, power:0b00) 0b01
+fn (num:@float, power:(0.0|-0.0)) 1.0
+fn (num:1.0, power:@float) 1.0
+fn (num:nan, power:@float) nan
+fn (num:@float, power:nan) nan
+fn (num:(@int|@byte|@float|.core_power), power:!$num) @!$num
+@#
+fn power(num, power) null
+
+#@
+The function returns 'true' if the elements of 'prefix' are equal to the first elements of 'array' in the same sequence, otherwise 'false'.
+The function returns 'true' if 'prefix' is an empty array.
+
+signature:
+fn (prefix:!$array, array:(@string|@byte_array|@array|.core_prefix_of?)) @bool
+@#
+fn prefix_of?(prefix, array) null
+
+#@
+The function outputs the value of the constant 'arg' to the command line interface.
+The function works with a string not as an array of characters.
+The function treats 'null' as a value, not as its absence.
+
+signature:
+fn (arg:@sysstr|@null|@token|@bool|@byte|@char|@int|@time|@float|@byte_array|.core_print|[box $arg*]|[array $arg*]|[table $arg = $arg]|[obj $arg = $arg]|[set $arg]) null
+
+error:
+:print         - failed to output the constant value to the command line interface (a problem on the command line side).
+:text_recoding - failed to convert the string for output from corsar to the system encoding.
+@#
+fn print(arg) null
+
+#@
+The same as 'print', but after outputting the argument, outputs a newline character.
+
+signature:
+fn (arg:@sysstr|@null|@token|@bool|@byte|@char|@int|@time|@float|@byte_array|.core_print|[box $arg*]|[array $arg*]|[table $arg = $arg]|[obj $arg = $arg]|[set $arg]) null
+
+error:
+:print         - failed to output the constant value to the command line interface (a problem on the command line side).
+:text_recoding - failed to convert the string for output from corsar to the system encoding.
+@#
+fn println(arg) null
+
+#@
+The function writes one element to a channel.
+
+signature:
+fn (channel:@channel, item:/(@breaker|null|@channel|@thread)) null
+
+error:
+:cant_write_to_channel - if 'channel' is the output end of the channel, not the input.
+:share_invalid_type    - if 'item' equals 'null', is or contains a type that cannot be passed through a channel.
+:no_reading_channel    - if the channel no longer has an output end, and therefore the written element will never be read.
+@#
+fn push(channel, item) null
+
+#@
+The function returns the number of elements in 'container' equal to 'item'.
+
+signature:
+fn (char:@char, string:@string) @int
+fn (byte:@byte, array:@byte_array) @int
+fn (item:/(null|@fn|@box|@breaker|@thread|@channel), container:(@array|@table|.core_qty|@obj)) @int
+@#
+fn qty(item, container) null
+
+#@
+The function returns the number of bits equal to '0'.
+
+signature:
+fn (arg:(@byte|@int|.core_qty_0_bits)) @int
+@#
+fn qty_0_bits(arg) null
+
+#@
+The function returns the number of bits equal to '1'.
+
+signature:
+fn (arg:(@byte|@int|.core_qty_1_bits)) @int
+@#
+fn qty_1_bits(arg) null
+
+#@
+The function returns the number of consecutive leading bits equal to '0'.
+If 'arg' is completely filled with '0' bits, the function returns the number of such bits.
+
+signature:
+fn (byte:0b00) 8
+fn (int:0) 64
+fn (arg:(@byte|@int|.core_qty_l0b)) @int
+@#
+fn qty_leading_0_bits(arg) null
+
+#@
+The function returns the number of consecutive leading bits equal to '1'.
+If 'arg' is completely filled with '1' bits, the function returns the number of such bits.
+
+signature:
+fn (byte:0bff) 8
+fn (int:-1) 64
+fn (arg:(@byte|@int|.core_qty_l1b)) @int
+@#
+fn qty_leading_1_bits(arg) null
+
+#@
+The function returns the number of consecutive trailing bits equal to '0'.
+If 'arg' is completely filled with '0' bits, the function returns the number of such bits.
+
+signature:
+fn (byte:0b00) 8
+fn (int:0) 64
+fn (arg:(@byte|@int|.core_qty_t0b)) @int
+@#
+fn qty_trailing_0_bits(arg) null
+
+#@
+The function returns the number of consecutive trailing bits equal to '1'.
+If 'arg' is completely filled with '1' bits, the function returns the number of such bits.
+
+signature:
+fn (byte:0bff) 8
+fn (int:-1) 64
+fn (arg:(@byte|@int|.core_qty_t1b)) @int
+@#
+fn qty_trailing_1_bits(arg) null
+
+#@
+The function reads 'count' bytes from the memory area whose address is specified in 'address' + 'offset'.
+Only the first 8 bytes of 'address' are used.
+
+signature:
+fn (address:(any|@error), offset:@int, count:@int) @byte_array
+
+error:
+:out_of_bounds - if count < 0 or if count > the maximum allowed array size.
+@#
+fn read_from_mem!!!(address, offset, count) null
+
+#@
+If the element 'item' is in the set 'set', the function returns 'set' but without that element, otherwise the function returns 'set' unchanged.
+
+signature:
+fn (set:(@set|.core_remove), item:param(hash:arg)) !$set
+@#
+fn remove(set, item) null
+
+#@
+The function creates an array that is the result of concatenating the array 'array' with itself 'count' times.
+The function returns an empty array if 'count' is 0.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_repeat), count:@int) !$array
+
+error:
+:out_of_bounds - if count < 0 or if the size of the new array exceeds the maximum allowed array size of this type.
+@#
+fn repeat(array, count) null
+
+#@
+The function replaces all elements of 'container' equal to 'old_item' with 'new_item'.
+
+signature:
+fn (string:@string, old_char:@char, new_char:@char) @string
+fn (array:@byte_array, old_byte:@byte,  new_byte:@byte) @byte_array
+fn (container:(.core_replace|@obj|@table|@array), old_item:/(null|@fn|@box|@breaker|@thread|@channel), new_item:common) !$container
+@#
+fn replace(container, old_item, new_item) null
+
+#@
+The function replaces elements of 'array' equal to all elements of 'old_part' occurring in the same order with elements of 'new_part'.
+If 'old_part' is an empty array, the elements of 'new_part' are inserted at the beginning and end of 'array', as well as between the elements of 'array'.
+If 'old_part' is an empty array and 'array' is an empty array, the function returns 'new_part'.
+The search for elements is performed from beginning to end.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_replace_part), old_part:!$array, new_part:!$array) !$array
+@#
+fn replace_part(array, old_part, new_part) null
+
+#@
+The function reserves space for at least 'items_qty' more elements if necessary.
+If short_type?(container) returns true, the function does nothing.
+
+signature:
+fn (container:(@string|@byte_array|@array|@table|@set|.core_reserve|@obj), items_qty:@int) !$container
+
+error:
+:out_of_bounds - if items_qty < 0 | len(container) + items_qty > maximum number of elements for this type.
+@#
+fn reserve(container, cap) null
+
+#@
+The function reverses the order of elements in the array (elements from the beginning move to the end, and those from the end move to the beginning).
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_reverse)) !$array
+@#
+fn reverse(array) null
+
+#@
+The function reverses the order of bits (the least significant bits become the most significant, and the most significant become the least significant).
+
+signature:
+fn (arg:(@byte|@int|.core_reverse_bits)) !$arg
+@#
+fn reverse_bits(arg) null
+
+#@
+The function reverses the order of bytes (the least significant bytes become the most significant, and the most significant become the least significant).
+
+signature:
+fn (arg:(@int|.core_reverse_bytes)) !$arg
+@#
+fn reverse_bytes(arg) null
+
+#@
+The function returns a pseudo-random number.
+A number is generated on each function call.
+The generated numbers may differ each time the application is run.
+The number is generated in the range [-9223372036854775808, 9223372036854775807]
+
+signature:
+fn () @int
+@#
+fn rnd() null
+
+#@
+Cyclic left shift.
+
+signature:
+fn (num:(@int|@byte|.core_rotate_left), shifts:(@int|@byte)) !$num
+
+error:
+:bits_shift - if (shifts < 0) | (shifts > number of bits in 'num')
+@#
+fn rotate_left(num, shifts) null
+
+#@
+Cyclic right shift.
+
+signature:
+fn (num:(@int|@byte|.core_rotate_right), shifts:(@int|@byte)) !$num
+
+error:
+:bits_shift - if (shifts < 0) | (shifts > number of bits in 'num')
+@#
+fn rotate_right(num, shifts) null
+
+#@
+Rounds the number to the nearest integer.
+In cases where there are two equally close integers, the one with the larger absolute value is chosen.
+
+signature:
+fn (num:nan) nan
+fn (num:(-0.0|0.0|inf|-inf)) $=num
+fn (num:(@float|.core_round)) !$num
+@#
+fn round(num) null
+
+#@
+It is an operator, not a function.
+The operator returns its argument, but without the information that the compiler has about the argument.
+
+signature:
+fn (arg:(any|@error)) $=arg
+@#
+fn scarlet__erase_info(arg) null
+
+#@
+It is an operator, not a function.
+The operator returns its argument, but without the information about the argument's value that the compiler has.
+
+signature:
+fn (arg:(any|@error)) $=arg
+@#
+fn scarlet__erase_value(arg) null
+
+#@
+In the program, any constant is stored as two 64-bit numbers.
+     This function takes two arguments and returns a constant created from the lower 64 bits of its arguments.
+The function increments the reference count (if there is one) of the result by 1.
+The function is extremely unsafe and can lead to highly unpredictable program behavior.
+The function can accept an error and not return it.
+
+signature:
+fn (low:(any|@error), high:(any|@error)) (any|@error)
+@#
+fn scarlet__join!!!(low, high) null
+
+#@
+The function returns a pseudo-random number.
+A number is generated on each compilation of the application.
+The number is generated in the range [-9223372036854775808, 9223372036854775807]
+
+signature:
+fn () @int
+@#
+fn scarlet__rnd(num) null
+
+#@
+In the program, any constant is stored as two 64-bit numbers.
+     This function takes a constant and returns these two numbers.
+The function can accept an error and not return it.
+
+signature:
+fn (arg:(any|@error)) [box low:@int, high:@int]
+@#
+fn scarlet__split!!!(arg) null
+
+#@
+The function returns the second at the specified time and in the specified time zone.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - if (timezone < -86400) | (timezone > 86400)
+@#
+fn second(time, timezone) null
+
+#@
+Copies elements of the array 'array' in the amount of 'len' from position 'from' to position 'to'.
+The function overwrites existing elements.
+The function does not change the number of elements in the array.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_self_copy), from:@int, to:@int, len:@int) !$array
+
+error:
+:out_of_bounds - if
+     (from       < 0) || (from > len(array)) ||
+     (to         < 0) || (to   > len(array)) ||
+     (len        < 0)                        ||
+     (from + len > len(array))               ||
+     (to   + len > len(array))
+@#
+fn self_copy(array, from, to, len) null
+
+#@
+The function serializes 'arg' by writing the resulting data into 'dst'.
+
+signature:
+fn (arg:(@string|@token|@bool|@byte|@char|@int|@time|@float|@byte_array|[obj $arg]|[table $arg = $arg]|[set $arg]|[array $arg*]), dst:@byte_array) !$dst
+@#
+fn serialize(arg, dst) null
+
+#@
+The function sets the level from which messages will be written to the message log.
+The higher the set level, the fewer messages will be written to the log.
+The available levels are listed in the signature.
+The earlier a level is listed in the signature, the lower it is.
+
+signature:
+fn (level:(
+     @core.log_lvl__minimum               |
+     @core.log_lvl__hint                  |
+     @core.log_lvl__may_require_attention |
+     @core.log_lvl__require_attention     |
+     @core.log_lvl__important             |
+     @core.log_lvl__very_important        |
+     @core.log_lvl__maximum)
+) null
+
+error:
+:out_of_bounds - if level is of type int, but is not one of the values listed in the signature.
+@#
+fn set_log_level(level) null
+
+#@
+The function returns 'true' if the constant's memory is used for storing elements,
+     'false' if the constant's memory is used for storing auxiliary data and a pointer to elements.
+
+signature:
+fn (array:(@string|@byte_array)) @bool
+@#
+fn short_type?(array) null
+
+#@
+The function rearranges the elements of 'box' in the order specified in 'idxes'.
+'idxes' stores the indices of the elements of 'box' in the order they should appear in the result.
+Each index in 'idxes' must appear exactly once and must correspond to an index of every element of 'box'.
+
+signature:
+fn (box:@box, idxes:[box @int{len(box)}]) @box
+
+error:
+:invalid_items_num - if len(box) /= len(idxes).
+:shuffle_dup       - if the same index is specified multiple times.
+:out_of_bounds     - if at least one index is greater than or equal to len(box).
+@#
+fn shuffle_box(box, idxes) null
+
+#@
+Sine of an angle.
+The angle is measured in radians.
+
+signature:
+fn (angle:nan) nan
+fn (angle:(-inf|inf)) nan
+fn (angle:(-0.0|0.0)) $=angle
+fn (angle:(@float|.core_sin)) !$arg
+@#
+fn sin(angle) null
+
+#@
+Suspends the current thread for at least 'nano_sec' nanoseconds.
+After the specified time elapses, the function strives to resume the thread as soon as possible.
+
+signature:
+sleep(nano_sec:@int) null
+
+error:
+:out_of_bounds - if 'nano_sec' < 0.
+:insomnia      - if it was not possible to suspend the current thread.
+@#
+fn sleep(nano_sec) null
+
+#@
+Sorting an array.
+If 'is_asc_order' is 'true', the array is sorted in ascending order, otherwise in descending order.
+This function uses the function cmp for element comparison.
+
+signature:
+fn (array:(@string|@byte_array|.core_sort|[array !param(cmp:arg_1)*]), is_asc_order:@bool) !$array
+
+error:
+:nan_cmp  - if during sorting, floating-point numbers were compared and at least one of them was nan.
+:cant_ord - if the cmp function returned :not_equal.
+@#
+fn sort(array, is_asc_order) null
+
+#@
+The sort_fn function is analogous to the sort function, but instead of the cmp function, the 'cmp_fn' function is used.
+The function may use 'cmp_fn' only for calling.
+If the 'cmp_fn' function behaves like the cmp function, the array will be sorted in ascending order.
+
+signature:
+fn (string:@string, cmp_fn:fn(char_1:@char, char_2:@char) (:equal|:less|:great|:not_equal|:nan_cmp)) @string
+fn (array:@byte_array, cmp_fn:fn(byte_1:@byte, byte_2:@byte) (:equal|:less|:great|:not_equal|:nan_cmp)) @byte_array
+fn (array:[array item:!common*]), cmp_fn:fn(item_1:!$item, item_2:!$item) (:equal|:less|:great|:not_equal|:nan_cmp)) !$array
+fn (array:.core_sort_fn, cmp_fn:fn(item_1:any, item_2:any) (:equal|:less|:great|:not_equal|:nan_cmp)) !$array
+
+error:
+:nan_cmp             - if the 'cmp_fn' function returns :nan_cmp.
+:cant_ord            - if the 'cmp_fn' function returns :not_equal.
+:ret_incorrect_value - if the 'cmp_fn' function returns a constant of type token, but it is not one of the following values: :equal, :less, :great, :not_equal, :nan_cmp.
+@#
+fn sort_fn(array, cmp_fn) null
+
+#@
+The function returns 'true' if the character occupies a character space when displayed, but has no visual representation, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_space?)) @bool
+@#
+fn space?(char) null
+
+#@
+The function splits an array into subarrays using the separator 'separator'.
+'separator' is not added to the subarrays.
+If 'separator' is the first element of 'array', it is considered that there is an empty subarray before it.
+If 'separator' is the last element of 'array', it is considered that there is an empty subarray after it.
+If 'separator' appears twice in a row in the elements of 'array', it is considered that there is an empty subarray between them.
+
+signature:
+fn (string:@string, separator:@char) [array @string+]
+fn (array:@byte_array, separator:@byte) [array @byte_array+]
+fn (array:@array, separator:/(null|@fn|@box|@breaker|@thread|@channel)) [array @array+]
+fn (array:.core_split, separator:/(null|@fn|@box|@breaker|@thread|@channel)) [array !$array+]
+@#
+fn split(array, separator) null
+
+#@
+The split_by_part function is analogous to the split function, but instead of a single element, multiple consecutive elements are used as the separator.
+If 'separator' is an empty array, the function returns subarrays consisting of single elements of 'array' with the same index as the element.
+If 'separator' and 'array' are both empty arrays, the function returns an empty array of type @core.array.
+The search for elements is performed from beginning to end.
+
+signature:
+fn (array:(@string|@byte_array|@array|.core_split_by_part), separator:!$array) [array !$array*]
+@#
+fn split_by_part(array, separator) null
+
+#@
+Squaring a number.
+The function uses the function (*).
+
+signature:
+fn (num:nan) nan
+fn (num:(@byte|@int|@float|.core___mul__)) $num
+@#
+fn sqr(num) null
+
+#@
+Square root calculation.
+
+signature:
+fn (num:nan) nan
+fn (num:(?num<-0.0)) nan
+fn (num:(-0.0|0.0|inf)) $=num
+fn (num:(@byte|@int|@float|.core_sqrt)) $num
+
+error:
+:sqrt_from_neg - if the type of 'num' is @int and 'num' < 0.
+@#
+fn sqrt(num) null
+
+#@
+Stable sorting of an array.
+If 'is_asc_order' is 'true', the array is sorted in ascending order, otherwise in descending order.
+This function uses the function cmp for element comparison.
+
+signature:
+fn (array:(@string|@byte_array|.core_stable_sort|[array !param(cmp:arg_1)*]), is_asc_order:@bool) !$array
+
+error:
+:nan_cmp  - if during sorting, floating-point numbers were compared and at least one of them was nan.
+:cant_ord - if the cmp function returned :not_equal.
+@#
+fn stable_sort(array, is_asc_order) null
+
+#@
+The stable_sort_fn function is analogous to the stable_sort function, but instead of the cmp function, the 'cmp_fn' function is used.
+The function may use 'cmp_fn' only for calling.
+If the 'cmp_fn' function behaves like the cmp function, the array will be sorted in ascending order.
+
+signature:
+fn (string:@string, cmp_fn:fn(char_1:@char, char_2:@char) (:equal|:less|:great|:not_equal|:nan_cmp)) @string
+fn (array:@byte_array, cmp_fn:fn(byte_1:@byte, byte_2:@byte) (:equal|:less|:great|:not_equal|:nan_cmp)) @byte_array
+fn (array:[array item:!common*]), cmp_fn:fn(item_1:!$item, item_2:!$item) (:equal|:less|:great|:not_equal|:nan_cmp)) !$array
+fn (array:.core_stable_sort_fn, cmp_fn:fn(item_1:any, item_2:any) (:equal|:less|:great|:not_equal|:nan_cmp)) !$array
+
+error:
+:nan_cmp             - if the 'cmp_fn' function returns :nan_cmp.
+:cant_ord            - if the 'cmp_fn' function returns :not_equal.
+:ret_incorrect_value - if the 'cmp_fn' function returns a constant of type token, but it is not one of the following values: :equal, :less, :great, :not_equal, :nan_cmp.
+@#
+fn stable_sort_fn(array, cmp_fn) null
+
+#@
+The function returns a token created from the characters of the string.
+The function returns null if the string contains an invalid set of characters.
+
+signature:
+fn (string:@string) (null|@token)
+@#
+fn str_to_tkn(string) null
+
+#@
+The function returns an array of bytes representing the string 'string' but in utf-8 encoding.
+The function returns null if 'string' contained characters not present in Unicode.
+
+signature:
+fn (string:@string) (null|@ustring)
+@#
+fn str_to_ustr(string) null
+
+#@
+The function returns 'true' if the elements of 'suffix' are equal to the last elements of 'array' in the same sequence, otherwise 'false'.
+The function returns 'true' if 'suffix' is an empty array.
+
+signature:
+fn (suffix:!$array, array:(@string|@byte_array|@array|.core_suffix_of?)) @bool
+@#
+fn suffix_of?(suffix, array) null
+
+#@
+The function returns 'true' if the character occupies a character space when displayed and has a visual representation, but is not a letter or digit, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_symbol?)) @bool
+@#
+fn symbol?(char) null
+
+#@
+The function turns a table into an object.
+
+signature:
+fn (table:[table @token=common]) @obj
+@#
+fn table_to_obj(table) null
+
+#@
+Creates an indexed array from the elements of 'array' with index < 'n'.
+The order of elements is preserved.
+
+signature:
+fn (array:(@string|@byte_array|.core_take|@array), n:@int) !$array
+
+error:
+:out_of_bounds - if (n > len(array)) | (n < 0)
+@#
+fn take(array, n) null
+
+#@
+The function returns one element of a set or an associative array.
+The function returns null if 'container' is empty.
+
+signature:
+fn (container:(@table|@set|.core_take_one|@obj)) (common|null)
+@#
+fn take_one(container) null
+
+#@
+The function returns one element and its corresponding key from an associative array.
+The function returns null if 'container' is empty.
+
+signature:
+fn (container:(@table|.core_take_one_kv|@obj)) ([box key:param(hash:arg), item:common]|null)
+@#
+fn take_one_kv(container) null
+
+#@
+Creates an indexed array from the elements of 'array' with index < n, where n is the index of the first element to which the application of 'func' returned 'false',
+     if there are no such elements, then n = len(array)
+The order of taking elements to apply 'func' is from beginning to end.
+The application of 'func' continues as long as it returns 'true'.
+The order of elements is preserved.
+The function may use 'func' only for calling.
+
+signature:
+fn (array:(@string|@byte_array|.core_take_while|@array), func:fn(item:common) @bool) !$array
+@#
+fn take_while(array, func) null
+
+#@
+Tangent of an angle.
+The angle is measured in radians.
+
+signature:
+fn (angle:nan) nan
+fn (angle:(-inf|inf)) nan
+fn (angle:(-0.0|0.0)) $=angle
+fn (angle:(@float|.core_tan)) !$arg
+@#
+fn tan(angle) null
+
+#@
+The function starts executing the function 'func' in a separate thread, returning a constant
+     with which the value returned by 'func' can be obtained.
+
+signature:
+fn (func:fn() (any|@error)) @thread
+
+error:
+:share_invalid_type - if 'func' uses constants from the current thread that cannot be passed to another thread.
+@#
+fn thread(func) null
+
+#@
+The function returns the current time.
+
+signature:
+fn () @time
+
+error:
+:get_time - if for some reason it was not possible to obtain the current time.
+@#
+fn time() null
+
+#@
+The function is analogous to pop, but with a limit on the maximum time to wait for an element.
+The function returns null if the specified time elapses without an element being received.
+'nano_sec' can be set to 0, which means to get the element if it exists, otherwise return null immediately.
+
+signature:
+fn (channel:@channel, nano_sec:@int) ((/(@breaker|@channel|@thread))|null)
+
+error:
+:out_of_bounds          - if 'nano_sec' < 0.
+:cant_read_from_channel - if 'channel' is the input end of the channel, not the output.
+:no_writing_channel     - if there are no elements in the channel and the channel no longer has an input end, and therefore no more elements will appear in it.
+@#
+fn time_limit_pop(channel, nano_sec) null
+
+#@
+The function is analogous to wait, but with a limit on the maximum time to wait for a result.
+'nano_sec' can be set to 0, which means to get the result if it exists, otherwise return the value
+     that would be returned when the time elapses.
+If the thread terminated with an error, the function returns that error.
+If the result was received, the function returns - [box true, null, result].
+If the time elapsed without a result, the function returns - [box false, 'thread', null].
+
+signature:
+fn (thread:@thread, nano_sec:@int) [box @bool, ($=thread|null), (any|null)]
+
+error:
+:out_of_bounds - if 'nano_sec' < 0.
+@#
+fn time_limit_wait(thread, nano_sec) null
+
+#@
+The system time zone value.
+Used for functions working with time.
+
+signature:
+fn () @int
+@#
+fn timezone() null
+
+#@
+The function converts a container with elements into an array of type core.array with the same elements.
+If 'container' is an indexed array, the elements in the result have the same indices as in the argument.
+
+signature:
+fn (array:@array) $=array
+fn (container:(@string|@byte_array|@box|@table|@set|.core_to_array|@obj)) @array
+@#
+fn to_array(container) null
+
+#@
+The function converts some values that can be perceived as bool values into bool values.
+The function returns null if 'arg' has a correct type but an incorrect value.
+List of convertible values:
+Value                                                     |Result
+----------------------------------------------------------+---------
+"false", "no", "off" (characters can be in any case)      |false
+"true", "yes", "on" (characters can be in any case)       |true
+false                                                     |false
+true                                                      |true
+0b00                                                      |false
+0b01                                                      |true
+:false, :no, :off                                         |false
+:true, :yes, :on                                          |true
+0                                                         |false
+1                                                         |true
+
+signature:
+fn (bool:@bool) $=bool
+fn (arg:(@string|@byte|@token|@int|.core_to_bool)) (null|@bool)
+@#
+fn to_bool(arg) null
+
+#@
+The function converts a container with elements into an array of type core.box with the same elements.
+If 'container' is an indexed array, the elements in the result have the same indices as in the argument.
+
+signature:
+fn (box:@box) $=box
+fn (container:(@string|@byte_array|@array|@table|@set|.core_to_box|@obj)) @box
+
+error:
+:out_of_bounds - if len(container) > 16.
+@#
+fn to_box(container) null
+
+#@
+The function converts some values that can be perceived as byte values into byte values.
+The function returns null if 'arg' has a correct type but an incorrect value.
+Conversion rules:
+Type      |Rules                                                                                  |Example
+----------+--------------------------------------------------------------------------------------+-------------------------
+string    |the string must contain a byte as if it were in source code, but without the 0b prefix|"fe"              -> 0bfe
+byte      |no conversion needed                                                                  |0bfe              -> 0bfe
+char      |returns the character code                                                            |'z'               -> 0b7a
+int       |returns the specified number, but with the byte type                                  |126               -> 0bfe
+float     |returns the integer part of the specified number, but with the byte type              |126.7             -> 0bfe
+byte_array|the array must consist of a single byte, which will be the result of the function     |[byte_array 0bfe] -> 'f'
+
+signature:
+fn (byte:@byte) $=byte
+fn (arg:(@string|@char|@int|@float|.core_to_byte)) (null|@byte)
+@#
+fn to_byte(arg) null
+
+#@
+The function converts some values into char values.
+The function returns null if 'arg' has a correct type but an incorrect value.
+Conversion rules:
+Type  |Rules                                                                     |Example
+------+--------------------------------------------------------------------------+--------------
+string|the string must consist of a single character, which will be the result   |"f"   -> 'f'
+byte  |returns the character with the specified code                             |0b66  -> 'f'
+char  |no conversion needed                                                      |'f'   -> 'f'
+int   |returns the character with the specified code                             |102   -> 'f'
+float |returns the character with the code from the integer part of the number   |102.7 -> 'f'
+
+signature:
+fn (char:@char) $=char
+fn (arg:(@string|@byte|@int|@float|.core_to_char)) (null|@char)
+@#
+fn to_char(arg) null
+
+#@
+The function converts some values into float values.
+The function returns null if 'arg' has a correct type but an incorrect value.
+Conversion rules:
+Type  |Rules                                                                                                                    |Example
+------+-------------------------------------------------------------------------------------------------------------------------+------------------
+string|the string must contain the textual representation of a real number as a decimal fraction or in exponential form         |"10.5"   -> 10.5
+      |the symbols + and - are allowed before the values                                                                        |"1.0e-4" -> 0.0001
+      |allows writing integer numbers (without a fractional part)                                                               |"+12.5"  -> 12.5
+      |special values may also be specified: "nan", "inf"                                                                       |"-12"    -> -12.0
+      |excluding special values, only the following characters are allowed: 0-9 . e + -                                         |"NAn"    -> not a number
+      |if a character in the string is a letter, its case does not matter                                                       |"+1200"  -> 1200.0
+byte  |converts a number from byte type to float type                                                                           |0b0a     -> 10.0
+int   |converts a number from int type to float type                                                                            |-15      -> -15.0
+float |no conversion needed                                                                                                     |102.25   -> 102.25
+
+signature:
+fn (float:@float) $=float
+fn (arg:(@string|@byte|@int|.core_to_float)) (null|@float)
+@#
+fn to_float(arg) null
+
+#@
+The function converts some values into int values.
+The function returns null if 'arg' has a correct type but an incorrect value.
+Conversion rules:
+Type  |Rules                                                                                  |Example
+------+---------------------------------------------------------------------------------------+--------------------------------------------------------
+string|the string must contain the textual representation of a number in the decimal system   |"10"                                      -> 10
+      |the symbols + and - are allowed before the values                                      |"-1"                                      -> -1
+byte  |converts a number from byte type to int type                                           |0b0a                                      -> 10
+char  |returns the character code                                                             |'z'                                       -> 122
+int   |no conversion needed                                                                   |10                                        -> 10
+time  |returns the number of seconds elapsed since 01.01.1970 00:00:00 +0.0                   |assemble_time(0, 2010, 8, 13, 23, 14, 57) -> 1281741297
+float |converts a number from float type to int type, discarding the fractional part          |102.79                                    -> 102
+
+signature:
+fn (int:@int) $=int
+fn (arg:(@string|@byte|@char|@time|@float|.core_to_int)) (null|@int)
+@#
+fn to_int(arg) null
+
+#@
+The function converts all uppercase letters to the corresponding lowercase letters.
+In some languages, changing the case of one letter leads to the appearance of new characters,
+     therefore if this function takes a single character of type char, the result will be of type string,
+     and also therefore the length of the argument and the result may not match.
+
+signature:
+fn (arg:(@string|@char)) @string
+fn (arg:.core_to_lower) common
+@#
+fn to_lower(arg) null
+
+#@
+The function converts a constant to its textual representation.
+The function works with a string not as an array of characters.
+The function treats 'null' as a value, not as its absence.
+Conversion rules:
+Type      |Result                                                                                          |Example
+----------+------------------------------------------------------------------------------------------------+------------------------------------------------------------------------
+string    |argument                                                                                        |"10"                                      -> "10"
+null      |as the value would be written in source code                                                    |null                                      -> "null"
+token     |as the value would be written in source code, but without :                                     |:123                                      -> "123"
+bool      |as the value would be written in source code                                                    |false                                     -> "false"
+byte      |as the value would be written in source code, but without 0b                                    |0bfe                                      -> "fe"
+char      |string with the specified character                                                             |'z'                                       -> "z"
+int       |string with the specified number in the decimal system, without the + symbol                    |123                                       -> "123"
+byte_array|string with bytes converted in sequence, without separators                                     |[byte_array 0b00, 0b01, 0b02]             -> "000102"
+time      |dd.MM.yyyy hh.mm.ss timezone                                                                    |assemble_time(0, 2010, 8, 13, 23, 14, 57) -> "14.08.2010 02:14:57 +3.00"
+          |Where:                                                                                          |
+          |     d        - day                                                                             |
+          |     M        - month                                                                           |
+          |     y        - year                                                                            |
+          |     h        - hour                                                                            |
+          |     m        - minute                                                                          |
+          |     s        - second                                                                          |
+          |     timezone - the number of hours added to UTC,                                               |
+          |                     so that the time in the string is local                                    |
+float     |string with the specified number as a decimal fraction, without the + symbol                    |1.0                                       -> "1.0"
+          |maximum number of digits after the decimal point - 15                                           |1.0/3.0                                   -> "0.333333333333333"
+          |special values: nan, inf, -inf                                                                  |
+box       |as the value would be written in source code, but to_string is applied to the elements          |[box 0b00, null]                          -> "[box 00, null]"
+array     |as the value would be written in source code, but to_string is applied to the elements          |[array 0b00, :12]                         -> "[array 00, 12]"
+obj       |as the value would be written in source code, but to_string is applied to the key and value     |[obj :12 = 0bff]                          -> "[obj 12 = ff]"
+table     |as the value would be written in source code, but to_string is applied to the key and value     |[table :12 = 0bff]                        -> "[table 12 = ff]"
+set       |as the value would be written in source code, but to_string is applied to the elements          |[set 0b00, :12]                           -> "[set 00, 12]"
+
+signature:
+fn (arg:(@string|null|@token|@bool|@byte|@char|@int|@byte_array|@time|@float|.core_to_string|[box $arg*]|[array $arg*]|[obj $arg]|[table $arg = $arg]|[set $arg])) @string
+@#
+fn to_string(arg) null
+
+#@
+The function converts all lowercase letters to the corresponding uppercase letters.
+In some languages, changing the case of one letter leads to the appearance of new characters,
+     therefore if this function takes a single character of type char, the result will be of type string,
+     and also therefore the length of the argument and the result may not match.
+
+signature:
+fn (arg:(@string|@char)) @string
+fn (arg:.core_to_upper) common
+@#
+fn to_upper(arg) null
+
+#@
+The function removes the characters ' ', '\t', '\n' from the end and beginning of the string.
+
+signature:
+fn (string:(@string|.core_trim)) !$string
+@#
+fn trim(string) null
+
+#@
+The function returns the number without its fractional part.
+
+signature:
+fn (num:nan) nan
+fn (num:(-0.0|0.0|inf|-inf)) $=num
+fn (num:(@float|.core_trunc)) !$num
+@#
+fn trunc(num) null
+
+#@
+The function returns the type name in the format "module_name.type_name".
+If the argument of the function is not an error, the function does not return an error.
+
+signature:
+fn (arg:.core_type) @string
+fn (arg:any) @string
+@#
+fn type(arg) null
+
+#@
+The function returns a utf-8 encoded string (of type byte_array) with a single character whose (Unicode) code is passed as an argument.
+
+signature:
+fn (code:@int) @ustring
+
+error:
+:out_of_bounds - if (code < 1) | (code > 1'114'111)
+@#
+fn uchar_to_ustr(code) null
+
+#@
+If 'arg' is an error, the function returns 'arg', otherwise the function returns [box arg, null].
+The function is used to check data that must be in a single instance (box, thread, breaker) for errors.
+
+Erroneous example:
+...
+let thrd = thread(fn () "hello".println()))
+if thrd.error?() // error, because thrd is used later in the program
+     fail("error")
+else null
+
+let result = thrd.wait()
+...
+
+Correct example:
+...
+let thrd = thread(fn () "hello".println()))
+let [box thrd, error] = thrd.uncopyable_error?()
+if error.error?()
+     fail(error)
+else null
+
+let result = thrd.wait()
+...
+
+signature:
+fn (error:@error) $=error
+fn (arg:any) [box $=arg, null]
+@#
+fn uncopyable_error?(arg) null
+
+#@
+If the argument of the function in its internal representation is not an array but a slice, the function creates an array from this slice.
+Also, the function (regardless of whether the array was a slice or not) frees the memory pre-allocated for new elements.
+The function is intended to reduce memory consumption and returns its argument unchanged
+     if the above actions do not lead to a reduction in the size of consumed memory.
+
+signature:
+fn (array:(@string|@byte_array|@array)) !$array
+@#
+fn unslice(array) null
+
+#@
+The function returns 'true' if the character is an uppercase letter, otherwise 'false'.
+
+signature:
+fn (char:(@char|.core_upper?)) @bool
+@#
+fn upper?(char) null
+
+#@
+The function outputs a utf-8 encoded string to the command line interface.
+
+signature:
+fn (string:@ustring) null
+
+error:
+:print         - failed to output the string to the command line interface (a problem on the command line side).
+:text_recoding - failed to convert the string for output from utf-8 to the system encoding.
+:text_encoding - the string is not valid utf-8 encoded text.
+@#
+fn uprint(string) null
+
+#@
+The same as 'uprint', but after outputting the argument, outputs a newline character.
+
+signature:
+fn (string:@ustring) null
+
+error:
+:print         - failed to output the string to the command line interface (a problem on the command line side).
+:text_recoding - failed to convert the string for output from utf-8 to the system encoding.
+:text_encoding - the string is not valid utf-8 encoded text.
+@#
+fn uprintln(string) null
+
+#@
+The function converts a utf-8 encoded string to a string.
+The function returns null if 'ustring' contained characters not present in corsar.
+
+signature:
+fn (ustring:@ustring) (null|@string)
+
+error:
+:text_encoding - the string is not valid utf-8 encoded text.
+@#
+fn ustr_to_str(ustring) null
+
+#@
+The function waits for the thread to finish and returns the data that the function launched in the specified thread returned.
+If the thread has not finished by the time this function is called, the function suspends the current thread until the result is received.
+If the thread terminated with an error, the function returns that error.
+
+signature:
+fn (thread:@thread) (any|@error)
+@#
+fn wait(thread) null
+
+#@
+The function writes bytes from 'bytes' to the memory area whose address is specified in 'address' + 'offset'.
+
+signature:
+fn (address:(any|@error), offset:@int, bytes:@byte_array) null
+@#
+fn write_to_mem!!!(address, offset, bytes) null
+
+#@
+The function returns the year at the specified time.
+
+signature:
+fn (time:@time, timezone:@int) @int
+
+error:
+:out_of_bounds - if (timezone < -86400) | (timezone > 86400)
+@#
+fn year(time, timezone) null
+
+#@
+Calling this function indicates that the current thread does not need processor time at the moment.
+
+signature:
+fn () null
+@#
+fn yield() null
+
+#@
+The function combines two arrays into one by applying the function 'func' to their elements and creating a new array with the results of 'func'.
+If one of the arguments is an indexed array, the other must also be an indexed array.
+If one of the arguments is an associative array, the other must also be an associative array.
+The function 'func' is applied to elements with the same indices or keys.
+If an element with an index or key exists in one array but not in the other,
+     that element is ignored and does not affect the result.
+The result type depends on the types of the arguments:
+     - if both arrays are indexed, the result type is @array
+     - if both arrays are of type @obj, the result type is @obj
+     - if both arrays are associative, but one of them is of a type other than @obj, the result type is @table
+The function can accept sets as arguments, treating them as associative arrays with the same key and value.
+This function treats methods only as methods, so it is assumed that arguments of type @obj do not have the key :_.
+The function may use 'func' only for calling.
+
+signature:
+fn (array_1:.core_zip, array_2:common, func:fn(item_1:common, item_2:common) common) common
+fn (array_1:(@string|@byte_array|@array), array_2:$array_1, func:fn(item_1:common, item_2:common) common) @array
+fn (array_1:@obj, array_2:@obj, func:fn(item_1:common, item_2:common) common) @obj
+fn (array_1:(@obj|@table|@set), array_2:$array_1, func:fn(item_1:common, item_2:common) common) @table
+@#
+fn zip(array_1, array_2, func) null
+
+#@
+The function is analogous to zip, but for 2 or more arrays.
+If one of the arguments is an indexed array, all others must also be indexed arrays.
+If one of the arguments is an associative array, all others must also be associative arrays.
+The function 'func' is applied to elements with the same indices or keys.
+If an element with an index or key exists in one array but not in another,
+     that element is ignored and does not affect the result.
+The result type depends on the types of the arguments:
+     - if all arrays are indexed, the result type is @array
+     - if all arrays are of type @obj, the result type is @obj
+     - if all arrays are associative, but one of them is of a type other than @obj, the result type is @table
+The function can accept sets as arguments, treating them as associative arrays with the same key and value.
+This function treats methods only as methods, so it is assumed that arguments of type @obj do not have the key :_.
+The function may use 'func' only for calling.
+
+signature:
+fn (arrays:[box array_1:.core_zip_n, arrays:common{1,15}], func:fn(items:common{2,16}) common) common
+fn (arrays:[box (@string|@byte_array|@array){2,16}], func:fn(items:common{2,16}) common) @array
+fn (arrays:[box @obj{2,16}], func:fn(items:common{2,16}) common) @obj
+fn (arrays:[box (@obj|@table|@set){2,16}], func:fn(items:common{2,16}) common) @table
+
+error:
+:out_of_bounds - if len(arrays) < 2.
+@#
+fn zip_n(arrays, func) null

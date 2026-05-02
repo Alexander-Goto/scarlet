@@ -1,0 +1,673 @@
+#*
+Rules that apply to functions also apply to methods, as if methods were functions but with the object containing the method passed as the first argument.
+
+Errors:
+Any function from this module, by default (unless otherwise specified), has the following behavioral characteristics:
+- if at least one argument of the function is an error, the function returns the error from that argument
+- if several arguments of the function are errors, the error from the argument that was passed first is returned
+- if an argument is passed to the function whose value causes an error (for example, an argument of an incorrect type),
+     but there is another argument with an error, the function returns the error from that argument
+- if at least one argument of the function is an error, the function will terminate before any action affecting the application state is performed
+- if a function argument has an incorrect type, the function may return an error with code ':invalid_type'
+- if a function argument is a function that accepts a number of arguments different from the one specified in the signature, the function may return an error with code ':wrong_num_fn_args'.
+- if a function argument is a function and calling the function from the argument returns an error, then the function itself returns that error.
+- if a function signature specifies an argument with some method and there is also an argument with type !$'name of the argument with the method', it is implied that their types (.core_type) are equal,
+     but the actual type checking is deferred to the method.
+- functions are thread-safe
+
+Notations used in type descriptions:
+@ustring                   - a string in utf-8 encoding, the type in the real program is 'byte_array'
+@sysstr                    - a string obtained from the system encoding, all characters with code \00001a are replaced by two such characters,
+     and non-ASCII characters may be replaced by \00001a and the hexadecimal code of the character in Unicode (6 digits), the type in the real program is 'string'.
+@type                      - the specified type
+(type)                     - instead of type, several types separated by the | symbol can be specified,
+     this syntax means that the constant can have one of the specified types,
+     if the constant matches the description of several types, it is considered to have the type that was specified first
+(types)                    - instead of types, several types separated by the & symbol must be specified,
+     this syntax means that the constant matches the description of all specified types
+name:type                  - a type assigned a name
+$name                      - the type that was assigned a name, if the type describes a set of types, this type can be any of the set
+!$name                     - the same as $name, but if the type describes a set of types,
+     this type equals the type of the constant used when assigning the name
+param(fn:param)            - the same type as the parameter 'param' of the function 'fn'
+[container item]           - where container is one of the types: array, box, set or obj; and 'item' is the type of the container's elements.
+     If the container is of type array or box:
+     Instead of a single type 'item', you can list several types separated by commas.
+     This means that the array contains exactly as many elements as the number of types specified, and each element has its corresponding type.
+     If only one type is specified, the array consists of a single element of that type.
+
+     If the container is of type set or obj:
+     A single 'item' type is specified, meaning the container can contain any number of elements, but all elements must be of that type.
+type{min,max}              - in cases where instead of a single type several can be specified (e.g., [container item]),
+     this syntax means no fewer than 'min' and no more than 'max' elements of the specified type; if the type 'type' describes a set of types,
+     the elements can have different types, but only from the specified set
+type{min,}                 - the same as type{min,max}, but without a maximum limit
+type{n}                    - the same as type{n,n}
+type*                      - the same as type{0,}
+type+                      - the same as type{1,}
+!type                      - in cases where instead of a single type several can be specified (e.g., [container item]),
+     this syntax means that all elements must be of the same type
+/type                      - any type except 'type' and error
+[table key=value]          - a table in which keys have type 'key' and values have type 'value'
+     if the type 'key' or 'value' describes a set of types, keys or values can have different types, but from the specified set
+fn(param)result            - a function that takes one argument of type 'param', and the return value has type 'result'
+     several argument types can be specified separated by commas, which will mean that the function takes the specified number of arguments of the specified types
+     the parameter can be omitted, meaning the function takes no arguments
+.name                      - the constant has a method with the specified name
+(?constraint)type          - 'type' but only if the constraint 'constraint' holds; if no type results,
+     the current signature variant is considered unsuitable
+any                        - any type except error
+common                     - any type except error, null, box, breaker
+nan                        - not a number (float)
+inf                        - infinity (float)
+-inf                       - minus infinity (float)
+$=name                     - the constant from the place where the name 'name' was declared
+!!!noreturn                - this notation can be used instead of the function result type and means that the function will never complete its work.
+value                      - not a type, but the specifically specified value 'value'
+
+Signatures:
+If the documentation lists several function signatures, in cases where several signatures fit certain arguments,
+     the one specified first is used.
+
+Additionally:
+All functions in this module treat objects as a table without the :_ (methods) key, but they may still use methods.
+If a function's description says it works with methods as values, it means methods are treated as values (i.e., as if it were not an object but a table).
+Many functions that work with indexed arrays also work with strings, treating them as an array of characters.
+     You can determine whether a function works with strings from its signature.
+If a function can accept both a string and an array as an argument but does not treat the string as an array of characters, this is noted in the function's description.
+*#
+
+#@
+Path to the application executable file.
+
+type: @fs_path
+@#
+let app_path = null
+
+#@
+Path to the temporary files directory.
+
+type: @fs_path
+@#
+let tmp_dir = null
+
+#@
+Path to the current user's home directory.
+If this path could not be determined, the constant's value is null.
+
+type: (null|@fs_path)
+@#
+let user_home_dir = null
+
+#*
+@fs_path - a type whose constants store a filesystem path.
+*#
+
+#@
+Creates a filesystem path constant.
+If 'path' is an array of strings, the array elements are the path components.
+If 'path' is an array of strings and the first element is '.' or '..', the path is considered relative; otherwise it is absolute.
+If creation is successful, the function returns a constant of type @fs_path; otherwise:
+     :empty     - the string or a path component is empty.
+     :long      - the resulting path is too long.
+     :separator - a path component contains the path separator, or the string contains two consecutive path separators.
+
+signature:
+fn (path:(@sysstr|[array @sysstr+])) (@fs_path|@token)
+
+error:
+:text_recoding - failed to convert the string from Corsar to the system encoding.
+@#
+fn fs_path(path) null
+
+#@
+Method compares two paths for equality.
+Comparison is performed as if the paths were strings in the system encoding.
+Used to implement core.(===) for type @fs_path.
+
+signature:
+fn (left:@fs_path, right:/@fs_path) false
+fn (left:@fs_path, right:@fs_path) @bool
+@#
+fn (fs_path->core___equal__)(left, right) null
+
+#@
+Method compares two paths for equality.
+Comparison is performed as if the paths were strings in the system encoding.
+Used to implement core.(==) for type @fs_path.
+
+signature:
+fn (left:@fs_path, right:@fs_path) @bool
+@#
+fn (fs_path->core___strong_equal__)(left, right) null
+
+#@
+Method compares two paths.
+Comparison is performed as if the paths were strings in the system encoding.
+Used to implement core.cmp for type @fs_path.
+The method returns the following values:
+     :equal     - if arg_1 == arg_2
+     :less      - if arg_1 < arg_2
+     :great     - if arg_1 > arg_2
+     :not_equal - if arg_2 is of a type other than @fs_path
+
+signature:
+fn (left:@fs_path, right:/@fs_path) :not_equal
+fn (left:@fs_path, right:@fs_path) (:equal|:less|:great)
+@#
+fn (fs_path->core_cmp)(arg_1, arg_2) null
+
+#@
+Method computes the hash of its argument.
+Used to implement core.hash for type @fs_path.
+
+signature:
+fn (path:@fs_path, seed:@int) @int
+@#
+fn (fs_path->core_hash)(path, seed) null
+
+#@
+Method outputs the path value to the command-line interface.
+Used to implement core.print for type @fs_path.
+
+signature:
+fn (path:@fs_path) null
+@#
+fn (fs_path->core_print)(path) null
+
+#@
+Method converts the @fs_path path to a string.
+Used to implement core.to_string for type @fs_path.
+
+signature:
+fn (path:@fs_path) @sysstr
+@#
+fn (fs_path->core_to_string)(path) null
+
+#@
+Method returns true if the path is absolute, otherwise false.
+
+signature:
+fn (path:@fs_path) @bool
+@#
+fn (fs_path->abs?)(path) null
+
+#@
+Method returns the last component of the path. (Example: fs_path("a/b/1.txt")->base() == "1.txt")
+
+signature:
+fn (path:@fs_path) @sysstr
+@#
+fn (fs_path->base)(path) null
+
+#@
+Method cleans the path of unnecessary components. (Example: fs_path("./a/./././b/c/e/../././..")->clean() == fs_path("./a/b"))
+Returns :roots_parent if the path refers to the parent of the root directory. (Example: /a/../..)
+
+signature:
+fn (path:@fs_path) (@fs_path|:roots_parent)
+@#
+fn (fs_path->clean)(path) null
+
+#@
+Method returns the path without the last component. (Example: fs_path("/a/b/1.txt")->dir() == fs_path("/a/b"))
+Returns null if the path had only one component.
+
+signature:
+fn (path:@fs_path) @fs_path
+@#
+fn (fs_path->dir)(path) null
+
+#@
+Method returns the file extension. (Example: fs_path("/a/b/1.txt")->ext() == "txt")
+Returns null if there is no extension.
+
+signature:
+fn (path:@fs_path) (null|@sysstr)
+@#
+fn (fs_path->ext)(path) null
+
+#@
+Method joins two paths.
+The path owning the method is treated as the current directory (./) for 'path'.
+If 'path' is absolute, the root is replaced by the current directory (./).
+Returns :long if the result is too long.
+
+signature:
+fn (current_dir:@fs_path, path:@fs_path) (@fs_path|:long)
+@#
+fn (fs_path->join)(current_dir, path) null
+
+#@
+Method returns true if the components of 'prefix' are the first components of 'path', otherwise false.
+Also returns true if 'prefix' equals 'path'.
+
+signature:
+fn (prefix:@fs_path, path:@fs_path) @bool
+@#
+fn (fs_path->prefix_of?)(prefix, path) null
+
+#@
+Method returns an array of the path components.
+Returns an empty array if the path pointed to the root directory.
+
+signature:
+fn (path:@fs_path) [array @sysstr+]
+@#
+fn (fs_path->split)(path) null
+
+
+#*
+@file - a type whose constants store data needed to work with files.
+
+A constant of this type can be transferred from one thread to another only if the sending thread will no longer use it.
+A constant of this type cannot be a global constant.
+A buffer is created in memory for working with the file.
+*#
+
+#@
+Opens the file specified by the path 'file_name'.
+How the file is opened depends on 'mode'.
+The 'mode' value is created by applying "bitwise or" (|) to several constants from the following list:
+     @std.fom__read  - file is open for reading
+     @std.fom__write - file is open for writing
+     @std.fom__new   - create the file if it does not exist, otherwise truncate it
+     @std.fom__begin - open the file with the position at the beginning
+     @std.fom__end   - open the file with the position at the end
+Only the following 'mode' values are valid:
+     @std.fom__read | @std.fom__begin
+     @std.fom__read | @std.fom__write | @std.fom__new
+     @std.fom__read | @std.fom__write | @std.fom__begin
+     @std.fom__read | @std.fom__write | @std.fom__end
+     @std.fom__write | @std.fom__new
+If the file cannot be opened, the function returns one of the following:
+     :not_exist - nothing exists at the specified path, or a component of the path does not exist
+     :not_file  - the path does not point to a file
+     :access    - insufficient permissions to open the file
+     :max_open  - the maximum number of open files for the application or operating system has been reached
+     :long      - a component name or the full path is too long
+     :fs_limits - file system limits were exceeded when creating the file
+     :space     - not enough space to create the file
+     :seek      - unable to open the file at the specified position (begin | end)
+     :open      - other reason
+
+signature:
+fn (file_name:@fs_path, mode:@int) (@file|@token)
+
+error:
+:mode - invalid 'mode' value.
+@#
+fn open_file(file_name, mode) null
+
+#@
+Method truncates the file at the current position.
+If truncation is successful, the method returns a constant of type @file, and only that constant should be used for further file operations.
+If truncation fails, the method returns the following:
+     :flush - sometimes flushing the file buffer is necessary before truncation; this value is returned when flushing fails
+          This result is not possible if the file was opened for reading only.
+     :cut - the truncation itself failed
+
+signature:
+fn (file:@file) (@file|@token)
+
+error:
+:duplicate - if the method is applied to a file that has a copy.
+@#
+fn (file->cut)(file) null
+
+#@
+Method moves the position to the end of the file.
+If the move is successful, the method returns a constant of type @file, and only that constant should be used for further file operations.
+If moving the position to the end fails, the method returns the following:
+     :flush - sometimes flushing the file buffer is necessary before moving; this value is returned when flushing fails
+          This result is not possible if the file was opened for reading only.
+     :seek - the move itself failed
+
+signature:
+fn (file:@file) (@file|@token)
+
+error:
+:duplicate - if the method is applied to a file that has a copy.
+@#
+fn (file->end!)(file) null
+
+#@
+Method synchronizes the file with its buffer.
+If synchronization is successful, the method returns a constant of type @file, and only that constant should be used for further file operations.
+If synchronization fails, the method returns null.
+
+signature:
+fn (file:@file) (null|@file)
+
+error:
+:duplicate - if the method is applied to a file that has a copy.
+@#
+fn (file->flush)(file) null
+
+#@
+Method reads at most len(buffer) bytes from the file.
+Returns a constant of type @box with three elements:
+     1 - possible values:
+          A constant of type @file; for further file work only this constant should be used.
+               Only this variant indicates successful reading.
+          :flush - sometimes flushing the file buffer is necessary before reading; this value is returned when flushing fails
+               This result is not possible if the file was opened for reading only.
+          :read - the read failed.
+     2 - number of bytes read
+          If reading was successful but readed_len /= len(bytes), it means the end of the file was reached.
+          If reading was unsuccessful, 'readed_len' contains the number of bytes read before the interruption.
+     3 - data read from the file
+          len(bytes) == len(buffer)
+          If the number of bytes read differs from len(bytes), the first 'readed_len' bytes come from the file, and the remaining bytes correspond to the bytes of 'buffer' at the same positions.
+          If after this method 'buffer' is no longer used in the program, the memory of 'buffer' is used for 'bytes' if possible.
+
+signature:
+fn (file:@file, buffer:@byte_array) [box (@file|@token), readed_len:@int, bytes:@byte_array]
+
+error:
+:duplicate - if the method is applied to a file that has a copy.
+@#
+fn (file->read)(file, buffer) null
+
+#@
+Method reads the file from the current position to the end and converts it to a string.
+'encoding' specifies the encoding of the file.
+Returns a constant of type @box with two elements:
+     1 - possible values:
+          A constant of type @file; for further file work only this constant should be used.
+               Only this variant indicates successful reading.
+          :flush - sometimes flushing the file buffer is necessary before reading; this value is returned when flushing fails
+               This result is not possible if the file was opened for reading only.
+          :encoding - the file does not use the encoding specified in 'encoding'
+          :read     - the read failed
+     2 - if reading was successful, a constant containing the read string; otherwise, null
+
+signature:
+fn (file:@file, encoding: :ctf8) [box (@file|@token), string:(null|@string)]
+fn (file:@file, encoding: :sys) [box (@file|@token), string:(null|@sysstr)]
+
+error:
+:duplicate - if the method is applied to a file that has a copy.
+:encoding  - if encoding /= :ctf8 && encoding /= :sys.
+@#
+fn (file->read_string)(file, encoding) null
+
+#@
+Method reads the file from the current position to the end.
+Returns a constant of type @box with two elements:
+     1 - possible values:
+          A constant of type @file; for further file work only this constant should be used.
+               Only this variant indicates successful reading.
+          :flush - sometimes flushing the file buffer is necessary before reading; this value is returned when flushing fails
+               This result is not possible if the file was opened for reading only.
+          :read - the read failed
+     2 - if reading was successful, a constant containing the read data; otherwise, null
+
+signature:
+fn (file:@file) [box (@file|@token), bytes:(null|@byte_array)]
+
+error:
+:duplicate - if the method is applied to a file that has a copy.
+@#
+fn (file->read_tail)(file) null
+
+#@
+Method moves the position to the specified location.
+If 'from_current' is true, the position is moved by 'offset' bytes from the current position; otherwise, the position is moved to 'offset' bytes from the beginning of the file.
+If the move is successful, the method returns a constant of type @file, and only that constant should be used for further file operations.
+If the move fails, the method returns:
+     :flush - sometimes flushing the file buffer is necessary before moving; this value is returned when flushing fails
+          This result is not possible if the file was opened for reading only.
+     :seek - the move itself failed
+
+signature:
+fn (file:@file, offset:@int, from_current:@bool) (@file|@token)
+
+error:
+:duplicate     - if the method is applied to a file that has a copy.
+:out_of_bounds - if offset < 0 && !from_current.
+@#
+fn (file->seek)(file, offset, from_current) null
+
+#@
+Method moves the position to the beginning of the file.
+If the move is successful, the method returns a constant of type @file, and only that constant should be used for further file operations.
+If the move fails, the method returns:
+     :flush - sometimes flushing the file buffer is necessary before moving; this value is returned when flushing fails
+          This result is not possible if the file was opened for reading only.
+     :seek - the move itself failed
+
+signature:
+fn (file:@file) (@file|@token)
+
+error:
+:duplicate - if the method is applied to a file that has a copy.
+@#
+fn (file->start!)(file) null
+
+#@
+Method determines the current position (number of bytes from the beginning).
+If the position is successfully obtained, the method returns a constant of type @box with two elements:
+     1 - constant of type @file; for further file work only this constant should be used
+     2 - the position
+If the position cannot be obtained, the method returns null.
+
+signature:
+fn (file:@file) (null|[box @file, position:@int])
+
+error:
+:duplicate - if the method is applied to a file that has a copy.
+@#
+fn (file->tell)(file) null
+
+#@
+Method writes 'bytes' at the current position of the file; if there is data after the current position, data from 'bytes' will overwrite it.
+If the write is successful, the method returns a constant of type @file, and only that constant should be used for further file operations.
+If the write fails, the method returns null.
+The method may write to the buffer rather than directly to the file. (Use the flush method to synchronize the buffer and the file.)
+
+signature:
+fn (file:@file, bytes:@byte_array) (null|@file)
+
+error:
+:duplicate - if the method is applied to a file that has a copy.
+@#
+fn (file->write)(file, bytes) null
+
+#@
+Method writes the string 'string' at the current position of the file; if there is data after the current position, data from 'string' will overwrite it.
+The string is written in the encoding specified by 'encoding'.
+If the write is successful, the method returns a constant of type @file, and only that constant should be used for further file operations.
+If the write fails, the method returns null.
+The method may write to the buffer rather than directly to the file. (Use the flush method to synchronize the buffer and the file.)
+
+signature:
+fn (file:@file, string:@string, encoding: :ctf8) (null|@file)
+fn (file:@file, string:@sysstr, encoding: :sys) (null|@file)
+
+error:
+:duplicate     - if the method is applied to a file that has a copy.
+:encoding      - if encoding /= :ctf8 && encoding /= :sys.
+:text_recoding - failed to convert the string from Corsar to the system encoding.
+@#
+fn (file->write_string)(file, string, encoding) null
+
+#@
+Changes the current directory to the specified path.
+If the change is successful, the function returns null; otherwise:
+     :access     - insufficient permissions
+     :long       - a component name or the path is too long
+     :not_exist  - the specified directory does not exist
+     :not_dir    - the path does not point to a directory
+     :change_dir - other reason
+
+signature:
+fn (path:@fs_path) (null|@token)
+@#
+fn change_dir(path) null
+
+#@
+Returns the current directory path.
+If the path cannot be obtained, the function returns null.
+
+signature:
+fn () (null|@fs_path)
+@#
+fn current_dir() null
+
+#@
+Deletes an empty directory.
+If the deletion is successful, the function returns null; otherwise:
+     :access     - insufficient permissions
+     :long       - a component name or the path is too long
+     :not_exist  - the specified directory does not exist
+     :not_dir    - the path does not point to a directory
+     :not_empty  - the directory is not empty
+     :delete     - other reason
+
+signature:
+fn (path:@fs_path) (null|@token)
+@#
+fn delete_empty_dir(path) null
+
+#@
+Deletes a file.
+If the deletion is successful, the function returns null; otherwise:
+     :access     - insufficient permissions
+     :long       - a component name or the path is too long
+     :not_exist  - the specified file does not exist
+     :not_file   - the path does not point to a file
+     :delete     - other reason
+
+signature:
+fn (path:@fs_path) (null|@token)
+@#
+fn delete_file(path) null
+
+#@
+Returns an array of strings with information about the contents of the directory at 'path'.
+The strings have the format "NameType".
+'Name' is the name of the directory entry.
+'Type' can be one of:
+     D - directory
+     F - file
+     U - unknown type
+The function ignores the entries '.' and '..'.
+If the directory contents cannot be retrieved, the function returns one of the following:
+     :access     - insufficient permissions to access the directory
+     :long       - a component name or the path is too long
+     :not_exist  - the specified directory does not exist
+     :not_dir    - the path does not point to a directory
+     :list       - other reason
+
+signature:
+fn (path:@fs_path) ([array @sysstr*]|@token)
+@#
+fn list_dir(path) null
+
+#@
+Creates a directory at 'path'.
+If the creation is successful, the function returns null; otherwise:
+     :access     - insufficient permissions
+     :long       - a component name or the path is too long
+     :exists     - the specified path is already occupied
+     :not_exist  - the parent directory does not exist
+     :space      - insufficient space to create the directory
+     :make       - other reason
+
+signature:
+fn (path:@fs_path) (null|@token)
+@#
+fn make_dir(path) null
+
+#@
+Reads a system string from the command-line interface.
+Reading continues until a newline character is read.
+The newline character is not included in the result.
+If reading is interrupted but some characters have already been received, they are returned.
+If reading fails, the function returns null.
+
+signature:
+fn () (null|@sysstr)
+@#
+fn read_cli_line() null
+
+#@
+Returns true if the program is running with administrator privileges, otherwise false.
+
+signature:
+fn () @bool
+@#
+fn root?() null
+
+#*
+@process - a type whose constants store data needed to work with processes launched from the program.
+
+A constant of this type can be transferred from one thread to another only if the sending thread will no longer use it.
+A constant of this type cannot be a global constant.
+If a constant of this type is freed without having obtained the process exit code via the wait or try_wait methods,
+     the thread freeing the constant suspends until the process ends.
+*#
+
+#@
+Launches an application whose executable file is specified by 'app_file', passing it arguments from 'args', with environment variables from 'env_vars'.
+If null is passed for 'env_vars', the new application inherits the environment variables of the current application.
+The 'flags' value is created by applying "bitwise or" (|) to several constants from the following list:
+     @std.raf__stdout - return the stdout file of the launched program; it will be accessible only for reading in the current program.
+     @std.raf__stdin  - return the stdin file of the launched program; it will be accessible only for writing in the current program.
+     @std.raf__stderr - return the stderr file of the launched program; it will be accessible only for reading in the current program.
+If the application cannot be launched, the function returns null.
+If the application is launched successfully, the function returns a constant of type @box with four elements:
+     1 - constant of type @process, which can be used to monitor the state of the launched process
+     2 - the stdout file of the launched program if the flag @std.raf__stdout is set, otherwise null
+     3 - the stdin file of the launched program if the flag @std.raf__stdin is set, otherwise null
+     4 - the stderr file of the launched program if the flag @std.raf__stderr is set, otherwise null
+
+signature:
+fn (app_file:@fs_path, args:[array @sysstr*], env_vars:(null|[table @sysstr = @sysstr], flags:@int)) [box process:@process, stdout:@file, stdin:@file, stderr:@file]
+
+error:
+:text_recoding - failed to convert the string from Corsar to the system encoding.
+:flags         - invalid 'flags' value.
+@#
+fn run_app(app_file, args, env_vars, flags) null
+
+#@
+Method waits for the process to finish and returns its exit code.
+
+signature:
+fn (process:@process) @int
+@#
+fn (process->wait)(process) null
+
+#@
+If the process has finished, returns its exit code; otherwise, returns null.
+
+signature:
+fn (process:@process) (null|@int)
+@#
+fn (process->try_wait)(process) null
+
+#@
+Returns a constant of type @file for working with the stderr file.
+
+signature:
+fn () @file
+@#
+fn stderr() null
+
+#@
+Returns a constant of type @file for working with the stdin file.
+
+signature:
+fn () @file
+@#
+fn stdin() null
+
+#@
+Returns a constant of type @file for working with the stdout file.
+
+signature:
+fn () @file
+@#
+fn stdout() null
