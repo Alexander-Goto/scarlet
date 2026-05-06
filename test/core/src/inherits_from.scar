@@ -91,14 +91,14 @@ fn test__inherits_from() {
           [obj :3 = string_1, :4 = string_2, :_ = [obj :2 = string_1, :4 = string_4]]
      ]):_ === [obj :7 = string_7, :2 = string_2, :4 = string_4])
 
-     let child_properties_len = rnd() & 63;
-     let child_methods_len    = rnd() & 63;
-     let child_properties     = loop([obj].init(child_properties_len), fn (child_properties)
-          if child_properties.len() == child_properties_len
-               [breaker child_properties]
+     let child_fields_len  = rnd() & 63;
+     let child_methods_len = rnd() & 63;
+     let child_fields      = loop([obj].init(child_fields_len), fn (child_fields)
+          if child_fields.len() == child_fields_len
+               [breaker child_fields]
           else {
                let name = str_to_tkn(if (rnd() & 3) == 1; "0123456789abcde" ++ (rnd() & 15).to_string() else (rnd() >> 1).to_string())
-               new (child_properties)[name] <= rnd_string()
+               new (child_fields)[name] <= rnd_string()
           }
      )
 
@@ -111,19 +111,19 @@ fn test__inherits_from() {
           }
      )
 
-     let borrowed_child_properties = if rnd_bool(); child_properties else null
-     let borrowed_child_methods    = if rnd_bool(); child_methods else null
+     let borrowed_child_fields  = if rnd_bool(); child_fields else null
+     let borrowed_child_methods = if rnd_bool(); child_methods else null
 
-     let child = new (child_properties):_ <= child_methods
+     let child = new (child_fields):_ <= child_methods
 
-     let parent_properties_len = rnd() & 63;
+     let parent_fields_len = rnd() & 63;
      let parent_methods_len    = rnd() & 63;
-     let parent_properties     = loop([obj].init(parent_properties_len), fn (parent_properties)
-          if parent_properties.len() == parent_properties_len
-               [breaker parent_properties]
+     let parent_fields     = loop([obj].init(parent_fields_len), fn (parent_fields)
+          if parent_fields.len() == parent_fields_len
+               [breaker parent_fields]
           else {
                let name = str_to_tkn(if (rnd() & 3) == 1; "0123456789abcde" ++ (rnd() & 15).to_string() else (rnd() >> 1).to_string())
-               new (parent_properties)[name] <= rnd_string()
+               new (parent_fields)[name] <= rnd_string()
           }
      )
 
@@ -136,25 +136,25 @@ fn test__inherits_from() {
           }
      )
 
-     let borrowed_parent_properties = if rnd_bool(); parent_properties else null
+     let borrowed_parent_fields = if rnd_bool(); parent_fields else null
      let borrowed_parent_methods    = if rnd_bool(); parent_methods else null
 
-     let parent = new (parent_properties):_ <= parent_methods
+     let parent = new (parent_fields):_ <= parent_methods
 
-     let expected_properties = parent_properties.foldl_kv(child_properties, fn (expected_properties, name, property)
-          new (expected_properties)[name] => fn (current_property) if current_property.null?(); property else current_property
+     let expected_fields = parent_fields.foldl_kv(child_fields, fn (expected_fields, name, field)
+          new (expected_fields)[name] => fn (current_field) if current_field.null?(); field else current_field
      )
      let expected_methods = parent_methods.foldl_kv(child_methods, fn (expected_methods, name, method)
           new (expected_methods)[name] => fn (current_method) if current_method.null?(); method else current_method
      )
-     let expected_obj = new (expected_properties):_ <= expected_methods
+     let expected_obj = new (expected_fields):_ <= expected_methods
      let have_obj     = child.inherits_from(parent)
      test(expected_obj === have_obj)
      test(expected_obj:_ === have_obj:_)
 
-     borrowed_child_properties.ignore()
+     borrowed_child_fields.ignore()
      borrowed_child_methods.ignore()
-     borrowed_parent_properties.ignore()
+     borrowed_parent_fields.ignore()
      borrowed_parent_methods.ignore()
 
      let error_1 = expected_error(:1, heap_string(), heap_string())

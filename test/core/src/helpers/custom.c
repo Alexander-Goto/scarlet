@@ -19,7 +19,7 @@ t_any custom__call_mtd(t_thrd_data* const thrd_data, const char* const owner, t_
 
      t_any const mtds = mtds_and_data[0];
      ref_cnt__inc(thrd_data, mtds, owner);
-     t_any const mtd = get_obj_property__own(thrd_data, mtds, mtd_tkn);
+     t_any const mtd = get_obj_field__own(thrd_data, mtds, mtd_tkn);
      return common_fn__call__own(thrd_data, mtd, args, args_len, owner);
 }
 
