@@ -20,7 +20,7 @@ Supported platforms:
 
 `git clone https://github.com/Alexander-Goto/scarlet`
 
-`cd scarlet/release/0.1`
+`cd scarlet/dev-build`
 
 `sh build.sh`
 
