@@ -1,59 +1,28 @@
-let t_operand = [obj
-     :scar_type = "t_operand"
+let t_field = [obj
+     :scar_type = "t_field"
 
-     :code           = @main.t_token
-     :ir             = null # (string|null)
-     :comptime_val   = null # (@t_comptime_val|null)
-     :possible_types = null # ([set @string]|null)
-     :is_gconst      = false
+     :object   = :i_expression
+     :field = @main.t_token
 ]
 
-fn has_ir!(operand, final_data, dependencies)
-     if not operand:ir.null?()
-          [box operand, final_data, dependencies]
-     else {
-          let [box ir, final_data, dependencies] = comptime_val_to_ir(operand:comptime_val, true, final_data, dependencies)
-          [box new (operand):ir <= ir, final_data, dependencies]
-     }
+fn field_independent?(field, independent_consts)
+     field:object.independent?(independent_consts)
 
-fn has_type?(operand, type)
-     if operand:possible_types.null?()
-          false
-     else if type.type() == "core.string"
-          operand:possible_types.len() == 1 && type.in?(operand:possible_types)
-     else operand:possible_types.all(true, _.in?(type))
+fn analyze_field(field, last_use_info, lambdas_data, contexts, name_ids, def_ids)
+     field:object.analyze(last_use_info, lambdas_data, contexts, name_ids, def_ids)
 
-fn maybe_has_type?(operand, type)
-     if operand:possible_types.null?()
-          true
-     else if type.type() == "core.string"
-          type.in?(operand:possible_types)
-     else operand:possible_types.any(true, _.in?(type))
+fn field_to_operand(field, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
+     let [box object_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
+          field:object.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, true, true)
 
-fn maybe_has_type!(operand, type)
-     if not operand.maybe_has_type?(type)
-          error__invalid_type(operand:code, type, operand:possible_types)
-     else null
+     let raw_field_tkn     = str_to_tkn(field:field:text.drop(1))
+     let field_tkn_operand = comptime_token(raw_field_tkn, field:field)
 
-fn inc_ref_cnt(operand, owner_name_ir_const, ir)
-     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:is_gconst || operand.has_type?(@main.without_managed_mem_types)) {
-          if operand.has_type?(@main.not_copyable_types)
-               error__reuse(operand:code, operand:possible_types)
-          else null
+     let code = new (object_operand:code):text => _ ++ field:field:text
 
-          ir__raw_ref_cnt__inc(operand:ir, owner_name_ir_const, ir)
-     } else ir
-
-fn dec_ref_cnt(operand, ir)
-     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:is_gconst || operand.has_type?(@main.without_managed_mem_types)) {
-          ir__raw_ref_cnt__dec(operand:ir, ir)
-     } else ir
-
-fn operand_independent?(operand) not operand:comptime_val.null?() || operand:is_gconst
-
-fn operand_to_operand(operand, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
-     if is_last {
-          let [box operand, final_data, dependencies] = operand.has_ir!(final_data, dependencies)
-
-          [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
-     } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
+     if object_operand.maybe_has_type?([set "obj", "null"])
+          ir__get_field_call(object_operand, field_tkn_operand, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     else if object_operand.has_type?("holder")
+          ir__partial_application("get_obj_field__partial_version", [array object_operand, field_tkn_operand], code, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc)
+     else error__invalid_type(object_operand:code, [set "obj", "null"], object_operand:possible_types)
+}
