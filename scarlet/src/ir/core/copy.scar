@@ -18,7 +18,7 @@ fn ir__core_fn_copy(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, e
      else null
 
      if dst:comptime_val.null?() || idx:comptime_val.null?() || src:comptime_val.null?() || dst:comptime_val:type == "obj" {
-          if dst:comptime_val:type === "obj" && dst:comptime_val:value[:_][:core_copy].null?()
+          if dst:comptime_val:type === "obj" && dst:comptime_val:value[:_]:value[:core_copy].null?()
                error__invalid_type(dst:code, ".core_copy", "obj")
           else null
 

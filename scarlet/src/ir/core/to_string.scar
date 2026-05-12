@@ -18,7 +18,7 @@ fn ir__core_fn_to_string(exp, last_use_ids, contexts, lambdas_data, unused_def_i
                [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
           } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
      } else if arg:comptime_val.null?() || not arg:comptime_val:type.in?([set "short_string", "string", "null", "token", "bool", "byte", "char", "int", "short_byte_array", "byte_array", "time", "float"]) ||
-               arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_][:core_to_string].null?()
+               arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_]:value[:core_to_string].null?()
           ir__fn_call(
                "McoreFNto_string", [array arg], code
 

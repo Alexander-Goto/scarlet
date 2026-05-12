@@ -21,7 +21,7 @@ fn ir__core_fn___add_mul_sub__(exp, fn_ir_name, last_use_ids, contexts, lambdas_
                     case "McoreFN__sub__": [box :core___sub__, ".core___sub__"]
                     default:               unreachable()
 
-                    if left:comptime_val:value[:_][token].null?()
+                    if left:comptime_val:value[:_]:value[token].null?()
                          error__invalid_type(left:code, mtd_type, "obj")
                     else null
                } else null

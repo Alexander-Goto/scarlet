@@ -16,7 +16,7 @@ fn ir__core_fn_look_from_end(exp, fn_ir_name, last_use_ids, contexts, lambdas_da
      array.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"])
 
      if item:comptime_val.null?() || array:comptime_val.null?() || not item:comptime_val:type.in?(@main.comptime_eq_types) || array:comptime_val:type == "obj" {
-          if array:comptime_val:type === "obj" && array:comptime_val:value[:_][if fn_ir_name[12] == 'f'; :core_look_from_end_in else :core_lofei].null?()
+          if array:comptime_val:type === "obj" && array:comptime_val:value[:_]:value[if fn_ir_name[12] == 'f'; :core_look_from_end_in else :core_lofei].null?()
                error__invalid_type(array:code, if fn_ir_name[12] == 'f'; ".core_look_from_end_in" else ".core_lofei", "obj")
           else null
 

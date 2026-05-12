@@ -13,7 +13,7 @@ fn ir__core_fn___less_or_eq__(exp, last_use_ids, contexts, lambdas_data, unused_
      else null
 
      if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.always_ord_types__float){
-          if left:comptime_val:type === "obj" && left:comptime_val:value[:_][:core_cmp].null?()
+          if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[:core_cmp].null?()
                error__invalid_type(left:code, ".core_cmp", "obj")
           else null
 

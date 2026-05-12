@@ -6,7 +6,7 @@ fn ir__core_fn_take_one_kv(exp, last_use_ids, contexts, lambdas_data, unused_def
 
      arg.maybe_has_type!([set "table", "obj", "custom"])
 
-     if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_][:core_take_one_kv].null?()
+     if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_]:value[:core_take_one_kv].null?()
           ir__fn_call(
                "McoreFNtake_one_kv", [array arg], code
                if arg.has_type?("table")

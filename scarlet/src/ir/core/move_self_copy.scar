@@ -51,7 +51,7 @@ fn ir__core_fn_move_self_copy(exp, fn_ir_name, last_use_ids, contexts, lambdas_d
      } else null
 
      if not (array_is_comptime && from_is_comptime && to_is_comptime && len_is_comptime) || array:comptime_val:type == "obj" {
-          if array:comptime_val:type === "obj" && array_value[:_][if fn_ir_name == "McoreFNmove"; :core_move else :core_self_copy].null?()
+          if array:comptime_val:type === "obj" && array_value[:_]:value[if fn_ir_name == "McoreFNmove"; :core_move else :core_self_copy].null?()
                error__invalid_type(array:code, if fn_ir_name == "McoreFNmove"; ".core_move" else ".core_self_copy", "obj")
           else null
 

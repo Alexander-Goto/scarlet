@@ -12,7 +12,7 @@ fn ir__core_fn_exp2_sqr(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, u
           let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
 
           if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@main.num_types) {
-               if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_][if fn_ir_name == "McoreFNexp2"; :core_exp2 else :core_sqr].null?()
+               if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_]:value[if fn_ir_name == "McoreFNexp2"; :core_exp2 else :core_sqr].null?()
                     error__invalid_type(arg:code, if fn_ir_name == "McoreFNexp2"; ".core_exp2" else ".core_sqr", "obj")
                else null
 

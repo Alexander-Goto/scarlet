@@ -7,7 +7,7 @@ fn ir__core_fn_to_lower_to_upper(exp, fn_ir_name, last_use_ids, contexts, lambda
      if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@main.string_types__char) {
           if arg:comptime_val:type =/= "obj"
                arg.maybe_has_type!(@main.string_types__char_mtd)
-          else if arg:comptime_val:value[:_][if fn_ir_name == "McoreFNto_lower"; :core_to_lower else :core_to_upper].null?()
+          else if arg:comptime_val:value[:_]:value[if fn_ir_name == "McoreFNto_lower"; :core_to_lower else :core_to_upper].null?()
                error__invalid_type(arg:code, if fn_ir_name == "McoreFNto_lower"; ".core_to_lower" else ".core_to_upper", "obj")
           else null
 

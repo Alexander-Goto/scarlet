@@ -7,7 +7,7 @@ fn ir__core_fn_trim(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, e
      if arg:comptime_val:type =/= "string" {
           arg.maybe_has_type!(@main.string_types__mtd)
 
-          if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_][:core_trim].null?()
+          if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_]:value[:core_trim].null?()
                error__invalid_type(arg:code, ".core_trim", "obj")
           else null
 

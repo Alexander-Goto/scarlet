@@ -13,7 +13,7 @@ fn ir__core_fn_max_min(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, un
      else null
 
      if arg_0:comptime_val.null?() || arg_1:comptime_val.null?() || not arg_0:comptime_val:type.in?(@main.always_ord_types) {
-          if arg_0:comptime_val:type === "obj" && arg_0:comptime_val:value[:_][if fn_ir_name == "McoreFNmax"; :core_max else :core_min].null?()
+          if arg_0:comptime_val:type === "obj" && arg_0:comptime_val:value[:_]:value[if fn_ir_name == "McoreFNmax"; :core_max else :core_min].null?()
                error__invalid_type(arg_0:code, if fn_ir_name == "McoreFNmax"; ".core_max" else ".core_min", "obj")
           else null
 

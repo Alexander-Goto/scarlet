@@ -14,7 +14,7 @@ fn ir__core_fn_repeat(exp, last_use_ids, contexts, lambdas_data, unused_def_ids,
           error__out_of_bounds(count:code)
      else null
 
-     if array:comptime_val:type === "obj" && array:comptime_val:value[:_][:core_repeat].null?()
+     if array:comptime_val:type === "obj" && array:comptime_val:value[:_]:value[:core_repeat].null?()
           error__invalid_type(array:code, ".core_repeat", "obj")
      else null
 

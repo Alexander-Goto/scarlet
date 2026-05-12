@@ -18,7 +18,7 @@ fn ir__core_fn___div_mod__(exp, fn_ir_name, last_use_ids, contexts, lambdas_data
           else null
 
           if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.num_types) {
-               if left:comptime_val:type === "obj" && left:comptime_val:value[:_][if fn_ir_name == "McoreFN__div__"; :core___div__ else :core___mod__].null?()
+               if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[if fn_ir_name == "McoreFN__div__"; :core___div__ else :core___mod__].null?()
                     error__invalid_type(left:code, if fn_ir_name == "McoreFN__div__"; ".core___div__" else ".core___mod__", "obj")
                else null
 

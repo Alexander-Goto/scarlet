@@ -28,7 +28,7 @@ fn ir__core_fn_char_is(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, un
                case "upperB":         [box :core_upper?, ".core_upper?"]
                default:               unreachable()
 
-               if arg:comptime_val:value[:_][token].null?()
+               if arg:comptime_val:value[:_]:value[token].null?()
                     error__invalid_type(arg:code, mtd_type, "obj")
                else null
           }

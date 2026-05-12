@@ -22,7 +22,7 @@ fn ir__core_fn_is_part_of_is_prefix_of_is_suffix_of(exp, fn_ir_name, last_use_id
                case "suffix_ofB": [box :core_suffix_of?, ".core_suffix_of?"]
                default:                  unreachable()
 
-               if array:comptime_val:value[:_][token].null?()
+               if array:comptime_val:value[:_]:value[token].null?()
                     error__invalid_type(array:code, mtd_type, "obj")
                else null
           } else null

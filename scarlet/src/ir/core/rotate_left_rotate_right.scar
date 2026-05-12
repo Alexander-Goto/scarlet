@@ -25,7 +25,7 @@ fn ir__core_fn_rotate_left_rotate_right(exp, fn_ir_name, last_use_ids, contexts,
           } else null
 
           if bits:comptime_val.null?() || shifts:comptime_val.null?() || not bits:comptime_val:type.in?(@main.bit_types) {
-               if bits:comptime_val:type === "obj" && bits:comptime_val:value[:_][if fn_ir_name[14] == 'l'; :core_rotate_left else :core_rotate_right].null?()
+               if bits:comptime_val:type === "obj" && bits:comptime_val:value[:_]:value[if fn_ir_name[14] == 'l'; :core_rotate_left else :core_rotate_right].null?()
                     error__invalid_type(bits:code, if fn_ir_name[14] == 'l'; ".core_rotate_left" else ".core_rotate_right", "obj")
                else null
 

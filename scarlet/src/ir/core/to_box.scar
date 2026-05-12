@@ -14,7 +14,7 @@ fn ir__core_fn_to_box(exp, last_use_ids, contexts, lambdas_data, unused_def_ids,
 
                [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
           } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
-     } else if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_][:core_to_box].null?()
+     } else if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_]:value[:core_to_box].null?()
           ir__fn_call("McoreFNto_box", [array arg], code, [set "box", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
      else {
           let arg_type = arg:comptime_val:type

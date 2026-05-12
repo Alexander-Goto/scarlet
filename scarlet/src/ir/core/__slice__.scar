@@ -39,7 +39,7 @@ fn ir__core_fn___slice__(exp, last_use_ids, contexts, lambdas_data, unused_def_i
      } else null
 
      if not (operand_is_comptime && from_is_comptime && to_is_comptime) || operand:comptime_val:type == "obj" {
-          if operand:comptime_val:type === "obj" && operand:comptime_val:value[:_][:core___slice__].null?()
+          if operand:comptime_val:type === "obj" && operand:comptime_val:value[:_]:value[:core___slice__].null?()
                error__invalid_type(operand:code, ".core___slice__", "obj")
           else null
 

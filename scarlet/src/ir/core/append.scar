@@ -21,7 +21,7 @@ fn ir__core_fn_append(exp, last_use_ids, contexts, lambdas_data, unused_def_ids,
      if container:comptime_val.null?() || new_item:comptime_val.null?() ||
           container:comptime_val:type == "obj" || not (container:comptime_val:type == "set" && new_item:comptime_val:type.in?(@main.always_hash_map_key_types))
      {
-          if container:comptime_val:type === "obj" && container:comptime_val:value[:_][:core_append].null?()
+          if container:comptime_val:type === "obj" && container:comptime_val:value[:_]:value[:core_append].null?()
                error__invalid_type(container:code, ".core_append", "obj")
           else null
 

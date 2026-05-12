@@ -8,7 +8,7 @@ fn ir__core_fn_first_last(exp, fn_ir_name, last_use_ids, contexts, lambdas_data,
      arg.maybe_has_type!(valid_types)
 
      if arg:comptime_val.null?() || arg:comptime_val:type == "obj" {
-          if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_][if fn_ir_name == "McoreFNfirst"; :core_first else :core_last].null?()
+          if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_]:value[if fn_ir_name == "McoreFNfirst"; :core_first else :core_last].null?()
                error__invalid_type(arg:code, if fn_ir_name == "McoreFNfirst"; ".core_first" else ".core_last", "obj")
           else null
 

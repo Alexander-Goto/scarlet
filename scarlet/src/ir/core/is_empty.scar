@@ -6,7 +6,7 @@ fn ir__core_fn_is_empty(exp, last_use_ids, contexts, lambdas_data, unused_def_id
 
      arg.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "box", "table", "set", "array", "obj", "custom"])
 
-     if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_][:core_empty?].null?()
+     if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_]:value[:core_empty?].null?()
           ir__fn_call(
                "McoreFNemptyB", [array arg], code
                if arg.has_type?([set "short_string", "string", "short_byte_array", "byte_array", "box", "table", "set", "array"]); [set "bool"] else [set "bool", "error"]

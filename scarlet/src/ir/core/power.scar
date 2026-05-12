@@ -14,7 +14,7 @@ fn ir__core_fn_power(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, 
           let code = new (exp:name):text => _ ++ ("(" ++ num:code:text ++ ", " ++ power:code:text ++ ")")
 
           if num:comptime_val.null?() || power:comptime_val.null?() || not num:comptime_val:type.in?(@main.num_types) {
-               if num:comptime_val:type === "obj" && num:comptime_val:value[:_][:core_power].null?()
+               if num:comptime_val:type === "obj" && num:comptime_val:value[:_]:value[:core_power].null?()
                     error__invalid_type(num:code, ".core_power", "obj")
                else null
 

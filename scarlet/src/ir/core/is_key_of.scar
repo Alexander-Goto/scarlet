@@ -10,7 +10,7 @@ fn ir__core_fn_is_key_of(exp, last_use_ids, contexts, lambdas_data, unused_def_i
      container.maybe_has_type!([set "table", "set", "obj", "custom"])
 
      if item:comptime_val.null?() || container:comptime_val.null?() || not item:comptime_val:type.in?(@main.always_hash_map_key_types) ||
-               container:comptime_val:type == "obj" && not container:comptime_val:value[:_][:core___get_item__].null?()
+               container:comptime_val:type == "obj" && not container:comptime_val:value[:_]:value[:core___get_item__].null?()
           ir__fn_call(
                "McoreFNkey_ofB", [array item, container], code
                if item.has_type?(@main.always_hash_map_key_types) && container.has_type?([set "table", "set"]); [set "bool"]  else [set "bool", "error"]

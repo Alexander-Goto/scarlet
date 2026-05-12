@@ -7,7 +7,7 @@ fn ir__core_fn_is_even_is_odd(exp, fn_ir_name, last_use_ids, contexts, lambdas_d
      if arg:comptime_val.null?() || not arg:comptime_val:type.in?([array "int", "byte"]) {
           if arg:comptime_val:type =/= "obj"
                arg.maybe_has_type!([set "int", "byte", "obj", "custom"])
-          else if arg:comptime_val:value[:_][:core_even?].null?()
+          else if arg:comptime_val:value[:_]:value[:core_even?].null?()
                error__invalid_type(arg:code, ".core_even?", "obj")
           else null
 

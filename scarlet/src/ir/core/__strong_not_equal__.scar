@@ -7,7 +7,7 @@ fn ir__core_fn___strong_not_equal__(exp, last_use_ids, contexts, lambdas_data, u
      let code = new (left:code):text => _ ++ (" /= " ++ right:code:text)
 
      if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.comptime_eq_types) {
-          if left:comptime_val:type === "obj" && left:comptime_val:value[:_][:core___strong_equal__].null?()
+          if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[:core___strong_equal__].null?()
                error__invalid_type(left:code, ".core___strong_equal__", "obj")
           else null
 

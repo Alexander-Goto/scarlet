@@ -24,7 +24,7 @@ fn ir__core_fn___get_item__(exp, last_use_ids, contexts, lambdas_data, unused_de
 
      if operand:comptime_val.null?() || key:comptime_val.null?() ||
           not key:comptime_val:type.in?(@main.always_hash_map_key_types) ||
-          operand:comptime_val:type == "obj" && not operand:comptime_val:value[:_][:core___get_item__].null?()
+          operand:comptime_val:type == "obj" && not operand:comptime_val:value[:_]:value[:core___get_item__].null?()
      {
           let result_possible_types = if operand.has_type?(@main.string_types)
                [set "char", "error"]

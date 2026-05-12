@@ -10,7 +10,7 @@ fn ir__core_fn_join(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, e
      parts.maybe_has_type!([set "array", "table", "set", "obj"])
      separator.maybe_has_type!(valid_types)
 
-     if separator:comptime_val:type === "obj" && separator:comptime_val:value[:_][:core_join].null?()
+     if separator:comptime_val:type === "obj" && separator:comptime_val:value[:_]:value[:core_join].null?()
           error__invalid_type(separator:code, ".core_join", "obj")
      else null
 

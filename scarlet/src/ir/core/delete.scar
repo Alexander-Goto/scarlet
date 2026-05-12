@@ -39,7 +39,7 @@ fn ir__core_fn_delete(exp, last_use_ids, contexts, lambdas_data, unused_def_ids,
      } else null
 
      if not (operand_is_comptime && from_is_comptime && to_is_comptime) || operand:comptime_val:type == "obj" {
-          if operand:comptime_val:type === "obj" && operand:comptime_val:value[:_][:core_delete].null?()
+          if operand:comptime_val:type === "obj" && operand:comptime_val:value[:_]:value[:core_delete].null?()
                error__invalid_type(operand:code, ".core_delete", "obj")
           else null
 

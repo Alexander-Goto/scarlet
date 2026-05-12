@@ -6,7 +6,7 @@ fn ir__core_fn_cap(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, ex
 
      if arg:comptime_val:type =/= "obj"
           arg.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"])
-     else if arg:comptime_val:value[:_][:core_cap].null?()
+     else if arg:comptime_val:value[:_]:value[:core_cap].null?()
           error__invalid_type(arg:code, ".core_cap", "obj")
      else null
 

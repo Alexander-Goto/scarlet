@@ -25,7 +25,7 @@ fn ir__core_fn___lshr_shl__(exp, fn_ir_name, last_use_ids, contexts, lambdas_dat
           } else null
 
           if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.bit_types) {
-               if left:comptime_val:type === "obj" && left:comptime_val:value[:_][if fn_ir_name == "McoreFN__lshr__"; :core___lshr__ else :core___shl__].null?()
+               if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[if fn_ir_name == "McoreFN__lshr__"; :core___lshr__ else :core___shl__].null?()
                     error__invalid_type(left:code, if fn_ir_name == "McoreFN__lshr__"; ".core___lshr__" else ".core___shl__", "obj")
                else null
 

@@ -14,7 +14,7 @@ fn ir__core_fn_float_is(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, u
                case "McoreFNneg_infB": [box :core_neg_inf?, ".core_neg_inf?"]
                default:                unreachable()
 
-               if arg:comptime_val:value[:_][token].null?()
+               if arg:comptime_val:value[:_]:value[token].null?()
                     error__invalid_type(arg:code, mtd_type, "obj")
                else null
           }

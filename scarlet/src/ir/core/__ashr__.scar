@@ -24,7 +24,7 @@ fn ir__core_fn___ashr__(exp, last_use_ids, contexts, lambdas_data, unused_def_id
           else null
 
           if right_comptime_val.null?() || left:comptime_val:type =/= "int" {
-               if left:comptime_val:type === "obj" && left:comptime_val:value[:_][:core___ashr__].null?()
+               if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[:core___ashr__].null?()
                     error__invalid_type(left:code, ".core___ashr__", "obj")
                else null
 

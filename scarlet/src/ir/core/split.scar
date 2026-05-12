@@ -17,7 +17,7 @@ fn ir__core_fn_split(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, 
      )
 
      if array:comptime_val.null?() || separator:comptime_val.null?() || not separator:comptime_val:type.in?(@main.comptime_eq_types) || array:comptime_val:type == "obj" {
-          if array:comptime_val:type === "obj" && array:comptime_val:value[:_][:core_split].null?()
+          if array:comptime_val:type === "obj" && array:comptime_val:value[:_]:value[:core_split].null?()
                error__invalid_type(array:code, ".core_split", "obj")
           else null
 

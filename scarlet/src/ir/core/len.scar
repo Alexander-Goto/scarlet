@@ -5,7 +5,7 @@ fn ir__core_fn_len(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, ex
      let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
 
      arg.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "box", "table", "set", "array", "obj", "custom"])
-     if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_][:core_len].null?()
+     if arg:comptime_val.null?() || arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_]:value[:core_len].null?()
           ir__fn_call(
                "McoreFNlen", [array arg], code
                if arg.has_type?([set "short_string", "string", "short_byte_array", "byte_array", "box", "table", "set", "array"]); [set "int"] else [set "int", "error"]

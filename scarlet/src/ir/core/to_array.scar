@@ -15,7 +15,7 @@ fn ir__core_fn_to_array(exp, last_use_ids, contexts, lambdas_data, unused_def_id
                [box operand, exp_data, ir__raw_return(ir, operand:ir), final_data, dependencies, src_gconsts]
           } else [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
      } else if arg:comptime_val.null?() || arg:comptime_val:type.in?([array "box", "custom"]) ||
-               arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_][:core_to_array].null?()
+               arg:comptime_val:type == "obj" && not arg:comptime_val:value[:_]:value[:core_to_array].null?()
           ir__fn_call(
                "McoreFNto_array", [array arg], code
 

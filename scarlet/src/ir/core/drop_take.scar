@@ -15,7 +15,7 @@ fn ir__core_fn_drop_take(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, 
      else null
 
      if array:comptime_val.null?() || n:comptime_val.null?() || array:comptime_val:type == "obj" {
-          if array:comptime_val:type === "obj" && array:comptime_val:value[:_][if fn_ir_name == "McoreFNdrop"; :core_drop else :core_take].null?()
+          if array:comptime_val:type === "obj" && array:comptime_val:value[:_]:value[if fn_ir_name == "McoreFNdrop"; :core_drop else :core_take].null?()
                error__invalid_type(array:code, if fn_ir_name == "McoreFNdrop"; ".core_drop" else ".core_take", "obj")
           else null
 

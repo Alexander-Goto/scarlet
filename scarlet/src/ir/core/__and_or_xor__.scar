@@ -21,7 +21,7 @@ fn ir__core_fn___and_or_xor__(exp, fn_ir_name, last_use_ids, contexts, lambdas_d
                     case "McoreFN__xor__": [box :core___xor__, ".core___xor__"]
                     default:               unreachable()
 
-                    if left:comptime_val:value[:_][token].null?()
+                    if left:comptime_val:value[:_]:value[token].null?()
                          error__invalid_type(left:code, mtd_type, "obj")
                     else null
                } else null

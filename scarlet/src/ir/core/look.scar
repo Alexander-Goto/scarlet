@@ -18,7 +18,7 @@ fn ir__core_fn_look(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unuse
      container.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom"])
 
      if item:comptime_val.null?() || container:comptime_val.null?() || not item:comptime_val:type.in?(@main.comptime_eq_types) ||
-          container:comptime_val:type == "obj" && not container:comptime_val:value[:_][if fn_ir_name[12] == 'i'; :core_look_in else :core_look_other_in].null?()
+          container:comptime_val:type == "obj" && not container:comptime_val:value[:_]:value[if fn_ir_name[12] == 'i'; :core_look_in else :core_look_other_in].null?()
      {
           let result_possible_types = if
                     item.has_type?("char") && container.has_type?(@main.string_types)     ||

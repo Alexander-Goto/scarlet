@@ -22,7 +22,7 @@ fn ir__core_fn_replace(exp, last_use_ids, contexts, lambdas_data, unused_def_ids
      }
 
      if container:comptime_val.null?() || old_item:comptime_val.null?() || new_item:comptime_val.null?() ||
-          not old_item:comptime_val:type.in?(@main.comptime_eq_types) || container:comptime_val:type == "obj" && not container:comptime_val:value[:_][:core_replace].null?()
+          not old_item:comptime_val:type.in?(@main.comptime_eq_types) || container:comptime_val:type == "obj" && not container:comptime_val:value[:_]:value[:core_replace].null?()
      {
           let result_possible_types = if container:possible_types.null?()
                valid_types.append("error")

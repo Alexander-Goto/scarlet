@@ -13,7 +13,7 @@ fn ir__core_fn_ascii_to_lower_ascii_to_upper(exp, fn_ir_name, last_use_ids, cont
                     [box :core_ascii_to_lower, ".core_ascii_to_lower"]
                else [box :core_ascii_to_upper, ".core_ascii_to_upper"]
 
-               if arg:comptime_val:value[:_][token].null?()
+               if arg:comptime_val:value[:_]:value[token].null?()
                     error__invalid_type(arg:code, mtd_type, "obj")
                else null
           }

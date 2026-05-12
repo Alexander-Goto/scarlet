@@ -14,7 +14,7 @@ fn ir__core_fn___concat__(exp, last_use_ids, contexts, lambdas_data, unused_def_
           let code = new (left:code):text => _ ++ (" ++ " ++ right:code:text)
 
           if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.concat_types) {
-               if left:comptime_val:type === "obj" && left:comptime_val:value[:_][:core___concat__].null?()
+               if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[:core___concat__].null?()
                     error__invalid_type(left:code, ".core___concat__", "obj")
                else null
 

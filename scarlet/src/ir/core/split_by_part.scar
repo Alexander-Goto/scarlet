@@ -8,7 +8,7 @@ fn ir__core_fn_split_by_part(exp, last_use_ids, contexts, lambdas_data, unused_d
 
      let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
      if array:comptime_val.null?() || separator:comptime_val.null?() || array:comptime_val:type.in?([array "array", "obj"]) {
-          if array:comptime_val:type === "obj" && array:comptime_val:value[:_][:core_split_by_part].null?()
+          if array:comptime_val:type === "obj" && array:comptime_val:value[:_]:value[:core_split_by_part].null?()
                error__invalid_type(array:code, ".core_split_by_part", "obj")
           else null
 

@@ -12,7 +12,7 @@ fn ir__core_fn_insert_part_to(exp, last_use_ids, contexts, lambdas_data, unused_
      let valid_for_comptime_types = [set "short_string", "string", "short_byte_array", "byte_array", "array"]
 
      if part:comptime_val.null?() || array:comptime_val.null?() || idx:comptime_val.null?() || not part:comptime_val:type.in?(valid_for_comptime_types) {
-          if part:comptime_val:type === "obj" && part:comptime_val:value[:_][:core_insert_part_to].null?()
+          if part:comptime_val:type === "obj" && part:comptime_val:value[:_]:value[:core_insert_part_to].null?()
                error__invalid_type(part:code, ".core_insert_part_to", "obj")
           else null
 
