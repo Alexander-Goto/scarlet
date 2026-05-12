@@ -1,6 +1,6 @@
 let compiled_module_name = @main.user_cmd:module_name
 
-let module_signature        = u"(scar|0|scarlet|0.1)"
+let module_signature        = u"(scar|0|scarlet|0.2 dev)"
 let module_signature_prefix = u"(scar|0|"
 
 fn create_module(final_data) {

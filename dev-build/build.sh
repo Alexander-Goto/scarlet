@@ -1,0 +1,2 @@
+clang -march=native -pthread -std=c23 -O3 -Wno-empty-body std/std.c -c -o std.o &&
+clang -march=native -pthread -lm -std=c23 -DEXPORT_CORE_BASIC -DEXPORT_CORE_ERROR -DEXPORT_CORE_STRING -O3 -Wno-empty-body scarlet.c std.o -o scarlet
