@@ -18,9 +18,9 @@ fn ir__core_fn_implement(exp, last_use_ids, contexts, lambdas_data, unused_def_i
      else {
           let new_obj = if interface:comptime_val:type == "obj"
                comptime_implement(obj:comptime_val:value, interface:comptime_val:value)
-          else interface.foldl(obj:comptime_val:value, fn (new_obj, one_interface)
+          else interface:comptime_val:value.foldl(obj:comptime_val:value, fn (new_obj, one_interface)
                if one_interface:type == "obj"
-                    comptime_implement(new_obj, one_interface:comptime_val:value)
+                    comptime_implement(new_obj, one_interface:value)
                else error__invalid_item_type(interface:code, "obj", one_interface:type)
           )
 
@@ -43,7 +43,7 @@ fn comptime_implement(obj, interface)
           obj
      else if obj[:_].null?()
           new (obj)[:_] <= new (@main.t_comptime_val) {:type <= "obj"; :value <= new (interface)[:_] <= null}
-     else new (obj)[:_] => interface.foldl_kv(_, fn (mtds, mtd_name, mtd)
+     else new (obj)[:_]:value => interface.foldl_kv(_, fn (mtds, mtd_name, mtd)
           if mtd_name == :_
                mtds
           else new (mtds)[mtd_name] => fn (existed_mtd) if existed_mtd.null?() || existed_mtd:type === "null"; mtd else existed_mtd
