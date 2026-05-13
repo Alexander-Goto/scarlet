@@ -38,6 +38,8 @@ fn gconst_to_operand(gconst, exp_data, ir, final_data, dependencies, src_gconsts
 
                [box operand, exp_data, ir, final_data, new (dependencies):gconsts => _.append(gconst:name:text.drop(1)), src_gconsts]
           } else {
+               let final_data = new (final_data):always_use_gconsts[final_gconst:ir_name] <= null
+
                let operand = new (@main.t_operand) {
                     :code           <= gconst:name
                     :ir             <= final_gconst:operand_ir
