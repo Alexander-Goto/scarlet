@@ -30,7 +30,7 @@ fn ir__mtd_call(mtd_tkn, mtd_const, args, args_calc_ir, code, call_contexts_cons
           let ir             = if not mtd_const:possible_types.null?() && mtd_const:possible_types.len() == 1 {
                let is_obj = mtd_const:possible_types.take_one() == "obj"
                ir ++ args_calc_ir ++ "t_any const " ++ result_reg ++
-                    (if is_obj; "obj__call__any_result__own(thrd_data,(const t_any){.raw_bits=" else "custom__call__any_result__own(thrd_data,(const t_any){.raw_bits=") ++
+                    (if is_obj; "=obj__call__any_result__own(thrd_data,(const t_any){.raw_bits=" else "=custom__call__any_result__own(thrd_data,(const t_any){.raw_bits=") ++
                     mtd_tkn_ir_num ++ "}," ++ mtd_const:ir ++ "," ++ prepared_args_ir ++ "," ++ args_len_ir ++
                     "," ++ exp_data:owner_name_ir_const ++ ");\n"
           } else {
