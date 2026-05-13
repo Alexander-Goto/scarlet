@@ -1077,5 +1077,135 @@
                     Instead of a name, the <b>_</b> character can be specified, meaning that this component is not needed.<br><br>
                </li>
           </ul>
+
+          <h3>Prototype-based Programming</h3>
+
+          In Scar, it is not possible to create new types, but there is support for prototype-based programming,
+               and for solving problems where types are used, prototypes are used in Scar.<br>
+          The <b>obj</b> type is used to implement prototypes.<br>
+          A prototype is an ordinary constant.<br>
+          As mentioned in the description of the <b>obj</b> type, this type supports methods.<br>
+          The <b>new</b> operator is used to create a new constant based on a prototype.<br>
+          Examples:
+<pre style='color:#9f73ff;background-color:#1f1f1f;'>
+<b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> t_point = [</span><b><span style='color:#cbcc87;'>obj</span></b><span style='color:#eaeaea;'> </span><i><span style='color:#5c6773;'># prototype</span></i>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:x</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0.0</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:y</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0.0</span>
+<span style='color:#eaeaea;'>]</span>
+
+<b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> t_color = [</span><b><span style='color:#cbcc87;'>obj</span></b><span style='color:#eaeaea;'> </span><i><span style='color:#5c6773;'># prototype</span></i>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:r</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0b00</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:g</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0b00</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:b</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0b00</span>
+<span style='color:#eaeaea;'>]</span>
+
+<b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> t_person = [</span><b><span style='color:#cbcc87;'>obj</span></b><span style='color:#eaeaea;'> </span><i><span style='color:#5c6773;'># prototype</span></i>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:name</span><span style='color:#eaeaea;'>        = </span><span style='color:#ee7d7d;'>&quot;&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:age</span><span style='color:#eaeaea;'>         = </span><span style='color:#dcb058;'>0</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:reg_time</span><span style='color:#eaeaea;'>    = </span><b><span style='color:#ba75df;'>null</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:description</span><span style='color:#eaeaea;'> = </span><b><span style='color:#ba75df;'>null</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:banned</span><span style='color:#eaeaea;'>      = </span><span style='color:#d9ab7d;'>false</span>
+
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:_</span><span style='color:#eaeaea;'> = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:register</span><span style='color:#eaeaea;'> = </span><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (_, name, age, description) {</span>
+<span style='color:#eaeaea;'>               </span><b><span style='color:#cbcc87;'>if</span></b><span style='color:#eaeaea;'> debug?() {</span>
+<span style='color:#eaeaea;'>                    guard(name.type() == </span><span style='color:#ee7d7d;'>&quot;core.string&quot;</span><span style='color:#eaeaea;'>)</span>
+<span style='color:#eaeaea;'>                    guard(</span><b><span style='color:#cbcc87;'>not</span></b><span style='color:#eaeaea;'> name.empty?())</span>
+<span style='color:#eaeaea;'>                    guard(name.len() &lt;= </span><span style='color:#dcb058;'>128</span><span style='color:#eaeaea;'>)</span>
+<span style='color:#eaeaea;'>                    guard(age.type() == </span><span style='color:#ee7d7d;'>&quot;core.int&quot;</span><span style='color:#eaeaea;'>)</span>
+<span style='color:#eaeaea;'>                    guard(age.in_range?(</span><span style='color:#dcb058;'>16</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>150</span><span style='color:#eaeaea;'>))</span>
+<span style='color:#eaeaea;'>                    </span><b><span style='color:#cbcc87;'>if</span></b><span style='color:#eaeaea;'> </span><b><span style='color:#cbcc87;'>not</span></b><span style='color:#eaeaea;'> description.null?() {</span>
+<span style='color:#eaeaea;'>                         guard(description.type() == </span><span style='color:#ee7d7d;'>&quot;core.string&quot;</span><span style='color:#eaeaea;'>)</span>
+<span style='color:#eaeaea;'>                         guard(description.len() &lt;= </span><span style='color:#dcb058;'>4096</span><span style='color:#eaeaea;'>)</span>
+<span style='color:#eaeaea;'>                    } </span><b><span style='color:#cbcc87;'>else</span></b><span style='color:#eaeaea;'> </span><b><span style='color:#ba75df;'>null</span></b>
+<span style='color:#eaeaea;'>               } </span><b><span style='color:#cbcc87;'>else</span></b><span style='color:#eaeaea;'> </span><b><span style='color:#ba75df;'>null</span></b>
+
+<span style='color:#eaeaea;'>               </span><b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (</span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_person) {</span>
+<span style='color:#eaeaea;'>                    </span><span style='color:#4e9fea;'>:name</span><span style='color:#eaeaea;'>        &lt;= name</span>
+<span style='color:#eaeaea;'>                    </span><span style='color:#4e9fea;'>:age</span><span style='color:#eaeaea;'>         &lt;= age</span>
+<span style='color:#eaeaea;'>                    </span><span style='color:#4e9fea;'>:reg_time</span><span style='color:#eaeaea;'>    &lt;= time()</span>
+<span style='color:#eaeaea;'>                    </span><span style='color:#4e9fea;'>:description</span><span style='color:#eaeaea;'> &lt;= description</span>
+<span style='color:#eaeaea;'>               }</span>
+<span style='color:#eaeaea;'>          }</span>
+
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:get_greeting</span><span style='color:#eaeaea;'> = </span><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (person) </span><b><span style='color:#cbcc87;'>if</span></b><span style='color:#eaeaea;'> person</span><span style='color:#4e9fea;'>:banned</span><span style='color:#eaeaea;'>; </span><span style='color:#ee7d7d;'>&quot;You are not welcome here!&quot;</span><span style='color:#eaeaea;'> </span><b><span style='color:#cbcc87;'>else</span></b><span style='color:#eaeaea;'> </span><span style='color:#ee7d7d;'>&quot;Welcome&quot;</span><span style='color:#eaeaea;'> ++ person</span><span style='color:#4e9fea;'>:name</span><span style='color:#eaeaea;'> ++ </span><span style='color:#ee7d7d;'>&quot;!&quot;</span>
+<span style='color:#eaeaea;'>     ]</span>
+<span style='color:#eaeaea;'>]</span>
+
+<b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> main() </span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_person-&gt;register(</span><span style='color:#ee7d7d;'>&quot;Some Man&quot;</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>20</span><span style='color:#eaeaea;'>, </span><b><span style='color:#ba75df;'>null</span></b><span style='color:#eaeaea;'>).println()</span></pre>
+
+To determine the type, Scar uses the <b>type</b> function from the <b>core</b> module; if you pass it a constant of type <b>obj</b> that has a <b>core_type</b> method,
+     then calling the <b>type</b> function will invoke the <b>core_type</b> method.
+
+Example:
+<pre style='color:#9f73ff;background-color:#1f1f1f;'>
+<b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> t_point = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:x</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0.0</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:y</span><span style='color:#eaeaea;'> = </span><span style='color:#dcb058;'>0.0</span>
+
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:_</span><span style='color:#eaeaea;'> = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:core_type</span><span style='color:#eaeaea;'> = </span><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (_) </span><span style='color:#ee7d7d;'>&quot;main.t_point&quot;</span>
+<span style='color:#eaeaea;'>     ]</span>
+<span style='color:#eaeaea;'>]</span>
+
+<b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> main() </span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_point.type().println() </span><i><span style='color:#5c6773;'># prints main.t_point</span></i></pre>
+
+Also in the <b>core</b> module there are the functions <b>inherits_from</b> and <b>implement</b>, for inheritance and to indicate that a prototype implements an interface, respectively.<br>
+For more details on these functions, see the documentation for the <b>core</b> module.
+
+Examples:
+<pre style='color:#9f73ff;background-color:#1f1f1f;'>
+<b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> t_life_form = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:domain</span><span style='color:#eaeaea;'>  = </span><span style='color:#ee7d7d;'>&quot;(uninitialized)&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:kingdom</span><span style='color:#eaeaea;'> = </span><span style='color:#ee7d7d;'>&quot;(uninitialized)&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:phylum</span><span style='color:#eaeaea;'>  = </span><span style='color:#ee7d7d;'>&quot;(uninitialized)&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:class</span><span style='color:#eaeaea;'>   = </span><span style='color:#ee7d7d;'>&quot;(uninitialized)&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:order</span><span style='color:#eaeaea;'>   = </span><span style='color:#ee7d7d;'>&quot;(uninitialized)&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:family</span><span style='color:#eaeaea;'>  = </span><span style='color:#ee7d7d;'>&quot;(uninitialized)&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:genus</span><span style='color:#eaeaea;'>   = </span><span style='color:#ee7d7d;'>&quot;(uninitialized)&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:species</span><span style='color:#eaeaea;'> = </span><span style='color:#ee7d7d;'>&quot;(uninitialized)&quot;</span>
+
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:_</span><span style='color:#eaeaea;'> = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:animal?</span><span style='color:#eaeaea;'> = </span><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (life_form) life_form</span><span style='color:#4e9fea;'>:kingdom</span><span style='color:#eaeaea;'> == </span><span style='color:#ee7d7d;'>&quot;Animalia&quot;</span>
+<span style='color:#eaeaea;'>     ]</span>
+<span style='color:#eaeaea;'>]</span>
+
+<b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> t_primate = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:domain</span><span style='color:#eaeaea;'>  = </span><span style='color:#ee7d7d;'>&quot;Eukaryota&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:kingdom</span><span style='color:#eaeaea;'> = </span><span style='color:#ee7d7d;'>&quot;Animalia&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:phylum</span><span style='color:#eaeaea;'>  = </span><span style='color:#ee7d7d;'>&quot;Chordata&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:class</span><span style='color:#eaeaea;'>   = </span><span style='color:#ee7d7d;'>&quot;Mammalia&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:order</span><span style='color:#eaeaea;'>   = </span><span style='color:#ee7d7d;'>&quot;Primates&quot;</span>
+<span style='color:#eaeaea;'>].inherits_from(</span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_life_form)</span>
+
+<b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> t_homo_sapiens = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:family</span><span style='color:#eaeaea;'>  = </span><span style='color:#ee7d7d;'>&quot;Hominidae&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:genus</span><span style='color:#eaeaea;'>   = </span><span style='color:#ee7d7d;'>&quot;Homo&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:species</span><span style='color:#eaeaea;'> = </span><span style='color:#ee7d7d;'>&quot;Homo sapiens&quot;</span>
+
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:name</span><span style='color:#eaeaea;'>       = </span><span style='color:#ee7d7d;'>&quot;(uninitialized)&quot;</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:profession</span><span style='color:#eaeaea;'> = </span><span style='color:#ee7d7d;'>&quot;(none)&quot;</span>
+
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:_</span><span style='color:#eaeaea;'> = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:employed?</span><span style='color:#eaeaea;'> = </span><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (person) person</span><span style='color:#4e9fea;'>:profession</span><span style='color:#eaeaea;'> /= </span><span style='color:#ee7d7d;'>&quot;(none)&quot;</span>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:get_name</span><span style='color:#eaeaea;'>  = _</span><span style='color:#4e9fea;'>:name</span>
+<span style='color:#eaeaea;'>     ]</span>
+<span style='color:#eaeaea;'>].inherits_from(</span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_primate).implement(</span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.i_named)</span>
+
+<b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> i_named = [</span><b><span style='color:#cbcc87;'>obj</span></b>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:get_name</span><span style='color:#eaeaea;'>     = </span><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (_) unreachable()</span>
+<span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:get_greeting</span><span style='color:#eaeaea;'> = </span><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (named) </span><span style='color:#ee7d7d;'>&quot;Welcome &quot;</span><span style='color:#eaeaea;'> ++ named-&gt;get_name() ++ </span><span style='color:#ee7d7d;'>&quot;.&quot;</span>
+<span style='color:#eaeaea;'>]</span>
+
+<b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> main() {</span>
+<span style='color:#eaeaea;'>     </span><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> mike = </span><b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (</span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_homo_sapiens) {</span>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:name</span><span style='color:#eaeaea;'>       &lt;= </span><span style='color:#ee7d7d;'>&quot;Mike&quot;</span>
+<span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:profession</span><span style='color:#eaeaea;'> &lt;= </span><span style='color:#ee7d7d;'>&quot;Carpenter&quot;</span>
+<span style='color:#eaeaea;'>     }</span>
+
+<span style='color:#eaeaea;'>     mike-&gt;animal?().println()      </span><i><span style='color:#5c6773;'># true</span></i>
+<span style='color:#eaeaea;'>     mike-&gt;employed?().println()    </span><i><span style='color:#5c6773;'># true</span></i>
+<span style='color:#eaeaea;'>     mike-&gt;get_greeting().println() </span><i><span style='color:#5c6773;'># Welcome Mike.</span></i>
+<span style='color:#eaeaea;'>}</span></pre>
      </body>
 </html>
