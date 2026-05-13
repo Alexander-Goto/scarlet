@@ -9,14 +9,17 @@ fn gconst_to_operand(gconst, exp_data, ir, final_data, dependencies, src_gconsts
      let [box final_gconst, final_data, src_gconsts] = if final_gconst:ir.empty?() {
           let [box _, short_name]           = disassemble_ir_name(final_gconst:ir_name)
           let [box src_gconsts, src_gconst] = new (src_gconsts)[short_name] <<= null
-          if src_gconst.null?()
-               error__recursive_gconst(gconst:name)
-          else null
+          if src_gconst.null?() {
+               if @main.compiled_module_name.prefix_of?(exp_data:owner_id.drop(1)) &&
+                         exp_data:owner_id.drop(@main.compiled_module_name.len() + 1).take(2).in?([array "LF", "CL"])
+                    [box final_gconst, final_data, src_gconsts]
+               else error__recursive_gconst(gconst:name)
+          } else {
+               let [box final_data, src_gconsts] = gconst_to_final(src_gconst, final_data, src_gconsts)
+               let final_gconst                  = final_data:gconsts[short_name][@main.compiled_module_name]
 
-          let [box final_data, src_gconsts] = gconst_to_final(src_gconst, final_data, src_gconsts)
-          let final_gconst                  = final_data:gconsts[short_name][@main.compiled_module_name]
-
-          [box final_gconst, final_data, src_gconsts]
+               [box final_gconst, final_data, src_gconsts]
+          }
      } else [box final_gconst, final_data, src_gconsts]
 
      if "@core.".prefix_of?(gconst:name:text) && final_gconst:comptime_val.null?() && "return (const t_any)".prefix_of?(final_gconst:ir) {
