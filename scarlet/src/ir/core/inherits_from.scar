@@ -18,9 +18,9 @@ fn ir__core_fn_inherits_from(exp, last_use_ids, contexts, lambdas_data, unused_d
      else {
           let new_child = if parent:comptime_val:type == "obj"
                comptime_inherits_from(child:comptime_val:value, parent:comptime_val:value)
-          else parent.foldl(child:comptime_val:value, fn (new_child, one_parent)
+          else parent:comptime_val:value.foldl(child:comptime_val:value, fn (new_child, one_parent)
                if one_parent:type == "obj"
-                    comptime_inherits_from(new_child, one_parent:comptime_val:value)
+                    comptime_inherits_from(new_child, one_parent:value)
                else error__invalid_item_type(parent:code, "obj", one_parent:type)
           )
 
@@ -41,6 +41,6 @@ fn ir__core_fn_inherits_from(exp, last_use_ids, contexts, lambdas_data, unused_d
 fn comptime_inherits_from(child, parent)
      parent.foldl_kv(child, fn (child, field_name, field)
           if field_name == :_
-               comptime_implement(child, field)
+               comptime_implement(child, field:value)
           else new (child)[field_name] => fn (existed_field) if existed_field.null?() || existed_field:type === "null"; field else existed_field
      )
