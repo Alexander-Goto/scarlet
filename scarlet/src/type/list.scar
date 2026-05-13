@@ -54,7 +54,6 @@ let not_copyable_types        = [set "box", "breaker", "thread"]
 let not_copyable_types__error = @main.not_copyable_types.append("error")
 
 let always_hash_map_key_types          = [set "short_string", "token", "bool", "byte", "char", "int", "time", "short_byte_array", "byte_array", "string"]
-let maybe_hash_map_key_types           = [set "obj", "table", "set", "array", "custom"]
 let all_hash_map_key_types             = [set "short_string", "token", "bool", "byte", "char", "int", "time", "short_byte_array", "byte_array", "string", "obj", "table", "set", "array", "custom"]
 let all_hash_map_key_types__null       = @main.all_hash_map_key_types.append("null")
 let all_hash_map_key_types__holder     = @main.all_hash_map_key_types.append("holder")
@@ -84,4 +83,3 @@ let look_types = [set "short_string", "token", "bool", "byte", "char", "int", "t
 let shared_types             = [set "short_string", "token", "bool", "byte", "char", "int", "time", "float", "short_fn", "short_byte_array", "box", "obj", "table", "set", "byte_array", "string", "array", "fn", "custom"]
 let shared_types__error      = @main.shared_types.append("error")
 let shared_types__null_error = @main.shared_types__error.append("null")
-let always_shared_types      = [set "short_string", "token", "bool", "byte", "char", "int", "time", "float", "short_fn", "short_byte_array", "byte_array", "string"]
