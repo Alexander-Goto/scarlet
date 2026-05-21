@@ -12,7 +12,7 @@ fn get_user_cmd() {
      let cmd = new (@main.t_user_cmd):cmd <= if @core.cli_args.empty?(); :help else :compile
 
      let [box cmd] = @core.cli_args.foldl([box cmd, :nothing], fn (state, arg) {
-          let [box cmd, recived] = state
+          let [box cmd, received] = state
 
           switch arg
           case "-h", "--help":
@@ -38,7 +38,7 @@ fn get_user_cmd() {
           default:
                if arg.first() == '-'
                     error__unknown_flag(arg)
-               else switch recived
+               else switch received
                     case :module_name: {
                          let correct_name = arg.filter(fn (char) char.ascii_lower?() || char.ascii_digit?() || char == '_')
                          if correct_name /= arg || arg.empty?() || not arg.first().ascii_lower?()
