@@ -50,7 +50,7 @@ fn error__already_exists(name, owner) fail("Error: " ++ msg__make(name, "The " +
 fn error__too_many_chars(char) fail("Error: " ++ msg__make(char, "A constant of type \"char\" must contain one character. (" ++ char:text ++ ")"))
 
 `cold`
-fn error__invalid_escape_sequence(sequence) fail("Error: " ++ msg__make(sequence, sequence:text ++ " is an invalid escape sequence."))
+fn error__invalid_escape_sequence(sequence) fail("Error: " ++ msg__make(sequence, "\"" ++ sequence:text ++ "\" is an invalid escape sequence."))
 
 `cold`
 fn error__unexpected_eof(file_name) fail("Error: The \"" ++ file_name ++ "\" file has ended, even though there should be more data in it.")
@@ -205,8 +205,8 @@ fn error__not_utf8_string(string) fail("Error: " ++ msg__make(string, string:tex
 `cold`
 fn error__not_found_when_make_prg(owner, module, name, module_exists)
      if module_exists
-          fail("Error: The " ++ owner ++ " " ++ name ++ " from the " ++ module ++ " module is requred, but there is no such " ++ owner ++ " in the " ++ module ++ " module.")
-     else fail("Error: The " ++ owner ++ " " ++ name ++ " from the " ++ module ++ " module is requred, but there is no such module.")
+          fail("Error: The " ++ owner ++ " \"" ++ name ++ "\" from the \"" ++ module ++ "\" module is requred, but there is no such " ++ owner ++ " in the \"" ++ module ++ "\" module.")
+     else fail("Error: The " ++ owner ++ " \"" ++ name ++ "\" from the \"" ++ module ++ "\" module is requred, but there is no such module.")
 
 `cold`
 fn error__not_found_ir_const(module) fail("Data from the \"" ++ module ++ "\" module was used, but the module itself was not loaded.")
