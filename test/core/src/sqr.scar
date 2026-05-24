@@ -7,7 +7,7 @@ let num__sqr = [obj
      ]
 ]
 
-fn to_num__sqr(arg) new (@main.num__sqr):value <= arg
+fn to_num__sqr(arg) new (@.num__sqr):value <= arg
 
 fn to_custom_num__sqr(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__sqr = [obj
      ]
 ]
 
-fn to_broken_num__sqr(arg) new (@main.broken_num__sqr):value <= arg
+fn to_broken_num__sqr(arg) new (@.broken_num__sqr):value <= arg
 
 fn to_broken_custom_num__sqr(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__sqr = [obj
      ]
 ]
 
-fn to_error_num__sqr(arg) new (@main.error_num__sqr):value <= arg
+fn to_error_num__sqr(arg) new (@.error_num__sqr):value <= arg
 
 fn to_error_custom_num__sqr(arg) custom__create(
      arg

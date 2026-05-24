@@ -6,7 +6,7 @@ let const__print = [obj
      ]
 ]
 
-fn to_const__print(arg) new (@main.const__print):value <= arg
+fn to_const__print(arg) new (@.const__print):value <= arg
 
 fn to_custom_const__print(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_const__print = [obj
      ]
 ]
 
-fn to_broken_const__print(arg) new (@main.broken_const__print):value <= arg
+fn to_broken_const__print(arg) new (@.broken_const__print):value <= arg
 
 fn to_broken_custom_const__print(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_const__print = [obj
      ]
 ]
 
-fn to_error_const__print(arg) new (@main.error_const__print):value <= arg
+fn to_error_const__print(arg) new (@.error_const__print):value <= arg
 
 fn to_error_custom_const__print(arg) custom__create(
      arg

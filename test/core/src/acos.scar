@@ -7,7 +7,7 @@ let num__acos = [obj
      ]
 ]
 
-fn to_num__acos(arg) new (@main.num__acos):value <= arg
+fn to_num__acos(arg) new (@.num__acos):value <= arg
 
 fn to_custom_num__acos(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__acos = [obj
      ]
 ]
 
-fn to_broken_num__acos(arg) new (@main.broken_num__acos):value <= arg
+fn to_broken_num__acos(arg) new (@.broken_num__acos):value <= arg
 
 fn to_broken_custom_num__acos(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__acos = [obj
      ]
 ]
 
-fn to_error_num__acos(arg) new (@main.error_num__acos):value <= arg
+fn to_error_num__acos(arg) new (@.error_num__acos):value <= arg
 
 fn to_error_custom_num__acos(arg) custom__create(
      arg

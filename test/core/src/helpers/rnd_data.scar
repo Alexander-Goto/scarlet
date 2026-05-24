@@ -1,7 +1,7 @@
 let last_corsar_code = 257
 
 fn rnd_char() {
-     let rnd_code = (rnd() & 0xff'ffff) % @main.last_corsar_code + 1
+     let rnd_code = (rnd() & 0xff'ffff) % @.last_corsar_code + 1
      rnd_code.to_char()
 }
 

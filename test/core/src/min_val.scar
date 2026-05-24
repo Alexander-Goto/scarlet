@@ -7,7 +7,7 @@ let const__min_val = [obj
      ]
 ]
 
-fn to_const__min_val(arg) new (@main.const__min_val):value <= arg
+fn to_const__min_val(arg) new (@.const__min_val):value <= arg
 
 fn to_custom_const__min_val(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_const__min_val = [obj
      ]
 ]
 
-fn to_broken_const__min_val(arg) new (@main.broken_const__min_val):value <= arg
+fn to_broken_const__min_val(arg) new (@.broken_const__min_val):value <= arg
 
 fn to_broken_custom_const__min_val(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_const__min_val = [obj
      ]
 ]
 
-fn to_error_const__min_val(arg) new (@main.error_const__min_val):value <= arg
+fn to_error_const__min_val(arg) new (@.error_const__min_val):value <= arg
 
 fn to_error_custom_const__min_val(arg) custom__create(
      arg

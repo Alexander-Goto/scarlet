@@ -7,7 +7,7 @@ let num__exp = [obj
      ]
 ]
 
-fn to_num__exp(arg) new (@main.num__exp):value <= arg
+fn to_num__exp(arg) new (@.num__exp):value <= arg
 
 fn to_custom_num__exp(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__exp = [obj
      ]
 ]
 
-fn to_broken_num__exp(arg) new (@main.broken_num__exp):value <= arg
+fn to_broken_num__exp(arg) new (@.broken_num__exp):value <= arg
 
 fn to_broken_custom_num__exp(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__exp = [obj
      ]
 ]
 
-fn to_error_num__exp(arg) new (@main.error_num__exp):value <= arg
+fn to_error_num__exp(arg) new (@.error_num__exp):value <= arg
 
 fn to_error_custom_num__exp(arg) custom__create(
      arg

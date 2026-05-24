@@ -6,7 +6,7 @@ let char__lower = [obj
      ]
 ]
 
-fn to_char__lower?(arg) new (@main.char__lower):value <= arg
+fn to_char__lower?(arg) new (@.char__lower):value <= arg
 
 fn to_custom_char__lower?(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_char__lower = [obj
      ]
 ]
 
-fn to_broken_char__lower?(arg) new (@main.broken_char__lower):value <= arg
+fn to_broken_char__lower?(arg) new (@.broken_char__lower):value <= arg
 
 fn to_broken_custom_char__lower?(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_char__lower = [obj
      ]
 ]
 
-fn to_error_char__lower?(arg) new (@main.error_char__lower):value <= arg
+fn to_error_char__lower?(arg) new (@.error_char__lower):value <= arg
 
 fn to_error_custom_char__lower?(arg) custom__create(
      arg

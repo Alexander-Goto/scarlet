@@ -6,7 +6,7 @@ let array__get_item = [obj
      ]
 ]
 
-fn to_array__get_item(arg) new (@main.array__get_item):value <= arg
+fn to_array__get_item(arg) new (@.array__get_item):value <= arg
 
 fn to_custom_array__get_item(container) custom__create(
      container
@@ -23,7 +23,7 @@ let broken_array__get_item = [obj
      ]
 ]
 
-fn to_broken_array__get_item(arg) new (@main.broken_array__get_item):value <= arg
+fn to_broken_array__get_item(arg) new (@.broken_array__get_item):value <= arg
 
 fn to_broken_custom_array__get_item(container) custom__create(
      container
@@ -40,7 +40,7 @@ let error_array__get_item = [obj
      ]
 ]
 
-fn to_error_array__get_item(arg) new (@main.error_array__get_item):value <= arg
+fn to_error_array__get_item(arg) new (@.error_array__get_item):value <= arg
 
 fn to_error_custom_array__get_item(container) custom__create(
      container

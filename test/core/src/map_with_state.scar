@@ -10,7 +10,7 @@ let container__map_with_state = [obj
      ]
 ]
 
-fn to_container__map_with_state(arg) new (@main.container__map_with_state):value <= arg
+fn to_container__map_with_state(arg) new (@.container__map_with_state):value <= arg
 
 fn to_custom_container__map_with_state(arg) custom__create(
      arg
@@ -31,7 +31,7 @@ let broken_container__map_with_state = [obj
      ]
 ]
 
-fn to_broken_container__map_with_state(arg) new (@main.broken_container__map_with_state):value <= arg
+fn to_broken_container__map_with_state(arg) new (@.broken_container__map_with_state):value <= arg
 
 fn to_broken_custom_container__map_with_state(arg) custom__create(
      arg
@@ -48,7 +48,7 @@ let error_container__map_with_state = [obj
      ]
 ]
 
-fn to_error_container__map_with_state(arg) new (@main.error_container__map_with_state):value <= arg
+fn to_error_container__map_with_state(arg) new (@.error_container__map_with_state):value <= arg
 
 fn to_error_custom_container__map_with_state(arg) custom__create(
      arg
@@ -97,7 +97,7 @@ fn test__map_with_state() {
      let string_1 = rnd_string()
      let string_2 = if rnd_bool(); string_1 else null
      let expected = [box string_1.map(fn (char)
-          if not char.in_range?('\000004', (@main.last_corsar_code - 2).to_char())
+          if not char.in_range?('\000004', (@.last_corsar_code - 2).to_char())
                char
           else (char.to_int() + 1).to_char()
      ), heap_string]
@@ -105,7 +105,7 @@ fn test__map_with_state() {
           [box
                str
 
-               if not char.in_range?('\000004', (@main.last_corsar_code - 2).to_char())
+               if not char.in_range?('\000004', (@.last_corsar_code - 2).to_char())
                     char
                else (char.to_int() + 1).to_char()
           ]

@@ -7,7 +7,7 @@ let const__min = [obj
      ]
 ]
 
-fn to_const__min(arg) new (@main.const__min):value <= arg
+fn to_const__min(arg) new (@.const__min):value <= arg
 
 fn to_custom_const__min(arg) custom__create(
      arg

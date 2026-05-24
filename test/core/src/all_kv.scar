@@ -6,7 +6,7 @@ let container__all_kv = [obj
      ]
 ]
 
-fn to_container__all_kv(arg) new (@main.container__all_kv):value <= arg
+fn to_container__all_kv(arg) new (@.container__all_kv):value <= arg
 
 fn to_custom_container__all_kv(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_container__all_kv = [obj
      ]
 ]
 
-fn to_broken_container__all_kv(arg) new (@main.broken_container__all_kv):value <= arg
+fn to_broken_container__all_kv(arg) new (@.broken_container__all_kv):value <= arg
 
 fn to_broken_custom_container__all_kv(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_container__all_kv = [obj
      ]
 ]
 
-fn to_error_container__all_kv(arg) new (@main.error_container__all_kv):value <= arg
+fn to_error_container__all_kv(arg) new (@.error_container__all_kv):value <= arg
 
 fn to_error_custom_container__all_kv(arg) custom__create(
      arg

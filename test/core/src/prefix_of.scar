@@ -6,7 +6,7 @@ let array__prefix_of = [obj
      ]
 ]
 
-fn to_array__prefix_of(arg) new (@main.array__prefix_of):value <= arg
+fn to_array__prefix_of(arg) new (@.array__prefix_of):value <= arg
 
 fn to_custom_array__prefix_of(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_array__prefix_of = [obj
      ]
 ]
 
-fn to_broken_array__prefix_of(arg) new (@main.broken_array__prefix_of):value <= arg
+fn to_broken_array__prefix_of(arg) new (@.broken_array__prefix_of):value <= arg
 
 fn to_broken_custom_array__prefix_of(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_array__prefix_of = [obj
      ]
 ]
 
-fn to_error_array__prefix_of(arg) new (@main.error_array__prefix_of):value <= arg
+fn to_error_array__prefix_of(arg) new (@.error_array__prefix_of):value <= arg
 
 fn to_error_custom_array__prefix_of(arg) custom__create(
      arg

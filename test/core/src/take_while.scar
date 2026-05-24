@@ -7,7 +7,7 @@ let array__take_while = [obj
      ]
 ]
 
-fn to_array__take_while(arg) new (@main.array__take_while):value <= arg
+fn to_array__take_while(arg) new (@.array__take_while):value <= arg
 
 fn to_custom_array__take_while(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_array__take_while = [obj
      ]
 ]
 
-fn to_broken_array__take_while(arg) new (@main.broken_array__take_while):value <= arg
+fn to_broken_array__take_while(arg) new (@.broken_array__take_while):value <= arg
 
 fn to_broken_custom_array__take_while(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_array__take_while = [obj
      ]
 ]
 
-fn to_error_array__take_while(arg) new (@main.error_array__take_while):value <= arg
+fn to_error_array__take_while(arg) new (@.error_array__take_while):value <= arg
 
 fn to_error_custom_array__take_while(arg) custom__create(
      arg

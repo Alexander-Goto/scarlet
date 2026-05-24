@@ -7,7 +7,7 @@ let const__ascii_to_lower = [obj
      ]
 ]
 
-fn to_const__ascii_to_lower(arg) new (@main.const__ascii_to_lower):value <= arg
+fn to_const__ascii_to_lower(arg) new (@.const__ascii_to_lower):value <= arg
 
 fn to_custom_const__ascii_to_lower(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_const__ascii_to_lower = [obj
      ]
 ]
 
-fn to_broken_const__ascii_to_lower(arg) new (@main.broken_const__ascii_to_lower):value <= arg
+fn to_broken_const__ascii_to_lower(arg) new (@.broken_const__ascii_to_lower):value <= arg
 
 fn to_broken_custom_const__ascii_to_lower(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_const__ascii_to_lower = [obj
      ]
 ]
 
-fn to_error_const__ascii_to_lower(arg) new (@main.error_const__ascii_to_lower):value <= arg
+fn to_error_const__ascii_to_lower(arg) new (@.error_const__ascii_to_lower):value <= arg
 
 fn to_error_custom_const__ascii_to_lower(arg) custom__create(
      arg

@@ -7,7 +7,7 @@ let array__stable_sort_fn = [obj
      ]
 ]
 
-fn to_array__stable_sort_fn(arg) new (@main.array__stable_sort_fn):value <= arg
+fn to_array__stable_sort_fn(arg) new (@.array__stable_sort_fn):value <= arg
 
 fn to_custom_array__stable_sort_fn(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_array__stable_sort_fn = [obj
      ]
 ]
 
-fn to_broken_array__stable_sort_fn(arg) new (@main.broken_array__stable_sort_fn):value <= arg
+fn to_broken_array__stable_sort_fn(arg) new (@.broken_array__stable_sort_fn):value <= arg
 
 fn to_broken_custom_array__stable_sort_fn(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_array__stable_sort_fn = [obj
      ]
 ]
 
-fn to_error_array__stable_sort_fn(arg) new (@main.error_array__stable_sort_fn):value <= arg
+fn to_error_array__stable_sort_fn(arg) new (@.error_array__stable_sort_fn):value <= arg
 
 fn to_error_custom_array__stable_sort_fn(arg) custom__create(
      arg
@@ -272,7 +272,7 @@ fn test__stable_sort_fn() {
 
      let len     = (rnd() & 1023) + 1;
      let array_1 = loop([array].init(len), fn (array) {
-          let array = array.append(new (@main.t_item__stable_sort_fn) {
+          let array = array.append(new (@.t_item__stable_sort_fn) {
                :cmp_value <= rnd() % 15
                :value     <= len(array)
           })

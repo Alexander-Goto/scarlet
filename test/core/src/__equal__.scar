@@ -6,7 +6,7 @@ let const__equal = [obj
      ]
 ]
 
-fn to_const__equal(arg) new (@main.const__equal):value <= arg
+fn to_const__equal(arg) new (@.const__equal):value <= arg
 
 fn to_custom_const__equal(arg) custom__create(
      arg

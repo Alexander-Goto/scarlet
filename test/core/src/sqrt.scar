@@ -7,7 +7,7 @@ let num__sqrt = [obj
      ]
 ]
 
-fn to_num__sqrt(arg) new (@main.num__sqrt):value <= arg
+fn to_num__sqrt(arg) new (@.num__sqrt):value <= arg
 
 fn to_custom_num__sqrt(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__sqrt = [obj
      ]
 ]
 
-fn to_broken_num__sqrt(arg) new (@main.broken_num__sqrt):value <= arg
+fn to_broken_num__sqrt(arg) new (@.broken_num__sqrt):value <= arg
 
 fn to_broken_custom_num__sqrt(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__sqrt = [obj
      ]
 ]
 
-fn to_error_num__sqrt(arg) new (@main.error_num__sqrt):value <= arg
+fn to_error_num__sqrt(arg) new (@.error_num__sqrt):value <= arg
 
 fn to_error_custom_num__sqrt(arg) custom__create(
      arg

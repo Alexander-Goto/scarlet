@@ -6,7 +6,7 @@ let array__zip = [obj
      ]
 ]
 
-fn to_array__zip(arg) new (@main.array__zip):value <= arg
+fn to_array__zip(arg) new (@.array__zip):value <= arg
 
 fn to_custom_array__zip(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let error_array__zip = [obj
      ]
 ]
 
-fn to_error_array__zip(arg) new (@main.error_array__zip):value <= arg
+fn to_error_array__zip(arg) new (@.error_array__zip):value <= arg
 
 fn to_error_custom_array__zip(arg) custom__create(
      arg

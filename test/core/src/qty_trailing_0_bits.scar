@@ -6,7 +6,7 @@ let num__qty_trailing_0_bits = [obj
      ]
 ]
 
-fn to_num__qty_trailing_0_bits(arg) new (@main.num__qty_trailing_0_bits):value <= arg
+fn to_num__qty_trailing_0_bits(arg) new (@.num__qty_trailing_0_bits):value <= arg
 
 fn to_custom_num__qty_trailing_0_bits(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_num__qty_trailing_0_bits = [obj
      ]
 ]
 
-fn to_broken_num__qty_trailing_0_bits(arg) new (@main.broken_num__qty_trailing_0_bits):value <= arg
+fn to_broken_num__qty_trailing_0_bits(arg) new (@.broken_num__qty_trailing_0_bits):value <= arg
 
 fn to_broken_custom_num__qty_trailing_0_bits(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_num__qty_trailing_0_bits = [obj
      ]
 ]
 
-fn to_error_num__qty_trailing_0_bits(arg) new (@main.error_num__qty_trailing_0_bits):value <= arg
+fn to_error_num__qty_trailing_0_bits(arg) new (@.error_num__qty_trailing_0_bits):value <= arg
 
 fn to_error_custom_num__qty_trailing_0_bits(arg) custom__create(
      arg

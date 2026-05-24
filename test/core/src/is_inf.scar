@@ -6,7 +6,7 @@ let num__inf = [obj
      ]
 ]
 
-fn to_num__inf?(arg) new (@main.num__inf):value <= arg
+fn to_num__inf?(arg) new (@.num__inf):value <= arg
 
 fn to_custom_num__inf?(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_num__inf = [obj
      ]
 ]
 
-fn to_broken_num__inf?(arg) new (@main.broken_num__inf):value <= arg
+fn to_broken_num__inf?(arg) new (@.broken_num__inf):value <= arg
 
 fn to_broken_custom_num__inf?(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_num__inf = [obj
      ]
 ]
 
-fn to_error_num__inf?(arg) new (@main.error_num__inf):value <= arg
+fn to_error_num__inf?(arg) new (@.error_num__inf):value <= arg
 
 fn to_error_custom_num__inf?(arg) custom__create(
      arg

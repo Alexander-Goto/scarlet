@@ -3,8 +3,8 @@ fn test__run_app() {
      let [box process, child_stdout, child_stdin, child_stderr] = run_app(
           fs_path("test")
           [array "--child".scarlet__erase_value()]
-          new (@core.env_vars)["new_var"] <= "new_var_value"
-          @std.raf__stdout | @std.raf__stdin | @std.raf__stderr
+          new (@.env_vars)["new_var"] <= "new_var_value"
+          @.raf__stdout | @.raf__stdin | @.raf__stderr
      )
 
      child_stdin->write(u"line_1\nline_2")->flush()

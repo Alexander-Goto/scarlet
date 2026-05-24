@@ -7,7 +7,7 @@ let string__trim = [obj
      ]
 ]
 
-fn to_string__trim(string) new (@main.string__trim):value <= string
+fn to_string__trim(string) new (@.string__trim):value <= string
 
 fn to_custom_string__trim(string) custom__create(
      string
@@ -25,7 +25,7 @@ let broken_string__trim = [obj
      ]
 ]
 
-fn to_broken_string__trim(string) new (@main.broken_string__trim):value <= string
+fn to_broken_string__trim(string) new (@.broken_string__trim):value <= string
 
 fn to_broken_custom_string__trim(string) custom__create(
      string
@@ -42,7 +42,7 @@ let error_string__trim = [obj
      ]
 ]
 
-fn to_error_string__trim(string) new (@main.error_string__trim):value <= string
+fn to_error_string__trim(string) new (@.error_string__trim):value <= string
 
 fn to_error_custom_string__trim(string) custom__create(
      string

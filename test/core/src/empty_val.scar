@@ -7,7 +7,7 @@ let container__empty_val = [obj
      ]
 ]
 
-fn to_container__empty_val(arg) new (@main.container__empty_val):value <= arg
+fn to_container__empty_val(arg) new (@.container__empty_val):value <= arg
 
 fn to_custom_container__empty_val(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_container__empty_val = [obj
      ]
 ]
 
-fn to_broken_container__empty_val(arg) new (@main.broken_container__empty_val):value <= arg
+fn to_broken_container__empty_val(arg) new (@.broken_container__empty_val):value <= arg
 
 fn to_broken_custom_container__empty_val(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_container__empty_val = [obj
      ]
 ]
 
-fn to_error_container__empty_val(arg) new (@main.error_container__empty_val):value <= arg
+fn to_error_container__empty_val(arg) new (@.error_container__empty_val):value <= arg
 
 fn to_error_custom_container__empty_val(arg) custom__create(
      arg

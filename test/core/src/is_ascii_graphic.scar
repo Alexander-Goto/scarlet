@@ -6,7 +6,7 @@ let char__ascii_graphic = [obj
      ]
 ]
 
-fn to_char__ascii_graphic?(arg) new (@main.char__ascii_graphic):value <= arg
+fn to_char__ascii_graphic?(arg) new (@.char__ascii_graphic):value <= arg
 
 fn to_custom_char__ascii_graphic?(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_char__ascii_graphic = [obj
      ]
 ]
 
-fn to_broken_char__ascii_graphic?(arg) new (@main.broken_char__ascii_graphic):value <= arg
+fn to_broken_char__ascii_graphic?(arg) new (@.broken_char__ascii_graphic):value <= arg
 
 fn to_broken_custom_char__ascii_graphic?(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_char__ascii_graphic = [obj
      ]
 ]
 
-fn to_error_char__ascii_graphic?(arg) new (@main.error_char__ascii_graphic):value <= arg
+fn to_error_char__ascii_graphic?(arg) new (@.error_char__ascii_graphic):value <= arg
 
 fn to_error_custom_char__ascii_graphic?(arg) custom__create(
      arg

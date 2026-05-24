@@ -29,9 +29,9 @@ fn test__time_limit_pop() {
      test(push(in, [array string]).null?())
      test(time_limit_pop(out, 0) === [array string])
      test(push(in, _ ++ string).null?())
-     test(time_limit_pop(out, 0)(string) === string ++ string)
+     test((time_limit_pop(out, 0))(string) === string ++ string)
      test(push(in, (fn (a, b) a.null?() && b === 12)(null, _)).null?())
-     test(time_limit_pop(out, 0)(12))
+     test((time_limit_pop(out, 0))(12))
      test(push(in, 12.to_custom_const__time_limit_pop()).null?())
      test(time_limit_pop(out, 0).custom__get_data() === 12)
 
@@ -58,8 +58,8 @@ fn test__time_limit_pop() {
      test(time_limit_pop(out, 0) === [set string])
      test(time_limit_pop(out, 0) === u"Hello world!!!")
      test(time_limit_pop(out, 0) === [array string])
-     test(time_limit_pop(out, 0)(string) === string ++ string)
-     test(time_limit_pop(out, 0)(12))
+     test((time_limit_pop(out, 0))(string) === string ++ string)
+     test((time_limit_pop(out, 0))(12))
      test(time_limit_pop(out, 0).custom__get_data() === 12)
 
      test(push(in, "Hello!!!").null?())
@@ -85,8 +85,8 @@ fn test__time_limit_pop() {
      test(time_limit_pop(out, 0) === [set string])
      test(time_limit_pop(out, 0) === u"Hello world!!!")
      test(time_limit_pop(out, 0) === [array string])
-     test(time_limit_pop(out, 0)(string) === string ++ string)
-     test(time_limit_pop(out, 0)(12))
+     test((time_limit_pop(out, 0))(string) === string ++ string)
+     test((time_limit_pop(out, 0))(12))
      test(time_limit_pop(out, 0).custom__get_data() === 12)
 
      thread(fn () {

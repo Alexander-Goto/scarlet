@@ -7,7 +7,7 @@ let num__mod = [obj
      ]
 ]
 
-fn to_num__mod(arg) new (@main.num__mod):value <= arg
+fn to_num__mod(arg) new (@.num__mod):value <= arg
 
 fn to_custom_num__mod(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__mod = [obj
      ]
 ]
 
-fn to_broken_num__mod(arg) new (@main.broken_num__mod):value <= arg
+fn to_broken_num__mod(arg) new (@.broken_num__mod):value <= arg
 
 fn to_broken_custom_num__mod(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__mod = [obj
      ]
 ]
 
-fn to_error_num__mod(arg) new (@main.error_num__mod):value <= arg
+fn to_error_num__mod(arg) new (@.error_num__mod):value <= arg
 
 fn to_error_custom_num__mod(arg) custom__create(
      arg

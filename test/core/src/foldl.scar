@@ -6,7 +6,7 @@ let container__foldl = [obj
      ]
 ]
 
-fn to_container__foldl(arg) new (@main.container__foldl):value <= arg
+fn to_container__foldl(arg) new (@.container__foldl):value <= arg
 
 fn to_custom_container__foldl(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let error_container__foldl = [obj
      ]
 ]
 
-fn to_error_container__foldl(arg) new (@main.error_container__foldl):value <= arg
+fn to_error_container__foldl(arg) new (@.error_container__foldl):value <= arg
 
 fn to_error_custom_container__foldl(arg) custom__create(
      arg

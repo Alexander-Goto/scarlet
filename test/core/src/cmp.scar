@@ -6,7 +6,7 @@ let const__cmp = [obj
      ]
 ]
 
-fn to_const__cmp(arg) new (@main.const__cmp):value <= arg
+fn to_const__cmp(arg) new (@.const__cmp):value <= arg
 
 fn to_custom_const__cmp(arg) custom__create(
      arg

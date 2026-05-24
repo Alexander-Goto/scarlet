@@ -6,7 +6,7 @@ let const__less_or_eq = [obj
      ]
 ]
 
-fn to_const__less_or_eq(arg) new (@main.const__less_or_eq):value <= arg
+fn to_const__less_or_eq(arg) new (@.const__less_or_eq):value <= arg
 
 fn to_custom_const__less_or_eq(arg) custom__create(
      arg

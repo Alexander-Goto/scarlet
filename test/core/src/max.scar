@@ -7,7 +7,7 @@ let const__max = [obj
      ]
 ]
 
-fn to_const__max(arg) new (@main.const__max):value <= arg
+fn to_const__max(arg) new (@.const__max):value <= arg
 
 fn to_custom_const__max(arg) custom__create(
      arg

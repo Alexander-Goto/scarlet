@@ -8,7 +8,7 @@ let container__reserve = [obj
      ]
 ]
 
-fn to_container__reserve(arg) new (@main.container__reserve):value <= arg
+fn to_container__reserve(arg) new (@.container__reserve):value <= arg
 
 fn to_custom_container__reserve(arg) custom__create(
      arg
@@ -27,7 +27,7 @@ let broken_container__reserve = [obj
      ]
 ]
 
-fn to_broken_container__reserve(arg) new (@main.broken_container__reserve):value <= arg
+fn to_broken_container__reserve(arg) new (@.broken_container__reserve):value <= arg
 
 fn to_broken_custom_container__reserve(arg) custom__create(
      arg
@@ -44,7 +44,7 @@ let error_container__reserve = [obj
      ]
 ]
 
-fn to_error_container__reserve(arg) new (@main.error_container__reserve):value <= arg
+fn to_error_container__reserve(arg) new (@.error_container__reserve):value <= arg
 
 fn to_error_custom_container__reserve(arg) custom__create(
      arg

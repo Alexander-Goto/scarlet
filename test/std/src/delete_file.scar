@@ -1,6 +1,6 @@
 `noinline`
 fn test__delete_file() {
-     open_file(fs_path("__tmp_file__"), @std.fom__write | @std.fom__new)
+     open_file(fs_path("__tmp_file__"), @.fom__write | @.fom__new)
      test(delete_file(fs_path("__tmp_file__")).null?())
 
      test(delete_file(fs_path("__tmp_file__")) == :not_exist)

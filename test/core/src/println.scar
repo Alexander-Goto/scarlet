@@ -6,7 +6,7 @@ let broken_const__println = [obj
      ]
 ]
 
-fn to_broken_const__println(arg) new (@main.broken_const__println):value <= arg
+fn to_broken_const__println(arg) new (@.broken_const__println):value <= arg
 
 fn to_broken_custom_const__println(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let error_const__println = [obj
      ]
 ]
 
-fn to_error_const__println(arg) new (@main.error_const__println):value <= arg
+fn to_error_const__println(arg) new (@.error_const__println):value <= arg
 
 fn to_error_custom_const__println(arg) custom__create(
      arg

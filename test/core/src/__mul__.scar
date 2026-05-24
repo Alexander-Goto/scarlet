@@ -7,7 +7,7 @@ let num__mul = [obj
      ]
 ]
 
-fn to_num__mul(arg) new (@main.num__mul):value <= arg
+fn to_num__mul(arg) new (@.num__mul):value <= arg
 
 fn to_custom_num__mul(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__mul = [obj
      ]
 ]
 
-fn to_broken_num__mul(arg) new (@main.broken_num__mul):value <= arg
+fn to_broken_num__mul(arg) new (@.broken_num__mul):value <= arg
 
 fn to_broken_custom_num__mul(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__mul = [obj
      ]
 ]
 
-fn to_error_num__mul(arg) new (@main.error_num__mul):value <= arg
+fn to_error_num__mul(arg) new (@.error_num__mul):value <= arg
 
 fn to_error_custom_num__mul(arg) custom__create(
      arg

@@ -6,7 +6,7 @@ let container__foldr_kv = [obj
      ]
 ]
 
-fn to_container__foldr_kv(arg) new (@main.container__foldr_kv):value <= arg
+fn to_container__foldr_kv(arg) new (@.container__foldr_kv):value <= arg
 
 fn to_custom_container__foldr_kv(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let error_container__foldr_kv = [obj
      ]
 ]
 
-fn to_error_container__foldr_kv(arg) new (@main.error_container__foldr_kv):value <= arg
+fn to_error_container__foldr_kv(arg) new (@.error_container__foldr_kv):value <= arg
 
 fn to_error_custom_container__foldr_kv(arg) custom__create(
      arg

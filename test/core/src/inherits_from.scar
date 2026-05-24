@@ -91,9 +91,9 @@ fn test__inherits_from() {
           [obj :3 = string_1, :4 = string_2, :_ = [obj :2 = string_1, :4 = string_4]]
      ]):_ === [obj :7 = string_7, :2 = string_2, :4 = string_4])
 
-     let child_fields_len  = rnd() & 63;
-     let child_methods_len = rnd() & 63;
-     let child_fields      = loop([obj].init(child_fields_len), fn (child_fields)
+     let child_fields_len = rnd() & 63;
+     let child_methods_len    = rnd() & 63;
+     let child_fields     = loop([obj].init(child_fields_len), fn (child_fields)
           if child_fields.len() == child_fields_len
                [breaker child_fields]
           else {
@@ -111,8 +111,8 @@ fn test__inherits_from() {
           }
      )
 
-     let borrowed_child_fields  = if rnd_bool(); child_fields else null
-     let borrowed_child_methods = if rnd_bool(); child_methods else null
+     let borrowed_child_fields = if rnd_bool(); child_fields else null
+     let borrowed_child_methods    = if rnd_bool(); child_methods else null
 
      let child = new (child_fields):_ <= child_methods
 

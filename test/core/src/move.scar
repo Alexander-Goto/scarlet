@@ -7,7 +7,7 @@ let array__move = [obj
      ]
 ]
 
-fn to_array__move(arg) new (@main.array__move):value <= arg
+fn to_array__move(arg) new (@.array__move):value <= arg
 
 fn to_custom_array__move(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_array__move = [obj
      ]
 ]
 
-fn to_broken_array__move(arg) new (@main.broken_array__move):value <= arg
+fn to_broken_array__move(arg) new (@.broken_array__move):value <= arg
 
 fn to_broken_custom_array__move(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_array__move = [obj
      ]
 ]
 
-fn to_error_array__move(arg) new (@main.error_array__move):value <= arg
+fn to_error_array__move(arg) new (@.error_array__move):value <= arg
 
 fn to_error_custom_array__move(arg) custom__create(
      arg

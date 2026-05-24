@@ -6,7 +6,7 @@ let char__letter = [obj
      ]
 ]
 
-fn to_char__letter?(arg) new (@main.char__letter):value <= arg
+fn to_char__letter?(arg) new (@.char__letter):value <= arg
 
 fn to_custom_char__letter?(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_char__letter = [obj
      ]
 ]
 
-fn to_broken_char__letter?(arg) new (@main.broken_char__letter):value <= arg
+fn to_broken_char__letter?(arg) new (@.broken_char__letter):value <= arg
 
 fn to_broken_custom_char__letter?(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_char__letter = [obj
      ]
 ]
 
-fn to_error_char__letter?(arg) new (@main.error_char__letter):value <= arg
+fn to_error_char__letter?(arg) new (@.error_char__letter):value <= arg
 
 fn to_error_custom_char__letter?(arg) custom__create(
      arg

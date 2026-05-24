@@ -7,7 +7,7 @@ let num__neg = [obj
      ]
 ]
 
-fn to_num__neg(arg) new (@main.num__neg):value <= arg
+fn to_num__neg(arg) new (@.num__neg):value <= arg
 
 fn to_custom_num__neg(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__neg = [obj
      ]
 ]
 
-fn to_broken_num__neg(arg) new (@main.broken_num__neg):value <= arg
+fn to_broken_num__neg(arg) new (@.broken_num__neg):value <= arg
 
 fn to_broken_custom_num__neg(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__neg = [obj
      ]
 ]
 
-fn to_error_num__neg(arg) new (@main.error_num__neg):value <= arg
+fn to_error_num__neg(arg) new (@.error_num__neg):value <= arg
 
 fn to_error_custom_num__neg(arg) custom__create(
      arg

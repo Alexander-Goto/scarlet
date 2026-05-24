@@ -7,7 +7,7 @@ let num__floor = [obj
      ]
 ]
 
-fn to_num__floor(arg) new (@main.num__floor):value <= arg
+fn to_num__floor(arg) new (@.num__floor):value <= arg
 
 fn to_custom_num__floor(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__floor = [obj
      ]
 ]
 
-fn to_broken_num__floor(arg) new (@main.broken_num__floor):value <= arg
+fn to_broken_num__floor(arg) new (@.broken_num__floor):value <= arg
 
 fn to_broken_custom_num__floor(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__floor = [obj
      ]
 ]
 
-fn to_error_num__floor(arg) new (@main.error_num__floor):value <= arg
+fn to_error_num__floor(arg) new (@.error_num__floor):value <= arg
 
 fn to_error_custom_num__floor(arg) custom__create(
      arg

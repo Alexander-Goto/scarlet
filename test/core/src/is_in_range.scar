@@ -6,7 +6,7 @@ let const__in_range = [obj
      ]
 ]
 
-fn to_const__in_range?(arg) new (@main.const__in_range):value <= arg
+fn to_const__in_range?(arg) new (@.const__in_range):value <= arg
 
 fn to_custom_const__in_range?(arg) custom__create(
      arg

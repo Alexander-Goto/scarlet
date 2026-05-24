@@ -6,7 +6,7 @@ let container__take_one = [obj
      ]
 ]
 
-fn to_container__take_one(arg) new (@main.container__take_one):value <= arg
+fn to_container__take_one(arg) new (@.container__take_one):value <= arg
 
 fn to_custom_container__take_one(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_container__take_one = [obj
      ]
 ]
 
-fn to_broken_container__take_one(arg) new (@main.broken_container__take_one):value <= arg
+fn to_broken_container__take_one(arg) new (@.broken_container__take_one):value <= arg
 
 fn to_broken_custom_container__take_one(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_container__take_one = [obj
      ]
 ]
 
-fn to_error_container__take_one(arg) new (@main.error_container__take_one):value <= arg
+fn to_error_container__take_one(arg) new (@.error_container__take_one):value <= arg
 
 fn to_error_custom_container__take_one(arg) custom__create(
      arg

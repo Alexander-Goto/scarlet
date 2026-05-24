@@ -7,7 +7,7 @@ let set__remove = [obj
      ]
 ]
 
-fn to_set__remove(arg) new (@main.set__remove):value <= arg
+fn to_set__remove(arg) new (@.set__remove):value <= arg
 
 fn to_custom_set__remove(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_set__remove = [obj
      ]
 ]
 
-fn to_broken_set__remove(arg) new (@main.broken_set__remove):value <= arg
+fn to_broken_set__remove(arg) new (@.broken_set__remove):value <= arg
 
 fn to_broken_custom_set__remove(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_set__remove = [obj
      ]
 ]
 
-fn to_error_set__remove(arg) new (@main.error_set__remove):value <= arg
+fn to_error_set__remove(arg) new (@.error_set__remove):value <= arg
 
 fn to_error_custom_set__remove(arg) custom__create(
      arg

@@ -6,7 +6,7 @@ let num__odd = [obj
      ]
 ]
 
-fn to_num__odd?(arg) new (@main.num__odd):value <= arg
+fn to_num__odd?(arg) new (@.num__odd):value <= arg
 
 fn to_custom_num__odd?(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_num__odd = [obj
      ]
 ]
 
-fn to_broken_num__odd?(arg) new (@main.broken_num__odd):value <= arg
+fn to_broken_num__odd?(arg) new (@.broken_num__odd):value <= arg
 
 fn to_broken_custom_num__odd?(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_num__odd = [obj
      ]
 ]
 
-fn to_error_num__odd?(arg) new (@main.error_num__odd):value <= arg
+fn to_error_num__odd?(arg) new (@.error_num__odd):value <= arg
 
 fn to_error_custom_num__odd?(arg) custom__create(
      arg

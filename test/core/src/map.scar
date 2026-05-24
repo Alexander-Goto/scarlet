@@ -7,7 +7,7 @@ let container__map = [obj
      ]
 ]
 
-fn to_container__map(arg) new (@main.container__map):value <= arg
+fn to_container__map(arg) new (@.container__map):value <= arg
 
 fn to_custom_container__map(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_container__map = [obj
      ]
 ]
 
-fn to_broken_container__map(arg) new (@main.broken_container__map):value <= arg
+fn to_broken_container__map(arg) new (@.broken_container__map):value <= arg
 
 fn to_broken_custom_container__map(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_container__map = [obj
      ]
 ]
 
-fn to_error_container__map(arg) new (@main.error_container__map):value <= arg
+fn to_error_container__map(arg) new (@.error_container__map):value <= arg
 
 fn to_error_custom_container__map(arg) custom__create(
      arg
@@ -89,12 +89,12 @@ fn test__map() {
      let string_1        = rnd_string()
      let string_2        = if rnd_bool(); string_1 else null
      let expected_string = string_1.foldl("", fn (string, char)
-          if char === '\000001' || char === @main.last_corsar_code.to_char()
+          if char === '\000001' || char === @.last_corsar_code.to_char()
                string.append(char)
           else string.append((char.to_int() + if char.to_int().even?(); 1 else -1).to_char())
      )
      let have_string = string_1.map(fn (char)
-          if char === '\000001' || char === @main.last_corsar_code.to_char()
+          if char === '\000001' || char === @.last_corsar_code.to_char()
                char
           else (char.to_int() + if char.to_int().even?(); 1 else -1).to_char()
      )

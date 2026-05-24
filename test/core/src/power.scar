@@ -7,7 +7,7 @@ let num__power = [obj
      ]
 ]
 
-fn to_num__power(arg) new (@main.num__power):value <= arg
+fn to_num__power(arg) new (@.num__power):value <= arg
 
 fn to_custom_num__power(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__power = [obj
      ]
 ]
 
-fn to_broken_num__power(arg) new (@main.broken_num__power):value <= arg
+fn to_broken_num__power(arg) new (@.broken_num__power):value <= arg
 
 fn to_broken_custom_num__power(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__power = [obj
      ]
 ]
 
-fn to_error_num__power(arg) new (@main.error_num__power):value <= arg
+fn to_error_num__power(arg) new (@.error_num__power):value <= arg
 
 fn to_error_custom_num__power(arg) custom__create(
      arg

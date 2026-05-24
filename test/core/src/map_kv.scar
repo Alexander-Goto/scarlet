@@ -7,7 +7,7 @@ let container__map_kv = [obj
      ]
 ]
 
-fn to_container__map_kv(arg) new (@main.container__map_kv):value <= arg
+fn to_container__map_kv(arg) new (@.container__map_kv):value <= arg
 
 fn to_custom_container__map_kv(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_container__map_kv = [obj
      ]
 ]
 
-fn to_broken_container__map_kv(arg) new (@main.broken_container__map_kv):value <= arg
+fn to_broken_container__map_kv(arg) new (@.broken_container__map_kv):value <= arg
 
 fn to_broken_custom_container__map_kv(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_container__map_kv = [obj
      ]
 ]
 
-fn to_error_container__map_kv(arg) new (@main.error_container__map_kv):value <= arg
+fn to_error_container__map_kv(arg) new (@.error_container__map_kv):value <= arg
 
 fn to_error_custom_container__map_kv(arg) custom__create(
      arg
@@ -89,12 +89,12 @@ fn test__map_kv() {
      let string_1        = rnd_string()
      let string_2        = if rnd_bool(); string_1 else null
      let expected_string = string_1.foldl_kv("", fn (string, idx, char)
-          if not char.in_range?('\000004', (@main.last_corsar_code - 2).to_char())
+          if not char.in_range?('\000004', (@.last_corsar_code - 2).to_char())
                string.append(char)
           else string.append((char.to_int() + if idx.even?(); 1 else -1).to_char())
      )
      let have_string = string_1.map_kv(fn (idx, char)
-          if not char.in_range?('\000004', (@main.last_corsar_code - 2).to_char())
+          if not char.in_range?('\000004', (@.last_corsar_code - 2).to_char())
                char
           else (char.to_int() + if idx.even?(); 1 else -1).to_char()
      )

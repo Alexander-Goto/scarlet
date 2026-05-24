@@ -1,8 +1,8 @@
 `noinline`
 fn test__change_dir() {
      let cwd = current_dir()
-     test(change_dir(@std.user_home_dir).null?())
-     test(current_dir() == @std.user_home_dir)
+     test(change_dir(@.user_home_dir).null?())
+     test(current_dir() == @.user_home_dir)
      test(change_dir(cwd).null?())
      test(current_dir() == cwd)
 

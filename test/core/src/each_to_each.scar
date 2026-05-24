@@ -7,7 +7,7 @@ let container__each_to_each = [obj
      ]
 ]
 
-fn to_container__each_to_each(arg) new (@main.container__each_to_each):value <= arg
+fn to_container__each_to_each(arg) new (@.container__each_to_each):value <= arg
 
 fn to_custom_container__each_to_each(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_container__each_to_each = [obj
      ]
 ]
 
-fn to_broken_container__each_to_each(arg) new (@main.broken_container__each_to_each):value <= arg
+fn to_broken_container__each_to_each(arg) new (@.broken_container__each_to_each):value <= arg
 
 fn to_broken_custom_container__each_to_each(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_container__each_to_each = [obj
      ]
 ]
 
-fn to_error_container__each_to_each(arg) new (@main.error_container__each_to_each):value <= arg
+fn to_error_container__each_to_each(arg) new (@.error_container__each_to_each):value <= arg
 
 fn to_error_custom_container__each_to_each(arg) custom__create(
      arg

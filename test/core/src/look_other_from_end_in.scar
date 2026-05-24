@@ -6,7 +6,7 @@ let container__look_other_from_end_in = [obj
      ]
 ]
 
-fn to_container__look_other_from_end_in(arg) new (@main.container__look_other_from_end_in):value <= arg
+fn to_container__look_other_from_end_in(arg) new (@.container__look_other_from_end_in):value <= arg
 
 fn to_custom_container__look_other_from_end_in(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let error_container__look_other_from_end_in = [obj
      ]
 ]
 
-fn to_error_container__look_other_from_end_in(arg) new (@main.error_container__look_other_from_end_in):value <= arg
+fn to_error_container__look_other_from_end_in(arg) new (@.error_container__look_other_from_end_in):value <= arg
 
 fn to_error_custom_container__look_other_from_end_in(arg) custom__create(
      arg

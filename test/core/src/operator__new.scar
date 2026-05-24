@@ -417,12 +417,12 @@ fn test__operator__new() {
 
      let string_1 = rnd_string()
      let string_2 = if rnd_bool(); string_1 else null
-     let expected = string_1.map(fn (char) if char === @main.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char())
+     let expected = string_1.map(fn (char) if char === @.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char())
      let have     = loop([box 0, string_1], fn (state) {
           let [box idx, have] = state
 
           let char     = have[idx]
-          let new_char = if char === @main.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char()
+          let new_char = if char === @.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char()
           let have     = new (have)[idx] <= new_char
           let idx      = idx + 1
 
@@ -436,12 +436,12 @@ fn test__operator__new() {
 
      let string_1 = rnd_string()
      let string_2 = if rnd_bool(); string_1 else null
-     let expected = string_1.map(fn (char) if char === @main.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char())
+     let expected = string_1.map(fn (char) if char === @.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char())
      let have     = loop([box 0, string_1], fn (state) {
           let [box idx, have] = state
 
           let char     = have[idx]
-          let new_char = if char === @main.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char()
+          let new_char = if char === @.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char()
           let have     = new (have)[idx] => fn (_) new_char
           let idx      = idx + 1
 
@@ -455,12 +455,12 @@ fn test__operator__new() {
 
      let string_1                  = rnd_string()
      let string_2                  = if rnd_bool(); string_1 else null
-     let expected                  = string_1.map(fn (char) if char === @main.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char())
+     let expected                  = string_1.map(fn (char) if char === @.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char())
      let [box have, chars_correct] = loop([box 0, string_1, true], fn (state) {
           let [box idx, have, chars_correct] = state
 
           let char                 = have[idx]
-          let new_char             = if char === @main.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char()
+          let new_char             = if char === @.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char()
           let [box have, old_char] = new (have)[idx] <<= new_char
           let chars_correct        = chars_correct && char === old_char
           let idx                  = idx + 1
@@ -476,12 +476,12 @@ fn test__operator__new() {
 
      let string_1                  = rnd_string()
      let string_2                  = if rnd_bool(); string_1 else null
-     let expected                  = string_1.map(fn (char) if char === @main.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char())
+     let expected                  = string_1.map(fn (char) if char === @.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char())
      let [box have, chars_correct] = loop([box 0, string_1, true], fn (state) {
           let [box idx, have, chars_correct] = state
 
           let char                 = have[idx]
-          let new_char             = if char === @main.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char()
+          let new_char             = if char === @.last_corsar_code.to_char(); 1.to_char() else (char.to_int() + 1).to_char()
           let [box have, old_char] = new (have)[idx] =>> fn (_) new_char
           let chars_correct        = chars_correct && char === old_char
           let idx                  = idx + 1

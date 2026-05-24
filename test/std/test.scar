@@ -1,9 +1,9 @@
 fn main() {
-     if @core.cli_args.len() == 1 && @core.cli_args.first() == "--child" {
+     if @.cli_args.len() == 1 && @.cli_args.first() == "--child" {
           u"stdout string".uprint()
           stderr()->write(u"stderr string")->flush()
 
-          guard((@core.env_vars)["new_var"] === "new_var_value")
+          guard((@.env_vars)["new_var"] === "new_var_value")
           guard(read_cli_line() == "line_1")
           guard(read_cli_line() == "line_2")
      } else {

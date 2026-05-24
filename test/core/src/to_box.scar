@@ -6,7 +6,7 @@ let container__to_box = [obj
      ]
 ]
 
-fn to_container__to_box(arg) new (@main.container__to_box):value <= arg
+fn to_container__to_box(arg) new (@.container__to_box):value <= arg
 
 fn to_custom_container__to_box(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_container__to_box = [obj
      ]
 ]
 
-fn to_broken_container__to_box(arg) new (@main.broken_container__to_box):value <= arg
+fn to_broken_container__to_box(arg) new (@.broken_container__to_box):value <= arg
 
 fn to_broken_custom_container__to_box(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_container__to_box = [obj
      ]
 ]
 
-fn to_error_container__to_box(arg) new (@main.error_container__to_box):value <= arg
+fn to_error_container__to_box(arg) new (@.error_container__to_box):value <= arg
 
 fn to_error_custom_container__to_box(arg) custom__create(
      arg

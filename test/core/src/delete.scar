@@ -7,7 +7,7 @@ let array__delete = [obj
      ]
 ]
 
-fn to_array__delete(arg) new (@main.array__delete):value <= arg
+fn to_array__delete(arg) new (@.array__delete):value <= arg
 
 fn to_custom_array__delete(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_array__delete = [obj
      ]
 ]
 
-fn to_broken_array__delete(arg) new (@main.broken_array__delete):value <= arg
+fn to_broken_array__delete(arg) new (@.broken_array__delete):value <= arg
 
 fn to_broken_custom_array__delete(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_array__delete = [obj
      ]
 ]
 
-fn to_error_array__delete(arg) new (@main.error_array__delete):value <= arg
+fn to_error_array__delete(arg) new (@.error_array__delete):value <= arg
 
 fn to_error_custom_array__delete(arg) custom__create(
      arg

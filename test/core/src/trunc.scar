@@ -7,7 +7,7 @@ let num__trunc = [obj
      ]
 ]
 
-fn to_num__trunc(arg) new (@main.num__trunc):value <= arg
+fn to_num__trunc(arg) new (@.num__trunc):value <= arg
 
 fn to_custom_num__trunc(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__trunc = [obj
      ]
 ]
 
-fn to_broken_num__trunc(arg) new (@main.broken_num__trunc):value <= arg
+fn to_broken_num__trunc(arg) new (@.broken_num__trunc):value <= arg
 
 fn to_broken_custom_num__trunc(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__trunc = [obj
      ]
 ]
 
-fn to_error_num__trunc(arg) new (@main.error_num__trunc):value <= arg
+fn to_error_num__trunc(arg) new (@.error_num__trunc):value <= arg
 
 fn to_error_custom_num__trunc(arg) custom__create(
      arg

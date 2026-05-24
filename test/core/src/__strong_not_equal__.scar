@@ -6,7 +6,7 @@ let const__strong_not_equal = [obj
      ]
 ]
 
-fn to_const__strong_not_equal(arg) new (@main.const__strong_not_equal):value <= arg
+fn to_const__strong_not_equal(arg) new (@.const__strong_not_equal):value <= arg
 
 fn to_custom_const__strong_not_equal(arg) custom__create(
      arg

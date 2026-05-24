@@ -135,9 +135,9 @@ fn test__multithread__share() {
      let address  = string.scarlet__split!!!()[0]
      let func     = fn () string
      push(in, func)
-     test(pop(out)().scarlet__split!!!()[0] =/= address)
+     test((pop(out))().scarlet__split!!!()[0] =/= address)
 
      let func = fn () string
      push(in, func)
-     test(pop(out)().scarlet__split!!!()[0] === address)
+     test((pop(out))().scarlet__split!!!()[0] === address)
 }

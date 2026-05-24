@@ -6,7 +6,7 @@ let array__first = [obj
      ]
 ]
 
-fn to_array__first(arg) new (@main.array__first):value <= arg
+fn to_array__first(arg) new (@.array__first):value <= arg
 
 fn to_custom_array__first(arg) custom__create(
      arg
@@ -23,7 +23,7 @@ let broken_array__first = [obj
      ]
 ]
 
-fn to_broken_array__first(arg) new (@main.broken_array__first):value <= arg
+fn to_broken_array__first(arg) new (@.broken_array__first):value <= arg
 
 fn to_broken_custom_array__first(arg) custom__create(
      arg
@@ -40,7 +40,7 @@ let error_array__first = [obj
      ]
 ]
 
-fn to_error_array__first(arg) new (@main.error_array__first):value <= arg
+fn to_error_array__first(arg) new (@.error_array__first):value <= arg
 
 fn to_error_custom_array__first(arg) custom__create(
      arg

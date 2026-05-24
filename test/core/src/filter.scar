@@ -7,7 +7,7 @@ let container__filter = [obj
      ]
 ]
 
-fn to_container__filter(arg) new (@main.container__filter):value <= arg
+fn to_container__filter(arg) new (@.container__filter):value <= arg
 
 fn to_custom_container__filter(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_container__filter = [obj
      ]
 ]
 
-fn to_broken_container__filter(arg) new (@main.broken_container__filter):value <= arg
+fn to_broken_container__filter(arg) new (@.broken_container__filter):value <= arg
 
 fn to_broken_custom_container__filter(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_container__filter = [obj
      ]
 ]
 
-fn to_error_container__filter(arg) new (@main.error_container__filter):value <= arg
+fn to_error_container__filter(arg) new (@.error_container__filter):value <= arg
 
 fn to_error_custom_container__filter(arg) custom__create(
      arg

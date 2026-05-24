@@ -9,7 +9,7 @@ let array__zip_n = [obj
      ]
 ]
 
-fn to_array__zip_n(arg) new (@main.array__zip_n):value <= arg
+fn to_array__zip_n(arg) new (@.array__zip_n):value <= arg
 
 fn to_custom_array__zip_n(arg) custom__create(
      arg
@@ -29,7 +29,7 @@ let error_array__zip_n = [obj
      ]
 ]
 
-fn to_error_array__zip_n(arg) new (@main.error_array__zip_n):value <= arg
+fn to_error_array__zip_n(arg) new (@.error_array__zip_n):value <= arg
 
 fn to_error_custom_array__zip_n(arg) custom__create(
      arg

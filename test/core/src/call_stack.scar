@@ -9,6 +9,6 @@ let g_2 = fn_1()
 fn test__call_stack() {
      test(call_stack() === [array "function - main.main", "function - main.test__call_stack"])
      test(fn_1() === [array "function - main.main", "function - main.test__call_stack", "function - main.fn_1", "function - main.fn_2", "function - main.fn_3"])
-     test(@main.g_1 === [array "constant - main.g_1"])
-     test(@main.g_2 === [array "constant - main.g_2", "function - main.fn_1", "function - main.fn_2", "function - main.fn_3"])
+     test(@.g_1 === [array "constant - main.g_1"])
+     test(@.g_2 === [array "constant - main.g_2", "function - main.fn_1", "function - main.fn_2", "function - main.fn_3"])
 }

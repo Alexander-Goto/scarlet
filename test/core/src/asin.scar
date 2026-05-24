@@ -7,7 +7,7 @@ let num__asin = [obj
      ]
 ]
 
-fn to_num__asin(arg) new (@main.num__asin):value <= arg
+fn to_num__asin(arg) new (@.num__asin):value <= arg
 
 fn to_custom_num__asin(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__asin = [obj
      ]
 ]
 
-fn to_broken_num__asin(arg) new (@main.broken_num__asin):value <= arg
+fn to_broken_num__asin(arg) new (@.broken_num__asin):value <= arg
 
 fn to_broken_custom_num__asin(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__asin = [obj
      ]
 ]
 
-fn to_error_num__asin(arg) new (@main.error_num__asin):value <= arg
+fn to_error_num__asin(arg) new (@.error_num__asin):value <= arg
 
 fn to_error_custom_num__asin(arg) custom__create(
      arg

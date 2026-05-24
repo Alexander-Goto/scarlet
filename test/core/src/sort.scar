@@ -7,7 +7,7 @@ let array__sort = [obj
      ]
 ]
 
-fn to_array__sort(arg) new (@main.array__sort):value <= arg
+fn to_array__sort(arg) new (@.array__sort):value <= arg
 
 fn to_custom_array__sort(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_array__sort = [obj
      ]
 ]
 
-fn to_broken_array__sort(arg) new (@main.broken_array__sort):value <= arg
+fn to_broken_array__sort(arg) new (@.broken_array__sort):value <= arg
 
 fn to_broken_custom_array__sort(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_array__sort = [obj
      ]
 ]
 
-fn to_error_array__sort(arg) new (@main.error_array__sort):value <= arg
+fn to_error_array__sort(arg) new (@.error_array__sort):value <= arg
 
 fn to_error_custom_array__sort(arg) custom__create(
      arg

@@ -7,7 +7,7 @@ let set__append_new = [obj
      ]
 ]
 
-fn to_set__append_new(arg) new (@main.set__append_new):value <= arg
+fn to_set__append_new(arg) new (@.set__append_new):value <= arg
 
 fn to_custom_set__append_new(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_set__append_new = [obj
      ]
 ]
 
-fn to_broken_set__append_new(arg) new (@main.broken_set__append_new):value <= arg
+fn to_broken_set__append_new(arg) new (@.broken_set__append_new):value <= arg
 
 fn to_broken_custom_set__append_new(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_set__append_new = [obj
      ]
 ]
 
-fn to_error_set__append_new(arg) new (@main.error_set__append_new):value <= arg
+fn to_error_set__append_new(arg) new (@.error_set__append_new):value <= arg
 
 fn to_error_custom_set__append_new(arg) custom__create(
      arg

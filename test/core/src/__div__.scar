@@ -7,7 +7,7 @@ let num__div = [obj
      ]
 ]
 
-fn to_num__div(arg) new (@main.num__div):value <= arg
+fn to_num__div(arg) new (@.num__div):value <= arg
 
 fn to_custom_num__div(arg) custom__create(
      arg
@@ -25,7 +25,7 @@ let broken_num__div = [obj
      ]
 ]
 
-fn to_broken_num__div(arg) new (@main.broken_num__div):value <= arg
+fn to_broken_num__div(arg) new (@.broken_num__div):value <= arg
 
 fn to_broken_custom_num__div(arg) custom__create(
      arg
@@ -42,7 +42,7 @@ let error_num__div = [obj
      ]
 ]
 
-fn to_error_num__div(arg) new (@main.error_num__div):value <= arg
+fn to_error_num__div(arg) new (@.error_num__div):value <= arg
 
 fn to_error_custom_num__div(arg) custom__create(
      arg
