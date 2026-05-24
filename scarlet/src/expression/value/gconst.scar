@@ -36,7 +36,7 @@ fn gconst_to_operand(gconst, exp_data, ir, final_data, dependencies, src_gconsts
           if result_has_unknown_type || final_gconst:comptime_val.null?() {
                let [box operand, exp_data, ir] = ir__gconst(final_gconst:ir_name, gconst:name, if result_has_unknown_type; null else final_gconst:possible_types, exp_data, ir, is_last)
 
-               [box operand, exp_data, ir, final_data, new (dependencies):gconsts => _.append(gconst:name:text.drop(1)), src_gconsts]
+               [box operand, exp_data, ir, final_data, new (dependencies):gconsts => _.append(gconst__ir_name_to_full_name(final_gconst:ir_name)), src_gconsts]
           } else {
                let final_data = new (final_data):always_use_gconsts[final_gconst:ir_name] <= null
 
@@ -49,7 +49,7 @@ fn gconst_to_operand(gconst, exp_data, ir, final_data, dependencies, src_gconsts
 
                let dependencies = if "return ".prefix_of?(final_gconst:ir)
                     join_dependencies(dependencies, final_gconst:dependencies)
-               else new (dependencies):gconsts => _.append(gconst:name:text.drop(1))
+               else new (dependencies):gconsts => _.append(gconst__ir_name_to_full_name(final_gconst:ir_name))
 
                [box operand, exp_data, ir, final_data, dependencies, src_gconsts]
           }

@@ -17,3 +17,12 @@ fn ir__gconst(ir_name, code, possible_types, exp_data, ir, is_last) {
           exp_data, ir
      ]
 }
+
+fn gconst__ir_name_to_full_name(name) {
+     let fn_id_idx = 'G'.look_in(name)
+
+     let name = name.self_copy(1, 0, fn_id_idx)
+     let name = new (name)[fn_id_idx - 1] <= '.'
+     let name = name.self_copy(fn_id_idx + 2, fn_id_idx, name.len() - fn_id_idx - 2)
+     name.take(name.len() - 2)
+}
