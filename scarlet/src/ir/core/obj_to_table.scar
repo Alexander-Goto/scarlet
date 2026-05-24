@@ -14,7 +14,7 @@ fn ir__core_fn_obj_to_table(exp, last_use_ids, contexts, lambdas_data, unused_de
                :code               <= code
                :comptime_val:type  <= "table"
                :comptime_val:value => fn (obj) obj.foldl_kv([table].init(obj.len()), fn (table, key, value) {
-                    let new_key = new (@main.t_comptime_val) {
+                    let new_key = new (@.t_comptime_val) {
                          :type  <= "token"
                          :value <= key
                     }

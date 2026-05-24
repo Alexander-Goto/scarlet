@@ -13,5 +13,5 @@ fn ir__core_fn_time_limit_pop(exp, last_use_ids, contexts, lambdas_data, unused_
           else null
      else nano_sec.maybe_has_type!("int")
 
-     ir__fn_call("McoreFNtime_limit_pop", [array channel, nano_sec], code, @main.shared_types__null_error, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     ir__fn_call("McoreFNtime_limit_pop", [array channel, nano_sec], code, @.shared_types__null_error, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
 }

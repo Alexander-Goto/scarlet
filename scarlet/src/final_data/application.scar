@@ -37,9 +37,9 @@ fn create_application(final_data) {
      not_used_gconsts.foldl(null, fn (_, name) warning__fn_or_gconst_not_used(name, "global constant"))
 
      let app_code = join_application_parts(signatures, def_ir_consts, application, calc_gconsts_ir_fn)
-     let file     = open_file(fs_path(@main.user_cmd:out), @std.fom__write | @std.fom__new)->write_string(app_code, :ctf8)->flush()
+     let file     = open_file(fs_path(@.user_cmd:out), @.fom__write | @.fom__new)->write_string(app_code, :ctf8)->flush()
      if file.error?() || file.type() /= "std.file"
-          error__cant_save_to_file(@main.user_cmd:out)
+          error__cant_save_to_file(@.user_cmd:out)
      else null
 }
 
@@ -170,7 +170,7 @@ fn add_gconst_to_application(queue, application, gconst, done, signatures, def_i
           "if(" ++ gconst:ir_name ++ ".bytes[15]!=tid__holder)[[clang::likely]]return " ++ gconst:ir_name ++ ";\n" ++
           gconst:ir_name ++ "=calc_gc_" ++ gconst:ir_name ++ "(thrd_data);\n"
 
-     let application = if gconst:possible_types.null?() || not gconst:possible_types.all(true, _.in?(@main.without_managed_mem_types))
+     let application = if gconst:possible_types.null?() || not gconst:possible_types.all(true, _.in?(@.without_managed_mem_types))
           ir__assume_type(gconst:ir_name, gconst:possible_types, application) ++
           gconst:ir_name ++ "=to_global_const(thrd_data," ++ gconst:ir_name ++ "," ++ gconst:name_ir_const ++ ");\n"
      else application
@@ -183,6 +183,6 @@ fn add_gconst_to_application(queue, application, gconst, done, signatures, def_i
 
 
 fn join_application_parts(signatures, def_ir_consts, application, calc_gconsts_ir_fn)
-     @main.core ++ signatures ++ def_ir_consts ++
+     @.core ++ signatures ++ def_ir_consts ++
      application ++ "int main(int const argc,const char*const*const argv,const char*const*const envp){\nplatform__check();\nt_thrd_data* thrd_data;\ninit_app(&thrd_data,argc,argv,envp);\n" ++
      calc_gconsts_ir_fn ++ "allow_thrds=true;\ncheck_app_result(thrd_data,MmainFNmain(thrd_data,nullptr));\ndeinit_app(thrd_data);\nreturn 0;\n}"

@@ -6,7 +6,7 @@ fn ir__core_fn___strong_not_equal__(exp, last_use_ids, contexts, lambdas_data, u
 
      let code = new (left:code):text => _ ++ (" /= " ++ right:code:text)
 
-     if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.comptime_eq_types) {
+     if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@.comptime_eq_types) {
           if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[:core___strong_equal__].null?()
                error__invalid_type(left:code, ".core___strong_equal__", "obj")
           else null
@@ -20,11 +20,11 @@ fn ir__core_fn___strong_not_equal__(exp, last_use_ids, contexts, lambdas_data, u
           let left_possible_types  = left:possible_types
           let right_possible_types = right:possible_types
           let right_expected_types = if left_possible_types.null?()
-               @main.eq_types
+               @.eq_types
           else {
-               let new_left_possible_types = left_possible_types.filter(_.in?(@main.eq_types)).prepare_types_for_cmp()
+               let new_left_possible_types = left_possible_types.filter(_.in?(@.eq_types)).prepare_types_for_cmp()
                if new_left_possible_types.empty?()
-                    error__invalid_type(left:code, @main.eq_types, left_possible_types)
+                    error__invalid_type(left:code, @.eq_types, left_possible_types)
                else new_left_possible_types
           }
           right.maybe_has_type!(right_expected_types)
@@ -32,17 +32,17 @@ fn ir__core_fn___strong_not_equal__(exp, last_use_ids, contexts, lambdas_data, u
           let maybe_error = left_possible_types.null?() || right_possible_types.null?() ||
                not (
                     left_possible_types.len() == 1 && left_possible_types == right_possible_types ||
-                    left_possible_types.all(true, _.in?(@main.string_types)) && right_possible_types.all(true, _.in?(@main.string_types)) ||
-                    left_possible_types.all(true, _.in?(@main.byte_array_types)) && right_possible_types.all(true, _.in?(@main.byte_array_types))
+                    left_possible_types.all(true, _.in?(@.string_types)) && right_possible_types.all(true, _.in?(@.string_types)) ||
+                    left_possible_types.all(true, _.in?(@.byte_array_types)) && right_possible_types.all(true, _.in?(@.byte_array_types))
                )
 
           let has_known_types = left_possible_types === right_possible_types && left_possible_types.len() == 1
-          if not (has_known_types || maybe_error) && left_possible_types.all(true, _.in?(@main.simple_eq_types)) && right_possible_types.all(true, _.in?(@main.simple_eq_types)) {
+          if not (has_known_types || maybe_error) && left_possible_types.all(true, _.in?(@.simple_eq_types)) && right_possible_types.all(true, _.in?(@.simple_eq_types)) {
                let [box result_reg, exp_data] = exp_data.new_reg()
 
                let ir = ir ++ "t_any const " ++ result_reg ++ "={.bytes={" ++ left_ir ++ ".raw_bits!=" ++ right_ir ++ ".raw_bits,[15]=tid__bool}};\n"
 
-               let operand = new (@main.t_operand) {
+               let operand = new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= [set "bool"]
@@ -52,7 +52,7 @@ fn ir__core_fn___strong_not_equal__(exp, last_use_ids, contexts, lambdas_data, u
           } else if not maybe_error && has_known_types && left_possible_types /= right_possible_types {
                let ir = dec_ref_cnt(right, dec_ref_cnt(left, ir))
                [box comptime_bool(true, code), exp_data, if is_last; ir__raw_return(ir, "bool__true") else ir, final_data, dependencies, src_gconsts]
-          } else if not maybe_error && has_known_types && left_possible_types.take_one().in?(@main.simple_eq_types__float) {
+          } else if not maybe_error && has_known_types && left_possible_types.take_one().in?(@.simple_eq_types__float) {
                let [box result_reg, exp_data] = exp_data.new_reg()
 
                let ir = ir ++ "t_any const " ++ result_reg ++ "={.structure={.value=" ++
@@ -68,7 +68,7 @@ fn ir__core_fn___strong_not_equal__(exp, last_use_ids, contexts, lambdas_data, u
                     default:
                          unreachable()
 
-               let operand = new (@main.t_operand) {
+               let operand = new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= [set "bool"]

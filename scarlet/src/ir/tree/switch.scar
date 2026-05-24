@@ -7,7 +7,7 @@ fn ir__table_switch(
      exp_data, ir, final_data, dependencies, src_gconsts, is_last
 ) {
      let named_consts = exp_data:named_consts
-     if table_is_comptime && not switch_operand:comptime_val.null?() && switch_operand:comptime_val:type.in?(@main.always_hash_map_key_types) {
+     if table_is_comptime && not switch_operand:comptime_val.null?() && switch_operand:comptime_val:type.in?(@.always_hash_map_key_types) {
           let case_idx = variants_operands.foldl_kv(variants_operands.len(), fn (default_idx, case_idx, case_variants_operands)
                case_variants_operands.foldl(default_idx, fn (default_idx, variant_operand)
                     if variant_operand:comptime_val === switch_operand:comptime_val
@@ -94,7 +94,7 @@ fn ir__table_switch(
           let c_switch_ir = consts_from_other_branches.foldl(c_switch_ir ++ "default:{\n", fn (c_switch_ir, name) named_consts[name]:operand.dec_ref_cnt(c_switch_ir)) ++ cases_irs.last() ++
                if is_last; "}\n}\n" else result_reg ++ "=" ++ cases_operands.last():ir ++ ";\n}\n}\n"
 
-          let case_idx_always_int = switch_operand.has_type?(@main.always_hash_map_key_types)
+          let case_idx_always_int = switch_operand.has_type?(@.always_hash_map_key_types)
 
           let ir = if case_idx_always_int
                ir ++ c_switch_ir
@@ -120,7 +120,7 @@ fn ir__table_switch(
           let ir = if is_last; ir else ir__assume_type(result_reg, possible_types, ir)
 
           [box
-               new (@main.t_operand) {
+               new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= possible_types
@@ -198,7 +198,7 @@ fn ir__simple_switch(
                else consts_from_other_branches.append(const_from_any_branch)
           )
 
-          let switch_operand_always_correct = switch_operand.has_type?(@main.always_hash_map_key_types)
+          let switch_operand_always_correct = switch_operand.has_type?(@.always_hash_map_key_types)
 
           let ir                 = consts_from_other_branches.foldl(ir ++ "default:{\n", fn (ir, name) named_consts[name]:operand.dec_ref_cnt(ir))
           let [box ir, exp_data] = if switch_operand_always_correct
@@ -250,7 +250,7 @@ fn ir__simple_switch(
           let ir = if is_last; ir else ir__assume_type(result_reg, possible_types, ir)
 
           [box
-               new (@main.t_operand) {
+               new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= possible_types

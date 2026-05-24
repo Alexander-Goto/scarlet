@@ -9,18 +9,18 @@ let t_user_cmd = [obj
 ]
 
 fn get_user_cmd() {
-     let cmd = new (@main.t_user_cmd):cmd <= if @core.cli_args.empty?(); :help else :compile
+     let cmd = new (@.t_user_cmd):cmd <= if @.cli_args.empty?(); :help else :compile
 
-     let [box cmd] = @core.cli_args.foldl([box cmd, :nothing], fn (state, arg) {
+     let [box cmd] = @.cli_args.foldl([box cmd, :nothing], fn (state, arg) {
           let [box cmd, received] = state
 
           switch arg
           case "-h", "--help":
-               if @core.cli_args.len() == 1
+               if @.cli_args.len() == 1
                     [box new (cmd):cmd <= :help, :nothing]
                else error__flag_not_alone(arg)
           case "-v", "--version":
-               if @core.cli_args.len() == 1
+               if @.cli_args.len() == 1
                     [box new (cmd):cmd <= :version, :nothing]
                else error__flag_not_alone(arg)
           case "-n", "--name":
@@ -81,14 +81,14 @@ fn get_user_cmd() {
 fn run_user_cmd(cmd)
      switch cmd:cmd
      case :help:
-          println(@main.msg__help)
+          println(@.msg__help)
      case :version:
-          println(@main.msg__version)
+          println(@.msg__version)
      case :compile: {
           let final_data = cmd:modules.load_modules()
           let final_data = cmd:sources.load_sources(final_data)
 
-          if @main.compiled_module_name == "main"
+          if @.compiled_module_name == "main"
                create_application(final_data)
           else create_module(final_data)
      }

@@ -2,7 +2,7 @@ let t_mtd_call = [obj
      :scar_type = "t_mtd_call"
 
      :mtd_const = :i_expression
-     :mtd_name  = @main.t_token
+     :mtd_name  = @.t_token
      :args      = [array] # [array @i_expression*]
 ]
 

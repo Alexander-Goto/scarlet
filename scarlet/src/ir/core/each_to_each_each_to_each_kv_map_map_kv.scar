@@ -8,7 +8,7 @@ fn ir__core_fn_each_to_each_each_to_each_kv_map_map_kv(exp, fn_ir_name, last_use
 
      let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "table", "array", "obj", "custom"]
      container.maybe_has_type!(valid_types)
-     func.maybe_has_type!(@main.fn_types)
+     func.maybe_has_type!(@.fn_types)
 
      let result_possible_types = if container:possible_types.null?()
           valid_types.append("error")

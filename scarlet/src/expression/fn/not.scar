@@ -1,7 +1,7 @@
 let t_not = [obj
      :scar_type = "t_not"
 
-     :operator = @main.t_token
+     :operator = @.t_token
      :exp      = :i_expression
 ]
 

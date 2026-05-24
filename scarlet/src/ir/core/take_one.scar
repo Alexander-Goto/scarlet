@@ -11,17 +11,17 @@ fn ir__core_fn_take_one(exp, last_use_ids, contexts, lambdas_data, unused_def_id
                "McoreFNtake_one", [array arg], code
 
                if arg.has_type?("table")
-                    @main.common_types__null
+                    @.common_types__null
                else if arg.has_type?("set")
-                    @main.all_hash_map_key_types__null
-               else @main.common_types__null_error
+                    @.all_hash_map_key_types__null
+               else @.common_types__null_error
 
                exp_data, ir, final_data, dependencies, src_gconsts, is_last
           )
      else {
           let comptime_value = (if arg:comptime_val:type == "obj" && :_.key_of?(arg:comptime_val:value)
-               arg:comptime_val:value.foldl_kv(@main.comptime_null_val, fn (null_val, key, value) if key == :_; null_val else [breaker value])
-          else arg:comptime_val:value.take_one()) <? @main.comptime_null_val
+               arg:comptime_val:value.foldl_kv(@.comptime_null_val, fn (null_val, key, value) if key == :_; null_val else [breaker value])
+          else arg:comptime_val:value.take_one()) <? @.comptime_null_val
 
           let operand = new (arg) {
                :ir             <= null

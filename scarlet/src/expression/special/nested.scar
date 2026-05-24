@@ -1,7 +1,7 @@
 let t_nested_exp = [obj
      :scar_type = "t_nested_exp"
 
-     :open_char = @main.t_token
+     :open_char = @.t_token
      :exp       = :i_expression
 ]
 

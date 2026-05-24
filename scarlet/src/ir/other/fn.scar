@@ -3,7 +3,7 @@ fn ir__fn_arg(idx, code, ir) {
      let reg = "__a" ++ idx
 
      [box
-          new (@main.t_operand) {
+          new (@.t_operand) {
                :code <= code
                :ir   <= reg
           }
@@ -30,8 +30,8 @@ fn ir__partial_application(fn_ir_name, args, code, exp_data, ir, final_data, dep
      let [box holders_qty, is_comptime] = args.foldl([box 0, true], fn (state, arg) {
           let [box holders_qty, is_comptime] = state
 
-          if arg.has_type?(@main.not_copyable_types__error)
-               error__invalid_type(arg:code, @main.copyable_not_error_types, arg:possible_types)
+          if arg.has_type?(@.not_copyable_types__error)
+               error__invalid_type(arg:code, @.copyable_not_error_types, arg:possible_types)
           else null
 
           [box
@@ -48,7 +48,7 @@ fn ir__partial_application(fn_ir_name, args, code, exp_data, ir, final_data, dep
                let [box result_maybe_error, holders_mask] = state
 
                [box
-                    result_maybe_error || arg.maybe_has_type?(@main.not_copyable_types__error)
+                    result_maybe_error || arg.maybe_has_type?(@.not_copyable_types__error)
                     if arg.has_type?("holder"); holders_mask | 1 << idx else holders_mask
                ]
           })
@@ -80,7 +80,7 @@ fn ir__partial_application(fn_ir_name, args, code, exp_data, ir, final_data, dep
 
                let ir__free_arg = arg.dec_ref_cnt("")
 
-               if not arg.maybe_has_type?(@main.not_copyable_types__error)
+               if not arg.maybe_has_type?(@.not_copyable_types__error)
                     [box ir__is_error, ir__error_actions ++ ir__free_arg, fn_maybe_error]
                else {
                     let ir__type_check             = "type_is_not_copyable_or_error(" ++ arg:ir ++ ".bytes[15])"
@@ -100,7 +100,7 @@ fn ir__partial_application(fn_ir_name, args, code, exp_data, ir, final_data, dep
                                    :unknown
                                    result_reg ++ "=" ++ arg:ir ++ ";\n"
 
-                                   if arg.maybe_has_type?(@main.not_copyable_types); ir__set_invalid_type_error else ir__free_arg
+                                   if arg.maybe_has_type?(@.not_copyable_types); ir__set_invalid_type_error else ir__free_arg
                               )
                          else ir__set_invalid_type_error
 
@@ -135,7 +135,7 @@ fn ir__partial_application(fn_ir_name, args, code, exp_data, ir, final_data, dep
           let ir   = ir__assume_type(result_reg, type, ir)
 
           [box
-               new (@main.t_operand) {
+               new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= type

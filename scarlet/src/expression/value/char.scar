@@ -1,6 +1,6 @@
 let t_char = [obj
      :scar_type = "t_char"
-     :value     = @main.t_token
+     :value     = @.t_token
 ]
 
 fn char_to_operand(char, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {

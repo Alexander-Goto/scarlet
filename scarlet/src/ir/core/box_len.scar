@@ -9,11 +9,11 @@ fn ir__core_fn_box_len(exp, last_use_ids, contexts, lambdas_data, unused_def_ids
 
           ir__fn_call("McoreFNbox_len", [array arg], code, if arg.has_type?("box"); [set "box"] else [set "box", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
      } else {
-          let operand = new (@main.t_operand) {
+          let operand = new (@.t_operand) {
                :code           <= code
-               :comptime_val   <= new (@main.t_comptime_val) {
+               :comptime_val   <= new (@.t_comptime_val) {
                     :type  <= "box"
-                    :value <= [array new (@main.t_comptime_val) {:type <= "int"; :value <= arg:comptime_val:value.len()}, arg:comptime_val]
+                    :value <= [array new (@.t_comptime_val) {:type <= "int"; :value <= arg:comptime_val:value.len()}, arg:comptime_val]
                }
                :possible_types <= [set "box"]
           }

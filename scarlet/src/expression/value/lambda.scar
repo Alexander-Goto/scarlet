@@ -1,7 +1,7 @@
 let t_lambda_in_exp = [obj
      :scar_type = "t_lambda_in_exp"
 
-     :keyword = @main.t_token
+     :keyword = @.t_token
      :params  = [array] # [array @i_expression*]
      :body    = :i_expression
 ]
@@ -31,7 +31,7 @@ fn analyze_lambda(lambda, owner_last_use_info, owner_lambdas_data, owner_context
           }
      })
 
-     let [box body_last_use_info, body_lambdas_data, def_ids] = lambda:body.analyze(@main.t_last_use_info, @main.t_lambdas_data, [set], body_name_ids, def_ids)
+     let [box body_last_use_info, body_lambdas_data, def_ids] = lambda:body.analyze(@.t_last_use_info, @.t_lambdas_data, [set], body_name_ids, def_ids)
 
      let lambda_id       = lambda:keyword.get_token_id()
      let lambda_contexts = owner_contexts.append("lfn:" ++ format_int(lambda_id, 32, false))
@@ -70,7 +70,7 @@ fn analyze_lambda(lambda, owner_last_use_info, owner_lambdas_data, owner_context
           [box body_last_use_ids, body_contexts, def_ids]
      })
 
-     let owner_lambdas_data = new (owner_lambdas_data)[lambda_id] <= new (@main.t_lambda_data) {
+     let owner_lambdas_data = new (owner_lambdas_data)[lambda_id] <= new (@.t_lambda_data) {
           :last_use_ids     <= body_last_use_ids
           :contexts         <= body_contexts
           :sub_lambdas_data <= body_lambdas_data

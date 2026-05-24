@@ -16,7 +16,7 @@ fn ir__core_fn_foldl_foldl_kv_foldr_foldr_kv(exp, fn_ir_name, last_use_ids, cont
      if state.has_type?("error")
           error__invalid_type(state:code, "/error", "error")
      else null
-     func.maybe_has_type!(@main.fn_types)
+     func.maybe_has_type!(@.fn_types)
 
      ir__fn_call(fn_ir_name, [array container, state, func], code, null, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
 }

@@ -9,7 +9,7 @@ fn exp_array__to_tree(exp_array) loop([box exp_array, 10, exp_array.len() - 1], 
           let exp = exp_array[exp_idx]
           if exp:scar_type == "t_token" && priority == operator__get_priority(exp:text)
                if exp:text == "not" {
-                    let not_exp = new (@main.t_not) {
+                    let not_exp = new (@.t_not) {
                          :operator <= exp
                          :exp      <= exp_array__to_tree(exp_array.drop(exp_idx + 1))
                     }
@@ -20,29 +20,29 @@ fn exp_array__to_tree(exp_array) loop([box exp_array, 10, exp_array.len() - 1], 
                     let left  = exp_array__to_tree(exp_array.take(exp_idx))
                     let right = exp_array__to_tree(exp_array.drop(exp_idx + 1))
                     let type  = switch exp:text
-                    case "<?":  @main.t_default_val
-                    case "*":   @main.t_mul
-                    case "/":   @main.t_div
-                    case "%":   @main.t_mod
-                    case "+":   @main.t_add
-                    case "++":  @main.t_concat
-                    case "-":   @main.t_sub
-                    case "<<":  @main.t_shl
-                    case ">>":  @main.t_lshr
-                    case ">>>": @main.t_ashr
-                    case "<":   @main.t_less
-                    case ">":   @main.t_great
-                    case "<=":  @main.t_less_or_eq
-                    case ">=":  @main.t_great_or_eq
-                    case "==":  @main.t_strong_equal
-                    case "/=":  @main.t_strong_not_equal
-                    case "===": @main.t_equal
-                    case "=/=": @main.t_not_equal
-                    case "&":   @main.t_and
-                    case "&&":  @main.t_lazy_and
-                    case "^":   @main.t_xor
-                    case "|":   @main.t_or
-                    case "||":  @main.t_lazy_or
+                    case "<?":  @.t_default_val
+                    case "*":   @.t_mul
+                    case "/":   @.t_div
+                    case "%":   @.t_mod
+                    case "+":   @.t_add
+                    case "++":  @.t_concat
+                    case "-":   @.t_sub
+                    case "<<":  @.t_shl
+                    case ">>":  @.t_lshr
+                    case ">>>": @.t_ashr
+                    case "<":   @.t_less
+                    case ">":   @.t_great
+                    case "<=":  @.t_less_or_eq
+                    case ">=":  @.t_great_or_eq
+                    case "==":  @.t_strong_equal
+                    case "/=":  @.t_strong_not_equal
+                    case "===": @.t_equal
+                    case "=/=": @.t_not_equal
+                    case "&":   @.t_and
+                    case "&&":  @.t_lazy_and
+                    case "^":   @.t_xor
+                    case "|":   @.t_or
+                    case "||":  @.t_lazy_or
                     default: unreachable()
 
                     [breaker new (type) {

@@ -14,7 +14,7 @@ fn ir__fn_call(fn_ir_name, args, code, result_type, exp_data, ir, final_data, de
      }
 
      [box
-          new (@main.t_operand) {
+          new (@.t_operand) {
                :code           <= code
                :ir             <= result_reg
                :possible_types <= result_type

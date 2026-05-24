@@ -1,6 +1,6 @@
 let t_float = [obj
      :scar_type = "t_float"
-     :value     = @main.t_token
+     :value     = @.t_token
 ]
 
 fn float_to_operand(float, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {

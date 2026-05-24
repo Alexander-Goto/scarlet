@@ -7,7 +7,7 @@ fn ir__core_fn_empty_val(exp, last_use_ids, contexts, lambdas_data, unused_def_i
      let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom"]
      arg.maybe_has_type!(valid_types)
 
-     if arg.maybe_has_type?([set "obj", "custom"]) || not (arg.has_type?(@main.string_types) || arg.has_type?(@main.byte_array_types)) && arg:possible_types.len() /= 1 {
+     if arg.maybe_has_type?([set "obj", "custom"]) || not (arg.has_type?(@.string_types) || arg.has_type?(@.byte_array_types)) && arg:possible_types.len() /= 1 {
           let result_possible_types = if arg:possible_types.null?()
                [set "short_string", "short_byte_array", "table", "set", "array", "obj", "custom", "error"]
           else {
@@ -35,27 +35,27 @@ fn ir__core_fn_empty_val(exp, last_use_ids, contexts, lambdas_data, unused_def_i
                :comptime_val <=
                     switch arg:possible_types.take_one()
                     case "short_string", "string":
-                         new (@main.t_comptime_val) {
+                         new (@.t_comptime_val) {
                               :type  <= "string"
                               :value <= ""
                          }
                     case "short_byte_array", "byte_array":
-                         new (@main.t_comptime_val) {
+                         new (@.t_comptime_val) {
                               :type  <= "byte_array"
                               :value <= [byte_array]
                          }
                     case "table":
-                         new (@main.t_comptime_val) {
+                         new (@.t_comptime_val) {
                               :type  <= "table"
                               :value <= [table]
                          }
                     case "set":
-                         new (@main.t_comptime_val) {
+                         new (@.t_comptime_val) {
                               :type  <= "set"
                               :value <= [set]
                          }
                     case "array":
-                         new (@main.t_comptime_val) {
+                         new (@.t_comptime_val) {
                               :type  <= "array"
                               :value <= [array]
                          }

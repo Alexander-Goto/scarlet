@@ -17,14 +17,14 @@ fn ir__core_fn_take_one_kv(exp, last_use_ids, contexts, lambdas_data, unused_def
           )
      else {
           let comptime_value = if arg:comptime_val:type == "obj"
-               arg:comptime_val:value.foldl_kv(@main.comptime_null_val, fn (null_val, key, value)
+               arg:comptime_val:value.foldl_kv(@.comptime_null_val, fn (null_val, key, value)
                     if key == :_
                          null_val
                     else [breaker
-                         new (@main.t_comptime_val) {
+                         new (@.t_comptime_val) {
                               :type  <= "box"
                               :value <= [array
-                                   new (@main.t_comptime_val) {
+                                   new (@.t_comptime_val) {
                                         :type  <= "token"
                                         :value <= key
                                    }
@@ -37,8 +37,8 @@ fn ir__core_fn_take_one_kv(exp, last_use_ids, contexts, lambdas_data, unused_def
           else {
                let [box key, value] = arg:comptime_val:value.take_one_kv()
                if key.null?()
-                    @main.comptime_null_val
-               else new (@main.t_comptime_val) {
+                    @.comptime_null_val
+               else new (@.t_comptime_val) {
                     :type  <= "box"
                     :value <= [array key, value]
                }

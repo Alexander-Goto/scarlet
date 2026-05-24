@@ -1,7 +1,7 @@
 let t_byte_array = [obj
      :scar_type = "t_byte_array"
 
-     :open_char = @main.t_token
+     :open_char = @.t_token
      :items     = [array] # [array @i_expression*]
 ]
 

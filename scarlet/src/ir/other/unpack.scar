@@ -5,7 +5,7 @@ fn ir__unpack(unpacking_type, names, unpacking_operand, exp_data, ir, final_data
                exp_data, ir, final_data, dependencies
           ]
      else {
-          unpacking_operand.maybe_has_type!(if unpacking_type == "byte_array"; @main.byte_array_types else unpacking_type)
+          unpacking_operand.maybe_has_type!(if unpacking_type == "byte_array"; @.byte_array_types else unpacking_type)
           if not unpacking_operand:comptime_val.null?() {
                if names.len() > unpacking_operand:comptime_val:value.len()
                     error__to_many_unpack_names(names[unpacking_operand:comptime_val:value.len()])
@@ -19,12 +19,12 @@ fn ir__unpack(unpacking_type, names, unpacking_operand, exp_data, ir, final_data
                               let comptime_val = unpacking_operand:comptime_val:value[idx]
                               let comptime_val = if unpacking_type /= "byte_array"
                                    comptime_val
-                              else new (@main.t_comptime_val) {
+                              else new (@.t_comptime_val) {
                                    :type  <= "byte"
                                    :value <= comptime_val
                               }
 
-                              new (@main.t_operand) {
+                              new (@.t_operand) {
                                    :code           <= name
                                    :comptime_val   <= comptime_val
                                    :possible_types <= comptime_val.get_type_for_operand()
@@ -41,9 +41,9 @@ fn ir__unpack(unpacking_type, names, unpacking_operand, exp_data, ir, final_data
                let maybe_null           = unpacking_operand.maybe_has_type?("null")
                let items_possible_types = switch unpacking_type
                case "box":        null
-               case "array":      if maybe_null; @main.common_types__null_error else @main.common_types__error
+               case "array":      if maybe_null; @.common_types__null_error else @.common_types__error
                case "byte_array": if maybe_null; [set "byte", "error", "null"] else [set "byte", "error"]
-               case "error":      [array [set "token", "error"], @main.string_types__error, @main.common_types__null_error]
+               case "error":      [array [set "token", "error"], @.string_types__error, @.common_types__null_error]
                default: unreachable()
 
                let [box unpacked_consts, state] = names.map_kv_with_state([box "", 0, ""], fn (state, idx, name) {
@@ -59,7 +59,7 @@ fn ir__unpack(unpacking_type, names, unpacking_operand, exp_data, ir, final_data
                          [box
                               [box idxes_list_ir ++ "{.qwords={" ++ idx.to_ir_num() ++ "}},", items_len + 1, assume_ir]
 
-                              new (@main.t_operand) {
+                              new (@.t_operand) {
                                    :code           <= name
                                    :ir             <= unpacked_consts_ir
                                    :possible_types <= unpacked_consts_type

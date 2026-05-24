@@ -80,7 +80,7 @@ fn concat_chain_creation_prepare(arrays, maybe_string, maybe_byte_array, maybe_a
                     else null
                ]
           else {
-               let string_predicate_ir = if not maybe_string || array_possible_types.all(true, _.in?(@main.string_types))
+               let string_predicate_ir = if not maybe_string || array_possible_types.all(true, _.in?(@.string_types))
                     string_predicate_ir
                else (if string_predicate_ir.null?(); "" else string_predicate_ir ++ "&&") ++
                     switch
@@ -95,7 +95,7 @@ fn concat_chain_creation_prepare(arrays, maybe_string, maybe_byte_array, maybe_a
                     default:
                          unreachable()
 
-               let byte_array_predicate_ir = if not maybe_byte_array || array_possible_types.all(true, _.in?(@main.byte_array_types))
+               let byte_array_predicate_ir = if not maybe_byte_array || array_possible_types.all(true, _.in?(@.byte_array_types))
                     byte_array_predicate_ir
                else (if byte_array_predicate_ir.null?(); "" else byte_array_predicate_ir ++ "&&") ++
                     switch
@@ -127,7 +127,7 @@ fn concat_chain_create(
 ) {
      let [box maybe_string, maybe_byte_array, maybe_array] = maybe_string_byte_array_array
 
-     let maybe_other   = not result_possible_types.all(true, _.in?(@main.concat_types__error))
+     let maybe_other   = not result_possible_types.all(true, _.in?(@.concat_types__error))
      let maybe_error   = "error".in?(result_possible_types)
      let only_one_type = (if maybe_string; 1 else 0) + (if maybe_byte_array; 1 else 0) + (if maybe_array; 1 else 0) == 1
 
@@ -158,7 +158,7 @@ fn concat_chain_create(
                          (if string_predicate_ir.null?(); "(" else string_predicate_ir ++ "&&(") ++
                               first_array_ir ++ ".bytes[15]==tid__string||" ++ first_array_ir ++ ".bytes[15]==tid__short_string)"
                     else {
-                         if first_array_possible_types.all(true, _.in?(@main.string_types))
+                         if first_array_possible_types.all(true, _.in?(@.string_types))
                               string_predicate_ir
                          else (if string_predicate_ir.null?(); "" else string_predicate_ir ++ "&&") ++
                               switch
@@ -181,7 +181,7 @@ fn concat_chain_create(
                     (if byte_array_predicate_ir.null?(); "(" else byte_array_predicate_ir ++ "&&(") ++
                          first_array_ir ++ ".bytes[15]==tid__byte_array||" ++ first_array_ir ++ ".bytes[15]==tid__short_byte_array)"
                else {
-                    if first_array_possible_types.all(true, _.in?(@main.byte_array_types))
+                    if first_array_possible_types.all(true, _.in?(@.byte_array_types))
                          byte_array_predicate_ir
                     else (if byte_array_predicate_ir.null?(); "" else byte_array_predicate_ir ++ "&&") ++
                          switch
@@ -301,7 +301,7 @@ fn concat_chain_create(
      let ir = if is_last; ir else ir ++ assume_ir
 
      [box
-          new (@main.t_operand) {
+          new (@.t_operand) {
                :code           <= code
                :ir             <= result_reg
                :possible_types <= result_possible_types

@@ -1,7 +1,7 @@
 let t_switch_exp = [obj
      :scar_type = "t_switch_exp"
 
-     :keyword     = @main.t_token
+     :keyword     = @.t_token
      :switch_exp  = :i_expression
      :cases       = [array] # [array [obj :variants = [array @i_expression*], :case_exp = @i_expression]*]
      :default_exp = :i_expression
@@ -21,13 +21,13 @@ fn analyze_switch_exp(switch_, last_use_info, lambdas_data, contexts, name_ids, 
           let [box branches, lambdas_data, def_ids] = state
 
           let case_contexts                                   = contexts.append(context_prefix ++ format_int(case_idx, 32, false))
-          let [box case_last_use_info, lambdas_data, def_ids] = case_:case_exp.analyze(@main.t_last_use_info, lambdas_data, case_contexts, name_ids, def_ids)
+          let [box case_last_use_info, lambdas_data, def_ids] = case_:case_exp.analyze(@.t_last_use_info, lambdas_data, case_contexts, name_ids, def_ids)
 
           [box branches.append(case_last_use_info), lambdas_data, def_ids]
      })
 
      let default_contexts                                   = contexts.append("swdf:" ++ keyword_coded_id)
-     let [box default_last_use_info, lambdas_data, def_ids] = switch_:default_exp.analyze(@main.t_last_use_info, lambdas_data, default_contexts, name_ids, def_ids)
+     let [box default_last_use_info, lambdas_data, def_ids] = switch_:default_exp.analyze(@.t_last_use_info, lambdas_data, default_contexts, name_ids, def_ids)
 
      [box merge_branches(last_use_info, branches.append(default_last_use_info)), lambdas_data, def_ids]
 }
@@ -35,11 +35,11 @@ fn analyze_switch_exp(switch_, last_use_info, lambdas_data, contexts, name_ids, 
 fn switch_exp_to_operand(switch_, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last, is_linear_alloc) {
      let [box switch_operand, exp_data, ir, final_data, dependencies, src_gconsts] =
           switch_:switch_exp.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
-     switch_operand.maybe_has_type!(@main.all_hash_map_key_types)
+     switch_operand.maybe_has_type!(@.all_hash_map_key_types)
 
      let keyword_coded_id = switch_:keyword.get_token_id().format_int(32, false)
-     let switch_name      = "_SWTB_" ++ exp_data:owner_id.drop(@main.compiled_module_name.len() + 1) ++ "_" ++ keyword_coded_id
-     let table_ir_name    = "M" ++ @main.compiled_module_name ++ "GC" ++ switch_name
+     let switch_name      = "_SWTB_" ++ exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "_" ++ keyword_coded_id
+     let table_ir_name    = "M" ++ @.compiled_module_name ++ "GC" ++ switch_name
      let table_name       = "switch (" ++ switch_:keyword:file ++ ", " ++ switch_:keyword:line.to_string() ++ ", " ++ switch_:keyword:row.to_string() ++ ")"
 
      let [box owner_name_ir_const, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ table_name ++ "\";\n", final_data, dependencies)
@@ -92,7 +92,7 @@ fn switch_exp_to_operand(switch_, last_use_ids, contexts, lambdas_data, unused_d
                          let variants_ir_first_len = variants_ir.len()
 
                          let [box variant_last_use_info, variant_lambdas_data, variant_def_ids] =
-                              variant.analyze(@main.t_last_use_info, @main.t_lambdas_data, [set], [table], [set])
+                              variant.analyze(@.t_last_use_info, @.t_lambdas_data, [set], [table], [set])
 
                          let [box variant_last_use_ids, variant_contexts, variant_unused_def_ids] = variant_last_use_info.foldl_kv([box [set], [table], variant_def_ids], fn (state, def_id, use_id_and_contexts) {
                               let [box variant_last_use_ids, variant_contexts, variant_unused_def_ids] = state
@@ -111,7 +111,7 @@ fn switch_exp_to_operand(switch_, last_use_ids, contexts, lambdas_data, unused_d
                          let [box variant_operand, table_exp_data, variants_ir, final_data, dependencies, src_gconsts] =
                               variant.to_operand(variant_last_use_ids, variant_contexts, variant_lambdas_data, variant_unused_def_ids, table_exp_data, variants_ir, final_data, dependencies, src_gconsts, false, false, false, true)
 
-                         variant_operand.maybe_has_type!(@main.all_hash_map_key_types)
+                         variant_operand.maybe_has_type!(@.all_hash_map_key_types)
 
                          if not variant.independent?([set])
                               error__incorrect_switch_variant(variant_operand:code)
@@ -127,13 +127,13 @@ fn switch_exp_to_operand(switch_, last_use_ids, contexts, lambdas_data, unused_d
                               error__already_exists(variant_operand:code, "variant")
                          else null
 
-                         let table_is_comptime = table_is_comptime && variant_is_comptime && variant_operand:comptime_val:type.in?(@main.always_hash_map_key_types)
+                         let table_is_comptime = table_is_comptime && variant_is_comptime && variant_operand:comptime_val:type.in?(@.always_hash_map_key_types)
 
                          let need_table =
                               need_table                                 ||
                               variants_ir_first_len /= variants_ir.len() ||
                               not variant_is_comptime                    ||
-                              not variant_operand:possible_types.take_one().in?(@main.switch_simple_types)
+                              not variant_operand:possible_types.take_one().in?(@.switch_simple_types)
 
                          [box
                               case_variants_operands.append(variant_operand)
@@ -158,15 +158,15 @@ fn switch_exp_to_operand(switch_, last_use_ids, contexts, lambdas_data, unused_d
                [array].init(variants_qty)
                fn (table_kvs, case_idx, case_variants) case_variants.foldl(
                     table_kvs
-                    fn (table_kvs, case_variant) table_kvs.append([obj :key = case_variant, :value = comptime_int(case_idx, @main.t_token)])
+                    fn (table_kvs, case_variant) table_kvs.append([obj :key = case_variant, :value = comptime_int(case_idx, @.t_token)])
                )
           )
 
           if table_is_comptime {
-               let [box table_operand, final_data, dependencies] = comptime_table(table_kvs, @main.t_token).has_ir!(final_data, dependencies)
+               let [box table_operand, final_data, dependencies] = comptime_table(table_kvs, @.t_token).has_ir!(final_data, dependencies)
 
                [box
-                    new (final_data):gconsts[switch_name][@main.compiled_module_name] <= new (@main.t_final_gconst) {
+                    new (final_data):gconsts[switch_name][@.compiled_module_name] <= new (@.t_final_gconst) {
                          :ir_name        <= table_ir_name
                          :ir             <= ir__raw_return(variants_ir, table_operand:ir)
                          :operand_ir     <= table_operand:ir
@@ -175,24 +175,24 @@ fn switch_exp_to_operand(switch_, last_use_ids, contexts, lambdas_data, unused_d
                          :name_ir_const  <= owner_name_ir_const
                     }
 
-                    new (dependencies):gconsts => _.append(@main.compiled_module_name ++ "." ++ switch_name)
+                    new (dependencies):gconsts => _.append(@.compiled_module_name ++ "." ++ switch_name)
                     src_gconsts
                ]
           } else {
-               let [box table_operand, table_exp_data, table_gconst_ir, final_data, dependencies, src_gconsts] = ir__table(table_kvs, @main.t_token, table_exp_data, variants_ir, final_data, dependencies, src_gconsts, false, false)
+               let [box table_operand, table_exp_data, table_gconst_ir, final_data, dependencies, src_gconsts] = ir__table(table_kvs, @.t_token, table_exp_data, variants_ir, final_data, dependencies, src_gconsts, false, false)
 
                let [box result_reg] = table_exp_data.new_reg()
                let table_gconst_ir  = table_gconst_ir ++ "t_any const " ++ result_reg ++ "=check_switch_table(thrd_data," ++ table_operand:ir ++ "," ++ variants_qty.to_ir_num() ++ ");\n"
 
                [box
-                    new (final_data):gconsts[switch_name][@main.compiled_module_name] <= new (@main.t_final_gconst) {
+                    new (final_data):gconsts[switch_name][@.compiled_module_name] <= new (@.t_final_gconst) {
                          :ir_name        <= table_ir_name
                          :ir             <= ir__raw_return(table_gconst_ir, result_reg)
                          :possible_types <= [set "table"]
                          :name_ir_const  <= owner_name_ir_const
                     }
 
-                    new (dependencies):gconsts => _.append(@main.compiled_module_name ++ "." ++ switch_name)
+                    new (dependencies):gconsts => _.append(@.compiled_module_name ++ "." ++ switch_name)
                     src_gconsts
                ]
           }

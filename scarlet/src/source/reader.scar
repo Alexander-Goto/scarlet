@@ -90,7 +90,7 @@ fn read_gconst(reader, doc_comment, attributes) {
      let [box value, reader]      = reader.one_of!("=", false).skip_spaces().read_exp()
 
      [box
-          new (@main.t_src_gconst) {
+          new (@.t_src_gconst) {
                :name        <= const_name
                :value       <= value
                :attributes  <= attributes
@@ -109,7 +109,7 @@ fn read_fn(reader, doc_comment, attributes) {
      let [box body, reader]    = if "external".key_of?(attributes); [box null, reader.one_of!([set "\n", ";"], false)] else reader.skip_spaces().read_exp()
 
      [box
-          new (@main.t_src_fn) {
+          new (@.t_src_fn) {
                :name        <= fn_name
                :params      <= params
                :body        <= body
@@ -133,11 +133,11 @@ fn read_attributes(reader, open_char) loop([box [table], reader], fn (state) {
      let attribute                      =
           switch first_attr_token:text
           case "`":        null
-          case "cold":     new (@main.t_cold_attr):code <= first_attr_token
-          case "export":   new (@main.t_export_attr):code <= first_attr_token
-          case "external": new (@main.t_external_attr):code <= first_attr_token
-          case "hot":      new (@main.t_hot_attr):code <= first_attr_token
-          case "noinline": new (@main.t_noinline_attr):code <= first_attr_token
+          case "cold":     new (@.t_cold_attr):code <= first_attr_token
+          case "export":   new (@.t_export_attr):code <= first_attr_token
+          case "external": new (@.t_external_attr):code <= first_attr_token
+          case "hot":      new (@.t_hot_attr):code <= first_attr_token
+          case "noinline": new (@.t_noinline_attr):code <= first_attr_token
           default:         error__not_expected_token(first_attr_token, null)
 
      if attribute.null?()
@@ -234,21 +234,21 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                let [box open_char, reader] = reader.one_of!("(", true)
                switch fn_name:text
                case "test": {
-                    let exp_array = new (exp_array)[exp_array.len() - 1] => fn (last_exp) new (@main.t_test) {
+                    let exp_array = new (exp_array)[exp_array.len() - 1] => fn (last_exp) new (@.t_test) {
                          :keyword <= fn_name
                          :exp     <= last_exp
                     }
                     [box exp_array, true, reader.one_of!(")", false)]
                }
                case "guard": {
-                    let exp_array = new (exp_array)[exp_array.len() - 1] => fn (last_exp) new (@main.t_guard) {
+                    let exp_array = new (exp_array)[exp_array.len() - 1] => fn (last_exp) new (@.t_guard) {
                          :keyword <= fn_name
                          :exp     <= last_exp
                     }
                     [box exp_array, true, reader.one_of!(")", false)]
                }
                case "check": {
-                    let exp_array = new (exp_array)[exp_array.len() - 1] => fn (last_exp) new (@main.t_check) {
+                    let exp_array = new (exp_array)[exp_array.len() - 1] => fn (last_exp) new (@.t_check) {
                          :keyword <= fn_name
                          :exp     <= last_exp
                     }
@@ -280,7 +280,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                     [box exp_array, true, reader]
                } else {
                     let [box exp, reader] = reader.skip_spaces().read_exp()
-                    let exp_array         = exp_array.append(new (@main.t_nested_exp) {
+                    let exp_array         = exp_array.append(new (@.t_nested_exp) {
                          :open_char <= first_token
                          :exp       <= exp
                     })
@@ -310,7 +310,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                     error__not_expected_token(first_token, null)
                else null
 
-               [box exp_array.append(new (@main.t_holder):keyword <= first_token), true, reader]
+               [box exp_array.append(new (@.t_holder):keyword <= first_token), true, reader]
           }
           case "fn": {
                if prev_is_operand
@@ -371,7 +371,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                               error__invalid_token(first_token)
                          else null
 
-                         let field = new (@main.t_field) {
+                         let field = new (@.t_field) {
                               :object   <= exp_array.last()
                               :field <= first_token
                          }
@@ -383,7 +383,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                               error__not_expected_token(first_token, null)
                          else null
 
-                         [box exp_array.append(new (@main.t_token_in_exp):value <= first_token), true, reader]
+                         [box exp_array.append(new (@.t_token_in_exp):value <= first_token), true, reader]
                     }
                case '@': {
                     if prev_is_operand
@@ -395,7 +395,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
 
                     let [box open_char, reader] = reader.one_of?("(")
                     if open_char.null?()
-                         [box exp_array.append(new (@main.t_gconst_in_exp):name <= full_name), true, reader]
+                         [box exp_array.append(new (@.t_gconst_in_exp):name <= full_name), true, reader]
                     else {
                          let [box fn_call, reader] = reader.read_fn_call(full_name, open_char)
                          [box exp_array.append(fn_call), true, reader]
@@ -416,7 +416,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                          [box num, exp_array.append(operator)]
                     } else [box first_token, exp_array]
 
-                    let exp_array = exp_array.append(new (if '.'.in?(num:text); @main.t_float else if 'x'.in?(num:text); @main.t_hex else @main.t_int):value <= num)
+                    let exp_array = exp_array.append(new (if '.'.in?(num:text); @.t_float else if 'x'.in?(num:text); @.t_hex else @.t_int):value <= num)
                     [box exp_array, true, reader]
                }
                case '\'': {
@@ -424,14 +424,14 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                          error__not_expected_token(first_token, null)
                     else null
 
-                    [box exp_array.append(new (@main.t_char):value <= first_token), true, reader]
+                    [box exp_array.append(new (@.t_char):value <= first_token), true, reader]
                }
                case '"': {
                     if prev_is_operand
                          error__not_expected_token(first_token, null)
                     else null
 
-                    [box exp_array.append(new (@main.t_string):value <= first_token), true, reader]
+                    [box exp_array.append(new (@.t_string):value <= first_token), true, reader]
                }
                case '0': {
                     if prev_is_operand
@@ -440,12 +440,12 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
 
                     let token_text = first_token:text
                     let type       = if "0x".prefix_of?(token_text)
-                         @main.t_hex
+                         @.t_hex
                     else if "0b".prefix_of?(token_text)
-                         @main.t_byte
+                         @.t_byte
                     else if '.'.in?(token_text)
-                         @main.t_float
-                    else @main.t_int
+                         @.t_float
+                    else @.t_int
 
                     [box exp_array.append(new (type):value <= first_token), true, reader]
                }
@@ -454,7 +454,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                          error__not_expected_token(first_token, null)
                     else null
 
-                    let exp_array = exp_array.append(new (if '.'.in?(first_token:text); @main.t_float else @main.t_int):value <= first_token)
+                    let exp_array = exp_array.append(new (if '.'.in?(first_token:text); @.t_float else @.t_int):value <= first_token)
                     [box exp_array, true, reader]
                }
                case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '_': {
@@ -468,20 +468,20 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
 
                     let [box exp, prev_is_operand, reader] = if str_idx /= chr_idx
                          if str_idx < chr_idx
-                              [box new (@main.t_string):value <= first_token, true, reader]
-                         else [box new (@main.t_char):value <= first_token, true,reader]
+                              [box new (@.t_string):value <= first_token, true, reader]
+                         else [box new (@.t_char):value <= first_token, true,reader]
                     else {
                          let [box open_char, reader] = reader.one_of?("(")
                          if open_char.null?()
                               switch token_text
-                              case "true", "false": [box new (@main.t_bool):value <= first_token, true, reader]
-                              case "null":          [box new (@main.t_null):keyword <= first_token, true, reader]
-                              default:              [box new (@main.t_const_in_exp):name <= first_token, true, reader]
+                              case "true", "false": [box new (@.t_bool):value <= first_token, true, reader]
+                              case "null":          [box new (@.t_null):keyword <= first_token, true, reader]
+                              default:              [box new (@.t_const_in_exp):name <= first_token, true, reader]
                          else switch token_text
                          case "test": {
                               let [box exp, reader] = reader.skip_spaces().read_exp()
                               [box
-                                   new (@main.t_test) {
+                                   new (@.t_test) {
                                         :keyword <= first_token
                                         :exp     <= exp
                                    }
@@ -492,7 +492,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                          case "guard": {
                               let [box exp, reader] = reader.skip_spaces().read_exp()
                               [box
-                                   new (@main.t_guard) {
+                                   new (@.t_guard) {
                                         :keyword <= first_token
                                         :exp     <= exp
                                    }
@@ -503,7 +503,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                          case "check": {
                               let [box exp, reader] = reader.skip_spaces().read_exp()
                               [box
-                                   new (@main.t_check) {
+                                   new (@.t_check) {
                                         :keyword <= first_token
                                         :exp     <= exp
                                    }
@@ -512,7 +512,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                               ]
                          }
                          case "unreachable":
-                              [box new (@main.t_unreachable):keyword <= first_token, true, reader.skip_spaces().one_of!(")", false)]
+                              [box new (@.t_unreachable):keyword <= first_token, true, reader.skip_spaces().one_of!(")", false)]
                          default: {
                               let [box exp, reader] = reader.read_fn_call(first_token, open_char)
                               [box exp, true, reader]
@@ -528,7 +528,7 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
 fn read_fn_call(reader, fn_name, open_char) {
      let [box args, reader] = reader.read_comma_exps(open_char)
      [box
-          new (@main.t_fn_call) {
+          new (@.t_fn_call) {
                :name <= fn_name
                :args <= args
           }
@@ -609,7 +609,7 @@ fn read_mtd_call(reader, mtd_const) {
      let [box args, reader]      = reader.read_comma_exps(open_char)
 
      [box
-          new (@main.t_mtd_call) {
+          new (@.t_mtd_call) {
                :mtd_const <= mtd_const
                :mtd_name  <= name
                :args      <= args
@@ -626,7 +626,7 @@ fn read_call_from_exp(reader, exp, open_char) {
      let [box args, reader] = reader.read_comma_exps(open_char)
 
      [box
-          new (@main.t_call_from_exp) {
+          new (@.t_call_from_exp) {
                :exp  <= exp
                :args <= args
           }
@@ -648,7 +648,7 @@ fn read_exps(reader, open_char) loop([box [array], reader.skip_spaces()], fn (st
      if close_char.null?()
           [box exps, reader]
      else [breaker [box
-          new (@main.t_grouped_exps) {
+          new (@.t_grouped_exps) {
                :open_char <= open_char
                :exps      <= exps
           }
@@ -665,7 +665,7 @@ fn read_get_item_or_slice(reader, operand) {
                let [box second_exp, reader] = reader.read_exp()
                let reader                   = reader.skip_spaces().one_of!("]", false)
                [box
-                    new (@main.t_slice) {
+                    new (@.t_slice) {
                          :operand <= operand
                          :from    <= first_exp
                          :to      <= second_exp
@@ -673,7 +673,7 @@ fn read_get_item_or_slice(reader, operand) {
                     reader
                ]
           } else [box
-               new (@main.t_get_item) {
+               new (@.t_get_item) {
                     :operand <= operand
                     :key     <= first_exp
                }
@@ -683,7 +683,7 @@ fn read_get_item_or_slice(reader, operand) {
           let [box second_exp, reader] = reader.read_exp()
           let reader                   = reader.skip_spaces().one_of!("]", false)
           [box
-               new (@main.t_slice) {
+               new (@.t_slice) {
                     :operand <= operand
                     :from    <= first_exp
                     :to      <= second_exp
@@ -699,7 +699,7 @@ fn read_struct_in_exp(reader, open_char) {
      case "array": {
           let [box items, reader] = reader.read_comma_exps(open_char)
           [box
-               new (@main.t_array) {
+               new (@.t_array) {
                     :open_char <= open_char
                     :items     <= items
                }
@@ -714,7 +714,7 @@ fn read_struct_in_exp(reader, open_char) {
           else null
 
           [box
-               new (@main.t_box) {
+               new (@.t_box) {
                     :open_char <= open_char
                     :items     <= items
                }
@@ -729,7 +729,7 @@ fn read_struct_in_exp(reader, open_char) {
           else null
 
           [box
-               new (@main.t_breaker) {
+               new (@.t_breaker) {
                     :open_char <= open_char
                     :item      <= items.first()
                }
@@ -744,7 +744,7 @@ fn read_struct_in_exp(reader, open_char) {
           else null
 
           [box
-               new (@main.t_error) {
+               new (@.t_error) {
                     :open_char <= open_char
                     :id        <= items.first()
                     :msg       <= items[1]
@@ -757,7 +757,7 @@ fn read_struct_in_exp(reader, open_char) {
      case "byte_array": {
           let [box items, reader] = reader.read_comma_exps(open_char)
           [box
-               new (@main.t_byte_array) {
+               new (@.t_byte_array) {
                     :open_char <= open_char
                     :items     <= items
                }
@@ -768,7 +768,7 @@ fn read_struct_in_exp(reader, open_char) {
      case "set": {
           let [box items, reader] = reader.read_comma_exps(open_char)
           [box
-               new (@main.t_set) {
+               new (@.t_set) {
                     :open_char <= open_char
                     :items     <= items
                }
@@ -779,7 +779,7 @@ fn read_struct_in_exp(reader, open_char) {
      case "obj": {
           let [box kvs, reader] = reader.read_kv_exps(open_char)
           [box
-               new (@main.t_obj) {
+               new (@.t_obj) {
                     :open_char <= open_char
                     :kvs       <= kvs
                }
@@ -790,7 +790,7 @@ fn read_struct_in_exp(reader, open_char) {
      case "table": {
           let [box kvs, reader] = reader.read_kv_exps(open_char)
           [box
-               new (@main.t_table) {
+               new (@.t_table) {
                     :open_char <= open_char
                     :kvs       <= kvs
                }
@@ -806,7 +806,7 @@ fn read_lambda(reader, keyword) {
      let [box body, reader]   = reader.skip_spaces().read_exp()
 
      [box
-          new (@main.t_lambda_in_exp) {
+          new (@.t_lambda_in_exp) {
                :keyword <= keyword
                :params  <= params
                :body    <= body
@@ -822,7 +822,7 @@ fn read_if(reader, keyword) {
      let [box else__exp, reader] = reader.skip_spaces().one_of!("else", false).skip_spaces().read_exp()
 
      [box
-          new (@main.t_if_exp) {
+          new (@.t_if_exp) {
                :keyword   <= keyword
                :predicate <= predicate
                :then      <= then__exp
@@ -838,7 +838,7 @@ fn read_const_def(reader, keyword) {
      let [box value, reader] = reader.one_of!("=", false).skip_spaces().read_exp()
 
      [box
-          new (@main.t_const_def) {
+          new (@.t_const_def) {
                :keyword <= keyword
                :name    <= name
                :value   <= value
@@ -882,7 +882,7 @@ fn read_unpack(reader, keyword, open_char) {
                     if close_char.null?()
                          [box names_and_keys, existed_names, reader]
                     else [breaker [box
-                         new (@main.t_unpack_kv) {
+                         new (@.t_unpack_kv) {
                               :keyword        <= keyword
                               :type           <= type:text
                               :names_and_keys <= names_and_keys
@@ -893,7 +893,7 @@ fn read_unpack(reader, keyword, open_char) {
                }
                case "]":
                     [breaker [box
-                         new (@main.t_unpack_kv) {
+                         new (@.t_unpack_kv) {
                               :keyword        <= keyword
                               :type           <= type:text
                               :names_and_keys <= names_and_keys
@@ -928,7 +928,7 @@ fn read_unpack(reader, keyword, open_char) {
                let names = append(names, name)
                if type:text == "error" && len(names) == 3 || type:text == "box" && len(names) == 16
                     [breaker [box
-                         new (@main.t_unpack) {
+                         new (@.t_unpack) {
                               :keyword <= keyword
                               :type    <= type:text
                               :names   <= names
@@ -947,7 +947,7 @@ fn read_unpack(reader, keyword, open_char) {
                          if close_char.null?()
                               [box names, existed_names, reader]
                          else [breaker [box
-                              new (@main.t_unpack) {
+                              new (@.t_unpack) {
                                    :keyword <= keyword
                                    :type    <= type:text
                                    :names   <= names
@@ -959,7 +959,7 @@ fn read_unpack(reader, keyword, open_char) {
                     }
                     case "]":
                          [breaker [box
-                              new (@main.t_unpack) {
+                              new (@.t_unpack) {
                                    :keyword <= keyword
                                    :type    <= type:text
                                    :names   <= names
@@ -996,7 +996,7 @@ fn read_operator_new(reader, keyword) {
                          error__invalid_token(token)
                     else null
 
-                    [box keys.append(new (@main.t_token_in_exp):value <= token), reader]
+                    [box keys.append(new (@.t_token_in_exp):value <= token), reader]
                } else if token:text == "[" {
                     let [box key, reader] = reader.skip_spaces().read_exp()
                     [box keys.append(key), reader.skip_spaces().one_of!("]", false)]
@@ -1007,13 +1007,13 @@ fn read_operator_new(reader, keyword) {
                error__not_expected_token(mod_type, "[")
           else null
 
-          if not mod_type:text.in?(@main.new_mod_types)
-               error__not_expected_token(mod_type, @main.new_mod_types)
+          if not mod_type:text.in?(@.new_mod_types)
+               error__not_expected_token(mod_type, @.new_mod_types)
           else null
 
           let [box mod_exp, reader] = reader.skip_spaces().read_exp()
           [box
-               new (@main.t_operator_new) {
+               new (@.t_operator_new) {
                     :keyword      <= keyword
                     :base_operand <= base_operand
                     :mods         <= [array [obj
@@ -1037,7 +1037,7 @@ fn read_operator_new(reader, keyword) {
                          error__invalid_token(token)
                     else null
 
-                    [box keys.append(new (@main.t_token_in_exp):value <= token), reader]
+                    [box keys.append(new (@.t_token_in_exp):value <= token), reader]
                } else if token:text == "[" {
                     let [box key, reader] = reader.skip_spaces().read_exp()
                     [box keys.append(key), reader.skip_spaces().one_of!("]", false)]
@@ -1048,8 +1048,8 @@ fn read_operator_new(reader, keyword) {
                error__not_expected_token(mod_type, "[")
           else null
 
-          if not mod_type:text.in?(@main.new_mod_types)
-               error__not_expected_token(mod_type, @main.new_mod_types)
+          if not mod_type:text.in?(@.new_mod_types)
+               error__not_expected_token(mod_type, @.new_mod_types)
           else null
 
           let [box mod_exp, reader] = reader.skip_spaces().read_exp()
@@ -1067,7 +1067,7 @@ fn read_operator_new(reader, keyword) {
 
                [box mods, reader]
           } else [breaker [box
-               new (@main.t_operator_new) {
+               new (@.t_operator_new) {
                     :keyword      <= keyword
                     :base_operand <= base_operand
                     :mods         <= mods
@@ -1105,7 +1105,7 @@ fn read_switch(reader, keyword) {
                let [box default_exp, reader] = reader.one_of!(":", false).skip_spaces().read_exp()
 
                [breaker [box
-                    new (@main.t_switch_exp) {
+                    new (@.t_switch_exp) {
                          :keyword     <= keyword
                          :switch_exp  <= switch_exp
                          :cases       <= cases

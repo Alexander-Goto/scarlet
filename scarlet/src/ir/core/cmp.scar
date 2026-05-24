@@ -6,7 +6,7 @@ fn ir__core_fn_cmp(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, ex
 
      let code = new (exp:name):text => _ ++ ("(" ++ arg_0:code:text ++ ", " ++ arg_1:code:text ++ ")")
 
-     if arg_0:comptime_val.null?() || arg_1:comptime_val.null?() || not arg_0:comptime_val:type.in?(@main.comptime_eq_types) {
+     if arg_0:comptime_val.null?() || arg_1:comptime_val.null?() || not arg_0:comptime_val:type.in?(@.comptime_eq_types) {
           let [box arg_0, final_data, dependencies] = arg_0.has_ir!(final_data, dependencies)
           let [box arg_1, final_data, dependencies] = arg_1.has_ir!(final_data, dependencies)
 
@@ -20,10 +20,10 @@ fn ir__core_fn_cmp(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, ex
           let maybe_error          = arg_0.maybe_has_type?("error") || arg_1.maybe_has_type?("error")
           let arg_0_has_known_type = not arg_0:possible_types.null?() && arg_0:possible_types.len() == 1
 
-          if not (maybe_error || arg_0:possible_types.filter(_.in?(arg_1:possible_types.prepare_types_for_cmp())).any(true, _.in?(@main.eq_types))) {
+          if not (maybe_error || arg_0:possible_types.filter(_.in?(arg_1:possible_types.prepare_types_for_cmp())).any(true, _.in?(@.eq_types))) {
                let ir = dec_ref_cnt(arg_1, dec_ref_cnt(arg_0, ir))
                [box new (comptime_token(:not_equal, code)):ir <= "tkn__not_equal", exp_data, if is_last; ir__raw_return(ir, "tkn__not_equal") else ir, final_data, dependencies, src_gconsts]
-          } else if not maybe_error && arg_0_has_known_type && arg_0:possible_types == arg_1:possible_types && arg_0:possible_types.take_one().in?(@main.simple_ord_types) {
+          } else if not maybe_error && arg_0_has_known_type && arg_0:possible_types == arg_1:possible_types && arg_0:possible_types.take_one().in?(@.simple_ord_types) {
                let [box result_reg, exp_data] = exp_data.new_reg()
 
                let type = arg_0:possible_types.take_one()
@@ -32,7 +32,7 @@ fn ir__core_fn_cmp(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, ex
                          arg_0_ir ++ ".bytes[0]==" ++ arg_1_ir ++ ".bytes[0]?tkn__equal:(" ++ arg_0_ir ++ ".bytes[0]>" ++ arg_1_ir ++ ".bytes[0]?tkn__great:tkn__less);\n"
                     else arg_0_ir ++ ".qwords[0]==" ++ arg_1_ir ++ ".qwords[0]?tkn__equal:((i64)" ++ arg_0_ir ++ ".qwords[0]>(i64)" ++ arg_1_ir ++ ".qwords[0]?tkn__great:tkn__less);\n"
 
-               let operand = new (@main.t_operand) {
+               let operand = new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= [set "token"]

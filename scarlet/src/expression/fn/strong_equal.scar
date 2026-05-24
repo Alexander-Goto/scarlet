@@ -1,7 +1,7 @@
 let t_strong_equal = [obj
      :scar_type = "t_strong_equal"
 
-     :operator = @main.t_token
+     :operator = @.t_token
      :left     = :i_expression
      :right    = :i_expression
 ]

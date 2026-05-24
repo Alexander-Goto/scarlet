@@ -13,7 +13,7 @@ fn ir__core_fn___concat__(exp, last_use_ids, contexts, lambdas_data, unused_def_
 
           let code = new (left:code):text => _ ++ (" ++ " ++ right:code:text)
 
-          if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.concat_types) {
+          if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@.concat_types) {
                if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[:core___concat__].null?()
                     error__invalid_type(left:code, ".core___concat__", "obj")
                else null
@@ -23,16 +23,16 @@ fn ir__core_fn___concat__(exp, last_use_ids, contexts, lambdas_data, unused_def_
 
                let [box new_left_possible_types, left_maybe_short_string, left_maybe_string, left_maybe_short_byte_array, left_maybe_byte_array] =
                     if left_possible_types.null?()
-                         [box @main.concat_types__mtd, true, true, true, true]
+                         [box @.concat_types__mtd, true, true, true, true]
                     else {
-                         let new_left_possible_types     = left_possible_types.filter(_.in?(@main.concat_types__mtd))
+                         let new_left_possible_types     = left_possible_types.filter(_.in?(@.concat_types__mtd))
                          let left_maybe_short_string     = "short_string".in?(new_left_possible_types)
                          let left_maybe_string           = "string".in?(new_left_possible_types)
                          let left_maybe_short_byte_array = "short_byte_array".in?(new_left_possible_types)
                          let left_maybe_byte_array       = "byte_array".in?(new_left_possible_types)
 
                          if new_left_possible_types.empty?()
-                              error__invalid_type(left:code, @main.concat_types__mtd, left_possible_types)
+                              error__invalid_type(left:code, @.concat_types__mtd, left_possible_types)
                          else new_left_possible_types
 
                          [box new_left_possible_types, left_maybe_short_string, left_maybe_string, left_maybe_short_byte_array, left_maybe_byte_array]
@@ -40,22 +40,22 @@ fn ir__core_fn___concat__(exp, last_use_ids, contexts, lambdas_data, unused_def_
 
                let [box new_right_possible_types, right_maybe_short_string, right_maybe_string, right_maybe_short_byte_array, right_maybe_byte_array] =
                     if right_possible_types.null?()
-                         [box @main.concat_types__mtd, true, true, true, true]
+                         [box @.concat_types__mtd, true, true, true, true]
                     else {
-                         let new_right_possible_types     = right_possible_types.filter(_.in?(@main.concat_types__mtd))
+                         let new_right_possible_types     = right_possible_types.filter(_.in?(@.concat_types__mtd))
                          let right_maybe_short_string     = "short_string".in?(new_right_possible_types)
                          let right_maybe_string           = "string".in?(new_right_possible_types)
                          let right_maybe_short_byte_array = "short_byte_array".in?(new_right_possible_types)
                          let right_maybe_byte_array       = "byte_array".in?(new_right_possible_types)
 
                          if new_right_possible_types.empty?()
-                              error__invalid_type(left:code, @main.concat_types__mtd, right_possible_types)
+                              error__invalid_type(left:code, @.concat_types__mtd, right_possible_types)
                          else new_right_possible_types
 
                          [box new_right_possible_types, right_maybe_short_string, right_maybe_string, right_maybe_short_byte_array, right_maybe_byte_array]
                     }
 
-               let result_possible_types = if new_right_possible_types.len() == @main.concat_types__mtd.len()
+               let result_possible_types = if new_right_possible_types.len() == @.concat_types__mtd.len()
                     new_left_possible_types
                else {
                     let result_possible_types = new_left_possible_types.filter(_.in?(new_right_possible_types))
@@ -86,12 +86,12 @@ fn ir__core_fn___concat__(exp, last_use_ids, contexts, lambdas_data, unused_def_
                else result_possible_types
 
                let maybe_error = left_possible_types.null?() || right_possible_types.null?() || not (
-                    left_possible_types.all(true, _.in?(@main.string_types))     && right_possible_types.all(true, _.in?(@main.string_types))     ||
-                    left_possible_types.all(true, _.in?(@main.byte_array_types)) && right_possible_types.all(true, _.in?(@main.byte_array_types)) ||
+                    left_possible_types.all(true, _.in?(@.string_types))     && right_possible_types.all(true, _.in?(@.string_types))     ||
+                    left_possible_types.all(true, _.in?(@.byte_array_types)) && right_possible_types.all(true, _.in?(@.byte_array_types)) ||
                     left_possible_types == [set "array"]                         && right_possible_types == left_possible_types
                )
                let need_chain = (exp:left:scar_type /= "t_operand" || exp:right:scar_type /= "t_operand") &&
-                    is_first_in_chain && result_possible_types.any(true, _.in?(@main.concat_types))
+                    is_first_in_chain && result_possible_types.any(true, _.in?(@.concat_types))
 
                let result_possible_types = if maybe_error; result_possible_types.append("error") else result_possible_types
 

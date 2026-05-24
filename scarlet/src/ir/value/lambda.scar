@@ -14,7 +14,7 @@ fn ir__lambda(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_sub
                     warning__constant_not_used(param)
                     [box named_consts, name_ids, params, ir__raw_ref_cnt__dec(fn_arg:ir, lambda_ir)]
                } else {
-                    let named_consts = new (named_consts)[param:text] <= new (@main.t_named_const) {
+                    let named_consts = new (named_consts)[param:text] <= new (@.t_named_const) {
                          :name_id <= name_id
                          :operand <= fn_arg
                     }
@@ -27,14 +27,14 @@ fn ir__lambda(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_sub
      })
 
      let lambda_code     = new (lambda:keyword):text <= "fn (" ++ params.join(", ") ++ ")"
-     let lambda_name     = owner_exp_data:owner_id.drop(@main.compiled_module_name.len() + 1) ++ "ID" ++ lambda:keyword.get_token_id().to_string()
-     let lambda_ir_name  = "M" ++ @main.compiled_module_name ++ "LF" ++ lambda_name
+     let lambda_name     = owner_exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "ID" ++ lambda:keyword.get_token_id().to_string()
+     let lambda_ir_name  = "M" ++ @.compiled_module_name ++ "LF" ++ lambda_name
      let lambda_msg_name = "lambda (" ++ lambda:keyword:file ++ ", " ++ lambda:keyword:line.to_string() ++ ", " ++ lambda:keyword:row.to_string() ++ ")"
 
      let [box lambda_ir_msg_name, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ lambda_msg_name ++ "\";\n", final_data, dependencies)
-     let dependencies                                       = new (dependencies):fns => _.append(@main.compiled_module_name ++ "." ++ lambda_name)
+     let dependencies                                       = new (dependencies):fns => _.append(@.compiled_module_name ++ "." ++ lambda_name)
 
-     let lambda_exp_data = new (@main.t_exp_data) {
+     let lambda_exp_data = new (@.t_exp_data) {
           :owner_id            <= lambda_ir_name
           :owner_name_ir_const <= lambda_ir_msg_name
           :named_consts        <= named_consts
@@ -47,15 +47,15 @@ fn ir__lambda(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_sub
           lambda:body.to_operand(body_last_use_ids, body_contexts, body_sub_lambdas_data, unused_def_ids, lambda_exp_data, lambda_ir, final_data, dependencies, src_gconsts, true, false, false, true)
      let lambda_code = new (lambda_code):text => _ ++ body_result:code:text
 
-     let final_lambda = new (@main.t_final_fn) {
+     let final_lambda = new (@.t_final_fn) {
           :ir_name    <= lambda_ir_name
           :params     <= params
           :ir         <= lambda_ir
           :attributes <= if is_inline; [table "ir_inline" = :no_final_data] else [table]
      }
 
-     let final_data = new (final_data):fns[lambda_name][@main.compiled_module_name] <= final_lambda
-     let fn_operand = comptime_fn(lambda_ir_name, [array @main.comptime_holder_val].repeat(params_len), [array], true, lambda_code)
+     let final_data = new (final_data):fns[lambda_name][@.compiled_module_name] <= final_lambda
+     let fn_operand = comptime_fn(lambda_ir_name, [array @.comptime_holder_val].repeat(params_len), [array], true, lambda_code)
 
      if is_last {
           let [box fn_operand, final_data, dependencies] = fn_operand.has_ir!(final_data, dependencies)
@@ -75,10 +75,10 @@ fn ir__closure(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_su
                let borrowed_operand  = named_owner_const:operand
                if borrowed_operand:possible_types.null?()
                     [box true, true_borrowed_names.append(borrowed_name), named_consts, name_ids]
-               else if borrowed_operand.has_type?(@main.not_copyable_types__error)
-                    error__invalid_type(borrowed_operand:code, @main.copyable_not_error_types, borrowed_operand:possible_types)
+               else if borrowed_operand.has_type?(@.not_copyable_types__error)
+                    error__invalid_type(borrowed_operand:code, @.copyable_not_error_types, borrowed_operand:possible_types)
                else if borrowed_operand:comptime_val.null?() {
-                    let maybe_error         = maybe_error || borrowed_operand.maybe_has_type?(@main.not_copyable_types__error)
+                    let maybe_error         = maybe_error || borrowed_operand.maybe_has_type?(@.not_copyable_types__error)
                     let true_borrowed_names = true_borrowed_names.append(borrowed_name)
 
                     [box maybe_error, true_borrowed_names, named_consts, name_ids]
@@ -100,7 +100,7 @@ fn ir__closure(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_su
                let [box borrowed_operand, lambda_ir] = ir__borrowed(named_owner_const:operand, idx, lambda_ir)
                let true_borrowed_operands            = true_borrowed_operands.append(named_owner_const:operand)
                let name_ids                          = new (name_ids)[named_owner_const:name_id] <= borrowed_name
-               let named_consts                      = new (named_consts)[borrowed_name] <= new (@main.t_named_const) {
+               let named_consts                      = new (named_consts)[borrowed_name] <= new (@.t_named_const) {
                     :name_id <= named_owner_const:name_id
                     :operand <= borrowed_operand
                }
@@ -123,7 +123,7 @@ fn ir__closure(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_su
                     warning__constant_not_used(param)
                     [box named_consts, name_ids, params, ir__raw_ref_cnt__dec(fn_arg:ir, lambda_ir)]
                } else {
-                    let named_consts = new (named_consts)[param:text] <= new (@main.t_named_const) {
+                    let named_consts = new (named_consts)[param:text] <= new (@.t_named_const) {
                          :name_id <= name_id
                          :operand <= fn_arg
                     }
@@ -136,14 +136,14 @@ fn ir__closure(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_su
      })
 
      let lambda_code     = new (lambda:keyword):text <= "fn (" ++ params.join(", ") ++ ")"
-     let lambda_name     = owner_exp_data:owner_id.drop(@main.compiled_module_name.len() + 1) ++ "ID" ++ lambda:keyword.get_token_id().to_string()
-     let lambda_ir_name  = "M" ++ @main.compiled_module_name ++ (if is_short; "LF" else "CL") ++ lambda_name
+     let lambda_name     = owner_exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "ID" ++ lambda:keyword.get_token_id().to_string()
+     let lambda_ir_name  = "M" ++ @.compiled_module_name ++ (if is_short; "LF" else "CL") ++ lambda_name
      let lambda_msg_name = "lambda (" ++ lambda:keyword:file ++ ", " ++ lambda:keyword:line.to_string() ++ ", " ++ lambda:keyword:row.to_string() ++ ")"
 
      let [box lambda_ir_msg_name, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ lambda_msg_name ++ "\";\n", final_data, dependencies)
-     let dependencies                                       = new (dependencies):fns => _.append(@main.compiled_module_name ++ "." ++ lambda_name)
+     let dependencies                                       = new (dependencies):fns => _.append(@.compiled_module_name ++ "." ++ lambda_name)
 
-     let lambda_exp_data = new (@main.t_exp_data) {
+     let lambda_exp_data = new (@.t_exp_data) {
           :owner_id            <= lambda_ir_name
           :owner_name_ir_const <= lambda_ir_msg_name
           :named_consts        <= named_consts
@@ -156,17 +156,17 @@ fn ir__closure(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_su
           lambda:body.to_operand(body_last_use_ids, body_contexts, body_sub_lambdas_data, unused_def_ids, lambda_exp_data, lambda_ir, final_data, dependencies, src_gconsts, true, false, false, true)
      let lambda_code = new (lambda_code):text => _ ++ body_result:code:text
 
-     let final_lambda = new (@main.t_final_fn) {
+     let final_lambda = new (@.t_final_fn) {
           :ir_name    <= lambda_ir_name
           :params     <= params
           :ir         <= lambda_ir
           :attributes <= if is_linear_alloc; [table "ir_inline" = :no_final_data] else [table]
      }
 
-     let final_data = new (final_data):fns[lambda_name][@main.compiled_module_name] <= final_lambda
+     let final_data = new (final_data):fns[lambda_name][@.compiled_module_name] <= final_lambda
 
      if is_short {
-          let fn_operand = comptime_fn(lambda_ir_name, [array @main.comptime_holder_val].repeat(params_len), [array], true, lambda_code)
+          let fn_operand = comptime_fn(lambda_ir_name, [array @.comptime_holder_val].repeat(params_len), [array], true, lambda_code)
           if is_last {
                let [box fn_operand, final_data, dependencies] = fn_operand.has_ir!(final_data, dependencies)
 
@@ -215,7 +215,7 @@ fn ir__closure(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_su
 
                let ir__free_item = borrowed_operand.dec_ref_cnt("")
 
-               if not borrowed_operand.maybe_has_type?(@main.not_copyable_types__error)
+               if not borrowed_operand.maybe_has_type?(@.not_copyable_types__error)
                     [box ir__is_error, ir__error_actions ++ ir__free_item, ir_fn_maybe_error]
                else {
                     let ir__type_check             = "type_is_not_copyable_or_error(" ++ borrowed_operand:ir ++ ".bytes[15])"
@@ -237,7 +237,7 @@ fn ir__closure(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_su
 
                                    fn_reg ++ "=" ++ borrowed_operand:ir ++ ";\n"
 
-                                   if borrowed_operand.maybe_has_type?(@main.not_copyable_types); ir__set_invalid_type_error else ir__free_item
+                                   if borrowed_operand.maybe_has_type?(@.not_copyable_types); ir__set_invalid_type_error else ir__free_item
                               )
                          else ir__set_invalid_type_error
 
@@ -273,7 +273,7 @@ fn ir__closure(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_su
           let fn_type  = if maybe_error; [set "fn", "error"] else [set "fn"]
           let owner_ir = ir__assume_type(fn_reg, fn_type, owner_ir)
 
-          let fn_operand = new (@main.t_operand) {
+          let fn_operand = new (@.t_operand) {
                :code           <= lambda_code
                :ir             <= fn_reg
                :possible_types <= fn_type

@@ -2,7 +2,7 @@ let t_field = [obj
      :scar_type = "t_field"
 
      :object   = :i_expression
-     :field = @main.t_token
+     :field = @.t_token
 ]
 
 fn field_independent?(field, independent_consts)

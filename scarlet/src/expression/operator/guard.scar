@@ -1,7 +1,7 @@
 let t_guard = [obj
      :scar_type = "t_guard"
 
-     :keyword = @main.t_token
+     :keyword = @.t_token
      :exp     = :i_expression
 ]
 

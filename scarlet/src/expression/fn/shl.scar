@@ -1,7 +1,7 @@
 let t_shl = [obj
      :scar_type = "t_shl"
 
-     :operator = @main.t_token
+     :operator = @.t_token
      :left     = :i_expression
      :right    = :i_expression
 ]

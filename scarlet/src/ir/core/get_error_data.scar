@@ -8,7 +8,7 @@ fn ir__core_fn_get_error_data(exp, last_use_ids, contexts, lambdas_data, unused_
 
      ir__fn_call(
           "McoreFNget_error_data", [array arg], code
-          if arg.has_type?("error"); @main.common_types else @main.common_types__error
+          if arg.has_type?("error"); @.common_types else @.common_types__error
           exp_data, ir, final_data, dependencies, src_gconsts, is_last
      )
 }

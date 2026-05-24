@@ -1,6 +1,6 @@
 fn ir__check(checked_operand, code, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
      if checked_operand.has_type?("error")
-          error__invalid_type(checked_operand:code, @main.not_error_types, "error")
+          error__invalid_type(checked_operand:code, @.not_error_types, "error")
      else {
           let checked_operand = new (checked_operand):code <= code
 
@@ -23,7 +23,7 @@ fn ir__check(checked_operand, code, exp_data, ir, final_data, dependencies, src_
                let ir   = ir__assume_type(check_reg, type, ir)
 
                [box
-                    new (@main.t_operand) {
+                    new (@.t_operand) {
                          :code           <= code
                          :ir             <= check_reg
                          :possible_types <= type

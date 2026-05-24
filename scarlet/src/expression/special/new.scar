@@ -3,7 +3,7 @@ let new_mod_types = [set "=>", "<=", "=>>", "<<="]
 let t_operator_new = [obj
      :scar_type = "t_operator_new"
 
-     :keyword      = @main.t_token
+     :keyword      = @.t_token
      :base_operand = :i_expression
      :mods         = [array] # [array [obj :keys = [array @i_expression*], :type = @string, :exp = @i_expression]*]
 ]

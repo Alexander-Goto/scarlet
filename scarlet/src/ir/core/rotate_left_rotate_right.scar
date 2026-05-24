@@ -13,29 +13,29 @@ fn ir__core_fn_rotate_left_rotate_right(exp, fn_ir_name, last_use_ids, contexts,
 
           let code = new (bits:code):text => _ ++ (" " ++ exp:name:text ++ " " ++ shifts:code:text)
 
-          bits.maybe_has_type!(@main.bit_types__mtd)
+          bits.maybe_has_type!(@.bit_types__mtd)
           shifts.maybe_has_type!([set "byte", "int"])
 
           let shifts_comptime_val = shifts:comptime_val
-          if not shifts_comptime_val.null?() && bits.has_type?(@main.bit_types) {
+          if not shifts_comptime_val.null?() && bits.has_type?(@.bit_types) {
                let int_shifts = shifts_comptime_val:value.to_int()
                if int_shifts > 64 || bits.has_type?("byte") && int_shifts > 8
                     error__out_of_bounds(exp:operator)
                else null
           } else null
 
-          if bits:comptime_val.null?() || shifts:comptime_val.null?() || not bits:comptime_val:type.in?(@main.bit_types) {
+          if bits:comptime_val.null?() || shifts:comptime_val.null?() || not bits:comptime_val:type.in?(@.bit_types) {
                if bits:comptime_val:type === "obj" && bits:comptime_val:value[:_]:value[if fn_ir_name[14] == 'l'; :core_rotate_left else :core_rotate_right].null?()
                     error__invalid_type(bits:code, if fn_ir_name[14] == 'l'; ".core_rotate_left" else ".core_rotate_right", "obj")
                else null
 
                let [box result_possible_types, maybe_chain, maybe_error] = if bits:possible_types.null?()
-                    [box @main.bit_types__mtd_error, true, true]
+                    [box @.bit_types__mtd_error, true, true]
                else if (bits.has_type?("int") || bits.has_type?("byte")) && not shifts:comptime_val.null?()
                     [box bits:possible_types, true, false]
                else {
-                    let new_bits_possible_types = bits:possible_types.filter(_.in?(@main.bit_types__mtd)).append("error")
-                    [box new_bits_possible_types, new_bits_possible_types.any(true, _.in?(@main.bit_types)), true]
+                    let new_bits_possible_types = bits:possible_types.filter(_.in?(@.bit_types__mtd)).append("error")
+                    [box new_bits_possible_types, new_bits_possible_types.any(true, _.in?(@.bit_types)), true]
                }
 
                let result_possible_types = if "byte".in?(result_possible_types) && not shifts_comptime_val.null?() && shifts_comptime_val:value.to_int() > 8

@@ -14,11 +14,11 @@ fn ir__scarlet__split(exp, last_use_ids, contexts, lambdas_data, unused_def_ids,
                :code               <= code
                :comptime_val:type  <= "box"
                :comptime_val:value <= [array
-                    new (@main.t_comptime_val) {
+                    new (@.t_comptime_val) {
                          :type  <= "int"
                          :value <= low
                     }
-                    new (@main.t_comptime_val) {
+                    new (@.t_comptime_val) {
                          :type  <= "int"
                          :value <= high
                     }

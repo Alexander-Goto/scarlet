@@ -9,12 +9,12 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                let [obj mod_keys = :keys, mod_operand = :operand, mod_type = :type] = mod
                let mod_keys_last_idx                                                = mod_keys.len() - 1
 
-               mod_operand.maybe_has_type!(if mod_type.first() == '<'; @main.common_types__null else @main.fn_types)
+               mod_operand.maybe_has_type!(if mod_type.first() == '<'; @.common_types__null else @.fn_types)
 
                if not (
                     base_operand:comptime_val.null?() ||
                     mod_operand:comptime_val.null?()  ||
-                    mod_keys.any(true, fn (key) key:comptime_val.null?() || not key:comptime_val:type.in?(@main.always_hash_map_key_types))
+                    mod_keys.any(true, fn (key) key:comptime_val.null?() || not key:comptime_val:type.in?(@.always_hash_map_key_types))
                ) && mod_type.first() == '<' {
                     let [box path, old_value] = mod_keys.foldl_kv([box [array].init(mod_keys.len()), base_operand:comptime_val], fn (state, key_idx, key) {
                          let [box path, value] = state
@@ -28,7 +28,7 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                               else null
 
                               if key_idx /= mod_keys_last_idx
-                                   error__not_expected_token(mod_keys[key_idx + 1]:code, @main.new_mod_types)
+                                   error__not_expected_token(mod_keys[key_idx + 1]:code, @.new_mod_types)
                               else null
 
                               let expected_type = if value:type == "string"; "char" else "byte"
@@ -37,7 +37,7 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                               [box
                                    path.append(value)
 
-                                   new (@main.t_comptime_val) {
+                                   new (@.t_comptime_val) {
                                         :type  <= expected_type
                                         :value <= value:value[key:comptime_val:value]
                                    }
@@ -51,7 +51,7 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                               else null
 
                               [box
-                                   path.append(new (@main.t_comptime_val) {
+                                   path.append(new (@.t_comptime_val) {
                                         :type  <= if key:comptime_val:type == "token"; "obj" else "table"
                                         :value <= [table].init(1)
                                    })
@@ -66,10 +66,10 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                                    else mod_keys[key_idx + 1].maybe_has_type!("token")
                               else key.maybe_has_type!("token")
 
-                              [box path.append(value), value:value[key:comptime_val:value] <? @main.comptime_null_val]
+                              [box path.append(value), value:value[key:comptime_val:value] <? @.comptime_null_val]
                          }
                          case "table":
-                              [box path.append(value), value:value[key:comptime_val] <? @main.comptime_null_val]
+                              [box path.append(value), value:value[key:comptime_val] <? @.comptime_null_val]
                          case "array": {
                               key.maybe_has_type!("int")
 
@@ -80,7 +80,7 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                               [box path.append(value), value:value[key:comptime_val:value]]
                          }
                          default:
-                              error__not_expected_token(key:code, @main.new_mod_types)
+                              error__not_expected_token(key:code, @.new_mod_types)
                     })
 
                     let new_base_operand_value = path.foldr_kv(mod_operand:comptime_val, fn (new_value, idx, container) {
@@ -101,13 +101,13 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
 
                     let new_base_operand_value = if mod_type.len() == 2
                          new_base_operand_value
-                    else new (@main.t_comptime_val) {
+                    else new (@.t_comptime_val) {
                          :type  <= "box"
                          :value <= [array new_base_operand_value, old_value]
                     }
 
                     [box
-                         new (@main.t_operand) {
+                         new (@.t_operand) {
                               :comptime_val   <= new_base_operand_value
                               :possible_types <= new_base_operand_value.get_type_for_operand()
                          }
@@ -119,7 +119,7 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                     let [box mod_operand, final_data, dependencies]  = mod_operand.has_ir!(final_data, dependencies)
                     let [box mod_keys, final_data, dependencies]     = operands_have_ir!(mod_keys, final_data, dependencies)
 
-                    mod_keys.foldl(null, fn (_, key) key.maybe_has_type!(@main.all_hash_map_key_types))
+                    mod_keys.foldl(null, fn (_, key) key.maybe_has_type!(@.all_hash_map_key_types))
 
                     if base_operand:possible_types.null?()
                          null
@@ -127,7 +127,7 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                          mod_keys.first().maybe_has_type!("int")
 
                          if mod_keys.len() /= 1
-                              error__not_expected_token(mod_keys[1]:code, @main.new_mod_types)
+                              error__not_expected_token(mod_keys[1]:code, @.new_mod_types)
                          else null
 
                          if mod_type.first() == '<'
@@ -144,7 +144,7 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                                    else null
 
                                    if key_idx /= mod_keys_last_idx
-                                        error__not_expected_token(mod_keys[key_idx + 1]:code, @main.new_mod_types)
+                                        error__not_expected_token(mod_keys[key_idx + 1]:code, @.new_mod_types)
                                    else null
 
                                    if mod_type.first() == '<' {
@@ -180,7 +180,7 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                                    }
                               }
                               case "table":
-                                   if key:comptime_val.null?() || not key:comptime_val:type.in?(@main.always_hash_map_key_types)
+                                   if key:comptime_val.null?() || not key:comptime_val:type.in?(@.always_hash_map_key_types)
                                         [breaker null]
                                    else {
                                         let value = current_base_operand:value[key:comptime_val]
@@ -196,7 +196,7 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                                    else error__out_of_bounds(key:code)
                               }
                               default:
-                                   error__not_expected_token(key:code, @main.new_mod_types)
+                                   error__not_expected_token(key:code, @.new_mod_types)
                          )
                     else if base_operand.has_type?([set "array", "error"]) || base_operand.has_type?("array")
                          mod_keys.first().maybe_has_type!("int")
@@ -224,7 +224,7 @@ fn ir__operator_new(base_operand, all_mods, code, exp_data, ir, final_data, depe
                     let ir = ir__assume_type(new_base_operand_reg, new_base_operand_possible_types, ir)
 
                     [box
-                         new (@main.t_operand) {
+                         new (@.t_operand) {
                               :ir             <= new_base_operand_reg
                               :possible_types <= new_base_operand_possible_types
                          }

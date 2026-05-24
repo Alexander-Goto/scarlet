@@ -1,7 +1,7 @@
 fn corsar_code_correct?(code) code.in_range?(1, 258)
 
 fn load_tokens_from_file(file_name) {
-     let file = open_file(fs_path(file_name), @std.fom__read | @std.fom__begin)
+     let file = open_file(fs_path(file_name), @.fom__read | @.fom__begin)
      if file.error?() || file.type() /= "std.file"
           error__cant_load_file(file_name)
      else null
@@ -14,7 +14,7 @@ fn load_tokens_from_file(file_name) {
           default:        unreachable()
      else null
 
-     loop([box [array], file_code, new (@main.t_token):file <= file_name], fn (state) {
+     loop([box [array], file_code, new (@.t_token):file <= file_name], fn (state) {
           let [box tokens, file_code, co_ords] = state
 
           let [box token, file_code, co_ords] = file__get_token(file_code, co_ords)

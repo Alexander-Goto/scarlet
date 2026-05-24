@@ -10,13 +10,13 @@ fn ir__get_field_call(object, field_tkn, code, exp_data, ir, final_data, depende
           let ir                         = ir ++ "t_any const " ++ result_reg ++ "=get_obj_field__own(thrd_data," ++ object:ir ++ "," ++ field_tkn:ir ++ ");\n"
 
           let type = if object.has_type?("obj") && field_tkn.has_type?("token")
-               @main.common_types__null
-          else @main.common_types__null_error
+               @.common_types__null
+          else @.common_types__null_error
 
           let ir = ir__assume_type(result_reg, type, ir)
 
           [box
-               new (@main.t_operand) {
+               new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= type

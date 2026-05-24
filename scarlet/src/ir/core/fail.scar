@@ -4,7 +4,7 @@ fn ir__core_fn_fail(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, e
 
      let code = new (exp:name):text => _ ++ ("(" ++ msg:code:text ++ ")")
 
-     msg.maybe_has_type!(@main.string_types__error)
+     msg.maybe_has_type!(@.string_types__error)
 
      ir__fn_call("McoreFNfail", [array msg], code, null, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
 }

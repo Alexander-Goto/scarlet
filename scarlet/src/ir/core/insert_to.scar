@@ -12,11 +12,11 @@ fn ir__core_fn_insert_to(exp, last_use_ids, contexts, lambdas_data, unused_def_i
      let valid_for_comptime_types = [set "short_string", "string", "short_byte_array", "byte_array", "array"]
 
      new_item.maybe_has_type!(
-          if array.has_type?(@main.string_types)
+          if array.has_type?(@.string_types)
                "char"
-          else if array.has_type?(@main.byte_array_types)
+          else if array.has_type?(@.byte_array_types)
                "byte"
-          else @main.common_types
+          else @.common_types
      )
 
      array.maybe_has_type!(valid_types)

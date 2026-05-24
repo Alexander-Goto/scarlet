@@ -1,7 +1,7 @@
 let t_obj = [obj
      :scar_type = "t_obj"
 
-     :open_char = @main.t_token
+     :open_char = @.t_token
      :kvs       = [array] # [array [obj :key = @i_expression, :value = @i_expression]*]
 ]
 
@@ -28,7 +28,7 @@ fn obj_to_operand(obj, last_use_ids, contexts, lambdas_data, unused_def_ids, exp
      })
 
      let is_fix            = not keys.any(true, fn (key) key:comptime_val.null?())
-     let valid_value_types = if is_fix; @main.common_types__null else @main.common_types
+     let valid_value_types = if is_fix; @.common_types__null else @.common_types
 
      let [box kvs_operands, code, exp_data, ir, final_data, dependencies, src_gconsts, is_comptime, is_obj] = if obj:kvs.empty?()
           [box [array], "[obj]", exp_data, ir, final_data, dependencies, src_gconsts, true, true]

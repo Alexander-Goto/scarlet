@@ -15,5 +15,5 @@ fn ir__core_fn_read_from_mem(exp, last_use_ids, contexts, lambdas_data, unused_d
           error__out_of_bounds(count:code)
      else null
 
-     ir__fn_call("McoreFNread_from_memAAA", [array mem, offset, count], code, @main.byte_array_types__error, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     ir__fn_call("McoreFNread_from_memAAA", [array mem, offset, count], code, @.byte_array_types__error, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
 }

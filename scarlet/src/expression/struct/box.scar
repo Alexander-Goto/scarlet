@@ -1,7 +1,7 @@
 let t_box = [obj
      :scar_type = "t_box"
 
-     :open_char = @main.t_token
+     :open_char = @.t_token
      :items     = [array] # [array @i_expression*]
 ]
 
@@ -24,7 +24,7 @@ fn box_to_operand(box, last_use_ids, contexts, lambdas_data, unused_def_ids, exp
                item.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
 
           if item.has_type?("error")
-               error__invalid_type(item:code, @main.not_error_types, "error")
+               error__invalid_type(item:code, @.not_error_types, "error")
           else null
 
           let items       = items.append(item)

@@ -178,7 +178,7 @@ fn comptime_val_to_ir(comptime_val, need_type, final_data, dependencies) {
 
                     let keys             = obj.foldl_kv([array].init(fields_without_placeholders_len), fn (keys, key, value) if value:type == "null"; keys else keys.append(key))
                     let virtual_hash_set = keys.sort(true).foldl(virtual_hash_set, virtual_hash_set__add(_, _, chunk_size, chunks_len))
-                    let data             = "[" ++ (chunk_size * chunks_len * 2 + 2).to_ir_num() ++ "]={{.qwords={0xf000000000000000ull," ++ @main.comptime_seed ++ "}}," ++ mtds_ir
+                    let data             = "[" ++ (chunk_size * chunks_len * 2 + 2).to_ir_num() ++ "]={{.qwords={0xf000000000000000ull," ++ @.comptime_seed ++ "}}," ++ mtds_ir
                     let data             = virtual_hash_set.foldl(data, fn (data, key)
                          if key.type() == "core.float"
                               data ++ ",null,null"
@@ -204,7 +204,7 @@ fn comptime_val_to_ir(comptime_val, need_type, final_data, dependencies) {
                          new (virtual_set)[idx] <= key
                     })
 
-                    let data = "[" ++ (chunks_len * 2 + 2).to_ir_num() ++ "]={{.qwords={" ++ (fix_offset << 57).to_ir_num() ++ "," ++ @main.comptime_seed ++ "}}," ++ mtds_ir
+                    let data = "[" ++ (chunks_len * 2 + 2).to_ir_num() ++ "]={{.qwords={" ++ (fix_offset << 57).to_ir_num() ++ "," ++ @.comptime_seed ++ "}}," ++ mtds_ir
                     let data = virtual_set.foldl(data, fn (data, key)
                          if key.type() == "core.float"
                               data ++ ",null,null"
@@ -249,7 +249,7 @@ fn comptime_val_to_ir(comptime_val, need_type, final_data, dependencies) {
                          cmp(left, right)
                     else cmp(left_type, right_type)
                }).foldl(virtual_hash_set, virtual_hash_set__add(_, _, chunk_size, chunks_len))
-               let data = "[" ++ (chunk_size * chunks_len * 2 + 1).to_ir_num() ++ "]={{.qwords={0," ++ @main.comptime_seed ++ "}}"
+               let data = "[" ++ (chunk_size * chunks_len * 2 + 1).to_ir_num() ++ "]={{.qwords={0," ++ @.comptime_seed ++ "}}"
                let data = virtual_hash_set.foldl(data, fn (data, key)
                     if key.type() == "core.float"
                          data ++ ",null,null"
@@ -289,7 +289,7 @@ fn comptime_val_to_ir(comptime_val, need_type, final_data, dependencies) {
                          cmp(left, right)
                     else cmp(left_type, right_type)
                }).foldl(virtual_hash_set, virtual_hash_set__add(_, _, chunk_size, chunks_len))
-               let data = "[" ++ (chunk_size * chunks_len + 1).to_ir_num() ++ "]={{.qwords={0," ++ @main.comptime_seed ++ "}}"
+               let data = "[" ++ (chunk_size * chunks_len + 1).to_ir_num() ++ "]={{.qwords={0," ++ @.comptime_seed ++ "}}"
                let data = virtual_hash_set.foldl(data, fn (data, item)
                     if item.type() == "core.float"
                          data ++ ",null"

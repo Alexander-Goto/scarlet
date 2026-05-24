@@ -11,7 +11,7 @@ fn ir__core_fn_filter_filter_kv(exp, fn_ir_name, last_use_ids, contexts, lambdas
      else [set "short_string", "string", "short_byte_array", "byte_array", "table", "array", "obj", "custom"]
 
      container.maybe_has_type!(valid_types)
-     func.maybe_has_type!(@main.fn_types)
+     func.maybe_has_type!(@.fn_types)
 
      let result_possible_types = if container:possible_types.null?()
           valid_types.append("error")

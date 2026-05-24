@@ -1,7 +1,7 @@
 let t_if_exp = [obj
      :scar_type = "t_if_exp"
 
-     :keyword   = @main.t_token
+     :keyword   = @.t_token
      :predicate = :i_expression
      :then      = :i_expression
      :else      = :i_expression
@@ -19,8 +19,8 @@ fn analyze_if_exp(if_exp, last_use_info, lambdas_data, contexts, name_ids, def_i
      let then_contexts    = contexts.append("ifth:" ++ keyword_coded_id)
      let else_contexts    = contexts.append("ifel:" ++ keyword_coded_id)
 
-     let [box then_last_use_info, lambdas_data, def_ids] = if_exp:then.analyze(@main.t_last_use_info, lambdas_data, then_contexts, name_ids, def_ids)
-     let [box else_last_use_info, lambdas_data, def_ids] = if_exp:else.analyze(@main.t_last_use_info, lambdas_data, else_contexts, name_ids, def_ids)
+     let [box then_last_use_info, lambdas_data, def_ids] = if_exp:then.analyze(@.t_last_use_info, lambdas_data, then_contexts, name_ids, def_ids)
+     let [box else_last_use_info, lambdas_data, def_ids] = if_exp:else.analyze(@.t_last_use_info, lambdas_data, else_contexts, name_ids, def_ids)
 
      let last_use_info = merge_branches(last_use_info, [array then_last_use_info, else_last_use_info])
      [box last_use_info, lambdas_data, def_ids]

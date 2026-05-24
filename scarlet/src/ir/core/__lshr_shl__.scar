@@ -13,18 +13,18 @@ fn ir__core_fn___lshr_shl__(exp, fn_ir_name, last_use_ids, contexts, lambdas_dat
 
           let code = new (left:code):text => _ ++ (" " ++ exp:operator:text ++ " " ++ right:code:text)
 
-          left.maybe_has_type!(@main.bit_types__mtd)
+          left.maybe_has_type!(@.bit_types__mtd)
           right.maybe_has_type!([set "byte", "int"])
 
           let right_comptime_val = right:comptime_val
-          if not right_comptime_val.null?() && left.has_type?(@main.bit_types) {
+          if not right_comptime_val.null?() && left.has_type?(@.bit_types) {
                let shifts = right_comptime_val:value.to_int()
                if shifts > 64 || left.has_type?("byte") && shifts > 8
                     error__out_of_bounds(exp:operator)
                else null
           } else null
 
-          if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.bit_types) {
+          if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@.bit_types) {
                if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[if fn_ir_name == "McoreFN__lshr__"; :core___lshr__ else :core___shl__].null?()
                     error__invalid_type(left:code, if fn_ir_name == "McoreFN__lshr__"; ".core___lshr__" else ".core___shl__", "obj")
                else null
@@ -32,12 +32,12 @@ fn ir__core_fn___lshr_shl__(exp, fn_ir_name, last_use_ids, contexts, lambdas_dat
                let left_possible_types  = left:possible_types
 
                let [box result_possible_types, maybe_chain, maybe_error] = if left_possible_types.null?()
-                    [box @main.bit_types__mtd_error, true, true]
+                    [box @.bit_types__mtd_error, true, true]
                else if (left.has_type?("int") || left.has_type?("byte")) && not right:comptime_val.null?()
                     [box left:possible_types, true, false]
                else {
-                    let new_left_possible_types = left_possible_types.filter(_.in?(@main.bit_types__mtd)).append("error")
-                    [box new_left_possible_types, new_left_possible_types.any(true, _.in?(@main.bit_types)), true]
+                    let new_left_possible_types = left_possible_types.filter(_.in?(@.bit_types__mtd)).append("error")
+                    [box new_left_possible_types, new_left_possible_types.any(true, _.in?(@.bit_types)), true]
                }
 
                let result_possible_types = if "byte".in?(result_possible_types) && not right_comptime_val.null?() && right_comptime_val:value.to_int() > 8

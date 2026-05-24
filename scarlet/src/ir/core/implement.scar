@@ -42,7 +42,7 @@ fn comptime_implement(obj, interface)
      if interface.empty?() || interface.len() == 1 && :_.key_of?(interface)
           obj
      else if obj[:_].null?()
-          new (obj)[:_] <= new (@main.t_comptime_val) {:type <= "obj"; :value <= new (interface)[:_] <= null}
+          new (obj)[:_] <= new (@.t_comptime_val) {:type <= "obj"; :value <= new (interface)[:_] <= null}
      else new (obj)[:_]:value => interface.foldl_kv(_, fn (mtds, mtd_name, mtd)
           if mtd_name == :_
                mtds

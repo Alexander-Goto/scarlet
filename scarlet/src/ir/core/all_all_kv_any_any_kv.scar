@@ -14,7 +14,7 @@ fn ir__core_fn_all_all_kv_any_any_kv(exp, fn_ir_name, last_use_ids, contexts, la
           else [set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom"]
      )
      default_result.maybe_has_type!("bool")
-     func.maybe_has_type!(@main.fn_types)
+     func.maybe_has_type!(@.fn_types)
 
      ir__fn_call(fn_ir_name, [array container, default_result, func], code, [set "bool", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
 }

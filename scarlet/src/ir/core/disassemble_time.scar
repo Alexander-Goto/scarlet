@@ -16,10 +16,10 @@ fn ir__core_fn_disassemble_time(exp, last_use_ids, contexts, lambdas_data, unuse
      if time:comptime_val.null?() || timezone:comptime_val.null?()
           ir__fn_call("McoreFNdisassemble_time", [array time, timezone], code, if time.has_type?("time") && not timezone:comptime_val.null?(); [set "box"] else [set "box", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
      else {
-          let comptime_val = new (@main.t_comptime_val) {
+          let comptime_val = new (@.t_comptime_val) {
                :type  <= "box"
                :value <= disassemble_time(time:comptime_val:value, timezone:comptime_val:value).to_array().map(fn (item)
-                    new (@main.t_comptime_val) {
+                    new (@.t_comptime_val) {
                          :type  <= "int"
                          :value <= item
                     }

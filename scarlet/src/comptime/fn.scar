@@ -1,7 +1,7 @@
 fn comptime_fn(name, args, borrowed_items, is_short, code)
-     new (@main.t_operand) {
+     new (@.t_operand) {
           :code         <= code
-          :comptime_val <= new (@main.t_comptime_val) {
+          :comptime_val <= new (@.t_comptime_val) {
                :type  <= "fn"
                :value <= [obj
                     :ir_name        = name

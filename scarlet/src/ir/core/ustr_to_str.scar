@@ -5,9 +5,9 @@ fn ir__core_fn_ustr_to_str(exp, last_use_ids, contexts, lambdas_data, unused_def
      let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
 
      if arg:comptime_val:type =/= "byte_array" {
-          arg.maybe_has_type!(@main.byte_array_types)
+          arg.maybe_has_type!(@.byte_array_types)
 
-          ir__fn_call("McoreFNustr_to_str", [array arg], code, @main.string_types__error.append("null"), exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+          ir__fn_call("McoreFNustr_to_str", [array arg], code, @.string_types__error.append("null"), exp_data, ir, final_data, dependencies, src_gconsts, is_last)
      } else {
           let value = ustr_to_str(arg:comptime_val:value)
           if value.error?()

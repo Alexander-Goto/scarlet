@@ -5,9 +5,9 @@ fn ir__core_fn_ascii_to_lower_ascii_to_upper(exp, fn_ir_name, last_use_ids, cont
      let code          = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
      let short_fn_name = fn_ir_name.drop(7)
 
-     if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@main.string_types__char) {
+     if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@.string_types__char) {
           if arg:comptime_val:type =/= "obj"
-               arg.maybe_has_type!(@main.string_types__char_mtd)
+               arg.maybe_has_type!(@.string_types__char_mtd)
           else {
                let [box token, mtd_type] = if short_fn_name == "ascii_to_lower"
                     [box :core_ascii_to_lower, ".core_ascii_to_lower"]
@@ -19,10 +19,10 @@ fn ir__core_fn_ascii_to_lower_ascii_to_upper(exp, fn_ir_name, last_use_ids, cont
           }
 
           let result_possible_types = if arg:possible_types.null?()
-               @main.string_types__char_mtd_error
-          else if arg.has_type?(@main.string_types__char)
+               @.string_types__char_mtd_error
+          else if arg.has_type?(@.string_types__char)
                arg:possible_types
-          else arg:possible_types.filter(_.in?(@main.string_types__char_mtd)).append("error")
+          else arg:possible_types.filter(_.in?(@.string_types__char_mtd)).append("error")
 
           ir__fn_call(fn_ir_name, [array arg], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
      } else {

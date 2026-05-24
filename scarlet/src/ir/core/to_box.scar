@@ -33,9 +33,9 @@ fn ir__core_fn_to_box(exp, last_use_ids, contexts, lambdas_data, unused_def_ids,
                :comptime_val:value => fn (arg)
                     switch arg_type
                     case "string":
-                         arg.foldl([array].init(arg.len()), fn (array, char) array.append(new (@main.t_comptime_val) {:type <= "char"; :value <= char}))
+                         arg.foldl([array].init(arg.len()), fn (array, char) array.append(new (@.t_comptime_val) {:type <= "char"; :value <= char}))
                     case "byte_array":
-                         arg.foldl([array].init(arg.len()), fn (array, byte) array.append(new (@main.t_comptime_val) {:type <= "byte"; :value <= byte}))
+                         arg.foldl([array].init(arg.len()), fn (array, byte) array.append(new (@.t_comptime_val) {:type <= "byte"; :value <= byte}))
                     case "array", "table", "set", "obj":
                          arg.to_array()
                     default:

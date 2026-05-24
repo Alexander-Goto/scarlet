@@ -1,6 +1,6 @@
 let t_const_in_exp = [obj
      :scar_type = "t_const_in_exp"
-     :name      = @main.t_token
+     :name      = @.t_token
 ]
 
 fn const_independent?(const, independent_consts) const:name:text.in?(independent_consts)

@@ -26,8 +26,8 @@ fn ir__core_fn_split_by_part(exp, last_use_ids, contexts, lambdas_data, unused_d
                "McoreFNsplit_by_part", [array array, separator], code
 
                if
-                         array.has_type?(@main.string_types) && separator.has_type?(@main.string_types)         ||
-                         array.has_type?(@main.byte_array_types) && separator.has_type?(@main.byte_array_types) ||
+                         array.has_type?(@.string_types) && separator.has_type?(@.string_types)         ||
+                         array.has_type?(@.byte_array_types) && separator.has_type?(@.byte_array_types) ||
                          array.has_type?("array") && separator.has_type?("array")
                     [set "array"]
                else [set "array", "error"]
@@ -45,7 +45,7 @@ fn ir__core_fn_split_by_part(exp, last_use_ids, contexts, lambdas_data, unused_d
                :comptime_val:type  <= "array"
                :comptime_val:value => fn (array) {
                     let result = array.split_by_part(separator:comptime_val:value)
-                    result.map(fn (item) new (@main.t_comptime_val) {:type <= array_type; :value <= item})
+                    result.map(fn (item) new (@.t_comptime_val) {:type <= array_type; :value <= item})
                }
                :possible_types <= [set "array"]
           }

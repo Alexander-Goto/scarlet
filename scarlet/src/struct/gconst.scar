@@ -1,7 +1,7 @@
 let t_src_gconst = [obj
      :scar_type = "t_src_gconst"
 
-     :name        = @main.t_token
+     :name        = @.t_token
      :value       = :i_expression
      :attributes  = [table] # [table attribute_id:@string = @i_attribute]
      :doc_comment = ""
@@ -16,19 +16,19 @@ let t_final_gconst = [obj
      :possible_types   = null  # ([set @string]|null)
      :comptime_val     = null  # (@t_comptime_val|null)
      :attributes       = [table] # [table attribute_id:@string = @i_final_attribute|:no_final_data]
-     :dependencies     = @main.t_dependencies
+     :dependencies     = @.t_dependencies
      :doc_comment      = ""
      :name_ir_const    = ""
 ]
 
 fn prepare_gconst_to_final(gconst, final_data) {
-     let ir_name = "M" ++ @main.compiled_module_name ++ "GC" ++ gconst:name:text
+     let ir_name = "M" ++ @.compiled_module_name ++ "GC" ++ gconst:name:text
 
-     let final_data = if @main.compiled_module_name == "main" || not "export".key_of?(gconst:attributes)
-          new (final_data):always_use_gconsts[ir_name] <= @main.compiled_module_name ++ "." ++ gconst:name:text
+     let final_data = if @.compiled_module_name == "main" || not "export".key_of?(gconst:attributes)
+          new (final_data):always_use_gconsts[ir_name] <= @.compiled_module_name ++ "." ++ gconst:name:text
      else final_data
 
-     new (final_data):gconsts[gconst:name:text][@main.compiled_module_name] <= new (@main.t_final_gconst) {
+     new (final_data):gconsts[gconst:name:text][@.compiled_module_name] <= new (@.t_final_gconst) {
           :ir_name     <= ir_name
           :attributes  <= gconst:attributes.map(attribute_to_final(_))
           :doc_comment <= gconst:doc_comment
@@ -36,7 +36,7 @@ fn prepare_gconst_to_final(gconst, final_data) {
 }
 
 fn gconst_to_final(gconst, final_data, src_gconsts) {
-     let [box last_use_info, lambdas_data, def_ids] = gconst:value.analyze(@main.t_last_use_info, @main.t_lambdas_data, [set], [table], [set])
+     let [box last_use_info, lambdas_data, def_ids] = gconst:value.analyze(@.t_last_use_info, @.t_lambdas_data, [set], [table], [set])
 
      let [box last_use_ids, contexts, unused_def_ids] = last_use_info.foldl_kv([box [set], [table], def_ids], fn (state, def_id, use_id_and_contexts) {
           let [box last_use_ids, contexts, unused_def_ids] = state
@@ -52,11 +52,11 @@ fn gconst_to_final(gconst, final_data, src_gconsts) {
           [box last_use_ids, contexts, unused_def_ids.remove(def_id)]
      })
 
-     let owner_name                                          = "constant - " ++ @main.compiled_module_name ++ "." ++ gconst:name:text
-     let [box owner_name_ir_const, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ owner_name ++ "\";\n", final_data, @main.t_dependencies)
+     let owner_name                                          = "constant - " ++ @.compiled_module_name ++ "." ++ gconst:name:text
+     let [box owner_name_ir_const, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ owner_name ++ "\";\n", final_data, @.t_dependencies)
 
-     let exp_data = new (@main.t_exp_data) {
-          :owner_id            <= "M" ++ @main.compiled_module_name ++ "GC" ++ gconst:name:text
+     let exp_data = new (@.t_exp_data) {
+          :owner_id            <= "M" ++ @.compiled_module_name ++ "GC" ++ gconst:name:text
           :owner_name_ir_const <= owner_name_ir_const
      }
 
@@ -74,9 +74,9 @@ fn gconst_to_final(gconst, final_data, src_gconsts) {
      }
 
      [box
-          new (final_data):gconsts[gconst:name:text][@main.compiled_module_name] => fn (final_gconst) new (final_gconst) {
+          new (final_data):gconsts[gconst:name:text][@.compiled_module_name] => fn (final_gconst) new (final_gconst) {
                :operand_ir     <= operand:ir
-               :possible_types <= if operand:possible_types.null?(); @main.not_error_types else operand:possible_types.remove("error").remove("breaker")
+               :possible_types <= if operand:possible_types.null?(); @.not_error_types else operand:possible_types.remove("error").remove("breaker")
                :comptime_val   <= operand:comptime_val
                :ir             <= ir
                :dependencies   <= dependencies
@@ -114,7 +114,7 @@ fn deserialize_gconst(bytes) {
      let comptime_val   = if comptime_val.type() == "core.bool"; null else comptime_val
 
      [box
-          new (@main.t_final_gconst) {
+          new (@.t_final_gconst) {
                :ir_name        <= ir_name
                :ir             <= ir
                :operand_ir     <= operand_ir

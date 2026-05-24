@@ -9,7 +9,7 @@ fn ir__core_fn_to_string(exp, last_use_ids, contexts, lambdas_data, unused_def_i
           "byte_array", "time", "float", "box", "table", "set", "array", "obj", "custom"
      ])
 
-     if arg.has_type?(@main.string_types) {
+     if arg.has_type?(@.string_types) {
           let operand = new (arg):code <= code
 
           if is_last {
@@ -23,8 +23,8 @@ fn ir__core_fn_to_string(exp, last_use_ids, contexts, lambdas_data, unused_def_i
                "McoreFNto_string", [array arg], code
 
                if arg.has_type?([set "short_string", "string", "null", "token", "bool", "byte", "char", "int", "short_byte_array", "byte_array", "time", "float"])
-                    @main.string_types
-               else @main.string_types__error
+                    @.string_types
+               else @.string_types__error
 
                exp_data, ir, final_data, dependencies, src_gconsts, is_last
           )

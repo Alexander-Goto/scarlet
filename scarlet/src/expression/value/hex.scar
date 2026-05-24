@@ -1,6 +1,6 @@
 let t_hex = [obj
      :scar_type = "t_hex"
-     :value     = @main.t_token
+     :value     = @.t_token
 ]
 
 fn hex_to_operand(hex, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {

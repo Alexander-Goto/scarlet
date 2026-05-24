@@ -1,7 +1,7 @@
 let t_grouped_exps = [obj
      :scar_type = "t_grouped_exps"
 
-     :open_char = @main.t_token
+     :open_char = @.t_token
      :exps      = [array] # [array @i_expression*]
 ]
 
@@ -121,7 +121,7 @@ fn grouped_exps_to_operand(exps, last_use_ids, contexts, lambdas_data, unused_de
                     } else [box
                          exps_ir
                          new (exp_data) {
-                              :named_consts[exp:name:text] <= new (@main.t_named_const) {
+                              :named_consts[exp:name:text] <= new (@.t_named_const) {
                                    :name_id <= name_id
                                    :operand <= operand
                               }
@@ -170,7 +170,7 @@ fn grouped_exps_to_operand(exps, last_use_ids, contexts, lambdas_data, unused_de
                               exps_ir
 
                               new (exp_data) {
-                                   :named_consts[name:text] <= new (@main.t_named_const) {
+                                   :named_consts[name:text] <= new (@.t_named_const) {
                                         :name_id <= name_id
                                         :operand <= operand
                                    }
@@ -212,7 +212,7 @@ fn grouped_exps_to_operand(exps, last_use_ids, contexts, lambdas_data, unused_de
                                    exps_ir
 
                                    new (exp_data) {
-                                        :named_consts[name:text] <= new (@main.t_named_const) {
+                                        :named_consts[name:text] <= new (@.t_named_const) {
                                              :name_id <= name_id
                                              :operand <= operand
                                         }

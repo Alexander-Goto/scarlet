@@ -1,6 +1,6 @@
 let version = "0.2 dev"
 
-let msg__version = "scarlet " ++ @main.version
+let msg__version = "scarlet " ++ @.version
 let msg__help    = "scarlet - compiler for scar programming language.\n" ++
      "\t-n or --name NAME          - name of the built module. (\"main\" - for applications)\n" ++
      "\t-m or --modules FILE_NAMES - list of files with modules. (file names are separated by a space)\n" ++

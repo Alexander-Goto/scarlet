@@ -4,9 +4,9 @@ fn ir__core_fn_to_lower_to_upper(exp, fn_ir_name, last_use_ids, contexts, lambda
 
      let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
 
-     if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@main.string_types__char) {
+     if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@.string_types__char) {
           if arg:comptime_val:type =/= "obj"
-               arg.maybe_has_type!(@main.string_types__char_mtd)
+               arg.maybe_has_type!(@.string_types__char_mtd)
           else if arg:comptime_val:value[:_]:value[if fn_ir_name == "McoreFNto_lower"; :core_to_lower else :core_to_upper].null?()
                error__invalid_type(arg:code, if fn_ir_name == "McoreFNto_lower"; ".core_to_lower" else ".core_to_upper", "obj")
           else null
@@ -14,11 +14,11 @@ fn ir__core_fn_to_lower_to_upper(exp, fn_ir_name, last_use_ids, contexts, lambda
           ir__fn_call(
                fn_ir_name, [array arg], code
 
-               if arg.has_type?(@main.string_types__char)
-                    @main.string_types
+               if arg.has_type?(@.string_types__char)
+                    @.string_types
                else if arg.maybe_has_type?([set "obj", "custom"])
-                    @main.common_types__error
-               else @main.string_types__error
+                    @.common_types__error
+               else @.string_types__error
 
                exp_data, ir, final_data, dependencies, src_gconsts, is_last
           )

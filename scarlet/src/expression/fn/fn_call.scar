@@ -1,7 +1,7 @@
 let t_fn_call = [obj
      :scar_type = "t_fn_call"
 
-     :name = @main.t_token
+     :name = @.t_token
      :args = [array] # [array @i_expression*]
 ]
 

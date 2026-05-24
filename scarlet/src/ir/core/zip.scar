@@ -14,11 +14,11 @@ fn ir__core_fn_zip(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, ex
           [box [set "table", "set", "obj"], [set "table", "error"]]
      else {
           array_1.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom"])
-          [box @main.common_types, @main.common_types__error]
+          [box @.common_types, @.common_types__error]
      }
 
      array_2.maybe_has_type!(array_2_expected_types)
-     func.maybe_has_type!(@main.fn_types)
+     func.maybe_has_type!(@.fn_types)
 
      ir__fn_call("McoreFNzip", [array array_1, array_2, func], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
 }

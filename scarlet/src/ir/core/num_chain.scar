@@ -584,7 +584,7 @@ fn num_chain_create(
 ) {
      let [box maybe_byte, maybe_int, maybe_float] = maybe_byte_int_float
 
-     let maybe_other = not result_possible_types.all(true, _.in?(@main.num_types__error))
+     let maybe_other = not result_possible_types.all(true, _.in?(@.num_types__error))
      let maybe_error = "error".in?(result_possible_types)
      let cases_qty   = (if maybe_byte; 1 else 0) + (if maybe_int; 1 else 0) + (if maybe_float; 1 else 0)
 
@@ -694,7 +694,7 @@ fn num_chain_create(
      }
 
      [box
-          new (@main.t_operand) {
+          new (@.t_operand) {
                :code           <= code
                :ir             <= result_reg
                :possible_types <= result_possible_types

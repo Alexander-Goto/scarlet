@@ -38,8 +38,8 @@ fn ir__core_fn_replace_part(exp, last_use_ids, contexts, lambdas_data, unused_de
           }
 
           let result_possible_types = if
-                    array.has_type?(@main.string_types) && old_part.has_type?(@main.string_types) && new_part.has_type?(@main.string_types)             ||
-                    array.has_type?(@main.byte_array_types) && old_part.has_type?(@main.byte_array_types) && new_part.has_type?(@main.byte_array_types) ||
+                    array.has_type?(@.string_types) && old_part.has_type?(@.string_types) && new_part.has_type?(@.string_types)             ||
+                    array.has_type?(@.byte_array_types) && old_part.has_type?(@.byte_array_types) && new_part.has_type?(@.byte_array_types) ||
                     array.has_type?("array") && old_part.has_type?("array") && new_part.has_type?("array")
                result_possible_types
           else result_possible_types.append("error")

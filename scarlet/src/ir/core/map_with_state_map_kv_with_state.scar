@@ -14,7 +14,7 @@ fn ir__core_fn_map_with_state_map_kv_with_state(exp, fn_ir_name, last_use_ids, c
           error__invalid_type(init_state:code, "/error", "error")
      else null
 
-     func.maybe_has_type!(@main.fn_types)
+     func.maybe_has_type!(@.fn_types)
 
      ir__fn_call(fn_ir_name, [array container, init_state, func], code, [set "box", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
 }

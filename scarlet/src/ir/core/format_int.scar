@@ -19,7 +19,7 @@ fn ir__core_fn_format_int(exp, last_use_ids, contexts, lambdas_data, unused_def_
      if num:comptime_val.null?() || base:comptime_val.null?() || is_signed:comptime_val.null?()
           ir__fn_call(
                "McoreFNformat_int", [array num, base, is_signed], code
-               if num.has_type?("int") && not base:comptime_val.null?() && is_signed.has_type?("bool"); @main.string_types else @main.string_types__error
+               if num.has_type?("int") && not base:comptime_val.null?() && is_signed.has_type?("bool"); @.string_types else @.string_types__error
                exp_data, ir, final_data, dependencies, src_gconsts, is_last
           )
      else {

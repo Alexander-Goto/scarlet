@@ -6,7 +6,7 @@ fn ir__core_fn___equal__(exp, last_use_ids, contexts, lambdas_data, unused_def_i
 
      let code = new (left:code):text => _ ++ (" === " ++ right:code:text)
 
-     if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.comptime_eq_types) {
+     if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@.comptime_eq_types) {
           let [box left, final_data, dependencies]  = left.has_ir!(final_data, dependencies)
           let [box right, final_data, dependencies] = right.has_ir!(final_data, dependencies)
 
@@ -22,22 +22,22 @@ fn ir__core_fn___equal__(exp, last_use_ids, contexts, lambdas_data, unused_def_i
           let left_has_known_type  = not left:possible_types.null?() && left:possible_types.len() == 1
           let right_has_known_type = not right:possible_types.null?() && right:possible_types.len() == 1
 
-          if not (left_has_known_type && right_has_known_type || maybe_error) && left.has_type?(@main.simple_eq_types) && right.has_type?(@main.simple_eq_types) {
+          if not (left_has_known_type && right_has_known_type || maybe_error) && left.has_type?(@.simple_eq_types) && right.has_type?(@.simple_eq_types) {
                let [box result_reg, exp_data] = exp_data.new_reg()
 
                let ir = ir ++ "t_any const " ++ result_reg ++ "={.bytes={" ++ left_ir ++ ".raw_bits==" ++ right_ir ++ ".raw_bits,[15]=tid__bool}};\n"
 
-               let operand = new (@main.t_operand) {
+               let operand = new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= [set "bool"]
                }
 
                [box operand, exp_data, if is_last; ir__raw_return(ir, result_reg) else ir, final_data, dependencies, src_gconsts]
-          } else if not (maybe_error || left:possible_types.filter(_.in?(right:possible_types)).any(false, _.in?(@main.eq_types))) {
+          } else if not (maybe_error || left:possible_types.filter(_.in?(right:possible_types)).any(false, _.in?(@.eq_types))) {
                let ir = dec_ref_cnt(right, dec_ref_cnt(left, ir))
                [box comptime_bool(false, code), exp_data, if is_last; ir__raw_return(ir, "bool__false") else ir, final_data, dependencies, src_gconsts]
-          } else if not maybe_error && left_has_known_type && left:possible_types == right:possible_types && left:possible_types.take_one().in?(@main.simple_eq_types__float) {
+          } else if not maybe_error && left_has_known_type && left:possible_types == right:possible_types && left:possible_types.take_one().in?(@.simple_eq_types__float) {
                let [box result_reg, exp_data] = exp_data.new_reg()
 
                let ir = ir ++ "t_any const " ++ result_reg ++ "={.structure={.value=" ++
@@ -53,7 +53,7 @@ fn ir__core_fn___equal__(exp, last_use_ids, contexts, lambdas_data, unused_def_i
                     default:
                          unreachable()
 
-               let operand = new (@main.t_operand) {
+               let operand = new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= [set "bool"]

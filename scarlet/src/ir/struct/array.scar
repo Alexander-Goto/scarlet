@@ -12,7 +12,7 @@ fn ir__array(items, code, exp_data, ir, final_data, dependencies, src_gconsts, i
 
           let ir__free_item = item.dec_ref_cnt("")
 
-          if item.has_type?(@main.common_types)
+          if item.has_type?(@.common_types)
                [box ir__is_error, ir__error_actions ++ ir__free_item, array_maybe_error]
           else {
                let ir__type_check             = "!type_is_common(" ++ item:ir ++ ".bytes[15])"
@@ -32,7 +32,7 @@ fn ir__array(items, code, exp_data, ir, final_data, dependencies, src_gconsts, i
                               :unknown
                               array_reg ++ "=" ++ item:ir ++ ";\n"
 
-                              if item.has_type?(@main.common_types__error); ir__free_item else ir__set_invalid_type_error
+                              if item.has_type?(@.common_types__error); ir__free_item else ir__set_invalid_type_error
                          )
                     else ir__set_invalid_type_error
 
@@ -75,7 +75,7 @@ fn ir__array(items, code, exp_data, ir, final_data, dependencies, src_gconsts, i
      else ir
 
      [box
-          new (@main.t_operand) {
+          new (@.t_operand) {
                :code           <= code
                :ir             <= array_reg
                :possible_types <= type

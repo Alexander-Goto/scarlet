@@ -12,7 +12,7 @@ fn ir__core_fn___less__(exp, last_use_ids, contexts, lambdas_data, unused_def_id
           error__nan_cmp((if left_is_nan; left else right):code)
      else null
 
-     if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.always_ord_types__float){
+     if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@.always_ord_types__float){
           if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[:core_cmp].null?()
                error__invalid_type(left:code, ".core_cmp", "obj")
           else null
@@ -26,24 +26,24 @@ fn ir__core_fn___less__(exp, last_use_ids, contexts, lambdas_data, unused_def_id
           let left_possible_types  = left:possible_types
           let right_possible_types = right:possible_types
           let right_expected_types = if left_possible_types.null?()
-               @main.ord_types__mtd
+               @.ord_types__mtd
           else {
-               let new_left_possible_types = left_possible_types.filter(_.in?(@main.ord_types__mtd)).prepare_types_for_cmp()
+               let new_left_possible_types = left_possible_types.filter(_.in?(@.ord_types__mtd)).prepare_types_for_cmp()
                if new_left_possible_types.empty?()
-                    error__invalid_type(left:code, @main.ord_types__mtd, left_possible_types)
+                    error__invalid_type(left:code, @.ord_types__mtd, left_possible_types)
                else new_left_possible_types
           }
           right.maybe_has_type!(right_expected_types)
 
           let maybe_error = left_possible_types.null?() || right_possible_types.null?() ||
                not (
-                    left_possible_types.len() == 1 && left_possible_types == right_possible_types && left_possible_types.take_one().in?(@main.always_ord_types) ||
-                    left_possible_types.all(true, _.in?(@main.string_types)) && right_possible_types.all(true, _.in?(@main.string_types)) ||
-                    left_possible_types.all(true, _.in?(@main.byte_array_types)) && right_possible_types.all(true, _.in?(@main.byte_array_types))
+                    left_possible_types.len() == 1 && left_possible_types == right_possible_types && left_possible_types.take_one().in?(@.always_ord_types) ||
+                    left_possible_types.all(true, _.in?(@.string_types)) && right_possible_types.all(true, _.in?(@.string_types)) ||
+                    left_possible_types.all(true, _.in?(@.byte_array_types)) && right_possible_types.all(true, _.in?(@.byte_array_types))
                )
 
           let has_known_types = left_possible_types === right_possible_types && left_possible_types.len() == 1
-          if not maybe_error && has_known_types && left_possible_types.take_one().in?(@main.simple_ord_types) {
+          if not maybe_error && has_known_types && left_possible_types.take_one().in?(@.simple_ord_types) {
                let [box result_reg, exp_data] = exp_data.new_reg()
 
                let ir = ir ++ "t_any const " ++ result_reg ++ "={.structure={.value=" ++
@@ -51,7 +51,7 @@ fn ir__core_fn___less__(exp, last_use_ids, contexts, lambdas_data, unused_def_id
                          left_ir ++ ".bytes[0]<" ++ right_ir ++ ".bytes[0],.type=tid__bool}};\n"
                     else "(i64)" ++ left_ir ++ ".qwords[0]<(i64)" ++ right_ir ++ ".qwords[0],.type=tid__bool}};\n"
 
-               let operand = new (@main.t_operand) {
+               let operand = new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= [set "bool"]
@@ -63,7 +63,7 @@ fn ir__core_fn___less__(exp, last_use_ids, contexts, lambdas_data, unused_def_id
 
                let ir = ir ++ "t_any const " ++ result_reg ++ "={.bytes={scar__memcmp(" ++ left_ir ++ ".bytes," ++ right_ir ++ ".bytes,16)==-1,[15]=tid__bool}};\n"
 
-               let operand = new (@main.t_operand) {
+               let operand = new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= [set "bool"]

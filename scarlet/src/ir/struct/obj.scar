@@ -70,8 +70,8 @@ fn ir__obj(kvs, code, exp_data, ir, final_data, dependencies, src_gconsts, is_fi
      let [box ir__is_error, ir__error_actions] = if is_obj
           null
      else {
-          let valid_value_types           = if is_fix; @main.common_types__null else @main.common_types
-          let valid_value_types_and_error = if is_fix; @main.common_types__null_error else @main.common_types__error
+          let valid_value_types           = if is_fix; @.common_types__null else @.common_types
+          let valid_value_types_and_error = if is_fix; @.common_types__null_error else @.common_types__error
 
           kvs.foldl_kv([box "", "free((void*)" ++ obj_reg ++ ".qwords[0]);\n", false], fn (state, kv_idx, kv) {
                let [box ir__is_error, ir__error_actions, obj_maybe_error] = state
@@ -166,7 +166,7 @@ fn ir__obj(kvs, code, exp_data, ir, final_data, dependencies, src_gconsts, is_fi
           ir__raw_return(ir, obj_reg)
      else ir
 
-     let obj_operand = new (@main.t_operand) {
+     let obj_operand = new (@.t_operand) {
           :code           <= code
           :ir             <= obj_reg
           :possible_types <= type

@@ -39,7 +39,7 @@ fn ir__table(kvs, code, exp_data, ir, final_data, dependencies, src_gconsts, is_
      else ir
 
      [box
-          new (@main.t_operand) {
+          new (@.t_operand) {
                :code           <= code
                :ir             <= table_reg
                :possible_types <= type

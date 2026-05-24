@@ -38,8 +38,8 @@ fn ir__core_fn_is_part_of_is_prefix_of_is_suffix_of(exp, fn_ir_name, last_use_id
           array.maybe_has_type!(array_expected_types)
 
           let result_possible_types = if
-                    part.has_type?(@main.string_types)     && array.has_type?(@main.string_types)     ||
-                    part.has_type?(@main.byte_array_types) && array.has_type?(@main.byte_array_types) ||
+                    part.has_type?(@.string_types)     && array.has_type?(@.string_types)     ||
+                    part.has_type?(@.byte_array_types) && array.has_type?(@.byte_array_types) ||
                     part.has_type?("array")                && array.has_type?("array")
                [set "bool"]
           else [set "bool", "error"]

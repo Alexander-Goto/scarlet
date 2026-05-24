@@ -1,6 +1,6 @@
 let t_holder = [obj
      :scar_type = "t_holder"
-     :keyword   = @main.t_token
+     :keyword   = @.t_token
 ]
 
 fn holder_to_operand(holder, exp_data, ir, final_data, dependencies, src_gconsts, is_last, allow_holder)

@@ -49,7 +49,7 @@ fn ir__core_fn_copy(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, e
                error__out_of_bounds((if src:comptime_val:value.len() > dst:comptime_val:value.len(); src else idx):code)
           else null
 
-          let comptime_val = new (@main.t_comptime_val) {
+          let comptime_val = new (@.t_comptime_val) {
                :type  <= dst:comptime_val:type
                :value <= copy(dst:comptime_val:value, idx:comptime_val:value, src:comptime_val:value)
           }

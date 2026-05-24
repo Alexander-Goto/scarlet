@@ -15,7 +15,7 @@ fn ir__error(id, msg, data, code, exp_data, ir, final_data, dependencies, src_gc
      else ir
 
      [box
-          new (@main.t_operand) {
+          new (@.t_operand) {
                :code           <= code
                :ir             <= error_reg
                :possible_types <= type

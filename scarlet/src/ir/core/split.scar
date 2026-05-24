@@ -9,14 +9,14 @@ fn ir__core_fn_split(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, 
      let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
      array.maybe_has_type!(valid_types)
      separator.maybe_has_type!(
-          if array.has_type?(@main.string_types)
+          if array.has_type?(@.string_types)
                "char"
-          else if array.has_type?(@main.byte_array_types)
+          else if array.has_type?(@.byte_array_types)
                "byte"
-          else @main.look_types
+          else @.look_types
      )
 
-     if array:comptime_val.null?() || separator:comptime_val.null?() || not separator:comptime_val:type.in?(@main.comptime_eq_types) || array:comptime_val:type == "obj" {
+     if array:comptime_val.null?() || separator:comptime_val.null?() || not separator:comptime_val:type.in?(@.comptime_eq_types) || array:comptime_val:type == "obj" {
           if array:comptime_val:type === "obj" && array:comptime_val:value[:_]:value[:core_split].null?()
                error__invalid_type(array:code, ".core_split", "obj")
           else null
@@ -25,9 +25,9 @@ fn ir__core_fn_split(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, 
                "McoreFNsplit", [array array, separator], code
 
                if
-                         array.has_type?(@main.string_types) && separator.has_type?("char")     ||
-                         array.has_type?(@main.byte_array_types) && separator.has_type?("byte") ||
-                         array.has_type?("array") && separator.has_type?(@main.look_types)
+                         array.has_type?(@.string_types) && separator.has_type?("char")     ||
+                         array.has_type?(@.byte_array_types) && separator.has_type?("byte") ||
+                         array.has_type?("array") && separator.has_type?(@.look_types)
                     [set "array"]
                else [set "array", "error"]
 
@@ -45,7 +45,7 @@ fn ir__core_fn_split(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, 
                :comptime_val:type  <= "array"
                :comptime_val:value => fn (array) {
                     let result = array.split(separator_value)
-                    result.map(fn (item) new (@main.t_comptime_val) {:type <= array_type; :value <= item})
+                    result.map(fn (item) new (@.t_comptime_val) {:type <= array_type; :value <= item})
                }
                :possible_types <= [set "array"]
           }

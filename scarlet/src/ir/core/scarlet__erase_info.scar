@@ -9,7 +9,7 @@ fn ir__scarlet__erase_info(exp, last_use_ids, contexts, lambdas_data, unused_def
      else ir
 
      [box
-          new (@main.t_operand) {
+          new (@.t_operand) {
                :code <= new (exp:name):text => _ ++ ("(" ++ arg_operand:code:text ++  ")")
                :ir   <= arg_operand:ir
           }

@@ -4,7 +4,7 @@ fn ir__core_fn_qty_bits(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, u
 
      let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
 
-     if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@main.bit_types) {
+     if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@.bit_types) {
           if arg:comptime_val:type === "obj" {
                let [box token, mtd_type] = switch fn_ir_name.drop(11)
                case "0_bits":          [box :core_qty_0_bits, ".core_qty_0_bits"]
@@ -22,7 +22,7 @@ fn ir__core_fn_qty_bits(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, u
 
           ir__fn_call(
                fn_ir_name, [array arg], code
-               if arg.has_type?(@main.bit_types); [set "int"] else [set "int", "error"]
+               if arg.has_type?(@.bit_types); [set "int"] else [set "int", "error"]
                exp_data, ir, final_data, dependencies, src_gconsts, is_last
           )
      } else {

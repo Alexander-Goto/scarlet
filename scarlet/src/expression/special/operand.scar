@@ -1,7 +1,7 @@
 let t_operand = [obj
      :scar_type = "t_operand"
 
-     :code           = @main.t_token
+     :code           = @.t_token
      :ir             = null # (string|null)
      :comptime_val   = null # (@t_comptime_val|null)
      :possible_types = null # ([set @string]|null)
@@ -36,8 +36,8 @@ fn maybe_has_type!(operand, type)
      else null
 
 fn inc_ref_cnt(operand, owner_name_ir_const, ir)
-     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:is_gconst || operand.has_type?(@main.without_managed_mem_types)) {
-          if operand.has_type?(@main.not_copyable_types)
+     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:is_gconst || operand.has_type?(@.without_managed_mem_types)) {
+          if operand.has_type?(@.not_copyable_types)
                error__reuse(operand:code, operand:possible_types)
           else null
 
@@ -45,7 +45,7 @@ fn inc_ref_cnt(operand, owner_name_ir_const, ir)
      } else ir
 
 fn dec_ref_cnt(operand, ir)
-     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:is_gconst || operand.has_type?(@main.without_managed_mem_types)) {
+     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:is_gconst || operand.has_type?(@.without_managed_mem_types)) {
           ir__raw_ref_cnt__dec(operand:ir, ir)
      } else ir
 

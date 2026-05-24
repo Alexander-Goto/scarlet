@@ -8,7 +8,7 @@ fn ir__core_fn_sort_fn_stable_sort_fn(exp, fn_ir_name, last_use_ids, contexts, l
 
      let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom"]
      array.maybe_has_type!(valid_types)
-     func.maybe_has_type!(@main.fn_types)
+     func.maybe_has_type!(@.fn_types)
 
      if array:comptime_val:type === "obj" && array:comptime_val:value[:_]:value[if fn_ir_name[8] == 'o'; :core_sort_fn else :core_stable_sort_fn].null?()
           error__invalid_type(array:code, if fn_ir_name[8] == 'o'; ".core_sort_fn" else ".core_stable_sort_fn", "obj")

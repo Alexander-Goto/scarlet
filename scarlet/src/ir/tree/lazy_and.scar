@@ -49,7 +49,7 @@ fn ir__lazy_and(left_operand, right_operand, right_ir, code, right_context_const
                     )
 
                     let possible_types = [set "bool", "error"]
-                    let result_operand = new (@main.t_operand) {
+                    let result_operand = new (@.t_operand) {
                          :code           <= code
                          :ir             <= result_reg
                          :possible_types <= possible_types
@@ -119,7 +119,7 @@ fn ir__lazy_and(left_operand, right_operand, right_ir, code, right_context_const
           )
 
           let possible_types = if left_operand.has_type?("bool") && right_operand.has_type?("bool"); [set "bool"] else [set "bool", "error"]
-          let result_operand = new (@main.t_operand) {
+          let result_operand = new (@.t_operand) {
                :code           <= code
                :ir             <= result_reg
                :possible_types <= possible_types

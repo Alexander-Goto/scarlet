@@ -8,10 +8,10 @@ fn ir__core_fn_remove(exp, last_use_ids, contexts, lambdas_data, unused_def_ids,
 
      let valid_types = [set "set", "obj", "custom"]
      set.maybe_has_type!(valid_types)
-     item.maybe_has_type!(@main.all_hash_map_key_types)
+     item.maybe_has_type!(@.all_hash_map_key_types)
 
      if set:comptime_val.null?() || item:comptime_val.null?() ||
-          set:comptime_val:type == "obj" || not (set:comptime_val:type == "set" && item:comptime_val:type.in?(@main.always_hash_map_key_types))
+          set:comptime_val:type == "obj" || not (set:comptime_val:type == "set" && item:comptime_val:type.in?(@.always_hash_map_key_types))
      {
           if set:comptime_val:type === "obj" && set:comptime_val:value[:_]:value[:core_remove].null?()
                error__invalid_type(set:code, ".core_remove", "obj")
@@ -19,7 +19,7 @@ fn ir__core_fn_remove(exp, last_use_ids, contexts, lambdas_data, unused_def_ids,
 
           let result_possible_types = if set:possible_types.null?()
                valid_types.append("error")
-          else if set.has_type?("set") && item.has_type?(@main.always_hash_map_key_types)
+          else if set.has_type?("set") && item.has_type?(@.always_hash_map_key_types)
                [set "set"]
           else set:possible_types.filter(_.in?(valid_types)).append("error")
 

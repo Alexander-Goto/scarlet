@@ -6,13 +6,13 @@ fn ir__core_fn_hash(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, e
 
      let code = new (exp:name):text => _ ++ (arg:code:text ++ ", " ++ seed:code:text ++ ")")
 
-     arg.maybe_has_type!(@main.all_hash_map_key_types)
+     arg.maybe_has_type!(@.all_hash_map_key_types)
      seed.maybe_has_type!("int")
 
-     if arg:comptime_val.null?() || seed:comptime_val.null?() || not arg:comptime_val:type.in?(@main.always_hash_map_key_types) {
+     if arg:comptime_val.null?() || seed:comptime_val.null?() || not arg:comptime_val:type.in?(@.always_hash_map_key_types) {
           ir__fn_call(
                "McoreFNhash", [array arg, seed], code
-               if arg.has_type?(@main.always_hash_map_key_types); [set "int"] else [set "int", "error"]
+               if arg.has_type?(@.always_hash_map_key_types); [set "int"] else [set "int", "error"]
                exp_data, ir, final_data, dependencies, src_gconsts, is_last
           )
      }

@@ -332,25 +332,25 @@ fn get_core_fn_partial_app_linear_alloc_mask(name)
 fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
      switch name
      case "McoreFN__add__", "McoreFN__div__", "McoreFN__mod__", "McoreFN__mul__", "McoreFN__sub__", "McoreFNpower":
-          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.num_types__mtd_holder))
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@.num_types__mtd_holder))
      case "McoreFN__and__", "McoreFN__or__", "McoreFN__xor__":
-          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.bit_types__mtd_holder))
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@.bit_types__mtd_holder))
      case "McoreFN__ashr__": {
           args.first().maybe_has_type!([set "int", "obj", "custom", "holder"])
           args[1].maybe_has_type!([set "byte", "int", "holder"])
      }
      case "McoreFN__concat__":
-          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.concat_types__mtd_holder))
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@.concat_types__mtd_holder))
      case "McoreFN__equal__", "McoreFN__not_equal__", "McoreFNcmp", "McoreFNscarlet__joinAAA":
-          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.copyable_not_error_types__holder))
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@.copyable_not_error_types__holder))
      case "McoreFN__get_item__": {
           args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "null", "obj", "table", "set", "custom", "holder"])
-          args[1].maybe_has_type!(@main.copyable_not_error_types__holder)
+          args[1].maybe_has_type!(@.copyable_not_error_types__holder)
      }
      case "McoreFN__great__", "McoreFN__great_or_eq__", "McoreFN__less__", "McoreFN__less_or_eq__", "McoreFNmax", "McoreFNmin":
-          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@main.ord_types__mtd_holder))
+          args.foldl(null, fn (_, arg) arg.maybe_has_type!(@.ord_types__mtd_holder))
      case "McoreFN__lshr__", "McoreFN__shl__", "McoreFNrotate_left", "McoreFNrotate_right": {
-          args.first().maybe_has_type!(@main.bit_types__mtd_holder)
+          args.first().maybe_has_type!(@.bit_types__mtd_holder)
           args[1].maybe_has_type!([set "byte", "int", "holder"])
      }
      case "McoreFN__slice__", "McoreFNdelete": {
@@ -369,7 +369,7 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
                "table", "set", "array", "obj", "custom", "holder"
           ])
           args[1].maybe_has_type!([set "bool", "holder"])
-          args[2].maybe_has_type!(@main.fn_types__holder)
+          args[2].maybe_has_type!(@.fn_types__holder)
      }
      case "McoreFNall_kv", "McoreFNany_kv": {
           args.first().maybe_has_type!([set
@@ -377,15 +377,15 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
                "table", "array", "obj", "custom", "holder"
           ])
           args[1].maybe_has_type!([set "bool", "holder"])
-          args[2].maybe_has_type!(@main.fn_types__holder)
+          args[2].maybe_has_type!(@.fn_types__holder)
      }
      case "McoreFNappend": {
           args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "set", "array", "obj", "custom", "holder"])
-          args[1].maybe_has_type!(@main.copyable_common_types__holder)
+          args[1].maybe_has_type!(@.copyable_common_types__holder)
      }
      case "McoreFNappend_new", "McoreFNremove": {
           args.first().maybe_has_type!([set "set", "obj", "custom", "holder"])
-          args[1].maybe_has_type!(@main.copyable_common_types__holder)
+          args[1].maybe_has_type!(@.copyable_common_types__holder)
      }
      case "McoreFNabs", "McoreFNacos", "McoreFNascii_ctrlB", "McoreFNascii_digitB", "McoreFNascii_graphicB", "McoreFNascii_letterB", "McoreFNascii_lowerB"
                "McoreFNascii_spaceB", "McoreFNascii_symbolB", "McoreFNascii_to_lower", "McoreFNascii_to_upper", "McoreFNascii_upperB", "McoreFNasciiB"
@@ -408,7 +408,7 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
           args.foldl(null, fn (_, arg) arg.maybe_has_type!([set "int", "holder"]))
      case "McoreFNbreak": {
           args.first().maybe_has_type!([set "bool", "holder"])
-          args[1].maybe_has_type!(@main.not_error_types__holder)
+          args[1].maybe_has_type!(@.not_error_types__holder)
      }
      case "McoreFNcopy": {
           let arg_0 = args.first()
@@ -446,7 +446,7 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
      }
      case "McoreFNdrop_while", "McoreFNsort_fn", "McoreFNstable_sort_fn", "McoreFNtake_while": {
           args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
-          args[1].maybe_has_type!(@main.fn_types__holder)
+          args[1].maybe_has_type!(@.fn_types__holder)
      }
      case "McoreFNduration":
           args.foldl(null, fn (_, arg) arg.maybe_has_type!([set "time", "holder"]))
@@ -455,35 +455,35 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
                "short_string", "string", "short_byte_array", "byte_array"
                "table", "array", "obj", "custom", "holder"
           ])
-          args[1].maybe_has_type!(@main.fn_types__holder)
+          args[1].maybe_has_type!(@.fn_types__holder)
      }
      case "McoreFNexpected_error": {
           args.first().maybe_has_type!([set "token", "holder"])
           args[1].maybe_has_type!([set "short_string", "string", "holder"])
-          args[2].maybe_has_type!(@main.copyable_common_types__holder_null)
+          args[2].maybe_has_type!(@.copyable_common_types__holder_null)
      }
      case "McoreFNfilter", "McoreFNfoldl1", "McoreFNfoldr1": {
           args.first().maybe_has_type!([set
                "short_string", "string", "short_byte_array", "byte_array"
                "table", "set", "array", "obj", "custom", "holder"
           ])
-          args[1].maybe_has_type!(@main.fn_types__holder)
+          args[1].maybe_has_type!(@.fn_types__holder)
      }
      case "McoreFNfoldl", "McoreFNfoldr": {
           args.first().maybe_has_type!([set
                "short_string", "string", "short_byte_array", "byte_array"
                "table", "set", "array", "obj", "custom", "holder"
           ])
-          args[1].maybe_has_type!(@main.copyable_not_error_types__holder)
-          args[2].maybe_has_type!(@main.fn_types__holder)
+          args[1].maybe_has_type!(@.copyable_not_error_types__holder)
+          args[2].maybe_has_type!(@.fn_types__holder)
      }
      case "McoreFNfoldl_kv", "McoreFNfoldr_kv", "McoreFNmap_with_state", "McoreFNmap_kv_with_state": {
           args.first().maybe_has_type!([set
                "short_string", "string", "short_byte_array", "byte_array"
                "table", "array", "obj", "custom", "holder"
           ])
-          args[1].maybe_has_type!(@main.copyable_not_error_types__holder)
-          args[2].maybe_has_type!(@main.fn_types__holder)
+          args[1].maybe_has_type!(@.copyable_not_error_types__holder)
+          args[2].maybe_has_type!(@.fn_types__holder)
      }
      case "McoreFNformat_int": {
           args.first().maybe_has_type!([set "int", "holder"])
@@ -491,7 +491,7 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
           args[2].maybe_has_type!([set "bool", "holder"])
      }
      case "McoreFNhash": {
-          args.first().maybe_has_type!(@main.all_hash_map_key_types__holder)
+          args.first().maybe_has_type!(@.all_hash_map_key_types__holder)
           args[1].maybe_has_type!([set "int", "holder"])
      }
      case "McoreFNimplement", "McoreFNinherits_from": {
@@ -499,7 +499,7 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
           args[1].maybe_has_type!([set "array", "obj", "holder"])
      }
      case "McoreFNinB": {
-          args.first().maybe_has_type!(@main.copyable_common_types__holder)
+          args.first().maybe_has_type!(@.copyable_common_types__holder)
           args[1].maybe_has_type!([set
                "short_string", "string", "short_byte_array", "byte_array"
                "table", "set", "array", "obj", "custom", "holder"
@@ -512,20 +512,20 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
 
           let not_holder  = if arg_0.has_type?("holder"); arg_1 else arg_0
           if arg_2.has_type?("holder") {
-               arg_0.maybe_has_type!(@main.ord_types__mtd_holder)
-               arg_1.maybe_has_type!(@main.ord_types__mtd_holder)
+               arg_0.maybe_has_type!(@.ord_types__mtd_holder)
+               arg_1.maybe_has_type!(@.ord_types__mtd_holder)
           } else {
                let not_holder_possible_types = not_holder:possible_types
                let not_holder_possible_types = if not_holder_possible_types.null?()
-                    @main.ord_types__mtd
+                    @.ord_types__mtd
                else {
-                    let new_not_holder_possible_types = not_holder_possible_types.filter(_.in?(@main.ord_types__mtd))
+                    let new_not_holder_possible_types = not_holder_possible_types.filter(_.in?(@.ord_types__mtd))
                     if new_not_holder_possible_types.empty?()
-                         error__invalid_type(not_holder:code, @main.ord_types__mtd, not_holder_possible_types)
+                         error__invalid_type(not_holder:code, @.ord_types__mtd, not_holder_possible_types)
                     else new_not_holder_possible_types
                }
 
-               arg_2.maybe_has_type!(if not_holder_possible_types.len() == @main.ord_types__mtd.len(); @main.ord_types__mtd else prepare_types_for_cmp(not_holder_possible_types))
+               arg_2.maybe_has_type!(if not_holder_possible_types.len() == @.ord_types__mtd.len(); @.ord_types__mtd else prepare_types_for_cmp(not_holder_possible_types))
           }
      }
      case "McoreFNinit": {
@@ -558,7 +558,7 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
           arg_2.maybe_has_type!([set "int", "holder"])
      }
      case "McoreFNinsert_to": {
-          args.first().maybe_has_type!(@main.copyable_common_types__holder)
+          args.first().maybe_has_type!(@.copyable_common_types__holder)
           args[1].maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
           args[2].maybe_has_type!([set "int", "holder"])
      }
@@ -567,7 +567,7 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
           args[1].maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
      }
      case "McoreFNkey_ofB": {
-          args.first().maybe_has_type!(@main.all_hash_map_key_types__holder)
+          args.first().maybe_has_type!(@.all_hash_map_key_types__holder)
           args[1].maybe_has_type!([set "table", "set", "obj", "custom", "holder"])
      }
      case "McoreFNlog__debug_msg", "McoreFNlog__msg": {
@@ -575,19 +575,19 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
           args[1].maybe_has_type!([set "short_string", "string"])
      }
      case "McoreFNlook_from_end_in", "McoreFNlook_other_from_end_in": {
-          args.first().maybe_has_type!(@main.copyable_common_types__holder)
+          args.first().maybe_has_type!(@.copyable_common_types__holder)
           args[1].maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
      }
      case "McoreFNlook_in", "McoreFNlook_other_in": {
-          args.first().maybe_has_type!(@main.copyable_common_types__holder)
+          args.first().maybe_has_type!(@.copyable_common_types__holder)
           args[1].maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom", "holder"])
      }
      case "McoreFNlook_part_from_end_in", "McoreFNlook_part_in", "McoreFNpart_ofB", "McoreFNprefix_ofB", "McoreFNsplit_by_part"
                "McoreFNsuffix_ofB":
           args.foldl(null, fn (_, arg) arg.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"]))
      case "McoreFNloop": {
-          args.first().maybe_has_type!(@main.copyable_not_error_types__holder)
-          args[1].maybe_has_type!(@main.fn_types__holder)
+          args.first().maybe_has_type!(@.copyable_not_error_types__holder)
+          args[1].maybe_has_type!(@.fn_types__holder)
      }
      case "McoreFNmove", "McoreFNself_copy": {
           args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
@@ -601,14 +601,14 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
      }
      case "McoreFNpush": {
           args.first().maybe_has_type!([set "channel", "holder"])
-          args[1].maybe_has_type!(@main.copyable_not_error_types__holder)
+          args[1].maybe_has_type!(@.copyable_not_error_types__holder)
      }
      case "McoreFNqty": {
-          args.first().maybe_has_type!(@main.copyable_common_types__holder)
+          args.first().maybe_has_type!(@.copyable_common_types__holder)
           args[1].maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "array", "obj", "custom", "holder"])
      }
      case "McoreFNread_from_memAAA": {
-          args.first().maybe_has_type!(@main.copyable_not_error_types__holder)
+          args.first().maybe_has_type!(@.copyable_not_error_types__holder)
           args[1].maybe_has_type!([set "int", "holder"])
           args[2].maybe_has_type!([set "int", "holder"])
      }
@@ -618,13 +618,13 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
 
           let tail_args_valid_types = if arg_0.has_type?("error")
                error__invalid_type(arg_0:code, arg_0_valid_types, "error")
-          else if arg_0.has_type?(@main.string_types__error)
+          else if arg_0.has_type?(@.string_types__error)
                [set "char", "holder"]
-          else if arg_0.has_type?(@main.byte_array_types__error)
+          else if arg_0.has_type?(@.byte_array_types__error)
                [set "byte", "holder"]
           else {
                arg_0.maybe_has_type!(arg_0_valid_types)
-               @main.copyable_common_types__holder
+               @.copyable_common_types__holder
           }
 
           args[1].maybe_has_type!(tail_args_valid_types)
@@ -666,7 +666,7 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
                "short_string", "string", "token", "bool", "byte", "char", "int", "time", "float"
                "short_byte_array", "byte_array", "table", "set", "array", "obj", "holder"
           ])
-          args[1].maybe_has_type!(@main.byte_array_types__holder)
+          args[1].maybe_has_type!(@.byte_array_types__holder)
      }
      case "McoreFNshuffle_box":
           args.foldl(null, fn (_, arg) if arg.has_type?("box"); error__reuse(arg:code, arg:possible_types) else null)
@@ -676,7 +676,7 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
      }
      case "McoreFNsplit": {
           args.first().maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "array", "obj", "custom", "holder"])
-          args[1].maybe_has_type!(@main.copyable_common_types__holder)
+          args[1].maybe_has_type!(@.copyable_common_types__holder)
      }
      case "McoreFNtime_limit_pop": {
           args.first().maybe_has_type!([set "channel", "holder"])
@@ -687,7 +687,7 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
           args[1].maybe_has_type!([set "int", "holder"])
      }
      case "McoreFNwrite_to_memAAA": {
-          args.first().maybe_has_type!(@main.copyable_not_error_types__holder)
+          args.first().maybe_has_type!(@.copyable_not_error_types__holder)
           args[1].maybe_has_type!([set "int", "holder"])
           args[2].maybe_has_type!([set "short_byte_array", "byte_array", "holder"])
      }
@@ -709,11 +709,11 @@ fn core_fn_partial_app_args_has_correct_types!(name, args, fn_name_for_error)
                arg_1.maybe_has_type!(valid_types)
           }
 
-          args[2].maybe_has_type!(@main.fn_types__holder)
+          args[2].maybe_has_type!(@.fn_types__holder)
      }
      case "McoreFNzip_n": {
           if args.first().has_type?("box"); error__reuse(args.first():code, args.first():possible_types) else null
-          args[1].maybe_has_type!(@main.fn_types__holder)
+          args[1].maybe_has_type!(@.fn_types__holder)
      }
      default:
           unreachable()

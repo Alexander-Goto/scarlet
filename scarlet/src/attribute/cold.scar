@@ -1,4 +1,4 @@
 let t_cold_attr = [obj
      :scar_type = "t_cold_attr"
-     :code      = @main.t_token
+     :code      = @.t_token
 ]

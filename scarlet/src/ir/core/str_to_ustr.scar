@@ -5,11 +5,11 @@ fn ir__core_fn_str_to_ustr(exp, last_use_ids, contexts, lambdas_data, unused_def
      let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
 
      if arg:comptime_val:type =/= "string" {
-          arg.maybe_has_type!(@main.string_types)
+          arg.maybe_has_type!(@.string_types)
 
           ir__fn_call(
                "McoreFNstr_to_ustr", [array arg], code
-               if arg.has_type?(@main.string_types); @main.byte_array_types__null else @main.byte_array_types__null_error
+               if arg.has_type?(@.string_types); @.byte_array_types__null else @.byte_array_types__null_error
                exp_data, ir, final_data, dependencies, src_gconsts, is_last
           )
      } else {

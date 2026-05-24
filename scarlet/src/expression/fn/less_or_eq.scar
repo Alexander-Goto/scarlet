@@ -1,7 +1,7 @@
 let t_less_or_eq = [obj
      :scar_type = "t_less_or_eq"
 
-     :operator = @main.t_token
+     :operator = @.t_token
      :left     = :i_expression
      :right    = :i_expression
 ]

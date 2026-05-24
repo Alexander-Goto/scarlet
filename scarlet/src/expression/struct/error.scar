@@ -1,7 +1,7 @@
 let t_error = [obj
      :scar_type = "t_error"
 
-     :open_char = @main.t_token
+     :open_char = @.t_token
      :id        = :i_expression
      :msg       = :i_expression
      :data      = :i_expression
@@ -22,12 +22,12 @@ fn error_to_operand(error, last_use_ids, contexts, lambdas_data, unused_def_ids,
      let [box msg, exp_data, ir, final_data, dependencies, src_gconsts] =
           error:msg.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
 
-     msg.maybe_has_type!(@main.string_types)
+     msg.maybe_has_type!(@.string_types)
 
      let [box data, exp_data, ir, final_data, dependencies, src_gconsts] =
           error:data.to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
 
-     data.maybe_has_type!(@main.common_types__null)
+     data.maybe_has_type!(@.common_types__null)
 
      let code = new (error:open_char):text <= "[error " ++ id:code:text ++ ", " ++ msg:code:text ++ ", " ++ data:code:text ++ "]"
 

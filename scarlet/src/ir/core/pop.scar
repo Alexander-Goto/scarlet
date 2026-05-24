@@ -6,5 +6,5 @@ fn ir__core_fn_pop(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, ex
 
      arg.maybe_has_type!("channel")
 
-     ir__fn_call("McoreFNpop", [array arg], code, @main.shared_types__error, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     ir__fn_call("McoreFNpop", [array arg], code, @.shared_types__error, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
 }

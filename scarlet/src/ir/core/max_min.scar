@@ -12,7 +12,7 @@ fn ir__core_fn_max_min(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, un
           error__nan_cmp((if arg_0_is_nan; arg_0 else arg_1):code)
      else null
 
-     if arg_0:comptime_val.null?() || arg_1:comptime_val.null?() || not arg_0:comptime_val:type.in?(@main.always_ord_types) {
+     if arg_0:comptime_val.null?() || arg_1:comptime_val.null?() || not arg_0:comptime_val:type.in?(@.always_ord_types) {
           if arg_0:comptime_val:type === "obj" && arg_0:comptime_val:value[:_]:value[if fn_ir_name == "McoreFNmax"; :core_max else :core_min].null?()
                error__invalid_type(arg_0:code, if fn_ir_name == "McoreFNmax"; ".core_max" else ".core_min", "obj")
           else null
@@ -21,11 +21,11 @@ fn ir__core_fn_max_min(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, un
           let arg_1_possible_types = arg_1:possible_types
 
           let result_possible_types = if arg_0_possible_types.null?()
-               @main.ord_types__mtd
+               @.ord_types__mtd
           else {
-               let new_arg_0_possible_types = arg_0_possible_types.filter(_.in?(@main.ord_types__mtd)).prepare_types_for_cmp()
+               let new_arg_0_possible_types = arg_0_possible_types.filter(_.in?(@.ord_types__mtd)).prepare_types_for_cmp()
                if new_arg_0_possible_types.empty?()
-                    error__invalid_type(arg_0:code, @main.ord_types__mtd, arg_0_possible_types)
+                    error__invalid_type(arg_0:code, @.ord_types__mtd, arg_0_possible_types)
                else new_arg_0_possible_types
           }
 
@@ -51,7 +51,7 @@ fn ir__core_fn_max_min(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, un
           else result_possible_types
 
           let result_possible_types = if arg_0_possible_types.null?() || arg_1_possible_types.null?() ||
-                    arg_0_possible_types.len() /= 1 || not arg_0_possible_types.take_one().in?(@main.always_ord_types) ||
+                    arg_0_possible_types.len() /= 1 || not arg_0_possible_types.take_one().in?(@.always_ord_types) ||
                     arg_0_possible_types /= arg_1_possible_types
                result_possible_types.append("error")
           else result_possible_types

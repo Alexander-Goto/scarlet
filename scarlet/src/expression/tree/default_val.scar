@@ -1,7 +1,7 @@
 let t_default_val = [obj
      :scar_type = "t_default_val"
 
-     :operator = @main.t_token
+     :operator = @.t_token
      :left     = :i_expression
      :right    = :i_expression
 ]

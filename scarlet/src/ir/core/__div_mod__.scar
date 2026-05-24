@@ -17,7 +17,7 @@ fn ir__core_fn___div_mod__(exp, fn_ir_name, last_use_ids, contexts, lambdas_data
                error__div_by_zero(right:code)
           else null
 
-          if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.num_types) {
+          if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@.num_types) {
                if left:comptime_val:type === "obj" && left:comptime_val:value[:_]:value[if fn_ir_name == "McoreFN__div__"; :core___div__ else :core___mod__].null?()
                     error__invalid_type(left:code, if fn_ir_name == "McoreFN__div__"; ".core___div__" else ".core___mod__", "obj")
                else null
@@ -26,11 +26,11 @@ fn ir__core_fn___div_mod__(exp, fn_ir_name, last_use_ids, contexts, lambdas_data
                let right_possible_types = right:possible_types
 
                let result_possible_types = if left_possible_types.null?()
-                    @main.num_types__mtd
+                    @.num_types__mtd
                else {
-                    let new_left_possible_types = left_possible_types.filter(_.in?(@main.num_types__mtd))
+                    let new_left_possible_types = left_possible_types.filter(_.in?(@.num_types__mtd))
                     if new_left_possible_types.empty?()
-                         error__invalid_type(left:code, @main.num_types__mtd, left_possible_types)
+                         error__invalid_type(left:code, @.num_types__mtd, left_possible_types)
                     else new_left_possible_types
                }
 
@@ -44,10 +44,10 @@ fn ir__core_fn___div_mod__(exp, fn_ir_name, last_use_ids, contexts, lambdas_data
                }
 
                let maybe_error = left_possible_types.null?() || right_possible_types.null?() ||
-                    left_possible_types.len() /= 1 || not left_possible_types.take_one().in?(@main.num_types) ||
+                    left_possible_types.len() /= 1 || not left_possible_types.take_one().in?(@.num_types) ||
                     left_possible_types /= right_possible_types || right_possible_types.take_one() /= "float" && right:comptime_val.null?()
                let need_chain = (exp:left:scar_type /= "t_operand" || exp:right:scar_type /= "t_operand") &&
-                    is_first_in_chain && result_possible_types.any(true, _.in?(@main.num_types))
+                    is_first_in_chain && result_possible_types.any(true, _.in?(@.num_types))
 
                let result_possible_types = if maybe_error; result_possible_types.append("error") else result_possible_types
 

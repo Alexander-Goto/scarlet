@@ -13,7 +13,7 @@ fn ir__core_fn_power(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, 
 
           let code = new (exp:name):text => _ ++ ("(" ++ num:code:text ++ ", " ++ power:code:text ++ ")")
 
-          if num:comptime_val.null?() || power:comptime_val.null?() || not num:comptime_val:type.in?(@main.num_types) {
+          if num:comptime_val.null?() || power:comptime_val.null?() || not num:comptime_val:type.in?(@.num_types) {
                if num:comptime_val:type === "obj" && num:comptime_val:value[:_]:value[:core_power].null?()
                     error__invalid_type(num:code, ".core_power", "obj")
                else null
@@ -22,11 +22,11 @@ fn ir__core_fn_power(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, 
                let power_possible_types = power:possible_types
 
                let result_possible_types = if num_possible_types.null?()
-                    @main.num_types__mtd
+                    @.num_types__mtd
                else {
-                    let new_num_possible_types = num_possible_types.filter(_.in?(@main.num_types__mtd))
+                    let new_num_possible_types = num_possible_types.filter(_.in?(@.num_types__mtd))
                     if new_num_possible_types.empty?()
-                         error__invalid_type(num:code, @main.num_types__mtd, num_possible_types)
+                         error__invalid_type(num:code, @.num_types__mtd, num_possible_types)
                     else new_num_possible_types
                }
 
@@ -40,10 +40,10 @@ fn ir__core_fn_power(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, 
                }
 
                let maybe_error = num_possible_types.null?() || power_possible_types.null?() ||
-                    num_possible_types.len() /= 1 || not num_possible_types.take_one().in?(@main.num_types) ||
+                    num_possible_types.len() /= 1 || not num_possible_types.take_one().in?(@.num_types) ||
                     num_possible_types /= power_possible_types
                let need_chain = (exp:args.first():scar_type /= "t_operand" || exp:args[1]:scar_type /= "t_operand") &&
-                    is_first_in_chain && result_possible_types.any(true, _.in?(@main.num_types))
+                    is_first_in_chain && result_possible_types.any(true, _.in?(@.num_types))
 
                let result_possible_types = if maybe_error; result_possible_types.append("error") else result_possible_types
 

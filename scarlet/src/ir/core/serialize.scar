@@ -10,21 +10,21 @@ fn ir__core_fn_serialize(exp, last_use_ids, contexts, lambdas_data, unused_def_i
           "short_string", "string", "token", "bool", "byte", "char", "int", "time"
           "float", "short_byte_array", "byte_array", "table", "set", "array", "obj"
      ])
-     dst.maybe_has_type!(@main.byte_array_types)
+     dst.maybe_has_type!(@.byte_array_types)
 
      if arg:comptime_val.null?() || dst:comptime_val.null?() || arg:comptime_val:type.in?([set "table", "set", "array", "obj"]) {
           let result_possible_types = if dst:possible_types.null?()
-               @main.byte_array_types__error
+               @.byte_array_types__error
           else if arg.has_type?([set
                "short_string", "string", "token", "bool", "byte", "char"
                "int", "time", "float", "short_byte_array", "byte_array"
-          ]) && dst.has_type?(@main.byte_array_types)
+          ]) && dst.has_type?(@.byte_array_types)
                if dst.maybe_has_type?("byte_array") && not dst.maybe_has_type?("short_byte_array")
                     [set "byte_array"]
-               else @main.byte_array_types
+               else @.byte_array_types
           else if dst.maybe_has_type?("byte_array") && not dst.maybe_has_type?("short_byte_array")
                [set "byte_array", "error"]
-          else @main.byte_array_types__error
+          else @.byte_array_types__error
 
           ir__fn_call("McoreFNserialize", [array arg, dst], code, result_possible_types, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
      } else {

@@ -13,7 +13,7 @@ fn ir__core_fn___add_mul_sub__(exp, fn_ir_name, last_use_ids, contexts, lambdas_
 
           let code = new (left:code):text => _ ++ (" " ++ exp:operator:text ++ " " ++ right:code:text)
 
-          if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@main.num_types) {
+          if left:comptime_val.null?() || right:comptime_val.null?() || not left:comptime_val:type.in?(@.num_types) {
                if left:comptime_val:type === "obj" {
                     let [box token, mtd_type] = switch fn_ir_name
                     case "McoreFN__add__": [box :core___add__, ".core___add__"]
@@ -30,11 +30,11 @@ fn ir__core_fn___add_mul_sub__(exp, fn_ir_name, last_use_ids, contexts, lambdas_
                let right_possible_types = right:possible_types
 
                let result_possible_types = if left_possible_types.null?()
-                    @main.num_types__mtd
+                    @.num_types__mtd
                else {
-                    let new_left_possible_types = left_possible_types.filter(_.in?(@main.num_types__mtd))
+                    let new_left_possible_types = left_possible_types.filter(_.in?(@.num_types__mtd))
                     if new_left_possible_types.empty?()
-                         error__invalid_type(left:code, @main.num_types__mtd, left_possible_types)
+                         error__invalid_type(left:code, @.num_types__mtd, left_possible_types)
                     else new_left_possible_types
                }
 
@@ -48,10 +48,10 @@ fn ir__core_fn___add_mul_sub__(exp, fn_ir_name, last_use_ids, contexts, lambdas_
                }
 
                let maybe_error = left_possible_types.null?() || right_possible_types.null?() ||
-                    left_possible_types.len() /= 1 || not left_possible_types.take_one().in?(@main.num_types) ||
+                    left_possible_types.len() /= 1 || not left_possible_types.take_one().in?(@.num_types) ||
                     left_possible_types /= right_possible_types
                let need_chain = (exp:left:scar_type /= "t_operand" || exp:right:scar_type /= "t_operand") &&
-                    is_first_in_chain && result_possible_types.any(true, _.in?(@main.num_types))
+                    is_first_in_chain && result_possible_types.any(true, _.in?(@.num_types))
 
                let result_possible_types = if maybe_error; result_possible_types.append("error") else result_possible_types
 

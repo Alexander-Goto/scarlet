@@ -7,25 +7,25 @@ fn ir__core_fn_is_in(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, 
      let code = new (exp:name):text => _ ++ ("(" ++ item:code:text ++ ", " ++ container:code:text ++ ")")
 
      item.maybe_has_type!(
-          if container.has_type?(@main.string_types)
+          if container.has_type?(@.string_types)
                "char"
-          else if container.has_type?(@main.byte_array_types)
+          else if container.has_type?(@.byte_array_types)
                "byte"
           else if container.has_type?("set")
-               @main.all_hash_map_key_types
-          else @main.look_types
+               @.all_hash_map_key_types
+          else @.look_types
      )
      container.maybe_has_type!([set "short_string", "string", "short_byte_array", "byte_array", "table", "set", "array", "obj", "custom"])
 
-     if item:comptime_val.null?() || container:comptime_val.null?() || not item:comptime_val:type.in?(@main.comptime_eq_types) ||
+     if item:comptime_val.null?() || container:comptime_val.null?() || not item:comptime_val:type.in?(@.comptime_eq_types) ||
           container:comptime_val:type == "obj" && not container:comptime_val:value[:_]:value[:core_look_in].null?()
      {
           let result_possible_types = if
-                    item.has_type?("char") && container.has_type?(@main.string_types)             ||
-                    item.has_type?("byte") && container.has_type?(@main.byte_array_types)         ||
-                    item.has_type?(@main.look_types) && container.has_type?("array")              ||
-                    item.has_type?(@main.always_hash_map_key_types) && container.has_type?("set") ||
-                    item.has_type?(@main.look_types) && container.has_type?("table")
+                    item.has_type?("char") && container.has_type?(@.string_types)             ||
+                    item.has_type?("byte") && container.has_type?(@.byte_array_types)         ||
+                    item.has_type?(@.look_types) && container.has_type?("array")              ||
+                    item.has_type?(@.always_hash_map_key_types) && container.has_type?("set") ||
+                    item.has_type?(@.look_types) && container.has_type?("table")
                [set "bool"]
           else [set "bool", "error"]
 

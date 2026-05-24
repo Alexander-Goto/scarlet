@@ -1,7 +1,7 @@
 let t_breaker = [obj
      :scar_type = "t_breaker"
 
-     :open_char = @main.t_token
+     :open_char = @.t_token
      :item      = :i_expression
 ]
 

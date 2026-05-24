@@ -35,7 +35,7 @@ fn ir__core_fn_assemble_time(exp, last_use_ids, contexts, lambdas_data, unused_d
           else new (timezone) {
                :ir           <= null
                :code         <= code
-               :comptime_val <= new (@main.t_comptime_val) {
+               :comptime_val <= new (@.t_comptime_val) {
                     :type  <= "time"
                     :value <= value
                }

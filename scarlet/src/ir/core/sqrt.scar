@@ -4,7 +4,7 @@ fn ir__core_fn_sqrt(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, e
 
      let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
 
-     if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@main.num_types) {
+     if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@.num_types) {
           if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_]:value[:core_sqrt].null?()
                error__invalid_type(arg:code, ".core_sqrt", "obj")
           else null
@@ -12,16 +12,16 @@ fn ir__core_fn_sqrt(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, e
           let arg_possible_types = arg:possible_types
 
           let result_possible_types = if arg_possible_types.null?()
-               @main.num_types__mtd_error
-          else if arg_possible_types.all(true, _.in?(@main.num_types))
+               @.num_types__mtd_error
+          else if arg_possible_types.all(true, _.in?(@.num_types))
                if "int".in?(arg_possible_types)
                     arg_possible_types.append("error")
                else arg_possible_types
           else {
-               let new_arg_possible_types = arg_possible_types.filter(_.in?(@main.num_types__mtd))
+               let new_arg_possible_types = arg_possible_types.filter(_.in?(@.num_types__mtd))
 
                if new_arg_possible_types.empty?()
-                    error__invalid_type(arg:code, @main.num_types__mtd, arg_possible_types)
+                    error__invalid_type(arg:code, @.num_types__mtd, arg_possible_types)
                else null
 
                new_arg_possible_types.append("error")

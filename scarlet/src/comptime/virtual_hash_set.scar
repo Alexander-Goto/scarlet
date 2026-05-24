@@ -7,10 +7,10 @@ fn create_virtual_hash_set(cap) {
      let chunks_len = if qty_1_bits(chunks_len) == 1; chunks_len else 1 << 64 - qty_leading_0_bits(chunks_len)
      let chunks_len = if chunks_len * chunk_size < cap * 2; chunks_len * 2 else chunks_len
 
-     let [box chunks_len, chunk_size] = if chunks_len <= @main.hash_map_max_chunks
+     let [box chunks_len, chunk_size] = if chunks_len <= @.hash_map_max_chunks
           [box chunks_len, chunk_size]
      else {
-          let chunks_len = @main.hash_map_max_chunks
+          let chunks_len = @.hash_map_max_chunks
           let chunk_size = cap / chunks_len
           let chunk_size = if chunk_size * chunks_len == cap; chunk_size else chunk_size + 1
 

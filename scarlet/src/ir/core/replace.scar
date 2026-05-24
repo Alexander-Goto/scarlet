@@ -10,19 +10,19 @@ fn ir__core_fn_replace(exp, last_use_ids, contexts, lambdas_data, unused_def_ids
 
      let valid_types = [set "short_string", "string", "short_byte_array", "byte_array", "table", "array", "obj", "custom"]
      container.maybe_has_type!(valid_types)
-     if container.has_type?(@main.string_types) {
+     if container.has_type?(@.string_types) {
           old_item.maybe_has_type!("char")
           new_item.maybe_has_type!("char")
-     } else if container.has_type?(@main.byte_array_types) {
+     } else if container.has_type?(@.byte_array_types) {
           old_item.maybe_has_type!("byte")
           new_item.maybe_has_type!("byte")
      } else {
-          old_item.maybe_has_type!(@main.look_types)
-          new_item.maybe_has_type!(@main.common_types)
+          old_item.maybe_has_type!(@.look_types)
+          new_item.maybe_has_type!(@.common_types)
      }
 
      if container:comptime_val.null?() || old_item:comptime_val.null?() || new_item:comptime_val.null?() ||
-          not old_item:comptime_val:type.in?(@main.comptime_eq_types) || container:comptime_val:type == "obj" && not container:comptime_val:value[:_]:value[:core_replace].null?()
+          not old_item:comptime_val:type.in?(@.comptime_eq_types) || container:comptime_val:type == "obj" && not container:comptime_val:value[:_]:value[:core_replace].null?()
      {
           let result_possible_types = if container:possible_types.null?()
                valid_types.append("error")
@@ -30,9 +30,9 @@ fn ir__core_fn_replace(exp, last_use_ids, contexts, lambdas_data, unused_def_ids
                let result_possible_types = container:possible_types.filter(_.in?(valid_types)).prepare_types_for_cmp()
 
                if
-                         old_item.has_type?("char") && new_item.has_type?("char") && container.has_type?(@main.string_types)     ||
-                         old_item.has_type?("byte") && new_item.has_type?("byte") && container.has_type?(@main.byte_array_types) ||
-                         old_item.has_type?(@main.look_types) && new_item.has_type?(@main.common_types) && container.has_type?([set "array", "table"])
+                         old_item.has_type?("char") && new_item.has_type?("char") && container.has_type?(@.string_types)     ||
+                         old_item.has_type?("byte") && new_item.has_type?("byte") && container.has_type?(@.byte_array_types) ||
+                         old_item.has_type?(@.look_types) && new_item.has_type?(@.common_types) && container.has_type?([set "array", "table"])
                     result_possible_types
                else result_possible_types.append("error")
           }

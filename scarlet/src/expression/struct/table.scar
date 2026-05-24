@@ -1,7 +1,7 @@
 let t_table = [obj
      :scar_type = "t_table"
 
-     :open_char = @main.t_token
+     :open_char = @.t_token
      :kvs       = [array] # [array [obj :key = @i_expression, :value = @i_expression]*]
 ]
 
@@ -31,8 +31,8 @@ fn table_to_operand(table, last_use_ids, contexts, lambdas_data, unused_def_ids,
           else key_operand:possible_types.foldl([box true, false], fn (result, type) {
                let [box all_key_types_valid, any_key_types_valid] = result
 
-               let all_key_types_valid = all_key_types_valid && type.in?(@main.always_hash_map_key_types)
-               let any_key_types_valid = any_key_types_valid || type.in?(@main.all_hash_map_key_types)
+               let all_key_types_valid = all_key_types_valid && type.in?(@.always_hash_map_key_types)
+               let any_key_types_valid = any_key_types_valid || type.in?(@.all_hash_map_key_types)
 
                break(not all_key_types_valid && any_key_types_valid, [box all_key_types_valid, any_key_types_valid])
           })
@@ -46,7 +46,7 @@ fn table_to_operand(table, last_use_ids, contexts, lambdas_data, unused_def_ids,
           else value_operand:possible_types.foldl([box true, false], fn (result, type) {
                let [box all_value_types_valid, any_value_types_valid] = result
 
-               let type_valid            = type.in?(@main.common_types)
+               let type_valid            = type.in?(@.common_types)
                let all_value_types_valid = all_value_types_valid && type_valid
                let any_value_types_valid = any_value_types_valid || type_valid
 
@@ -54,7 +54,7 @@ fn table_to_operand(table, last_use_ids, contexts, lambdas_data, unused_def_ids,
           })
 
           if not any_value_types_valid
-               error__invalid_type(value_operand:code, @main.common_types, value_operand:possible_types)
+               error__invalid_type(value_operand:code, @.common_types, value_operand:possible_types)
           else null
 
           let new_key_id = if key_operand:comptime_val.null?()

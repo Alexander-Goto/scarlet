@@ -4,12 +4,12 @@ fn ir__core_fn_str_to_tkn(exp, last_use_ids, contexts, lambdas_data, unused_def_
 
      let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
 
-     arg.maybe_has_type!(@main.string_types)
+     arg.maybe_has_type!(@.string_types)
 
      if arg:comptime_val.null?()
           ir__fn_call(
                "McoreFNstr_to_tkn", [array arg], code
-               if arg.has_type?(@main.string_types); [set "token", "null"] else [set "token", "null", "error"]
+               if arg.has_type?(@.string_types); [set "token", "null"] else [set "token", "null", "error"]
                exp_data, ir, final_data, dependencies, src_gconsts, is_last
           )
      else {

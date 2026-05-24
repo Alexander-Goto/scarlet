@@ -9,12 +9,12 @@ fn ir__core_fn_write_to_mem(exp, last_use_ids, contexts, lambdas_data, unused_de
      let code = new (exp:name):text => _ ++ ("(" ++ address:code:text ++ ", " ++ offset:code:text ++ ", " ++ bytes:code:text ++ ")")
 
      offset.maybe_has_type!("int")
-     bytes.maybe_has_type!(@main.byte_array_types)
+     bytes.maybe_has_type!(@.byte_array_types)
 
      ir__fn_call(
           "McoreFNwrite_to_memAAA", [array address, offset, bytes], code
 
-          if offset.has_type?("int") && bytes.has_type?(@main.byte_array_types)
+          if offset.has_type?("int") && bytes.has_type?(@.byte_array_types)
                [set "null"]
           else [set "null", "error"]
 

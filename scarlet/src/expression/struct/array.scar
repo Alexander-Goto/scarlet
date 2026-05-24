@@ -1,7 +1,7 @@
 let t_array = [obj
      :scar_type = "t_array"
 
-     :open_char = @main.t_token
+     :open_char = @.t_token
      :items     = [array] # [array @i_expression*]
 ]
 
@@ -28,7 +28,7 @@ fn array_to_operand(array, last_use_ids, contexts, lambdas_data, unused_def_ids,
           else item:possible_types.foldl([box true, false], fn (result, type) {
                let [box all_item_types_valid, any_item_types_valid] = result
 
-               let type_valid           = type.in?(@main.common_types)
+               let type_valid           = type.in?(@.common_types)
                let all_item_types_valid = all_item_types_valid && type_valid
                let any_item_types_valid = any_item_types_valid || type_valid
 
@@ -36,7 +36,7 @@ fn array_to_operand(array, last_use_ids, contexts, lambdas_data, unused_def_ids,
           })
 
           if not any_item_types_valid
-               error__invalid_type(item:code, @main.common_types, item:possible_types)
+               error__invalid_type(item:code, @.common_types, item:possible_types)
           else null
 
           let items       = items.append(item)

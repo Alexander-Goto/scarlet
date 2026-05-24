@@ -1,7 +1,7 @@
 let t_unpack = [obj
      :scar_type = "t_unpack"
 
-     :keyword = @main.t_token
+     :keyword = @.t_token
      :type    = ""
      :names   = [array] # [array @t_token*]
      :operand = :i_expression

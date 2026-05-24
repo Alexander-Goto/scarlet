@@ -20,9 +20,9 @@ fn ir__core_fn_char_lang(exp, last_use_ids, contexts, lambdas_data, unused_def_i
           let lang = arg:comptime_val:value.char_lang()
 
           let [box comptime_lang, possible_types] = if lang.null?()
-               [box @main.comptime_null_val, [set "null"]]
+               [box @.comptime_null_val, [set "null"]]
           else [box
-               new (@main.t_comptime_val) {
+               new (@.t_comptime_val) {
                     :type  <= "string"
                     :value <= lang
                }

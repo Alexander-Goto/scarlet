@@ -12,9 +12,9 @@ fn ir__core_fn_first_last(exp, fn_ir_name, last_use_ids, contexts, lambdas_data,
                error__invalid_type(arg:code, if fn_ir_name == "McoreFNfirst"; ".core_first" else ".core_last", "obj")
           else null
 
-          let result_possible_types = if arg.has_type?(@main.string_types)
+          let result_possible_types = if arg.has_type?(@.string_types)
                [set "char", "error"]
-          else if arg.has_type?(@main.byte_array_types)
+          else if arg.has_type?(@.byte_array_types)
                [set "byte", "error"]
           else null
 
@@ -27,12 +27,12 @@ fn ir__core_fn_first_last(exp, fn_ir_name, last_use_ids, contexts, lambdas_data,
           let value = if fn_ir_name == "McoreFNfirst"; arg:comptime_val:value.first() else arg:comptime_val:value.last()
           let value = switch arg:comptime_val:type
           case "string":
-               new (@main.t_comptime_val) {
+               new (@.t_comptime_val) {
                     :type  <= "char"
                     :value <= value
                }
           case "byte_array":
-               new (@main.t_comptime_val) {
+               new (@.t_comptime_val) {
                     :type  <= "byte"
                     :value <= value
                }

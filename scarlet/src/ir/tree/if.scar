@@ -114,7 +114,7 @@ fn ir__if(predicate_operand, then_operand, then_ir, else_operand, else_ir, code,
           let ir = if is_last; ir else ir__assume_type(result_reg, possible_types, ir)
 
           [box
-               new (@main.t_operand) {
+               new (@.t_operand) {
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= possible_types

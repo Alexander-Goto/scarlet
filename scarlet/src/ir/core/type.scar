@@ -9,16 +9,16 @@ fn ir__core_fn_type(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, e
      else null
 
      let has_unknown_type   = arg:possible_types.null?()
-     let is_string          = arg.has_type?(@main.string_types)
-     let is_byte_array      = arg.has_type?(@main.byte_array_types)
-     let is_fn              = arg.has_type?(@main.fn_types)
+     let is_string          = arg.has_type?(@.string_types)
+     let is_byte_array      = arg.has_type?(@.byte_array_types)
+     let is_fn              = arg.has_type?(@.fn_types)
      let is_one_kwnown_type = not has_unknown_type && arg:possible_types.len() == 1
 
      if has_unknown_type || not (is_string || is_byte_array || is_fn || is_one_kwnown_type) ||
                "custom".in?(arg:possible_types) || arg:comptime_val:type === "obj" && not arg:comptime_val:value[:_]:value[:core_type].null?()
           ir__fn_call(
                "McoreFNtype", [array arg], code
-               if arg.maybe_has_type?("error"); @main.string_types__error else @main.string_types
+               if arg.maybe_has_type?("error"); @.string_types__error else @.string_types
                exp_data, ir, final_data, dependencies, src_gconsts, is_last
           )
      else {

@@ -3,7 +3,7 @@ fn ir__raw_const(prefix, suffix, final_data, dependencies) {
      if not name.null?()
           [box name, final_data, new (dependencies):ir_consts => _.append(name)]
      else {
-          let name = "IC" ++ @main.compiled_module_name ++ "S" ++ final_data:ir_consts.len().format_int(32, false)
+          let name = "IC" ++ @.compiled_module_name ++ "S" ++ final_data:ir_consts.len().format_int(32, false)
           [box
                name
 

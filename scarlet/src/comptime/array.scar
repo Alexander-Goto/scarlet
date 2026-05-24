@@ -1,17 +1,17 @@
 fn comptime_array(items, code) if items.empty?()
-     new (@main.t_operand) {
+     new (@.t_operand) {
           :code           <= code
           :ir             <= "empty_array"
           :possible_types <= [set "array"]
-          :comptime_val   <= new (@main.t_comptime_val) {
+          :comptime_val   <= new (@.t_comptime_val) {
                :type  <= "array"
                :value <= [array]
           }
      }
-else new (@main.t_operand) {
+else new (@.t_operand) {
      :code           <= code
      :possible_types <= [set "array"]
-     :comptime_val   <= new (@main.t_comptime_val) {
+     :comptime_val   <= new (@.t_comptime_val) {
           :type  <= "array"
           :value <= items.map(_:comptime_val)
      }

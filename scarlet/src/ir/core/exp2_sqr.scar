@@ -11,7 +11,7 @@ fn ir__core_fn_exp2_sqr(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, u
 
           let code = new (exp:name):text => _ ++ ("(" ++ arg:code:text ++ ")")
 
-          if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@main.num_types) {
+          if arg:comptime_val.null?() || not arg:comptime_val:type.in?(@.num_types) {
                if arg:comptime_val:type === "obj" && arg:comptime_val:value[:_]:value[if fn_ir_name == "McoreFNexp2"; :core_exp2 else :core_sqr].null?()
                     error__invalid_type(arg:code, if fn_ir_name == "McoreFNexp2"; ".core_exp2" else ".core_sqr", "obj")
                else null
@@ -19,18 +19,18 @@ fn ir__core_fn_exp2_sqr(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, u
                let arg_possible_types = arg:possible_types
 
                let [box result_possible_types, maybe_chain, maybe_error] = if arg_possible_types.null?()
-                    [box @main.num_types__mtd_error, true, true]
-               else if arg_possible_types.all(true, _.in?(@main.num_types))
+                    [box @.num_types__mtd_error, true, true]
+               else if arg_possible_types.all(true, _.in?(@.num_types))
                     [box arg_possible_types, true, false]
                else {
-                    let new_arg_possible_types = arg_possible_types.filter(_.in?(@main.num_types__mtd))
+                    let new_arg_possible_types = arg_possible_types.filter(_.in?(@.num_types__mtd))
 
                     if new_arg_possible_types.empty?()
-                         error__invalid_type(arg:code, @main.num_types__mtd, arg_possible_types)
+                         error__invalid_type(arg:code, @.num_types__mtd, arg_possible_types)
                     else null
 
                     let new_arg_possible_types = new_arg_possible_types.append("error")
-                    [box new_arg_possible_types, new_arg_possible_types.any(true, _.in?(@main.num_types)), true]
+                    [box new_arg_possible_types, new_arg_possible_types.any(true, _.in?(@.num_types)), true]
                }
 
                let need_chain = exp:args.first():scar_type /= "t_operand" && is_first_in_chain && maybe_chain

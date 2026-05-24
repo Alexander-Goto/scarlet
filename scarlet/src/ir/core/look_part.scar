@@ -29,8 +29,8 @@ fn ir__core_fn_look_part(exp, fn_ir_name, last_use_ids, contexts, lambdas_data, 
           array.maybe_has_type!(array_expected_types)
 
           let result_possible_types = if
-                    part.has_type?(@main.string_types)     && array.has_type?(@main.string_types)     ||
-                    part.has_type?(@main.byte_array_types) && array.has_type?(@main.byte_array_types) ||
+                    part.has_type?(@.string_types)     && array.has_type?(@.string_types)     ||
+                    part.has_type?(@.byte_array_types) && array.has_type?(@.byte_array_types) ||
                     part.has_type?("array")                && array.has_type?("array")
                [set "int", "null"]
           else [set "int", "null", "error"]

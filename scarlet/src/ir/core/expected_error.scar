@@ -9,8 +9,8 @@ fn ir__core_fn_expected_error(exp, last_use_ids, contexts, lambdas_data, unused_
      let code = new (exp:name):text => _ ++ ("(" ++ id:code:text ++ ", " ++ msg:code:text ++ ", " ++ data:code:text ++ ")")
 
      id.maybe_has_type!("token")
-     msg.maybe_has_type!(@main.string_types)
-     data.maybe_has_type!(@main.common_types__null)
+     msg.maybe_has_type!(@.string_types)
+     data.maybe_has_type!(@.common_types__null)
 
      ir__fn_call("McoreFNexpected_error", [array id, msg, data], code, null, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
 }
