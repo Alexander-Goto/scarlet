@@ -90,7 +90,7 @@
             <RegExpr String="\b((true)|(false))\b" attribute="Bool"/>
             <RegExpr String="(\bu)?'" attribute="Char" context="Char"/>
             <RegExpr String="\b0b[\da-f]{2}\b" attribute="Byte"/>
-            <RegExpr String="@[a-z][a-z\d_]*" attribute="ModuleName"/>
+            <RegExpr String="@[a-z\d_]*(?=\.)" attribute="ModuleName"/>
             <RegExpr String="\br((uz)|u)?&quot;[^&quot;]*&quot;" attribute="String"/>
             <RegExpr String="\bru?'[^']*'" attribute="Char"/>
 
