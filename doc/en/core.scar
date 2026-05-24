@@ -2178,7 +2178,7 @@ The number is generated in the range [-9223372036854775808, 9223372036854775807]
 signature:
 fn () @int
 @#
-fn scarlet__rnd(num) null
+fn scarlet__rnd() null
 
 #@
 In the program, any constant is stored as two 64-bit numbers.

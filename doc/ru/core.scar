@@ -2178,7 +2178,7 @@ fn scarlet__join!!!(low, high) null
 signature:
 fn () @int
 @#
-fn scarlet__rnd(num) null
+fn scarlet__rnd() null
 
 #@
 В программе любая костанта храниться в виде двух 64-битных чисел,
