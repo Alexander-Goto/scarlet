@@ -53,8 +53,9 @@ fn load_modules(file_names)
                error__src_module_in_bin_modules(module_name)
           else null
 
-          let ir_prefix_len = module_name.len() + 3
+          let final_data = new (final_data):modules_names => _.append(module_name)
 
+          let ir_prefix_len             = module_name.len() + 3
           let [box gconsts_len, module] = deserialize(module)
           let [box final_data, module]  = loop([box final_data, module, gconsts_len], fn (state) {
                let [box final_data, module, remain_qty] = state
