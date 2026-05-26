@@ -9,7 +9,10 @@ fn load_sources(file_names, final_data) {
           [box structs ++ file_structs, final_data]
      })
 
-     let [box gconsts, fns] = structs.foldl([box [table], [table]], fn (state, struct) {
+     let file_names_len = file_names.len()
+     let gconsts        = [table].init(max(file_names_len, 64))
+     let fns            = [table].init(max(file_names_len * 2, 128))
+     let [box gconsts, fns] = structs.foldl([box gconsts, fns], fn (state, struct) {
           let [box gconsts, fns] = state
 
           switch struct:scar_type
@@ -32,9 +35,16 @@ fn load_sources(file_names, final_data) {
           default: unreachable()
      })
 
-     let final_data = new (final_data) {
-          :gconsts => _.reserve(gconsts.len())
-          :fns     => _.reserve((fns.len() + gconsts.len()) * 2)
+     let fns_len     = fns.len()
+     let gconsts_len = gconsts.len()
+     let sum_len     = fns_len + gconsts_len
+     let final_data  = new (final_data) {
+          :gconsts            => _.reserve(gconsts_len)
+          :fns                => _.reserve(sum_len * 2)
+          :ir_splited_consts  => _.reserve(sum_len * 8)
+          :ir_consts          => _.reserve(sum_len * 8)
+          :always_use_fns     => _.reserve(fns_len)
+          :always_use_gconsts => _.reserve(gconsts_len)
      }
 
      let final_data = gconsts.foldl(final_data, fn (final_data, gconst) prepare_gconst_to_final(gconst, final_data))

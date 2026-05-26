@@ -32,8 +32,9 @@ fn create_module(final_data) {
      else null
 }
 
-fn load_modules(file_names)
-     file_names.foldl(@.t_final_data, fn (final_data, file_name) {
+fn load_modules(file_names) {
+     let final_data = new (@.t_final_data):modules_names => _.reserve(file_names.len())
+     file_names.foldl(final_data, fn (final_data, file_name) {
           let [box file, module] = open_file(fs_path(file_name), @.fom__read | @.fom__begin)->read_tail()
           if file.error?() || file.type() /= "std.file"
                error__cant_load_file(file_name)
@@ -120,3 +121,4 @@ fn load_modules(file_names)
 
           final_data
      })
+}
