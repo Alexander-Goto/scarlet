@@ -33,7 +33,15 @@ fn create_module(final_data) {
 }
 
 fn load_modules(file_names) {
-     let final_data = new (@.t_final_data):modules_names => _.reserve(file_names.len())
+     let file_names_len = file_names.len()
+     let final_data     = new (@.t_final_data) {
+          :modules_names     => _.reserve(file_names_len)
+          :gconsts           => _.reserve(file_names_len * 256)
+          :fns               => _.reserve(file_names_len * 1024)
+          :ir_splited_consts => _.reserve(file_names_len * 2048)
+          :ir_consts         => _.reserve(file_names_len * 2048)
+     }
+
      file_names.foldl(final_data, fn (final_data, file_name) {
           let [box file, module] = open_file(fs_path(file_name), @.fom__read | @.fom__begin)->read_tail()
           if file.error?() || file.type() /= "std.file"

@@ -634,7 +634,7 @@ fn read_call_from_exp(reader, exp, open_char) {
      ]
 }
 
-fn read_exps(reader, open_char) loop([box [array], reader.skip_spaces()], fn (state) {
+fn read_exps(reader, open_char) loop([box [array].init(16), reader.skip_spaces()], fn (state) {
      let [box exps, reader] = state
 
      if reader.eof?()
@@ -1080,7 +1080,7 @@ fn read_operator_new(reader, keyword) {
 
 fn read_switch(reader, keyword) {
      let [box switch_exp, reader] = reader.skip_spaces().read_exp()
-     loop([box [array], reader.skip_spaces()], fn (state) {
+     loop([box [array].init(16), reader.skip_spaces()], fn (state) {
           let [box cases, reader] = state
 
           let [box variants, reader] = loop([box [array], reader.one_of!("case", false).skip_spaces()], fn (state) {

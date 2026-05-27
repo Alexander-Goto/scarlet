@@ -14,7 +14,7 @@ fn load_tokens_from_file(file_name) {
           default:        unreachable()
      else null
 
-     loop([box [array], file_code, new (@.t_token):file <= file_name], fn (state) {
+     loop([box [array].init(file_code.len() / 8), file_code, new (@.t_token):file <= file_name], fn (state) {
           let [box tokens, file_code, co_ords] = state
 
           let [box token, file_code, co_ords] = file__get_token(file_code, co_ords)

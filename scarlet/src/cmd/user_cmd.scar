@@ -9,7 +9,13 @@ let t_user_cmd = [obj
 ]
 
 fn get_user_cmd() {
-     let cmd = new (@.t_user_cmd):cmd <= if @.cli_args.empty?(); :help else :compile
+     let cmd = if @.cli_args.empty?()
+          @.t_user_cmd
+     else new (@.t_user_cmd) {
+          :cmd     <= :compile
+          :modules <= [array].init(@.cli_args.len())
+          :sources <= [array].init(@.cli_args.len())
+     }
 
      let [box cmd] = @.cli_args.foldl([box cmd, :nothing], fn (state, arg) {
           let [box cmd, received] = state
