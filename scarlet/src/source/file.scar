@@ -35,9 +35,10 @@ fn file__get_token(file, co_ords)
 
                switch file_head.first()
                case ' ':
-                    if prev_char_type == :none
-                         [box null, file_tail, new (co_ords):row => _ + 1, :none]
-                    else [breaker [box token, file, co_ords]]
+                    if prev_char_type == :none {
+                         let first_not_space_idx = ' '.look_other_in(file) <? file.len()
+                         [box null, file.drop(first_not_space_idx), new (co_ords):row => _ + first_not_space_idx, :none]
+                    } else [breaker [box token, file, co_ords]]
                case '\n':
                     if prev_char_type == :none
                          [breaker [box
