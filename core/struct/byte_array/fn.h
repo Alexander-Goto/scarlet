@@ -2771,13 +2771,16 @@ static t_any look_part_from_end_in__long_byte_array__byte_array__own(t_thrd_data
                part_bytes = part.bytes;
                break;
           case 1: {
+               if (array_ref_cnt > 1) set_ref_cnt(array, array_ref_cnt - 1);
                u64 const byte_idx = look_byte_from_end(array_bytes, array_len, part.bytes[0]);
-               ref_cnt__dec(thrd_data, array);
+               if (array_ref_cnt == 1) free((void*)array.qwords[0]);
 
                return byte_idx == (u64)-1 ? null : (const t_any){.structure = {.value = byte_idx, .type = tid__int}};
           }
           case 0:
-               ref_cnt__dec(thrd_data, array);
+               if (array_ref_cnt > 1) set_ref_cnt(array, array_ref_cnt - 1);
+               else if (array_ref_cnt == 1) free((void*)array.qwords[0]);
+
                return (const t_any){.structure = {.value = array_len, .type = tid__int}};
           }
      } else {
@@ -2805,10 +2808,10 @@ static t_any look_part_from_end_in__long_byte_array__byte_array__own(t_thrd_data
           u64 const idx = look_byte_part_from_end__rabin_karp(array_bytes, array_len, part_bytes, part_len);
           result = idx == (u64)-1 ? null : (const t_any){.structure = {.value = idx, .type = tid__int}};
      } else {
-          u64 remain_bytes = array_len - part_len + 2;
-
+          u64       remain_bytes       = array_len - part_len + 2;
+          u16 const part_first_2_chars = *(const ua_u16*)part_bytes;
           while (true) {
-               u64 const part_in_array_idx = look_2_bytes_from_end(array_bytes, remain_bytes, *(const ua_u16*)part_bytes);
+               u64 const part_in_array_idx = look_2_bytes_from_end(array_bytes, remain_bytes, part_first_2_chars);
 
                if (part_in_array_idx == (u64)-1) {
                     result = null;
@@ -2899,11 +2902,15 @@ static t_any look_part_in__long_byte_array__byte_array__own(t_thrd_data* const t
                part_bytes = part.bytes;
                break;
           case 1:
+               if (array_ref_cnt > 1) set_ref_cnt(array, array_ref_cnt - 1);
                u64 const byte_idx = look_byte_from_begin(array_bytes, array_len, part.bytes[0]);
-               ref_cnt__dec(thrd_data, array);
+               if (array_ref_cnt == 1) free((void*)array.qwords[0]);
+
                return byte_idx == (u64)-1 ? null : (const t_any){.structure = {.value = byte_idx, .type = tid__int}};
           case 0:
-               ref_cnt__dec(thrd_data, array);
+               if (array_ref_cnt > 1) set_ref_cnt(array, array_ref_cnt - 1);
+               else if (array_ref_cnt == 1) free((void*)array.qwords[0]);
+
                return (const t_any){.structure = {.value = 0, .type = tid__int}};
           }
      } else {
@@ -2931,10 +2938,11 @@ static t_any look_part_in__long_byte_array__byte_array__own(t_thrd_data* const t
           u64 const idx = look_byte_part_from_end__rabin_karp(array_bytes, array_len, part_bytes, part_len);
           result = idx == (u64)-1 ? null : (const t_any){.structure = {.value = idx, .type = tid__int}};
      } else {
-          u64 idx  = 0;
-          u64 edge = array_len - part_len + 2;
+          u64       idx                = 0;
+          u64       edge               = array_len - part_len + 2;
+          u16 const part_first_2_chars = *(const ua_u16*)part_bytes;
           while (true) {
-               u64 const part_in_array_offset = look_2_bytes_from_begin(&array_bytes[idx], edge - idx, *(const ua_u16*)part_bytes);
+               u64 const part_in_array_offset = look_2_bytes_from_begin(&array_bytes[idx], edge - idx, part_first_2_chars);
                if (part_in_array_offset == (u64)-1) {
                     result = null;
                     break;

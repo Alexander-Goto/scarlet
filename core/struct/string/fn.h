@@ -3828,13 +3828,16 @@ static inline t_any look_part_from_end_in__long_string__string__own(t_thrd_data*
                part_chars = short_string_chars;
                break;
           case 1: {
+               if (string_ref_cnt > 1) set_ref_cnt(string, string_ref_cnt - 1);
                u64 const char_idx = look_char_from_end(string_chars, string_len, (const t_any){.structure = {.value = *(const ua_u32*)short_string_chars, .type = tid__char}});
-               ref_cnt__dec(thrd_data, string);
+               if (string_ref_cnt == 1) free((void*)string.qwords[0]);
 
                return char_idx == (u64)-1 ? null : (const t_any){.structure = {.value = char_idx, .type = tid__int}};
           }
           case 0:
-               ref_cnt__dec(thrd_data, string);
+               if (string_ref_cnt > 1) set_ref_cnt(string, string_ref_cnt - 1);
+               else if (string_ref_cnt == 1) free((void*)string.qwords[0]);
+
                return (const t_any){.structure = {.value = string_len, .type = tid__int}};
           }
 
@@ -3969,11 +3972,15 @@ static inline t_any look_part_in__long_string__string__own(t_thrd_data* const th
                break;
           case 1: {
                u64 const char_idx = look_char_from_begin(string_chars, string_len, (const t_any){.structure = {.value = *(const ua_u32*)short_string_chars, .type = tid__char}});
-               ref_cnt__dec(thrd_data, string);
+               if (string_ref_cnt == 1) free((void*)string.qwords[0]);
+               if (string_ref_cnt > 1) set_ref_cnt(string, string_ref_cnt - 1);
+
                return char_idx == (u64)-1 ? null : (const t_any){.structure = {.value = char_idx, .type = tid__int}};
           }
           case 0:
-               ref_cnt__dec(thrd_data, string);
+               if (string_ref_cnt > 1) set_ref_cnt(string, string_ref_cnt - 1);
+               else if (string_ref_cnt == 1) free((void*)string.qwords[0]);
+
                return (const t_any){.structure = {.value = 0, .type = tid__int}};
           }
 
