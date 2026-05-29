@@ -1,12 +1,10 @@
 fn load_sources(file_names, final_data) {
-     let [box structs, final_data] = file_names.foldl([box [array], final_data], fn (state, file_name) {
-          let [box structs, final_data] = state
-
+     let structs = file_names.foldl([array], fn (structs, file_name) {
           let tokens       = load_tokens_from_file(file_name)
           let reader       = new (@.t_reader){:tokens <= tokens; :file_name <= file_name}
           let file_structs = reader.read_structs()
 
-          [box structs ++ file_structs, final_data]
+          structs ++ file_structs
      })
 
      let file_names_len = file_names.len()
