@@ -1,1 +1,1 @@
-This is the compiler build with all changes that have not yet been included in any numbered release.
+This is a compiler build with bug fixes and support for new language features that have not yet been included in any of the numbered releases.
