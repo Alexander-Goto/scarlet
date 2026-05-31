@@ -17,7 +17,7 @@ fn ir__check(checked_operand, code, exp_data, ir, final_data, dependencies, src_
 
                let [box check_reg, exp_data] = exp_data.new_reg()
 
-               let ir = "t_any const " ++ check_reg ++ "=Ocheck(thrd_data," ++ checked_operand:ir ++ "," ++ file_name_ir_const ++ "," ++ code:line.to_ir_num() ++ "," ++ code:row.to_ir_num() ++ ");\n"
+               let ir = ir ++ "t_any const " ++ check_reg ++ "=Ocheck(thrd_data," ++ checked_operand:ir ++ "," ++ file_name_ir_const ++ "," ++ code:line.to_ir_num() ++ "," ++ code:row.to_ir_num() ++ ");\n"
 
                let type = if checked_operand:possible_types.null?(); null else checked_operand:possible_types.remove("error")
                let ir   = ir__assume_type(check_reg, type, ir)
