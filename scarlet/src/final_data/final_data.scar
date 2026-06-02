@@ -635,7 +635,7 @@ let t_final_data = [obj
           }]
           "make_channel" = [table "core" = new (@.t_final_fn) {
                :ir_name    <= "McoreFNmake_channel"
-               :params     <= [array]
+               :params     <= [array ""]
                :attributes <= [table "export" = :no_final_data]
           }]
           "map_kv" = [table "core" = new (@.t_final_fn) {

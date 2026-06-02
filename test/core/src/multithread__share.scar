@@ -1,6 +1,6 @@
 `noinline`
 fn test__multithread__share() {
-     let [box in, out] = make_channel()
+     let [box in, out] = make_channel(1)
 
      let string  = loop(rnd_string(), fn (string) if string.short_type?(); rnd_string() else [breaker string])
      let address = string.scarlet__split!!!()[0]

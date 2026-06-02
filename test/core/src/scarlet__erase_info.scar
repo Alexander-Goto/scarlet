@@ -19,7 +19,7 @@ fn test__scarlet__erase_info() {
      test(rnd_string_obj().scarlet__erase_info().type() === "core.obj")
      test(rnd_string_table().scarlet__erase_info().type() === "core.table")
      test(thread(fn () heap_string()).scarlet__erase_info().type() === "core.thread")
-     test(make_channel()[0].scarlet__erase_info().type() === "core.channel")
+     test(make_channel(1)[0].scarlet__erase_info().type() === "core.channel")
      test(custom__create(heap_string(), [obj]).scarlet__erase_info().type() === "main.custom")
      test([array expected_error(:1, heap_string(), heap_string()).scarlet__erase_info()].get_error_id() === :1)
      test([array null.scarlet__erase_info()].get_error_id() === :invalid_type)

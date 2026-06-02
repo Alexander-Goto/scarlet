@@ -3,12 +3,29 @@
 #include "../common/fn.h"
 #include "../common/include.h"
 #include "../common/macro.h"
+#include "../common/ref_cnt.h"
 #include "../common/type.h"
 #include "../struct/box/basic.h"
 #include "../struct/channel/basic.h"
 
-core t_any McoreFNmake_channel(t_thrd_data* const thrd_data, const t_any*) {
+core t_any McoreFNmake_channel(t_thrd_data* const thrd_data, const t_any* const args) {
      const char* const owner = "function - core.make_channel";
+
+     t_any const cap = args[0];
+     if (cap.bytes[15] != tid__int || (i64)cap.qwords[0] < 1) [[clang::unlikely]] {
+          if (cap.bytes[15] == tid__error)
+               return cap;
+
+          t_any error;
+          call_stack__push(thrd_data, owner);
+          if (cap.bytes[15] != tid__int) {
+               ref_cnt__dec(thrd_data, cap);
+               error = error__invalid_type(thrd_data, owner);
+          } else error = error__out_of_bounds(thrd_data, owner);
+          call_stack__pop(thrd_data);
+
+          return error;
+     }
 
      t_channel* const channel = aligned_alloc(alignof(t_channel), sizeof(t_channel));
      *channel                 = (const t_channel) {
@@ -17,9 +34,9 @@ core t_any McoreFNmake_channel(t_thrd_data* const thrd_data, const t_any*) {
           .readers_len       = 1,
           .waiting_thrds_len = 0,
           .items_len         = 0,
-          .items_cap         = 4,
+          .items_cap         = cap.qwords[0],
           .idx_of_first_item = 0,
-          .items             = aligned_alloc(16, 64),
+          .items             = aligned_alloc(16, cap.qwords[0] * 16),
      };
 
      mtx_init(&channel->mtx.mtx, mtx_plain);

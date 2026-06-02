@@ -1,6 +1,15 @@
 `noinline`
 fn test__make_channel() {
-     let [box in, out] = make_channel()
+     let [box in, out] = make_channel(1)
      test(in.type() === "core.channel")
      test(out.type() === "core.channel")
+
+     test(make_channel(0.scarlet__erase_value()).scarlet__erase_info().get_error_id() == :out_of_bounds)
+     test(make_channel(-1.scarlet__erase_value()).scarlet__erase_info().get_error_id() == :out_of_bounds)
+     test(make_channel(-9223372036854775808.scarlet__erase_value()).scarlet__erase_info().get_error_id() == :out_of_bounds)
+
+     test(make_channel(heap_string()).scarlet__erase_info().get_error_id() == :invalid_type)
+     test(make_channel([box heap_string()].scarlet__erase_info()).scarlet__erase_info().get_error_id() == :invalid_type)
+
+     test(make_channel(expected_error(:1, heap_string(), heap_string())).scarlet__erase_info().get_error_id() == :1)
 }

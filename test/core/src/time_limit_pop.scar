@@ -5,7 +5,7 @@ fn to_custom_const__time_limit_pop(arg) custom__create(
 
 `noinline`
 fn test__time_limit_pop() {
-     let [box in, out] = make_channel()
+     let [box in, out] = make_channel(1)
      let string        = heap_string()
 
      test(push(in, "Hello!!!").null?())
@@ -125,7 +125,7 @@ fn test__time_limit_pop() {
 
      test(time_limit_pop(in, rnd() >> 1).get_error_id() === :cant_read_from_channel)
 
-     let [box _, out] = make_channel()
+     let [box _, out] = make_channel(1)
      test(time_limit_pop(out, 0).get_error_id() === :no_writing_channel)
      test(time_limit_pop(out, 10000).get_error_id() === :no_writing_channel)
 }

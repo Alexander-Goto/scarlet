@@ -21,6 +21,6 @@ fn test__dump() {
      test(rnd_string_obj().dump().type() === "core.string")
      test(rnd_string_table().dump().type() === "core.string")
      test(thread(fn () heap_string()).dump().type() === "core.string")
-     test(make_channel()[0].dump().type() === "core.string")
+     test(make_channel(1)[0].dump().type() === "core.string")
      test(custom__create(heap_string(), [obj]).dump().type() === "core.string")
 }

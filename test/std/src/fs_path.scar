@@ -173,7 +173,7 @@ fn test__fs_path() {
      test(fs_path("a")->kajdfghkjdf(error_1, error_2).get_error_id() == :1)
      test(fs_path("a")->kajdfghkjdf(error_2, error_1).get_error_id() == :2)
 
-     let [box in, out] = make_channel()
+     let [box in, out] = make_channel(1)
      push(in, fs_path("a"))
      test(pop(out) === fs_path("a"))
 

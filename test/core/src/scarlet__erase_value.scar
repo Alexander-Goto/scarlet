@@ -19,7 +19,7 @@ fn test__scarlet__erase_value() {
      test(rnd_string_obj().scarlet__erase_value().type() === "core.obj")
      test(rnd_string_table().scarlet__erase_value().type() === "core.table")
      test(thread(fn () heap_string()).scarlet__erase_value().type() === "core.thread")
-     test(make_channel()[0].scarlet__erase_value().type() === "core.channel")
+     test(make_channel(1)[0].scarlet__erase_value().type() === "core.channel")
      test(custom__create(heap_string(), [obj]).scarlet__erase_value().type() === "main.custom")
      let [box error] = [box].scarlet__erase_value()
      test(error.get_error_id() === :unpk_not_enough_items)

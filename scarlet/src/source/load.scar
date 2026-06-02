@@ -11,8 +11,8 @@ fn load_sources(file_names, final_data) {
                structs ++ file_structs
           })
      else {
-          let [box files_in, files_out]     = make_channel()
-          let [box structs_in, structs_out] = make_channel()
+          let [box files_in, files_out]     = make_channel(file_names_len + threads_num)
+          let [box structs_in, structs_out] = make_channel(threads_num * 2)
 
           file_names.foldl(null, fn (_, file_name) push(files_in, file_name))
           loop(threads_num, fn (remain_qty) {

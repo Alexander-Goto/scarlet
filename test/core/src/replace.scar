@@ -418,8 +418,8 @@ fn test__replace() {
      test([array heap_string()].replace([breaker heap_string()].scarlet__erase_info(), [breaker heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
      test([array heap_string()].replace(thread(fn() null).scarlet__erase_info(), heap_string()).get_error_id() === :invalid_type)
      test([array heap_string()].replace(thread(fn() null).scarlet__erase_info(), thread(fn() null).scarlet__erase_info()).get_error_id() === :invalid_type)
-     test([array heap_string()].replace(make_channel()[0], heap_string()).get_error_id() === :invalid_type)
-     test([array heap_string()].replace(make_channel()[0], make_channel()[0]).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(make_channel(1)[0], heap_string()).get_error_id() === :invalid_type)
+     test([array heap_string()].replace(make_channel(1)[0], make_channel(1)[0]).get_error_id() === :invalid_type)
      test([box heap_string()].scarlet__erase_info().replace([box heap_string()].scarlet__erase_info(), [box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
      test([box heap_string()].scarlet__erase_info().replace([box heap_string()].scarlet__erase_info(), [box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
 

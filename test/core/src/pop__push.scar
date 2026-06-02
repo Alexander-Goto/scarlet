@@ -5,7 +5,7 @@ fn to_custom_const__pop__push(arg) custom__create(
 
 `noinline`
 fn test__pop__push() {
-     let [box in, out] = make_channel()
+     let [box in, out] = make_channel(1)
      let string        = heap_string()
 
      test(push(in, "Hello!!!").null?())
@@ -117,6 +117,6 @@ fn test__pop__push() {
      test(push(in, out.scarlet__erase_info()).get_error_id() === :share_invalid_type)
      test(push(in, heap_string()).get_error_id() === :no_reading_channel)
 
-     let [box _, out] = make_channel()
+     let [box _, out] = make_channel(1)
      test(pop(out).get_error_id() === :no_writing_channel)
 }

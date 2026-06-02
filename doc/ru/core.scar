@@ -1606,11 +1606,15 @@ fn lower?(char) null
 
 #@
 Функция создаёт канал и возвращает его вход и выход.
+В канале будет аллоцирована память под 'cap' элементов (память увеличивается при необходимости).
 
 signature:
-fn () [box in:@channel, out:@channel]
+fn (cap:@int) [box in:@channel, out:@channel]
+
+error:
+:out_of_bounds - если cap < 1.
 @#
-fn make_channel() null
+fn make_channel(cap) null
 
 #@
 Функция применяет 'func' к каждому элементу 'container'.

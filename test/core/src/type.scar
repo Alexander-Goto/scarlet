@@ -44,7 +44,7 @@ fn test__type() {
      test([array].type() === "core.array")
      test(rnd_string_array().type() === "core.array")
      test(thread(fn () null).type() === "core.thread")
-     test(make_channel()[0].type() === "core.channel")
+     test(make_channel(1)[0].type() === "core.channel")
 
      test(to_const__type(-0.49).type() === "main.type")
      test(to_custom_const__type(-0.49).type() === "main.custom")

@@ -1,5 +1,14 @@
-fn ir__core_fn_make_channel(exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
-     let code = new (exp:name):text => _ ++ "()"
+fn ir__core_fn_make_channel(exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last) {
+     let [box cap, exp_data, ir, final_data, dependencies, src_gconsts] =
+          exp:args.first().to_operand(last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, false, false, false, true)
 
-     ir__fn_call("McoreFNmake_channel", [array], code, [set "box"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+     let code = new (exp:name):text => _ ++ ("(" ++ cap:code:text ++ ")")
+
+     if cap:comptime_val:type =/= "int"
+          cap.maybe_has_type!("int")
+     else if cap:comptime_val:value < 1
+          error__out_of_bounds(cap:code)
+     else null
+
+     ir__fn_call("McoreFNmake_channel", [array cap], code, if cap:comptime_val:type === "int"; [set "box"] else [set "box", "error"], exp_data, ir, final_data, dependencies, src_gconsts, is_last)
 }

@@ -166,7 +166,7 @@ fn ir__core_fn_call(
      case "McoreFNloop":
           ir__core_fn_loop(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
      case "McoreFNmake_channel":
-          ir__core_fn_make_channel(fn_exp, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
+          ir__core_fn_make_channel(fn_exp, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
      case "McoreFNmap_with_state", "McoreFNmap_kv_with_state":
           ir__core_fn_map_with_state_map_kv_with_state(fn_exp, fn_ir_name, last_use_ids, contexts, lambdas_data, unused_def_ids, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
      case "McoreFNmax", "McoreFNmin":

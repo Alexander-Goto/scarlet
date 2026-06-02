@@ -51,7 +51,7 @@ fn to_error_custom_const__print(arg) custom__create(
 
 `noinline`
 fn test__print() {
-     let [box in, out] = make_channel()
+     let [box in, out] = make_channel(1)
 
      test(in.to_const__print().print().null?())
      test(time_limit_pop(out, 0) === "print")

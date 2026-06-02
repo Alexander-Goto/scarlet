@@ -182,7 +182,7 @@ fn test__in?() {
      test((_ ++ heap_string()).scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
      test([breaker heap_string()].scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
      test(thread(fn() null).scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
-     test(make_channel()[0].scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
+     test(make_channel(1)[0].scarlet__erase_info().in?(heap_table()).get_error_id() === :invalid_type)
 
      test(heap_string().in?("").get_error_id() === :invalid_type)
      test(heap_string().in?(heap_string()).get_error_id() === :invalid_type)

@@ -491,7 +491,7 @@ fn test__split() {
      test([array].init(10).split([box heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
      test([array].init(10).split([breaker heap_string()].scarlet__erase_info()).get_error_id() === :invalid_type)
      test([array].init(10).split(thread(fn() null).scarlet__erase_info()).get_error_id() === :invalid_type)
-     test([array].init(10).split(make_channel()[0].scarlet__erase_info()).get_error_id() === :invalid_type)
+     test([array].init(10).split(make_channel(1)[0].scarlet__erase_info()).get_error_id() === :invalid_type)
 
      test(to_broken_array__split([array]).split(heap_string()).get_error_id() === :invalid_type)
      test(to_broken_custom_array__split([array]).split(heap_string()).get_error_id() === :invalid_type)

@@ -1606,11 +1606,15 @@ fn lower?(char) null
 
 #@
 The function creates a channel and returns its input and output.
+The channel allocates memory for cap elements (growing when necessary).
 
 signature:
-fn () [box in:@channel, out:@channel]
+fn (cap:@int) [box in:@channel, out:@channel]
+
+error:
+:out_of_bounds - if cap < 1.
 @#
-fn make_channel() null
+fn make_channel(cap) null
 
 #@
 The function applies 'func' to each element of 'container'.
