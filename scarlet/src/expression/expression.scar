@@ -230,7 +230,7 @@ fn (
      dependencies:     @t_dependencies
      src_gconsts:      [table name:@string = @t_src_gconst]
      is_last:          @bool
-     is_linear_alloc:    @bool
+     is_linear_alloc:  @bool
      allow_holder:     @bool
      is_first_in_chain @bool
 ) [box operand:@t_operand, $exp_data, $ir, $final_data, $dependencies, $src_gconsts]

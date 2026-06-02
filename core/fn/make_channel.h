@@ -12,7 +12,7 @@ core t_any McoreFNmake_channel(t_thrd_data* const thrd_data, const t_any*) {
 
      t_channel* const channel = aligned_alloc(alignof(t_channel), sizeof(t_channel));
      *channel                 = (const t_channel) {
-          .main_ref_cnt    = 2,
+          .main_ref_cnt      = 2,
           .writers_len       = 1,
           .readers_len       = 1,
           .waiting_thrds_len = 0,
@@ -25,15 +25,15 @@ core t_any McoreFNmake_channel(t_thrd_data* const thrd_data, const t_any*) {
      mtx_init(&channel->mtx.mtx, mtx_plain);
      cnd_init(&channel->cnd);
 
-     t_channel_ptr* const in_channel_ptr  = aligned_alloc(alignof(t_channel_ptr), sizeof(t_channel_ptr));
-     *in_channel_ptr                      = (const t_channel_ptr) {
+     t_channel_ptr* const in_channel_ptr = aligned_alloc(alignof(t_channel_ptr), sizeof(t_channel_ptr));
+     *in_channel_ptr                     = (const t_channel_ptr) {
           .local_ref_cnt = 1,
-          .channel         = channel,
+          .channel       = channel,
      };
      t_channel_ptr* const out_channel_ptr = aligned_alloc(alignof(t_channel_ptr), sizeof(t_channel_ptr));
-     *out_channel_ptr                      = (const t_channel_ptr) {
+     *out_channel_ptr                     = (const t_channel_ptr) {
           .local_ref_cnt = 1,
-          .channel         = channel,
+          .channel       = channel,
      };
 
      t_any const in  = channel__set_write_flag((const t_any){.structure = {.value = (u64)in_channel_ptr, .type = tid__channel}}, true);
