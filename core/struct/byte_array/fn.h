@@ -2809,9 +2809,9 @@ static t_any look_part_from_end_in__long_byte_array__byte_array__own(t_thrd_data
           result = idx == (u64)-1 ? null : (const t_any){.structure = {.value = idx, .type = tid__int}};
      } else {
           u64       remain_bytes       = array_len - part_len + 2;
-          u16 const part_first_2_chars = *(const ua_u16*)part_bytes;
+          u16 const part_first_2_bytes = *(const ua_u16*)part_bytes;
           while (true) {
-               u64 const part_in_array_idx = look_2_bytes_from_end(array_bytes, remain_bytes, part_first_2_chars);
+               u64 const part_in_array_idx = look_2_bytes_from_end(array_bytes, remain_bytes, part_first_2_bytes);
 
                if (part_in_array_idx == (u64)-1) {
                     result = null;
@@ -2940,9 +2940,9 @@ static t_any look_part_in__long_byte_array__byte_array__own(t_thrd_data* const t
      } else {
           u64       idx                = 0;
           u64       edge               = array_len - part_len + 2;
-          u16 const part_first_2_chars = *(const ua_u16*)part_bytes;
+          u16 const part_first_2_bytes = *(const ua_u16*)part_bytes;
           while (true) {
-               u64 const part_in_array_offset = look_2_bytes_from_begin(&array_bytes[idx], edge - idx, part_first_2_chars);
+               u64 const part_in_array_offset = look_2_bytes_from_begin(&array_bytes[idx], edge - idx, part_first_2_bytes);
                if (part_in_array_offset == (u64)-1) {
                     result = null;
                     break;
