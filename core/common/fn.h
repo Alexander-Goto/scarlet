@@ -1246,3 +1246,10 @@ static void scar__move(void* const mem, u64 from, u64 to, u64 len) {
           to = from < to ? to - len : to + len;
      }
 }
+
+[[clang::always_inline]]
+static bool rabin_karp_triger(u64 const part_len, u64 const array_len, u64 const item_size) {
+     assert(part_len <= array_len);
+
+     return (array_len - part_len) * item_size > 256 && part_len * item_size > 64;
+}

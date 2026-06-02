@@ -3863,7 +3863,7 @@ static inline t_any look_part_from_end_in__long_string__string__own(t_thrd_data*
      t_any result;
      if (part_len > string_len)
           result = null;
-     else if (part_len >= 341 && string_len >= 2730) {
+     else if (rabin_karp_triger(part_len, string_len, 3)) {
           u64 const idx = look_string_part_from_end__rabin_karp(string_chars, string_len * 3, part_chars, part_len * 3);
           result = idx == (u64)-1 ? null : (const t_any){.structure = {.value = idx, .type = tid__int}};
      } else {
@@ -4006,7 +4006,7 @@ static inline t_any look_part_in__long_string__string__own(t_thrd_data* const th
      t_any result;
      if (part_len > string_len)
           result = null;
-     else if (part_len >= 341 && string_len >= 2730) {
+     else if (rabin_karp_triger(part_len, string_len, 3)) {
           u64 const idx = look_string_part_from_begin__rabin_karp(string_chars, string_len * 3, part_chars, part_len * 3);
           result = idx == (u64)-1 ? null : (const t_any){.structure = {.value = idx, .type = tid__int}};
      } else {
@@ -5746,7 +5746,7 @@ static inline t_any string__replace_part__own(t_thrd_data* const thrd_data, t_an
 
                     break;
                }
-          } else if (old_part_len >= 341 && tail_len >= 2730)
+          } else if (rabin_karp_triger(old_part_len, tail_len, 3))
                occurrence_offset = look_string_part_from_begin__rabin_karp(&string_chars[string_idx * 3], tail_len * 3, old_part_chars, old_part_len * 3);
           else {
                u64       string_idx_offset = 0;
@@ -6771,7 +6771,7 @@ static t_any long_string__split_by_part__own(t_thrd_data* const thrd_data, t_any
                     separator_idx += string_idx;
                     break;
                }
-          } else if (separator_len >= 341 && string_remain_len >= 2730) {
+          } else if (rabin_karp_triger(separator_len, string_remain_len, 3)) {
                separator_idx = look_string_part_from_begin__rabin_karp(&string_chars[part_first_idx * 3], string_remain_len * 3, separator_chars, separator_len * 3);
                separator_idx = separator_idx == -1 ? string_len : part_first_idx + separator_idx;
           } else {

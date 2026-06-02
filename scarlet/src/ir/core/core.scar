@@ -1359,6 +1359,11 @@ memcpy_le_256(block_2,buffer,remain_bytes);
 to=from<to?to-len:to+len;
 }
 }
+[[clang::always_inline]]
+static bool rabin_karp_triger(u64 const part_len,u64 const array_len,u64 const item_size){
+assert(part_len<=array_len);
+return(array_len-part_len)*item_size>256&&part_len*item_size>64;
+}
 //auto-generated:begin//
 typedef u32 v_char __attribute__((ext_vector_type(32)));
 typedef i32 v_char_offset __attribute__((ext_vector_type(32)));
@@ -8308,7 +8313,7 @@ if(part_ref_cnt>1)set_ref_cnt(part,part_ref_cnt-1);
 t_any result;
 if(part_len>string_len)
 result=null;
-else if(part_len>=341&&string_len>=2730){
+else if(rabin_karp_triger(part_len,string_len,3)){
 u64 const idx=look_string_part_from_end__rabin_karp(string_chars,string_len*3,part_chars,part_len*3);
 result=idx==(u64)-1?null:(const t_any){.structure={.value=idx,.type=tid__int}};
 }else{
@@ -8427,7 +8432,7 @@ if(part_ref_cnt>1)set_ref_cnt(part,part_ref_cnt-1);
 t_any result;
 if(part_len>string_len)
 result=null;
-else if(part_len>=341&&string_len>=2730){
+else if(rabin_karp_triger(part_len,string_len,3)){
 u64 const idx=look_string_part_from_begin__rabin_karp(string_chars,string_len*3,part_chars,part_len*3);
 result=idx==(u64)-1?null:(const t_any){.structure={.value=idx,.type=tid__int}};
 }else{
@@ -9869,7 +9874,7 @@ occurrence_offset+=string_idx_offset;
 string_idx_offset=occurrence_offset+1;
 break;
 }
-}else if(old_part_len>=341&&tail_len>=2730)
+}else if(rabin_karp_triger(old_part_len,tail_len,3))
 occurrence_offset=look_string_part_from_begin__rabin_karp(&string_chars[string_idx*3],tail_len*3,old_part_chars,old_part_len*3);
 else{
 u64 string_idx_offset=0;
@@ -10716,7 +10721,7 @@ break;
 separator_idx+=string_idx;
 break;
 }
-}else if(separator_len>=341&&string_remain_len>=2730){
+}else if(rabin_karp_triger(separator_len,string_remain_len,3)){
 separator_idx=look_string_part_from_begin__rabin_karp(&string_chars[part_first_idx*3],string_remain_len*3,separator_chars,separator_len*3);
 separator_idx=separator_idx==-1?string_len:part_first_idx+separator_idx;
 }else{
@@ -19963,7 +19968,7 @@ if(part_ref_cnt>1)set_ref_cnt(part,part_ref_cnt-1);
 t_any result;
 if(part_len>array_len)
 result=null;
-else if(part_len>=1024&&array_len>=8192){
+else if(rabin_karp_triger(part_len,array_len,1)){
 u64 const idx=look_byte_part_from_end__rabin_karp(array_bytes,array_len,part_bytes,part_len);
 result=idx==(u64)-1?null:(const t_any){.structure={.value=idx,.type=tid__int}};
 }else{
@@ -20071,7 +20076,7 @@ if(part_ref_cnt>1)set_ref_cnt(part,part_ref_cnt-1);
 t_any result;
 if(part_len>array_len)
 result=null;
-else if(part_len>=1024&&array_len>=8192){
+else if(rabin_karp_triger(part_len,array_len,1)){
 u64 const idx=look_byte_part_from_end__rabin_karp(array_bytes,array_len,part_bytes,part_len);
 result=idx==(u64)-1?null:(const t_any){.structure={.value=idx,.type=tid__int}};
 }else{
@@ -21020,7 +21025,7 @@ occurrence_offset+=array_idx_offset;
 array_idx_offset=occurrence_offset+1;
 break;
 }
-}else if(old_part_len>=1024&&tail_len>=8192)
+}else if(rabin_karp_triger(old_part_len,tail_len,1))
 occurrence_offset=look_byte_part_from_begin__rabin_karp(&array_bytes[array_idx],tail_len,old_part_bytes,old_part_len);
 else{
 u64 array_idx_offset=0;
@@ -21792,7 +21797,7 @@ break;
 separator_idx+=array_idx;
 break;
 }
-}else if(separator_len>=1024&&array_remain_len>=8192){
+}else if(rabin_karp_triger(separator_len,array_remain_len,1)){
 separator_idx=look_byte_part_from_begin__rabin_karp(&array_bytes[part_first_idx],array_remain_len,separator_bytes,separator_len);
 separator_idx=separator_idx==-1?array_len:part_first_idx+separator_idx;
 }else{

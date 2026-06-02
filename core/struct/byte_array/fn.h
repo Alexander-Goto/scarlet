@@ -2804,7 +2804,7 @@ static t_any look_part_from_end_in__long_byte_array__byte_array__own(t_thrd_data
      t_any result;
      if (part_len > array_len)
           result = null;
-     else if (part_len >= 1024 && array_len >= 8192) {
+     else if (rabin_karp_triger(part_len, array_len, 1)) {
           u64 const idx = look_byte_part_from_end__rabin_karp(array_bytes, array_len, part_bytes, part_len);
           result = idx == (u64)-1 ? null : (const t_any){.structure = {.value = idx, .type = tid__int}};
      } else {
@@ -2934,7 +2934,7 @@ static t_any look_part_in__long_byte_array__byte_array__own(t_thrd_data* const t
      t_any result;
      if (part_len > array_len)
           result = null;
-     else if (part_len >= 1024 && array_len >= 8192) {
+     else if (rabin_karp_triger(part_len, array_len, 1)) {
           u64 const idx = look_byte_part_from_end__rabin_karp(array_bytes, array_len, part_bytes, part_len);
           result = idx == (u64)-1 ? null : (const t_any){.structure = {.value = idx, .type = tid__int}};
      } else {
@@ -4112,7 +4112,7 @@ static t_any byte_array__replace_part__own(t_thrd_data* const thrd_data, t_any c
 
                     break;
                }
-          } else if (old_part_len >= 1024 && tail_len >= 8192)
+          } else if (rabin_karp_triger(old_part_len, tail_len, 1))
                occurrence_offset = look_byte_part_from_begin__rabin_karp(&array_bytes[array_idx], tail_len, old_part_bytes, old_part_len);
           else {
                u64       array_idx_offset       = 0;
@@ -5047,7 +5047,7 @@ static t_any long_byte_array__split_by_part__own(t_thrd_data* const thrd_data, t
                     separator_idx += array_idx;
                     break;
                }
-          } else if (separator_len >= 1024 && array_remain_len >= 8192) {
+          } else if (rabin_karp_triger(separator_len, array_remain_len, 1)) {
                separator_idx = look_byte_part_from_begin__rabin_karp(&array_bytes[part_first_idx], array_remain_len, separator_bytes, separator_len);
                separator_idx = separator_idx == -1 ? array_len : part_first_idx + separator_idx;
           } else {
