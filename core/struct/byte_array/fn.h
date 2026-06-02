@@ -4115,10 +4115,11 @@ static t_any byte_array__replace_part__own(t_thrd_data* const thrd_data, t_any c
           } else if (old_part_len >= 1024 && tail_len >= 8192)
                occurrence_offset = look_byte_part_from_begin__rabin_karp(&array_bytes[array_idx], tail_len, old_part_bytes, old_part_len);
           else {
-               u64       array_idx_offset = 0;
-               u64 const edge             = tail_len - old_part_len + 2;
+               u64       array_idx_offset       = 0;
+               u64 const edge                   = tail_len - old_part_len + 2;
+               u16 const old_part_first_2_bytes = *(const ua_u16*)old_part_bytes;
                while (true) {
-                    occurrence_offset = look_2_bytes_from_begin(&array_bytes[array_idx + array_idx_offset], edge - array_idx_offset, *(const ua_u16*)old_part_bytes);
+                    occurrence_offset = look_2_bytes_from_begin(&array_bytes[array_idx + array_idx_offset], edge - array_idx_offset, old_part_first_2_bytes);
                     if (occurrence_offset == (u64)-1) break;
 
                     occurrence_offset += array_idx_offset;
@@ -5050,9 +5051,10 @@ static t_any long_byte_array__split_by_part__own(t_thrd_data* const thrd_data, t
                separator_idx = look_byte_part_from_begin__rabin_karp(&array_bytes[part_first_idx], array_remain_len, separator_bytes, separator_len);
                separator_idx = separator_idx == -1 ? array_len : part_first_idx + separator_idx;
           } else {
-               u64 array_idx = part_first_idx;
+               u64 array_idx                     = part_first_idx;
+               u16 const separator_first_2_bytes = *(const ua_u16*)separator_bytes;
                while (true) {
-                    separator_idx = look_2_bytes_from_begin(&array_bytes[array_idx], edge - array_idx, *(const ua_u16*)separator_bytes);
+                    separator_idx = look_2_bytes_from_begin(&array_bytes[array_idx], edge - array_idx, separator_first_2_bytes);
                     if (separator_idx == (u64)-1) {
                          separator_idx = array_len;
                          break;
