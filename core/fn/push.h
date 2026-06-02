@@ -68,7 +68,7 @@ core t_any McoreFNpush(t_thrd_data* const thrd_data, const t_any* const args) {
                memmove(channel->items, &channel->items[channel->idx_of_first_item], channel->items_len * 16);
                channel->idx_of_first_item = 0;
           } else {
-               channel->items_cap = channel->items_cap * 3 / 2;
+               channel->items_cap = array_growth_formula(channel->items_cap);
                channel->items     = aligned_realloc(16, channel->items, channel->items_cap * 16);
           }
      }

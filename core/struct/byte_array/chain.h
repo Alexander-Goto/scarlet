@@ -57,7 +57,7 @@ static t_any byte_array_chain_concat(t_thrd_data* const thrd_data, u64 const arr
      t_any result;
      u8*   result_bytes;
      if (biggest_cap < (i64)result_len) {
-          u64 result_cap  = result_len * 3 / 2;
+          u64 result_cap  = array_growth_formula(result_len);
           result_cap      = result_cap > array_max_len ? array_max_len : result_cap;
           result          = long_byte_array__new(result_cap);
           result_bytes    = slice_array__get_items(result);

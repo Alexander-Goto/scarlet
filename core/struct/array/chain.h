@@ -45,7 +45,7 @@ static t_any array_chain_concat(t_thrd_data* const thrd_data, u64 const arrays_q
      t_any  result;
      t_any* result_items;
      if (biggest_cap < (i64)result_len) {
-          u64 result_cap  = result_len * 3 / 2;
+          u64 result_cap  = array_growth_formula(result_len);
           result_cap      = result_cap > array_max_len ? array_max_len : result_cap;
           result          = array__init(thrd_data, result_cap, core_concat_fn_name);
           result_items    = slice_array__get_items(result);

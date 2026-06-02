@@ -1364,6 +1364,10 @@ static bool rabin_karp_triger(u64 const part_len,u64 const array_len,u64 const i
 assert(part_len<=array_len);
 return(array_len-part_len)*item_size>256&&part_len*item_size>64;
 }
+[[clang::always_inline]]
+static u64 array_growth_formula(u64 const cap){
+return cap<=16?cap*4:(cap<=1024?cap*2:cap*3/2);
+}
 //auto-generated:begin//
 typedef u32 v_char __attribute__((ext_vector_type(32)));
 typedef i32 v_char_offset __attribute__((ext_vector_type(32)));
@@ -3678,7 +3682,7 @@ slice_array__set_len(string,string_len);
 return string;
 }
 if(string_cap==array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
-string_cap=string_cap*3/2+7;
+string_cap=array_growth_formula(string_cap)+7;
 string_cap=string_cap>array_max_len?array_max_len:string_cap;
 string.qwords[0]=(u64)realloc((u8*)string.qwords[0],string_cap*3+16);
 string_chars=slice_array__get_items(string);
@@ -5210,7 +5214,7 @@ u64 const right_len=right_slice_len<=slice_max_len?right_slice_len:right_array_l
 assert(right_len<=slice_max_len||right_slice_offset==0);
 u64 const new_len=left_len+right_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 t_any string;
 if(right_ref_cnt==1){
@@ -5249,7 +5253,7 @@ u64 const left_len=left_slice_len<=slice_max_len?left_slice_len:left_array_len;
 assert(left_len<=slice_max_len||left_slice_offset==0);
 u64 const new_len=left_len+right_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 t_any string;
 if(left_ref_cnt==1){
@@ -5298,7 +5302,7 @@ assert(right_slice_len<=slice_max_len||right_slice_offset==0);
 assert(right_array_cap>=right_array_len);
 u64 const new_len=left_len+right_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 if(left_chars==right_chars){
 if(left_ref_cnt>2)set_ref_cnt(left,left_ref_cnt-2);
@@ -5386,7 +5390,7 @@ u64 const string_len=string_slice_len<=slice_max_len?string_slice_len:string_arr
 assert(string_len<=slice_max_len||string_slice_offset==0);
 u64 const new_len=string_len+1;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 t_any result;
 if(string_ref_cnt==1){
@@ -9900,7 +9904,7 @@ dst_len=0;
 }else if(dst_len+occurrence_offset+new_part_len>dst_cap){
 dst_cap=dst_cap+occurrence_offset+new_part_len;
 if(dst_cap>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
-dst_cap=dst_cap*3/2;
+dst_cap=array_growth_formula(dst_cap);
 dst_cap=dst_cap>array_max_len?array_max_len:dst_cap;
 dst_string.qwords[0]=(u64)realloc((u8*)dst_string.qwords[0],dst_cap*3+16);
 dst_chars=slice_array__get_items(dst_string);
@@ -9961,7 +9965,7 @@ ref_cnt__dec(thrd_data,string);
 return error__out_of_bounds(thrd_data,owner);
 }
 if(current_cap>=minimum_cap)return string;
-u64 new_cap=minimum_cap*3/2;
+u64 new_cap=array_growth_formula(minimum_cap);
 new_cap=new_cap>array_max_len?array_max_len:new_cap;
 if(ref_cnt==1){
 slice_array__set_cap(string,new_cap);
@@ -11126,7 +11130,7 @@ dst_len=idx;
 u64 const new_len=dst_len+chars_in_lower;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
 if(dst_cap<new_len){
-dst_cap=new_len*3/2;
+dst_cap=array_growth_formula(new_len);
 dst_cap=dst_cap<=array_max_len?dst_cap:new_len;
 dst.qwords[0]=(u64)realloc((u8*)dst.qwords[0],dst_cap*3+16);
 dst_chars=slice_array__get_items(dst);
@@ -11227,7 +11231,7 @@ dst_len=idx;
 u64 const new_len=dst_len+chars_in_upper;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
 if(dst_cap<new_len){
-dst_cap=new_len*3/2;
+dst_cap=array_growth_formula(new_len);
 dst_cap=dst_cap<=array_max_len?dst_cap:new_len;
 dst.qwords[0]=(u64)realloc((u8*)dst.qwords[0],dst_cap*3+16);
 dst_chars=slice_array__get_items(dst);
@@ -11725,7 +11729,7 @@ if(ref_cnt==1)free((void*)string.qwords[0]);
 return result;
 }
 if(result_cap==array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum byte array size has been exceeded.\",owner);
-result_cap=result_cap*3/2;
+result_cap=array_growth_formula(result_cap);
 result_cap=result_cap>array_max_len?array_max_len:result_cap;
 result.qwords[0]=(u64)realloc((u8*)result.qwords[0],result_cap+16);
 result_chars=slice_array__get_items(result);
@@ -11848,7 +11852,7 @@ return error__out_of_bounds(thrd_data,owner);
 }
 u64 const new_len=len+1;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 t_any result;
 if(ref_cnt==1){
@@ -11929,7 +11933,7 @@ u64 const part_len=slice_len<=slice_max_len?slice_len:part_array_len;
 assert(slice_len<=slice_max_len||slice_offset==0);
 u64 const new_len=string_len+part_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 u8 offset=0;
 t_any result;
@@ -11980,7 +11984,7 @@ u8 const part_len=short_string__get_len(part);
 if(part_len==0)return string;
 u64 const new_len=string_len+part_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 t_any result;
 if(string_ref_cnt==1){
@@ -12037,7 +12041,7 @@ assert(part_slice_len<=slice_max_len||part_slice_offset==0);
 assert(part_array_cap>=part_array_len);
 u64 const new_len=string_len+part_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum string size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 if(string_chars==part_chars){
 if(string_ref_cnt>2)set_ref_cnt(string,string_ref_cnt-2);
@@ -12290,7 +12294,7 @@ assert(left_slice_len<=slice_max_len||left_slice_offset==0);
 assert(left_array_cap>=left_array_len);
 u64 const new_len=left_len+right_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum array size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 if(left_items==right_items){
 if(left_ref_cnt>2)set_ref_cnt(left,left_ref_cnt-2);
@@ -12680,7 +12684,7 @@ u64 const len=slice_len<=slice_max_len?slice_len:array_len;
 t_any new_array=slice__set_metadata(array,0,len<slice_max_len?len+1:slice_max_len+1);
 assert(slice_len<=slice_max_len||slice_offset==0);
 if(len==array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum array size has been exceeded.\",owner);
-u64 new_cap=(len+1)*3/2;
+u64 new_cap=array_growth_formula(len+1);
 new_cap=new_cap<8?7:(new_cap<=array_max_len?new_cap:len+1);
 if(ref_cnt==1){
 u64 const array_cap=slice_array__get_cap(array);
@@ -14462,7 +14466,7 @@ dst_len=0;
 dst_cap=slice_array__get_cap(dst_array);
 }else if(dst_new_len>dst_cap){
 if(dst_new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum array size has been exceeded.\",owner);
-dst_cap=dst_new_len*3/2;
+dst_cap=array_growth_formula(dst_new_len);
 dst_cap=dst_cap>array_max_len?dst_new_len:dst_cap;
 dst_array.qwords[0]=(u64)aligned_realloc(16,(t_any*)dst_array.qwords[0],(dst_cap+1)*16);
 dst_items=slice_array__get_items(dst_array);
@@ -14537,7 +14541,7 @@ ref_cnt__dec(thrd_data,array);
 return error__out_of_bounds(thrd_data,owner);
 }
 if(current_cap>=minimum_cap)return array;
-u64 new_cap=minimum_cap*3/2;
+u64 new_cap=array_growth_formula(minimum_cap);
 new_cap=new_cap>array_max_len?array_max_len:new_cap;
 if(ref_cnt==1){
 slice_array__set_cap(array,new_cap);
@@ -15928,7 +15932,7 @@ return error__out_of_bounds(thrd_data,owner);
 u64 const new_len=len+1;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum array size has been exceeded.\",owner);
 if(ref_cnt==1){
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 u64 const cap=slice_array__get_cap(array);
 slice_array__set_len(array,new_len);
@@ -16015,7 +16019,7 @@ return array;
 }
 u64 const new_len=array_len+part_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum array size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 if(array_items==part_items){
 if(array_ref_cnt>2)set_ref_cnt(array,array_ref_cnt-2);
@@ -17806,7 +17810,7 @@ u64 const new_len=left_len+right_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum byte array size has been exceeded.\",owner);
 t_any array;
 if(right_ref_cnt==1){
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 u64 const right_array_cap=slice_array__get_cap(right);
 array=right;
@@ -17846,7 +17850,7 @@ u64 const new_len=left_len+right_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum byte array size has been exceeded.\",owner);
 t_any array;
 if(left_ref_cnt==1){
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 u64 const left_array_cap=slice_array__get_cap(left);
 array=left;
@@ -17895,7 +17899,7 @@ assert(right_slice_len<=slice_max_len||right_slice_offset==0);
 assert(right_array_cap>=right_array_len);
 u64 const new_len=left_len+right_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum byte array size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 if(left_bytes==right_bytes){
 if(left_ref_cnt>2)set_ref_cnt(left,left_ref_cnt-2);
@@ -21052,7 +21056,7 @@ dst_cap=slice_array__get_cap(dst_array);
 }else if(dst_len+occurrence_offset+new_part_len>dst_cap){
 dst_cap=dst_cap+occurrence_offset+new_part_len;
 if(dst_cap>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum byte array size has been exceeded.\",owner);
-dst_cap=dst_cap*3/2;
+dst_cap=array_growth_formula(dst_cap);
 dst_cap=dst_cap>array_max_len?array_max_len:dst_cap;
 dst_array.qwords[0]=(u64)realloc((u8*)dst_array.qwords[0],dst_cap+16);
 dst_bytes=slice_array__get_items(dst_array);
@@ -21114,7 +21118,7 @@ ref_cnt__dec(thrd_data,array);
 return error__out_of_bounds(thrd_data,owner);
 }
 if(current_cap>=minimum_cap)return array;
-u64 new_cap=minimum_cap*3/2;
+u64 new_cap=array_growth_formula(minimum_cap);
 new_cap=new_cap>array_max_len?array_max_len:new_cap;
 if(ref_cnt==1){
 slice_array__set_cap(array,new_cap);
@@ -22187,7 +22191,7 @@ return error__out_of_bounds(thrd_data,owner);
 }
 u64 const new_len=len+1;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum byte array size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 t_any result;
 if(ref_cnt==1){
@@ -22268,7 +22272,7 @@ u64 const part_len=slice_len<=slice_max_len?slice_len:part_array_len;
 assert(slice_len<=slice_max_len||slice_offset==0);
 u64 const new_len=array_len+part_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum byte array size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 t_any result;
 if(part_ref_cnt==1){
@@ -22320,7 +22324,7 @@ u8 const part_len=short_byte_array__get_len(part);
 if(part_len==0)return array;
 u64 const new_len=array_len+part_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum byte array size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 t_any result;
 if(array_ref_cnt==1){
@@ -22379,7 +22383,7 @@ assert(part_slice_len<=slice_max_len||part_slice_offset==0);
 assert(part_array_cap>=part_array_len);
 u64 const new_len=array_len+part_len;
 if(new_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum byte array size has been exceeded.\",owner);
-u64 new_cap=new_len*3/2;
+u64 new_cap=array_growth_formula(new_len);
 new_cap=new_cap<=array_max_len?new_cap:new_len;
 if(array_bytes==part_bytes){
 if(array_ref_cnt>2)set_ref_cnt(array,array_ref_cnt-2);
@@ -30100,7 +30104,7 @@ static void bytes__prepare_to_write(t_thrd_data*const thrd_data,t_serialized_byt
 u64 const max_len=bytes->len+added_size;
 if(max_len>array_max_len+16)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"The maximum byte array size has been exceeded.\",owner);
 if(max_len>bytes->cap){
-bytes->cap=max_len*3/2;
+bytes->cap=array_growth_formula(max_len);
 bytes->cap=bytes->cap>array_max_len+16?max_len:bytes->cap;
 bytes->bytes=realloc(bytes->bytes,bytes->cap);
 }
@@ -30388,7 +30392,7 @@ u32 const slice_len=slice__get_len(bytes);
 u64 const array_len=slice_len<=slice_max_len?slice_len:slice_array__get_len(bytes);
 const u8*const array_bytes=&((const u8*)slice_array__get_items(bytes))[slice_offset];
 serialized_bytes.len=array_len+16;
-serialized_bytes.cap=array_len*3/2+16;
+serialized_bytes.cap=array_growth_formula(array_len)+16;
 serialized_bytes.bytes=malloc(serialized_bytes.cap);
 memcpy(&serialized_bytes.bytes[16],array_bytes,array_len);
 }
@@ -37439,7 +37443,7 @@ if(channel->idx_of_first_item!=0){
 memmove(channel->items,&channel->items[channel->idx_of_first_item],channel->items_len*16);
 channel->idx_of_first_item=0;
 }else{
-channel->items_cap=channel->items_cap*3/2;
+channel->items_cap=array_growth_formula(channel->items_cap);
 channel->items=aligned_realloc(16,channel->items,channel->items_cap*16);
 }
 }
@@ -39717,7 +39721,7 @@ mtx_lock(&sub_thrds_mtx.mtx);
 new_thrd_data->thrd_id=new_thrd_id;
 new_thrd_id+=1;
 if(sub_thrds_len==sub_thrds_cap){
-sub_thrds_cap=(sub_thrds_len+1)*3/2;
+sub_thrds_cap=array_growth_formula(sub_thrds_len+1);
 sub_thrds_data=realloc(sub_thrds_data,sub_thrds_cap*sizeof(t_thrd_data*));
 }
 if(sub_thrds_len!=active_sub_thrds){
@@ -42233,7 +42237,7 @@ return empty_array;
 t_any result;
 t_any*result_items;
 if(biggest_cap<(i64)result_len){
-u64 result_cap=result_len*3/2;
+u64 result_cap=array_growth_formula(result_len);
 result_cap=result_cap>array_max_len?array_max_len:result_cap;
 result=array__init(thrd_data,result_cap,core_concat_fn_name);
 result_items=slice_array__get_items(result);
@@ -42325,7 +42329,7 @@ if(result_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"
 t_any result;
 u8*result_bytes;
 if(biggest_cap<(i64)result_len){
-u64 result_cap=result_len*3/2;
+u64 result_cap=array_growth_formula(result_len);
 result_cap=result_cap>array_max_len?array_max_len:result_cap;
 result=long_byte_array__new(result_cap);
 result_bytes=slice_array__get_items(result);
@@ -42512,7 +42516,7 @@ if(result_len>array_max_len)[[clang::unlikely]]fail_with_call_stack(thrd_data,\"
 t_any result;
 u8*result_chars;
 if(biggest_cap<(i64)result_len){
-u64 result_cap=result_len*3/2;
+u64 result_cap=array_growth_formula(result_len);
 result_cap=result_cap>array_max_len?array_max_len:result_cap;
 result=long_string__new(result_cap);
 result_chars=slice_array__get_items(result);

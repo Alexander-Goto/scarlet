@@ -109,7 +109,7 @@ core t_any McoreFNthread(t_thrd_data* const thrd_data, const t_any* const args) 
      new_thrd_data->thrd_id = new_thrd_id;
      new_thrd_id           += 1;
      if (sub_thrds_len == sub_thrds_cap) {
-          sub_thrds_cap  = (sub_thrds_len + 1) * 3 / 2;
+          sub_thrds_cap  = array_growth_formula(sub_thrds_len + 1);
           sub_thrds_data = realloc(sub_thrds_data, sub_thrds_cap * sizeof(t_thrd_data*));
      }
 

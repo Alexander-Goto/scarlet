@@ -61,7 +61,7 @@ static inline t_any concat__short_str__long_str__own(t_thrd_data* const thrd_dat
      u64 const new_len = left_len + right_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      t_any string;
@@ -110,7 +110,7 @@ static inline t_any concat__long_str__short_str__own(t_thrd_data* const thrd_dat
      u64 const new_len = left_len + right_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      t_any string;
@@ -170,7 +170,7 @@ static inline t_any concat__long_str__long_str__own(t_thrd_data* const thrd_data
      u64 const new_len = left_len + right_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      if (left_chars == right_chars) {
@@ -277,7 +277,7 @@ static inline t_any long_string__append__own(t_thrd_data* const thrd_data, t_any
      u64 const new_len = string_len + 1;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      t_any result;
@@ -5776,7 +5776,7 @@ static inline t_any string__replace_part__own(t_thrd_data* const thrd_data, t_an
                     dst_cap = dst_cap + occurrence_offset + new_part_len;
                     if (dst_cap > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
-                    dst_cap              = dst_cap * 3 / 2;
+                    dst_cap              = array_growth_formula(dst_cap);
                     dst_cap              = dst_cap > array_max_len ? array_max_len : dst_cap;
                     dst_string.qwords[0] = (u64)realloc((u8*)dst_string.qwords[0], dst_cap * 3 + 16);
                     dst_chars            = slice_array__get_items(dst_string);
@@ -5851,7 +5851,7 @@ static t_any long_string__reserve__own(t_thrd_data* const thrd_data, t_any strin
 
      if (current_cap >= minimum_cap) return string;
 
-     u64 new_cap = minimum_cap * 3 / 2;
+     u64 new_cap = array_growth_formula(minimum_cap);
      new_cap     = new_cap > array_max_len ? array_max_len : new_cap;
 
      if (ref_cnt == 1) {
@@ -7255,7 +7255,7 @@ static t_any long_string__to_lower__own(t_thrd_data* const thrd_data, t_any cons
                if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
                if (dst_cap < new_len) {
-                    dst_cap       = new_len * 3 / 2;
+                    dst_cap       = array_growth_formula(new_len);
                     dst_cap       = dst_cap <= array_max_len ? dst_cap : new_len;
                     dst.qwords[0] = (u64)realloc((u8*)dst.qwords[0], dst_cap * 3 + 16);
                     dst_chars     = slice_array__get_items(dst);
@@ -7377,7 +7377,7 @@ static t_any long_string__to_upper__own(t_thrd_data* const thrd_data, t_any cons
                if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
                if (dst_cap < new_len) {
-                    dst_cap       = new_len * 3 / 2;
+                    dst_cap       = array_growth_formula(new_len);
                     dst_cap       = dst_cap <= array_max_len ? dst_cap : new_len;
                     dst.qwords[0] = (u64)realloc((u8*)dst.qwords[0], dst_cap * 3 + 16);
                     dst_chars     = slice_array__get_items(dst);
@@ -7973,7 +7973,7 @@ static t_any str_to_ustr__own(t_thrd_data* const thrd_data, t_any const string, 
 
           if (result_cap == array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum byte array size has been exceeded.", owner);
 
-          result_cap       = result_cap * 3 / 2;
+          result_cap       = array_growth_formula(result_cap);
           result_cap       = result_cap > array_max_len ? array_max_len : result_cap;
           result.qwords[0] = (u64)realloc((u8*)result.qwords[0], result_cap + 16);
           result_chars     = slice_array__get_items(result);
@@ -8122,7 +8122,7 @@ static t_any long_string__insert_to__own(t_thrd_data* const thrd_data, t_any con
      u64 const new_len = len + 1;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      t_any result;
@@ -8221,7 +8221,7 @@ static t_any insert_part_to__short_str__long_str__own(t_thrd_data* const thrd_da
      u64 const new_len = string_len + part_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      u8    offset = 0;
@@ -8285,7 +8285,7 @@ static t_any insert_part_to__long_str__short_str__own(t_thrd_data* const thrd_da
      u64 const new_len = string_len + part_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      t_any result;
@@ -8355,7 +8355,7 @@ static t_any insert_part_to__long_str__long_str__own(t_thrd_data* const thrd_dat
      u64 const new_len = string_len + part_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      if (string_chars == part_chars) {

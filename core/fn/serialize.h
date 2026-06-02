@@ -60,7 +60,7 @@ static void bytes__prepare_to_write(t_thrd_data* const thrd_data, t_serialized_b
      if (max_len > array_max_len + 16) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum byte array size has been exceeded.", owner);
 
      if (max_len > bytes->cap) {
-          bytes->cap   = max_len * 3 / 2;
+          bytes->cap   = array_growth_formula(max_len);
           bytes->cap   = bytes->cap > array_max_len + 16 ? max_len : bytes->cap;
           bytes->bytes = realloc(bytes->bytes, bytes->cap);
      }
@@ -394,7 +394,7 @@ core t_any McoreFNserialize(t_thrd_data* const thrd_data, const t_any* const arg
           const u8* const array_bytes  = &((const u8*)slice_array__get_items(bytes))[slice_offset];
 
           serialized_bytes.len   = array_len + 16;
-          serialized_bytes.cap   = array_len * 3 / 2 + 16;
+          serialized_bytes.cap   = array_growth_formula(array_len) + 16;
           serialized_bytes.bytes = malloc(serialized_bytes.cap);
 
           memcpy(&serialized_bytes.bytes[16], array_bytes, array_len);

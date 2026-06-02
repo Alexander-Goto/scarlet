@@ -1253,3 +1253,8 @@ static bool rabin_karp_triger(u64 const part_len, u64 const array_len, u64 const
 
      return (array_len - part_len) * item_size > 256 && part_len * item_size > 64;
 }
+
+[[clang::always_inline]]
+static u64 array_growth_formula(u64 const cap) {
+     return cap <= 16 ? cap * 4 : (cap <= 1024 ? cap * 2 : cap * 3 / 2);
+}

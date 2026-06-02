@@ -105,7 +105,7 @@ static inline t_any concat__short_byte_array__long_byte_array__own(t_thrd_data* 
 
      t_any array;
      if (right_ref_cnt == 1) {
-          u64 new_cap = new_len * 3 / 2;
+          u64 new_cap = array_growth_formula(new_len);
           new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
           u64 const right_array_cap = slice_array__get_cap(right);
@@ -156,7 +156,7 @@ static inline t_any concat__long_byte_array__short_byte_array__own(t_thrd_data* 
 
      t_any array;
      if (left_ref_cnt == 1) {
-          u64 new_cap = new_len * 3 / 2;
+          u64 new_cap = array_growth_formula(new_len);
           new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
           u64 const left_array_cap = slice_array__get_cap(left);
@@ -216,7 +216,7 @@ static inline t_any concat__long_byte_array__long_byte_array__own(t_thrd_data* c
      u64 const new_len = left_len + right_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum byte array size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      if (left_bytes == right_bytes) {
@@ -4143,7 +4143,7 @@ static t_any byte_array__replace_part__own(t_thrd_data* const thrd_data, t_any c
                     dst_cap = dst_cap + occurrence_offset + new_part_len;
                     if (dst_cap > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum byte array size has been exceeded.", owner);
 
-                    dst_cap = dst_cap * 3 / 2;
+                    dst_cap = array_growth_formula(dst_cap);
                     dst_cap = dst_cap > array_max_len ? array_max_len : dst_cap;
 
                     dst_array.qwords[0] = (u64)realloc((u8*)dst_array.qwords[0], dst_cap + 16);
@@ -4222,7 +4222,7 @@ static t_any long_byte_array__reserve__own(t_thrd_data* const thrd_data, t_any a
 
      if (current_cap >= minimum_cap) return array;
 
-     u64 new_cap = minimum_cap * 3 / 2;
+     u64 new_cap = array_growth_formula(minimum_cap);
      new_cap     = new_cap > array_max_len ? array_max_len : new_cap;
 
      if (ref_cnt == 1) {
@@ -5527,7 +5527,7 @@ static t_any long_byte_array__insert_to__own(t_thrd_data* const thrd_data, t_any
      u64 const new_len = len + 1;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum byte array size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      t_any result;
@@ -5625,7 +5625,7 @@ static t_any insert_part_to__short_byte_array__long_byte_array__own(t_thrd_data*
      u64 const new_len = array_len + part_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum byte array size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      t_any result;
@@ -5691,7 +5691,7 @@ static t_any insert_part_to__long_byte_array__short_byte_array__own(t_thrd_data*
      u64 const new_len = array_len + part_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum byte array size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      t_any result;
@@ -5763,7 +5763,7 @@ static t_any insert_part_to__long_byte_array__long_byte_array__own(t_thrd_data* 
      u64 const new_len = array_len + part_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum byte array size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      if (array_bytes == part_bytes) {

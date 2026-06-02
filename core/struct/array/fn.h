@@ -119,7 +119,7 @@ static t_any array__concat__own(t_thrd_data* const thrd_data, t_any left, t_any 
      u64 const new_len = left_len + right_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum array size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      if (left_items == right_items) {
@@ -602,7 +602,7 @@ static inline t_any array__append__own(t_thrd_data* const thrd_data, t_any const
 
      if (len == array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum array size has been exceeded.", owner);
 
-     u64 new_cap = (len + 1) * 3 / 2;
+     u64 new_cap = array_growth_formula(len + 1);
      new_cap     = new_cap < 8 ? 7 : (new_cap <= array_max_len ? new_cap : len + 1);
 
      if (ref_cnt == 1) {
@@ -2821,7 +2821,7 @@ static t_any array__replace_part__own(t_thrd_data* const thrd_data, t_any const 
                } else if (dst_new_len > dst_cap) {
                     if (dst_new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum array size has been exceeded.", owner);
 
-                    dst_cap             = dst_new_len * 3 / 2;
+                    dst_cap             = array_growth_formula(dst_new_len);
                     dst_cap             = dst_cap > array_max_len ? dst_new_len : dst_cap;
                     dst_array.qwords[0] = (u64)aligned_realloc(16, (t_any*)dst_array.qwords[0], (dst_cap + 1) * 16);
                     dst_items           = slice_array__get_items(dst_array);
@@ -2913,7 +2913,7 @@ static t_any array__reserve__own(t_thrd_data* const thrd_data, t_any array, u64 
 
      if (current_cap >= minimum_cap) return array;
 
-     u64 new_cap = minimum_cap * 3 / 2;
+     u64 new_cap = array_growth_formula(minimum_cap);
      new_cap     = new_cap > array_max_len ? array_max_len : new_cap;
 
      if (ref_cnt == 1) {
@@ -4607,7 +4607,7 @@ static t_any array__insert_to__own(t_thrd_data* const thrd_data, t_any array, t_
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum array size has been exceeded.", owner);
 
      if (ref_cnt == 1) {
-          u64 new_cap = new_len * 3 / 2;
+          u64 new_cap = array_growth_formula(new_len);
           new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
           u64 const cap = slice_array__get_cap(array);
@@ -4715,7 +4715,7 @@ static t_any array__insert_part_to__own(t_thrd_data* const thrd_data, t_any arra
      u64 const new_len = array_len + part_len;
      if (new_len > array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum array size has been exceeded.", owner);
 
-     u64 new_cap = new_len * 3 / 2;
+     u64 new_cap = array_growth_formula(new_len);
      new_cap     = new_cap <= array_max_len ? new_cap : new_len;
 
      if (array_items == part_items) {

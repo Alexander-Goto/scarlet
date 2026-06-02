@@ -144,7 +144,7 @@ core_string t_any string_from_n_len_sysstr(t_thrd_data* const thrd_data, u64 con
 
           if (string_cap == array_max_len) [[clang::unlikely]] fail_with_call_stack(thrd_data, "The maximum string size has been exceeded.", owner);
 
-          string_cap       = string_cap * 3 / 2 + 7;
+          string_cap       = array_growth_formula(string_cap) + 7;
           string_cap       = string_cap > array_max_len ? array_max_len : string_cap;
           string.qwords[0] = (u64)realloc((u8*)string.qwords[0], string_cap * 3 + 16);
           string_chars     = slice_array__get_items(string);
