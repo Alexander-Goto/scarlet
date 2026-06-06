@@ -372,8 +372,8 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                          else null
 
                          let field = new (@.t_field) {
-                              :object   <= exp_array.last()
-                              :field <= first_token
+                              :object <= exp_array.last()
+                              :field  <= first_token
                          }
                          let exp_array = new (exp_array)[exp_array.len() - 1] <= field
 

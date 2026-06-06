@@ -1,8 +1,8 @@
 let t_field = [obj
      :scar_type = "t_field"
 
-     :object   = :i_expression
-     :field = @.t_token
+     :object = :i_expression
+     :field  = @.t_token
 ]
 
 fn field_independent?(field, independent_consts)
