@@ -58,7 +58,7 @@ fn ir__default_val(left_operand, right_operand, right_ir, code, right_context_co
                [box ir, result_reg, exp_data]
           }
 
-          let is_gconst = left_operand:is_gconst && right_operand:is_gconst
+          let is_gconst = left_operand:gconst? && right_operand:gconst?
 
           let left_possible_types  = left_operand:possible_types
           let right_possible_types = right_operand:possible_types
@@ -70,7 +70,7 @@ fn ir__default_val(left_operand, right_operand, right_ir, code, right_context_co
                :code           <= code
                :ir             <= result_reg
                :possible_types <= possible_types
-               :is_gconst      <= is_gconst
+               :gconst?        <= is_gconst
           }
           let ir = if is_last; ir else ir__assume_type(result_reg, possible_types, ir)
 

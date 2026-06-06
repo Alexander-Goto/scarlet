@@ -27,7 +27,7 @@ fn gconst_to_operand(gconst, exp_data, ir, final_data, dependencies, src_gconsts
                :code           <= gconst:name
                :ir             <= final_gconst:ir[7, final_gconst:ir.len() - 2]
                :possible_types <= final_gconst:possible_types
-               :is_gconst      <= true
+               :gconst?        <= true
           }
 
           [box operand, exp_data, if is_last; ir__raw_return(ir, operand:ir) else ir, final_data, dependencies, src_gconsts]

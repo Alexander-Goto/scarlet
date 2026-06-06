@@ -100,7 +100,7 @@ fn ir__if(predicate_operand, then_operand, then_ir, else_operand, else_ir, code,
                )
           }
 
-          let is_gconst = predicate_is_bool && then_operand:is_gconst && else_operand:is_gconst
+          let is_gconst = predicate_is_bool && then_operand:gconst? && else_operand:gconst?
 
           let then_possible_types = then_operand:possible_types
           let else_possible_types = else_operand:possible_types
@@ -118,7 +118,7 @@ fn ir__if(predicate_operand, then_operand, then_ir, else_operand, else_ir, code,
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= possible_types
-                    :is_gconst      <= is_gconst
+                    :gconst?        <= is_gconst
                }
 
                exp_data, ir, final_data, dependencies, src_gconsts

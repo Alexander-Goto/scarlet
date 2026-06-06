@@ -5,7 +5,7 @@ let t_operand = [obj
      :ir             = null # (string|null)
      :comptime_val   = null # (@t_comptime_val|null)
      :possible_types = null # ([set @string]|null)
-     :is_gconst      = false
+     :gconst?        = false
 ]
 
 fn has_ir!(operand, final_data, dependencies)
@@ -36,7 +36,7 @@ fn maybe_has_type!(operand, type)
      else null
 
 fn inc_ref_cnt(operand, owner_name_ir_const, ir)
-     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:is_gconst || operand.has_type?(@.without_managed_mem_types)) {
+     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:gconst? || operand.has_type?(@.without_managed_mem_types)) {
           if operand.has_type?(@.not_copyable_types)
                error__reuse(operand:code, operand:possible_types)
           else null
@@ -45,11 +45,11 @@ fn inc_ref_cnt(operand, owner_name_ir_const, ir)
      } else ir
 
 fn dec_ref_cnt(operand, ir)
-     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:is_gconst || operand.has_type?(@.without_managed_mem_types)) {
+     if operand:possible_types.null?() || operand:comptime_val.null?() && not (operand:gconst? || operand.has_type?(@.without_managed_mem_types)) {
           ir__raw_ref_cnt__dec(operand:ir, ir)
      } else ir
 
-fn operand_independent?(operand) not operand:comptime_val.null?() || operand:is_gconst
+fn operand_independent?(operand) not operand:comptime_val.null?() || operand:gconst?
 
 fn operand_to_operand(operand, exp_data, ir, final_data, dependencies, src_gconsts, is_last)
      if is_last {

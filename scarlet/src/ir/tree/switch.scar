@@ -108,7 +108,7 @@ fn ir__table_switch(
                c_switch_ir
           )
 
-          let is_gconst = case_idx_always_int && cases_operands.all(true, _:is_gconst)
+          let is_gconst = case_idx_always_int && cases_operands.all(true, _:gconst?)
 
           let possible_types = if cases_operands.any(true, fn (case_operand) case_operand:possible_types.null?())
                null
@@ -124,7 +124,7 @@ fn ir__table_switch(
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= possible_types
-                    :is_gconst      <= is_gconst
+                    :gconst?        <= is_gconst
                }
 
                exp_data, ir, final_data, dependencies, src_gconsts
@@ -238,7 +238,7 @@ fn ir__simple_switch(
                [box ir, exp_data]
           }
 
-          let is_gconst = switch_operand_always_correct && cases_operands.all(true, _:is_gconst)
+          let is_gconst = switch_operand_always_correct && cases_operands.all(true, _:gconst?)
 
           let possible_types = if cases_operands.any(true, fn (case_operand) case_operand:possible_types.null?())
                null
@@ -254,7 +254,7 @@ fn ir__simple_switch(
                     :code           <= code
                     :ir             <= result_reg
                     :possible_types <= possible_types
-                    :is_gconst      <= is_gconst
+                    :gconst?        <= is_gconst
                }
 
                exp_data, ir, final_data, dependencies, src_gconsts
