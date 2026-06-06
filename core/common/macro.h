@@ -14,6 +14,10 @@
 #define MACRO_STR__HELPER(arg) #arg
 #define MACRO_STR(arg) MACRO_STR__HELPER(arg)
 
+#ifdef unreachable
+#undef unreachable
+#endif
+
 #ifdef NDEBUG
 #define assume_aligned(mem, align) __builtin_assume((u64)(mem) % (align) == 0)
 #define assume(cond) __builtin_assume(cond)

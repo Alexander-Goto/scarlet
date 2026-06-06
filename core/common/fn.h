@@ -6,8 +6,17 @@
 #include "macro.h"
 #include "type.h"
 
+static atomic_bool failing = false;
+
+void start_failing() {
+     bool const already_failing = atomic_exchange(&failing, true);
+     if (already_failing) do thrd_sleep(&(struct timespec const){.tv_sec = 60}, nullptr); while (true);
+}
+
 [[gnu::cold, noreturn]]
 static void fail(const char* const msg) {
+     start_failing();
+
      fprintf(stderr, "%s\n", msg);
      exit(EXIT_FAILURE);
 }
@@ -351,6 +360,8 @@ static void call_stack__show(u64 const stack_len, const char* const* const stack
 
 [[gnu::cold, noreturn]]
 static void fail_with_call_stack(t_thrd_data* const thrd_data, const char* const msg, const char* const owner) {
+     start_failing();
+
 #ifdef CALL_STACK
      call_stack__show(thrd_data->call_stack.len, thrd_data->call_stack.stack, stderr);
 #endif
