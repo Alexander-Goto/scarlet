@@ -2315,7 +2315,7 @@ core_basic inline u64 look_2_bytes_from_begin(const u8* const bytes, u64 const b
           v_64_u8 const looked_second_byte_vec = looked_bytes >> 8;
           do {
                v_64_u8 const bytes_vec         = *(const v_64_u8*)&bytes[idx];
-               u64           looked_bytes_mask =
+               u64     const looked_bytes_mask =
                     v_64_bool_to_u64(__builtin_convertvector(bytes_vec == looked_first_byte_vec, v_64_bool)) &
                     v_64_bool_to_u64(__builtin_convertvector(bytes_vec == looked_second_byte_vec, v_64_bool)) >> 1;
 
@@ -2338,7 +2338,7 @@ core_basic inline u64 look_2_bytes_from_begin(const u8* const bytes, u64 const b
           v_32_u8 const low_part  = *(const v_32_u8*)&bytes[idx];
           v_32_u8 const high_part = *(const v_32_u8*)&bytes[bytes_len - 32];
 
-          u64 looked_bytes_mask =
+          u64 const looked_bytes_mask =
                (
                     v_32_bool_to_u32(__builtin_convertvector(low_part == looked_first_byte_vec, v_32_bool)) |
                     (u64)v_32_bool_to_u32(__builtin_convertvector(high_part == looked_first_byte_vec, v_32_bool)) << (remain_bytes - 32)
@@ -2360,7 +2360,7 @@ core_basic inline u64 look_2_bytes_from_begin(const u8* const bytes, u64 const b
           v_16_u8 const low_part  = *(const v_16_u8*)&bytes[idx];
           v_16_u8 const high_part = *(const v_16_u8*)&bytes[bytes_len - 16];
 
-          u32 looked_bytes_mask =
+          u32 const looked_bytes_mask =
           (
                v_16_bool_to_u16(__builtin_convertvector(low_part == looked_first_byte_vec, v_16_bool)) |
                (u32)v_16_bool_to_u16(__builtin_convertvector(high_part == looked_first_byte_vec, v_16_bool)) << (remain_bytes - 16)
@@ -2382,7 +2382,7 @@ core_basic inline u64 look_2_bytes_from_begin(const u8* const bytes, u64 const b
           v_8_u8 const low_part  = *(const v_8_u8*)&bytes[idx];
           v_8_u8 const high_part = *(const v_8_u8*)&bytes[bytes_len - 8];
 
-          u16 looked_bytes_mask =
+          u16 const looked_bytes_mask =
           (
                v_8_bool_to_u8(__builtin_convertvector(low_part == looked_first_byte_vec, v_8_bool)) |
                (u16)v_8_bool_to_u8(__builtin_convertvector(high_part == looked_first_byte_vec, v_8_bool)) << (remain_bytes - 8)
@@ -2895,7 +2895,7 @@ static t_any look_part_in__long_byte_array__byte_array__own(t_thrd_data* const t
      u64       part_ref_cnt;
      if (part.bytes[15] == tid__short_byte_array) {
           part_ref_cnt = 0;
-          part_len = short_byte_array__get_len(part);
+          part_len     = short_byte_array__get_len(part);
 
           switch (part_len) {
           default:
@@ -2939,7 +2939,7 @@ static t_any look_part_in__long_byte_array__byte_array__own(t_thrd_data* const t
           result = idx == (u64)-1 ? null : (const t_any){.structure = {.value = idx, .type = tid__int}};
      } else {
           u64       idx                = 0;
-          u64       edge               = array_len - part_len + 2;
+          u64 const edge               = array_len - part_len + 2;
           u16 const part_first_2_bytes = *(const ua_u16*)part_bytes;
           while (true) {
                u64 const part_in_array_offset = look_2_bytes_from_begin(&array_bytes[idx], edge - idx, part_first_2_bytes);
