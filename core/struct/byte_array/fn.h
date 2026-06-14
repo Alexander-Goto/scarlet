@@ -3414,7 +3414,6 @@ static t_any short_byte_array__print(t_thrd_data* const thrd_data, t_any array, 
      typedef u64 v_4_u64 __attribute__((ext_vector_type(4)));
 
      u8 const str_len = short_byte_array__get_len(array) * 2;
-     memset_inline(&array.bytes[14], 0, 2);
 
      v_32_u8 chars_vec = array.vector.s00112233445566778899aabbccddeeff >> (const v_32_u8)(const v_4_u64)0x0004'0004'0004'0004ull & 0xf;
      chars_vec        += (u8)'0';
