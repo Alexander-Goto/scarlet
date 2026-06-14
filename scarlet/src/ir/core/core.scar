@@ -19598,7 +19598,7 @@ v_64_u8 const looked_first_byte_vec=looked_bytes;
 v_64_u8 const looked_second_byte_vec=looked_bytes>>8;
 do{
 v_64_u8 const bytes_vec=*(const v_64_u8*)&bytes[idx];
-u64 looked_bytes_mask=
+u64 const looked_bytes_mask=
 v_64_bool_to_u64(__builtin_convertvector(bytes_vec==looked_first_byte_vec,v_64_bool))&
 v_64_bool_to_u64(__builtin_convertvector(bytes_vec==looked_second_byte_vec,v_64_bool))>>1;
 if(looked_bytes_mask!=0)return idx+__builtin_ctzll(looked_bytes_mask);
@@ -19614,7 +19614,7 @@ v_32_u8 const looked_first_byte_vec=looked_bytes;
 v_32_u8 const looked_second_byte_vec=looked_bytes>>8;
 v_32_u8 const low_part=*(const v_32_u8*)&bytes[idx];
 v_32_u8 const high_part=*(const v_32_u8*)&bytes[bytes_len-32];
-u64 looked_bytes_mask=
+u64 const looked_bytes_mask=
 (
 v_32_bool_to_u32(__builtin_convertvector(low_part==looked_first_byte_vec,v_32_bool))|
 (u64)v_32_bool_to_u32(__builtin_convertvector(high_part==looked_first_byte_vec,v_32_bool))<<(remain_bytes-32)
@@ -19631,7 +19631,7 @@ v_16_u8 const looked_first_byte_vec=looked_bytes;
 v_16_u8 const looked_second_byte_vec=looked_bytes>>8;
 v_16_u8 const low_part=*(const v_16_u8*)&bytes[idx];
 v_16_u8 const high_part=*(const v_16_u8*)&bytes[bytes_len-16];
-u32 looked_bytes_mask=
+u32 const looked_bytes_mask=
 (
 v_16_bool_to_u16(__builtin_convertvector(low_part==looked_first_byte_vec,v_16_bool))|
 (u32)v_16_bool_to_u16(__builtin_convertvector(high_part==looked_first_byte_vec,v_16_bool))<<(remain_bytes-16)
@@ -19648,7 +19648,7 @@ v_8_u8 const looked_first_byte_vec=looked_bytes;
 v_8_u8 const looked_second_byte_vec=looked_bytes>>8;
 v_8_u8 const low_part=*(const v_8_u8*)&bytes[idx];
 v_8_u8 const high_part=*(const v_8_u8*)&bytes[bytes_len-8];
-u16 looked_bytes_mask=
+u16 const looked_bytes_mask=
 (
 v_8_bool_to_u8(__builtin_convertvector(low_part==looked_first_byte_vec,v_8_bool))|
 (u16)v_8_bool_to_u8(__builtin_convertvector(high_part==looked_first_byte_vec,v_8_bool))<<(remain_bytes-8)
@@ -20097,7 +20097,7 @@ u64 const idx=look_byte_part_from_end__rabin_karp(array_bytes,array_len,part_byt
 result=idx==(u64)-1?null:(const t_any){.structure={.value=idx,.type=tid__int}};
 }else{
 u64 idx=0;
-u64 edge=array_len-part_len+2;
+u64 const edge=array_len-part_len+2;
 u16 const part_first_2_bytes=*(const ua_u16*)part_bytes;
 while(true){
 u64 const part_in_array_offset=look_2_bytes_from_begin(&array_bytes[idx],edge-idx,part_first_2_bytes);
@@ -20483,7 +20483,6 @@ assert(array.bytes[15]==tid__short_byte_array);
 typedef u8 v_32_u8 __attribute__((ext_vector_type(32)));
 typedef u64 v_4_u64 __attribute__((ext_vector_type(4)));
 u8 const str_len=short_byte_array__get_len(array)*2;
-memset_inline(&array.bytes[14],0,2);
 v_32_u8 chars_vec=array.vector.s00112233445566778899aabbccddeeff>>(const v_32_u8)(const v_4_u64)0x0004'0004'0004'0004ull&0xf;
 chars_vec+=(u8)'0';
 chars_vec+=(chars_vec>(u8)'9')&(u8)('a'-':');
@@ -20515,8 +20514,8 @@ return null;
 }
 u64 chars_idx=0;
 u64 byte_idx=0;
-for(;bytes_len-byte_idx>=16;byte_idx+=16){
-v_32_u8 chars_vec=(*(const v_16_u8_a1*)&bytes[byte_idx]).s112233445566778899aabbccddeeff00>>(const v_32_u8)(const v_4_u64)0x0004'0004'0004'0004ull&0xf;
+for(;bytes_len-byte_idx>16;byte_idx+=16){
+v_32_u8 chars_vec=(*(const v_16_u8_a1*)&bytes[byte_idx]).s00112233445566778899aabbccddeeff>>(const v_32_u8)(const v_4_u64)0x0004'0004'0004'0004ull&0xf;
 chars_vec+=(u8)'0';
 chars_vec+=(chars_vec>(u8)'9')&(u8)('a'-':');
 *(v_32_u8*)&chars[chars_idx]=chars_vec;
@@ -20527,14 +20526,19 @@ if(fwrite(chars,1,1024,file)!=1024)[[clang::unlikely]]
 return error__cant_print(thrd_data,owner);
 }
 }
-v_32_u8_a1 chars_vec=(*(const v_16_u8_a1*)&bytes[bytes_len-16]).s112233445566778899aabbccddeeff00>>(const v_32_u8)(const v_4_u64)0x0004'0004'0004'0004ull&0xf;
+v_32_u8_a1 chars_vec=(*(const v_16_u8_a1*)&bytes[bytes_len-16]).s00112233445566778899aabbccddeeff>>(const v_32_u8)(const v_4_u64)0x0004'0004'0004'0004ull&0xf;
 chars_vec+=(u8)'0';
 chars_vec+=(chars_vec>(u8)'9')&(u8)('a'-':');
 u8 const last_bytes_len=bytes_len-byte_idx;
 u32 const last_chars_len=chars_idx+last_bytes_len*2;
-chars_idx=chars_idx==0?0:chars_idx-32+last_bytes_len*2;
-*(v_32_u8_a1*)&chars[chars_idx]=chars_vec;
-if(fwrite(chars,1,last_chars_len,file)!=last_chars_len)[[clang::unlikely]]
+u8*last_chars;
+if(chars_idx==0)
+last_chars=&((u8*)&chars_vec)[32-last_chars_len];
+else{
+*(v_32_u8_a1*)&chars[chars_idx+last_bytes_len*2-32]=chars_vec;
+last_chars=chars;
+}
+if(fwrite(last_chars,1,last_chars_len,file)!=last_chars_len)[[clang::unlikely]]
 return error__cant_print(thrd_data,owner);
 return null;
 }

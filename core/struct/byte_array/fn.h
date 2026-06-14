@@ -3456,8 +3456,8 @@ static t_any long_byte_array__print(t_thrd_data* const thrd_data, t_any const ar
 
      u64 chars_idx = 0;
      u64 byte_idx  = 0;
-     for (; bytes_len - byte_idx >= 16; byte_idx += 16) {
-          v_32_u8 chars_vec = (*(const v_16_u8_a1*)&bytes[byte_idx]).s112233445566778899aabbccddeeff00 >> (const v_32_u8)(const v_4_u64)0x0004'0004'0004'0004ull & 0xf;
+     for (; bytes_len - byte_idx > 16; byte_idx += 16) {
+          v_32_u8 chars_vec = (*(const v_16_u8_a1*)&bytes[byte_idx]).s00112233445566778899aabbccddeeff >> (const v_32_u8)(const v_4_u64)0x0004'0004'0004'0004ull & 0xf;
           chars_vec        += (u8)'0';
           chars_vec        += (chars_vec > (u8)'9') & (u8)('a' - ':');
 
@@ -3471,16 +3471,21 @@ static t_any long_byte_array__print(t_thrd_data* const thrd_data, t_any const ar
           }
      }
 
-     v_32_u8_a1 chars_vec = (*(const v_16_u8_a1*)&bytes[bytes_len - 16]).s112233445566778899aabbccddeeff00 >> (const v_32_u8)(const v_4_u64)0x0004'0004'0004'0004ull & 0xf;
+     v_32_u8_a1 chars_vec = (*(const v_16_u8_a1*)&bytes[bytes_len - 16]).s00112233445566778899aabbccddeeff >> (const v_32_u8)(const v_4_u64)0x0004'0004'0004'0004ull & 0xf;
      chars_vec           += (u8)'0';
      chars_vec           += (chars_vec > (u8)'9') & (u8)('a' - ':');
 
      u8  const last_bytes_len = bytes_len - byte_idx;
      u32 const last_chars_len = chars_idx + last_bytes_len * 2;
-     chars_idx                = chars_idx == 0 ? 0 : chars_idx - 32 + last_bytes_len * 2;
+     u8*       last_chars;
+     if (chars_idx == 0)
+          last_chars = &((u8*)&chars_vec)[32 - last_chars_len];
+     else {
+          *(v_32_u8_a1*)&chars[chars_idx + last_bytes_len * 2 - 32] = chars_vec;
+          last_chars                                                = chars;
+     }
 
-     *(v_32_u8_a1*)&chars[chars_idx] = chars_vec;
-     if (fwrite(chars, 1, last_chars_len, file) != last_chars_len) [[clang::unlikely]]
+     if (fwrite(last_chars, 1, last_chars_len, file) != last_chars_len) [[clang::unlikely]]
           return error__cant_print(thrd_data, owner);
 
      return null;
