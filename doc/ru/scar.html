@@ -337,7 +337,8 @@
                <li>
                     Глобальная константа<br>
                     Получение значения глобальной константы в исходном коде:<br>
-                    <code><span style='color:#d33f3f;'>@<i>имя_модуля</i></span><span style='color:#eaeaea;'>.<i>имя_константы</i></span></code><br><br>
+                    <code><span style='color:#d33f3f;'>@<i>имя_модуля</i></span><span style='color:#eaeaea;'>.<i>имя_константы</i></span></code><br>
+                    Если константа с указанным именем если только в одном модуле, то имя модуля можно не указывать (но символы @. должны быть).<br><br>
 
                     Приоритет - 0.<br><br>
                </li>
@@ -1120,7 +1121,7 @@
 <span style='color:#eaeaea;'>                    } </span><b><span style='color:#cbcc87;'>else</span></b><span style='color:#eaeaea;'> </span><b><span style='color:#ba75df;'>null</span></b>
 <span style='color:#eaeaea;'>               } </span><b><span style='color:#cbcc87;'>else</span></b><span style='color:#eaeaea;'> </span><b><span style='color:#ba75df;'>null</span></b>
 
-<span style='color:#eaeaea;'>               </span><b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (</span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_person) {</span>
+<span style='color:#eaeaea;'>               </span><b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (</span><span style='color:#d33f3f;'>@</span><span style='color:#eaeaea;'>.t_person) {</span>
 <span style='color:#eaeaea;'>                    </span><span style='color:#4e9fea;'>:name</span><span style='color:#eaeaea;'>        &lt;= name</span>
 <span style='color:#eaeaea;'>                    </span><span style='color:#4e9fea;'>:age</span><span style='color:#eaeaea;'>         &lt;= age</span>
 <span style='color:#eaeaea;'>                    </span><span style='color:#4e9fea;'>:reg_time</span><span style='color:#eaeaea;'>    &lt;= time()</span>
@@ -1132,7 +1133,7 @@
 <span style='color:#eaeaea;'>     ]</span>
 <span style='color:#eaeaea;'>]</span>
 
-<b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> main() </span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_person-&gt;register(</span><span style='color:#ee7d7d;'>&quot;Some Man&quot;</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>20</span><span style='color:#eaeaea;'>, </span><b><span style='color:#ba75df;'>null</span></b><span style='color:#eaeaea;'>).println()</span></pre>
+<b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> main() </span><span style='color:#d33f3f;'>@</span><span style='color:#eaeaea;'>.t_person-&gt;register(</span><span style='color:#ee7d7d;'>&quot;Some Man&quot;</span><span style='color:#eaeaea;'>, </span><span style='color:#dcb058;'>20</span><span style='color:#eaeaea;'>, </span><b><span style='color:#ba75df;'>null</span></b><span style='color:#eaeaea;'>).println()</span></pre>
           Для определения типа, в Scar используется функция <b>type</b> из модуля <b>core</b>, если ей передать константу типа <b>obj</b> у которой есть метод <b>core_type</b>,
                то при вызове функции <b>type</b> произойдёт вызов метода <b>core_type</b>.<br>
                Пример:
@@ -1146,7 +1147,7 @@
 <span style='color:#eaeaea;'>     ]</span>
 <span style='color:#eaeaea;'>]</span>
 
-<b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> main() </span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_point.type().println() </span><i><span style='color:#5c6773;'># выведет main.t_point</span></i></pre>
+<b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> main() </span><span style='color:#d33f3f;'>@</span><span style='color:#eaeaea;'>.t_point.type().println() </span><i><span style='color:#5c6773;'># выведет main.t_point</span></i></pre>
           Так же в модуле <b>core</b> есть функции <b>inherits_from</b> и <b>implement</b>, соответственно для наследования и указания того, что прототип реализует интерфейс.<br>
           Подробнее об этих функциях смотрите в документации к модулю <b>core</b>.<br>
           Примеры:
@@ -1172,7 +1173,7 @@
 <span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:phylum</span><span style='color:#eaeaea;'>  = </span><span style='color:#ee7d7d;'>&quot;Chordata&quot;</span>
 <span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:class</span><span style='color:#eaeaea;'>   = </span><span style='color:#ee7d7d;'>&quot;Mammalia&quot;</span>
 <span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:order</span><span style='color:#eaeaea;'>   = </span><span style='color:#ee7d7d;'>&quot;Primates&quot;</span>
-<span style='color:#eaeaea;'>].inherits_from(</span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_life_form)</span>
+<span style='color:#eaeaea;'>].inherits_from(</span><span style='color:#d33f3f;'>@</span><span style='color:#eaeaea;'>.t_life_form)</span>
 
 <b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> t_homo_sapiens = [</span><b><span style='color:#cbcc87;'>obj</span></b>
 <span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:family</span><span style='color:#eaeaea;'>  = </span><span style='color:#ee7d7d;'>&quot;Hominidae&quot;</span>
@@ -1186,7 +1187,7 @@
 <span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:employed?</span><span style='color:#eaeaea;'> = </span><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (person) person</span><span style='color:#4e9fea;'>:profession</span><span style='color:#eaeaea;'> /= </span><span style='color:#ee7d7d;'>&quot;(none)&quot;</span>
 <span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:get_name</span><span style='color:#eaeaea;'>  = _</span><span style='color:#4e9fea;'>:name</span>
 <span style='color:#eaeaea;'>     ]</span>
-<span style='color:#eaeaea;'>].inherits_from(</span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_primate).implement(</span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.i_named)</span>
+<span style='color:#eaeaea;'>].inherits_from(</span><span style='color:#d33f3f;'>@</span><span style='color:#eaeaea;'>.t_primate).implement(</span><span style='color:#d33f3f;'>@</span><span style='color:#eaeaea;'>.i_named)</span>
 
 <b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> i_named = [</span><b><span style='color:#cbcc87;'>obj</span></b>
 <span style='color:#eaeaea;'>     </span><span style='color:#4e9fea;'>:get_name</span><span style='color:#eaeaea;'>     = </span><b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> (_) unreachable()</span>
@@ -1194,7 +1195,7 @@
 <span style='color:#eaeaea;'>]</span>
 
 <b><span style='color:#cbcc87;'>fn</span></b><span style='color:#eaeaea;'> main() {</span>
-<span style='color:#eaeaea;'>     </span><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> mike = </span><b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (</span><span style='color:#d33f3f;'>@main</span><span style='color:#eaeaea;'>.t_homo_sapiens) {</span>
+<span style='color:#eaeaea;'>     </span><b><span style='color:#cbcc87;'>let</span></b><span style='color:#eaeaea;'> mike = </span><b><span style='color:#cbcc87;'>new</span></b><span style='color:#eaeaea;'> (</span><span style='color:#d33f3f;'>@</span><span style='color:#eaeaea;'>.t_homo_sapiens) {</span>
 <span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:name</span><span style='color:#eaeaea;'>       &lt;= </span><span style='color:#ee7d7d;'>&quot;Mike&quot;</span>
 <span style='color:#eaeaea;'>          </span><span style='color:#4e9fea;'>:profession</span><span style='color:#eaeaea;'> &lt;= </span><span style='color:#ee7d7d;'>&quot;Carpenter&quot;</span>
 <span style='color:#eaeaea;'>     }</span>
