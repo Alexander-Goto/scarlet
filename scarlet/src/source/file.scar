@@ -408,9 +408,10 @@ fn file__get_str_or_chr_token(file, token, open_char_co_ords, open_char) {
      let [box file, text, co_ords] = loop([box file, text, new (open_char_co_ords):row => _ + 1], fn (state) {
           let [box file, text, co_ords] = state
 
-          if file.empty?()
+          if file.empty?() {
+               let open_char = open_char.to_string()
                error__no_end_id(new (open_char_co_ords):text <= open_char, open_char)
-          else null
+          } else null
 
           let current_char = file.first()
           let file_tail    = file.drop(1)
