@@ -20,7 +20,7 @@ static void init_app(t_thrd_data** const thrd_data, int const argc, const char* 
      (*thrd_data)->free_breakers = breakers_mask;
 
      u64 rnd_nums[5];
-     platform__init_rnd_nums(rnd_nums);
+     platform__init_rnd_nums(rnd_nums, 5);
 
      memcpy_inline(&(*thrd_data)->rnd_num_src, rnd_nums, 32);
      static_rnd_num = rnd_nums[4];

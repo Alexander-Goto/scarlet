@@ -17619,11 +17619,11 @@ __builtin_unreachable();
 }
 #endif
 #ifdef __linux__
-static void platform__init_rnd_nums(u64*const rnd_nums){
+static void platform__init_rnd_nums(u64*const rnd_nums,u8 const len){
 FILE*const file=fopen(\"/dev/urandom\",\"r\");
 if(file==nullptr)[[clang::unlikely]]fail(\"Can't open the file \\x22/dev/urandom\\x22.\");
 setvbuf(file,nullptr,_IONBF,0);
-if(fread(rnd_nums,sizeof(u64),5,file)!=5)[[clang::unlikely]]fail(\"Can't read the file \\x22/dev/urandom\\x22.\");
+if(fread(rnd_nums,sizeof(u64),len,file)!=len)[[clang::unlikely]]fail(\"Can't read the file \\x22/dev/urandom\\x22.\");
 fclose(file);
 }
 #else
@@ -17637,7 +17637,7 @@ static void init_app(t_thrd_data**const thrd_data,int const argc,const char*cons
 (*thrd_data)->free_boxes=boxes_mask;
 (*thrd_data)->free_breakers=breakers_mask;
 u64 rnd_nums[5];
-platform__init_rnd_nums(rnd_nums);
+platform__init_rnd_nums(rnd_nums,5);
 memcpy_inline(&(*thrd_data)->rnd_num_src,rnd_nums,32);
 static_rnd_num=rnd_nums[4];
 app_args_len=argc-1;
@@ -39731,11 +39731,7 @@ mtx_unlock(&sub_thrds_mtx.mtx);
 t_thrd_data*const new_thrd_data=aligned_alloc(alignof(t_thrd_data),sizeof(t_thrd_data));
 new_thrd_data->free_boxes=boxes_mask;
 new_thrd_data->free_breakers=breakers_mask;
-FILE*const file=fopen(\"/dev/urandom\",\"r\");
-if(file==nullptr)[[clang::unlikely]]fail(\"Can't open the file \\x22/dev/urandom\\x22.\");
-setvbuf(file,nullptr,_IONBF,0);
-if(fread(&new_thrd_data->rnd_num_src,sizeof(u64),4,file)!=4)[[clang::unlikely]]fail(\"Can't read the file \\x22/dev/urandom\\x22.\");
-fclose(file);
+platform__init_rnd_nums((u64*)&new_thrd_data->rnd_num_src,4);
 new_thrd_data->linear_allocator=(const t_linear_allocator){.mem=nullptr,.states=nullptr};
 #ifdef CALL_STACK
 new_thrd_data->call_stack.len=thrd_data->call_stack.len;

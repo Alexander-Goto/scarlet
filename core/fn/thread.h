@@ -9,6 +9,7 @@
 #include "../multithread/fn.h"
 #include "../multithread/type.h"
 #include "../multithread/var.h"
+#include "../platform/rnd.h"
 #include "../struct/common/fn_struct.h"
 #include "../struct/holder/basic.h"
 
@@ -84,13 +85,7 @@ core t_any McoreFNthread(t_thrd_data* const thrd_data, const t_any* const args) 
      new_thrd_data->free_boxes        = boxes_mask;
      new_thrd_data->free_breakers     = breakers_mask;
 
-     FILE* const file = fopen("/dev/urandom", "r");
-     if (file == nullptr) [[clang::unlikely]] fail("Can't open the file \x22/dev/urandom\x22.");
-
-     setvbuf(file, nullptr, _IONBF, 0);
-     if (fread(&new_thrd_data->rnd_num_src, sizeof(u64), 4, file) != 4) [[clang::unlikely]] fail("Can't read the file \x22/dev/urandom\x22.");
-     fclose(file);
-
+     platform__init_rnd_nums((u64*)&new_thrd_data->rnd_num_src, 4);
      new_thrd_data->linear_allocator = (const t_linear_allocator){.mem = nullptr, .states = nullptr};
 
 #ifdef CALL_STACK
