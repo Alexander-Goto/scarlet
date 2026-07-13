@@ -3,7 +3,12 @@ fn ir__raw_const(prefix, suffix, final_data, dependencies) {
      if not name.null?()
           [box name, final_data, new (dependencies):ir_consts => _.append(name)]
      else {
-          let name = "IC" ++ @.compiled_module_name ++ "S" ++ final_data:ir_consts.len().format_int(32, false)
+          let maybe_uniq_id = hash(suffix, hash(prefix, @.static_rnd)) & 0x3f'ffff
+          let name          = "IC" ++ @.compiled_module_name ++ "H" ++ maybe_uniq_id.format_int(32, false)
+          let name          = if name.key_of?(final_data:ir_consts)
+               "IC" ++ @.compiled_module_name ++ "S" ++ final_data:ir_consts.len().format_int(32, false)
+          else name
+
           [box
                name
 

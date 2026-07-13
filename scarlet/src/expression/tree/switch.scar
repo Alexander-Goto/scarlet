@@ -38,9 +38,13 @@ fn switch_exp_to_operand(switch_, last_use_ids, contexts, lambdas_data, unused_d
      switch_operand.maybe_has_type!(@.all_hash_map_key_types)
 
      let keyword_coded_id = switch_:keyword.get_token_id().format_int(32, false)
-     let switch_name      = "_SWTB_" ++ exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "_" ++ keyword_coded_id
-     let table_ir_name    = "M" ++ @.compiled_module_name ++ "GC" ++ switch_name
-     let table_name       = "switch (" ++ switch_:keyword:file ++ ", " ++ switch_:keyword:line.to_string() ++ ", " ++ switch_:keyword:row.to_string() ++ ")"
+     let maybe_uniq_id    = hash(switch_operand:code:text, hash(exp_data:owner_id, exp_data:ir_reg_num)) & 0xffff
+     let switch_name      = "_SWTB_" ++ exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "H" ++ maybe_uniq_id.format_int(32, false)
+     let switch_name      = if final_data:gconsts[switch_name][@.compiled_module_name].null?()
+          switch_name
+     else "_SWTB_" ++ exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "S" ++ keyword_coded_id
+     let table_ir_name = "M" ++ @.compiled_module_name ++ "GC" ++ switch_name
+     let table_name    = "switch (" ++ switch_:keyword:file ++ ", " ++ switch_:keyword:line.to_string() ++ ", " ++ switch_:keyword:row.to_string() ++ ")"
 
      let [box owner_name_ir_const, final_data, dependencies] = ir__raw_const("static const char*const ", "=\"" ++ table_name ++ "\";\n", final_data, dependencies)
 
