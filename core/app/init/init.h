@@ -15,6 +15,9 @@
 
 [[clang::noinline]]
 static void init_app(t_thrd_data** const thrd_data, int const argc, const char* const* const argv, const char* const* const envp) {
+     const char* const fake_rnd_env_var = getenv("SCAR__FAKE_RND");
+     fake_rnd_enable                    = fake_rnd_env_var != nullptr && fake_rnd_env_var[0] == '1' && fake_rnd_env_var[1] == 0;
+
      *thrd_data                  = aligned_alloc(alignof(t_thrd_data), sizeof(t_thrd_data));
      (*thrd_data)->free_boxes    = boxes_mask;
      (*thrd_data)->free_breakers = breakers_mask;

@@ -11,3 +11,4 @@ static u64                static_rnd_num;
 static char*              sys_locale;
 static u32                sys_lang;
 static bool               sys_enc_is_utf8 = false;
+static bool               fake_rnd_enable = false;
