@@ -1,6 +1,6 @@
 fn load_sources(file_names, final_data) {
      let file_names_len = file_names.len()
-     let threads_num    = min(@.cpu_cores_num, file_names_len)
+     let threads_num    = min(@.user_cmd:max_threads <? @.cpu_cores_num, file_names_len)
 
      let structs = if threads_num == 1
           file_names.foldl([array], fn (structs, file_name) {

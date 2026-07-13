@@ -6,6 +6,7 @@ let t_user_cmd = [obj
      :modules     = [array] # [array @string*]
      :sources     = [array] # [array @string*]
      :out         = ""
+     :max_threads = null
 ]
 
 fn get_user_cmd() {
@@ -41,6 +42,8 @@ fn get_user_cmd() {
                if cmd:out.empty?()
                     [box cmd, :out]
                else error__flag_set_twice(arg)
+          case "-mt", "--max-threads":
+               [box cmd, :max_threads]
           default:
                if arg.first() == '-'
                     error__unknown_flag(arg)
@@ -63,6 +66,13 @@ fn get_user_cmd() {
                          [box new (cmd):sources => _.append(arg), :sources]
                     case :out:
                          [box new (cmd):out <= arg, :nothing]
+                    case :max_threads: {
+                         let max_threads = arg.to_int()
+                         if max_threads.null?() || max_threads < 1
+                              error__incorrect_threads_num()
+                         else null
+                         [box new (cmd):max_threads <= max_threads, :nothing]
+                    }
                     default:
                          error__unknown_flag(arg)
      })

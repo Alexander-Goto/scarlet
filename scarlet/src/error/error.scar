@@ -222,3 +222,6 @@ fn error__two_modules_with_same_name(name) fail("Error: Two modules have the nam
 
 `cold`
 fn error__incorrect_module_file(file_name) fail("Error: File \"" ++ file_name ++ "\" is not a valid module.")
+
+`cold`
+fn error__incorrect_threads_num() fail("Error: The number of threads must be greater than zero.")
