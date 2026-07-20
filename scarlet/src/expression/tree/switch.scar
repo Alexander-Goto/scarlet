@@ -3,7 +3,7 @@ let t_switch_exp = [obj
 
      :keyword     = @.t_token
      :switch_exp  = :i_expression
-     :cases       = [array] # [array [obj :variants = [array @i_expression*], :case_exp = @i_expression]*]
+     :cases       = [array] # [array [obj :variants = [array @i_expression*], :case_exp = @i_expression]+]
      :default_exp = :i_expression
 ]
 
