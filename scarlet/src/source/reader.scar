@@ -365,12 +365,12 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
           }
           default:
                switch first_token:text.first()
-               case ':':
-                    if prev_is_operand {
-                         if not first_token:text.drop(1).src_token_valid?()
-                              error__invalid_token(first_token)
-                         else null
+               case ':': {
+                    if not first_token:text.drop(1).src_token_valid?()
+                         error__invalid_token(first_token)
+                    else null
 
+                    if prev_is_operand {
                          let field = new (@.t_field) {
                               :object <= exp_array.last()
                               :field  <= first_token
@@ -378,13 +378,8 @@ fn read_exp(reader) loop([box [array], false, reader], fn (state) {
                          let exp_array = new (exp_array)[exp_array.len() - 1] <= field
 
                          [box exp_array, true, reader]
-                    } else {
-                         if first_token:text.len() == 1
-                              error__not_expected_token(first_token, null)
-                         else null
-
-                         [box exp_array.append(new (@.t_token_in_exp):value <= first_token), true, reader]
-                    }
+                    } else [box exp_array.append(new (@.t_token_in_exp):value <= first_token), true, reader]
+               }
                case '@': {
                     if prev_is_operand
                          error__not_expected_token(first_token, null)
