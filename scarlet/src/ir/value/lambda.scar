@@ -26,8 +26,12 @@ fn ir__lambda(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_sub
           }
      })
 
-     let lambda_code     = new (lambda:keyword):text <= "fn (" ++ params.join(", ") ++ ")"
-     let lambda_name     = owner_exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "ID" ++ lambda:keyword.get_token_id().to_string()
+     let lambda_code   = new (lambda:keyword):text <= "fn (" ++ params.join(", ") ++ ")"
+     let maybe_uniq_id = hash(lambda_code:text, hash(owner_exp_data:owner_id, owner_exp_data:ir_reg_num)) & 0x3f'ffff
+     let lambda_name   = owner_exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "HI" ++ maybe_uniq_id.format_int(32, false)
+     let lambda_name   = if final_data:fns[lambda_name][@.compiled_module_name].null?()
+          lambda_name
+     else owner_exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "ID" ++ lambda:keyword.get_token_id().to_string()
      let lambda_ir_name  = "M" ++ @.compiled_module_name ++ "LF" ++ lambda_name
      let lambda_msg_name = "lambda (" ++ lambda:keyword:file ++ ", " ++ lambda:keyword:line.to_string() ++ ", " ++ lambda:keyword:row.to_string() ++ ")"
 
@@ -135,8 +139,12 @@ fn ir__closure(lambda, owner_exp_data, body_last_use_ids, body_contexts, body_su
           }
      })
 
-     let lambda_code     = new (lambda:keyword):text <= "fn (" ++ params.join(", ") ++ ")"
-     let lambda_name     = owner_exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "ID" ++ lambda:keyword.get_token_id().to_string()
+     let lambda_code   = new (lambda:keyword):text <= "fn (" ++ params.join(", ") ++ ")"
+     let maybe_uniq_id = hash(lambda_code:text, hash(owner_exp_data:owner_id, owner_exp_data:ir_reg_num)) & 0x3f'ffff
+     let lambda_name   = owner_exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "HI" ++ maybe_uniq_id.format_int(32, false)
+     let lambda_name   = if final_data:fns[lambda_name][@.compiled_module_name].null?()
+          lambda_name
+     else owner_exp_data:owner_id.drop(@.compiled_module_name.len() + 1) ++ "ID" ++ lambda:keyword.get_token_id().to_string()
      let lambda_ir_name  = "M" ++ @.compiled_module_name ++ (if is_short; "LF" else "CL") ++ lambda_name
      let lambda_msg_name = "lambda (" ++ lambda:keyword:file ++ ", " ++ lambda:keyword:line.to_string() ++ ", " ++ lambda:keyword:row.to_string() ++ ")"
 
