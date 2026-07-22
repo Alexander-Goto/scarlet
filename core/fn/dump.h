@@ -304,7 +304,7 @@ core_basic void dump__half_own(t_thrd_data* const thrd_data, t_any* const result
           u8           const params_cap   = fn__get_params_cap(arg);
           u8           const params_len   = common_fn__get_params_len(arg);
           const t_any* const args         = fn__get_args(thrd_data, arg);
-          u16          const borrowed_len = fn__get_borrowed_len(arg);
+          u32          const borrowed_len = fn__get_borrowed_len(arg);
           const t_any* const borrowed     = fn__get_borrowed(thrd_data, arg);
 
           if (params_cap == 0) {
@@ -327,7 +327,7 @@ core_basic void dump__half_own(t_thrd_data* const thrd_data, t_any* const result
                dump__add_string__own(thrd_data, result__own, (const t_any){.bytes = ")\n"}, owner);
           }
 
-          for (u16 idx = 0; idx < borrowed_len; idx += 1)
+          for (u32 idx = 0; idx < borrowed_len; idx += 1)
                dump__half_own(thrd_data, result__own, borrowed[idx], sub_level, sub_level + 1, owner);
 
           dump__add_string__own(thrd_data, result__own, dump__level_spaces(thrd_data, sub_level - 1, owner), owner);
