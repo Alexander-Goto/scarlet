@@ -19,7 +19,10 @@ static u64 int__sqrt(u64 const integer) {
      assert((i64)integer >= 0);
 
      if (integer < 0x20'0000'0440'48a3) return __builtin_sqrt((double)(i64)integer);
-     if (sizeof(long double) >= 80) return __builtin_sqrtl((long double)(i64)integer);
+
+#if LDBL_MANT_DIG >= 64
+     return __builtin_sqrtl((long double)(i64)integer);
+#endif
 
      u64 left  = 9'490'6265ull;
      u64 right = integer + 1;

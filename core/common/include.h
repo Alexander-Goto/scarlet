@@ -14,6 +14,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <float.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <locale.h>
