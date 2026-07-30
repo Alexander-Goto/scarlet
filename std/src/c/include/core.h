@@ -311,11 +311,11 @@ static bool type_is_eq_and_common(t_type_id type) {
      return (type != tid__null) & (type != tid__short_fn) & (type != tid__box) & (type != tid__breaker) & (type != tid__error) & (type != tid__fn) & (type != tid__thread) & (type != tid__channel);
 }
 
-extern void start_failing();
+extern void initiate_exit();
 
 [[gnu::cold, noreturn]]
 static void fail(const char* const msg) {
-     start_failing();
+     initiate_exit();
 
      fprintf(stderr, "%s\n", msg);
      exit(EXIT_FAILURE);
@@ -1165,7 +1165,7 @@ static void call_stack__show(u64 const stack_len, const char* const* const stack
 
 [[gnu::cold, noreturn]]
 static void fail_with_call_stack(t_thrd_data* const thrd_data, const char* const msg, const char* const owner) {
-     start_failing();
+     initiate_exit();
 
      #ifdef CALL_STACK
      call_stack__show(thrd_data->call_stack.len, thrd_data->call_stack.stack, stderr);
