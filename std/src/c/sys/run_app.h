@@ -545,6 +545,7 @@ t_any MstdFNrun_app(t_thrd_data* const thrd_data, const t_any* const args) {
 
      close(status_fildes[0]);
      if (fcntl(status_fildes[1], F_SETFD, FD_CLOEXEC) == -1) {
+          initiate_exit();
           write(status_fildes[1], stderr_fildes, 1);
           exit(EXIT_FAILURE);
      }
@@ -569,6 +570,7 @@ t_any MstdFNrun_app(t_thrd_data* const thrd_data, const t_any* const args) {
 
      execve(c_app_file, c_args, c_env_vars);
 
+     initiate_exit();
      write(status_fildes[1], stderr_fildes, 1);
      exit(EXIT_FAILURE);
 
