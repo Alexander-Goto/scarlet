@@ -7,6 +7,6 @@
 
 [[clang::noinline, noreturn]]
 core t_any McoreFNexit(t_thrd_data* const thrd_data, const t_any*) {
-     start_failing();
+     initiate_exit();
      exit(EXIT_SUCCESS);
 }

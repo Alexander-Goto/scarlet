@@ -91,7 +91,7 @@ core_error t_any error__new__own(t_thrd_data* const thrd_data, const char* const
 
 [[gnu::cold, clang::noinline, noreturn]]
 core_error void error__show_and_exit(t_thrd_data* const thrd_data, t_any const error_arg) {
-     start_failing();
+     initiate_exit();
 
      assert(error_arg.bytes[15] == tid__error);
 

@@ -6,7 +6,7 @@
 
 [[gnu::cold, noreturn]]
 static void Ounreachable(t_thrd_data* const thrd_data, const char* const file, u64 const line, u64 const row) {
-     start_failing();
+     initiate_exit();
 
 #ifdef CALL_STACK
      call_stack__show(thrd_data->call_stack.len, thrd_data->call_stack.stack, stderr);

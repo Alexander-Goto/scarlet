@@ -13,7 +13,7 @@ core t_any McoreFNfail(t_thrd_data* const thrd_data, const t_any* args) {
      t_any msg = args[0];
      switch (msg.bytes[15]) {
      case tid__short_string: case tid__string: {
-          start_failing();
+          initiate_exit();
 
 #ifdef DEBUG
           call_stack__show(thrd_data->call_stack.len, thrd_data->call_stack.stack, stderr);

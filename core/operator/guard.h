@@ -7,7 +7,7 @@
 
 static inline t_any Oguard(t_thrd_data* const thrd_data, t_any const guard_exp, const char* const file, u64 const line, u64 const row) {
      if (guard_exp.bytes[15] != tid__bool || guard_exp.bytes[0] == 0) [[clang::unlikely]] {
-          start_failing();
+          initiate_exit();
 
 #ifdef CALL_STACK
           call_stack__show(thrd_data->call_stack.len, thrd_data->call_stack.stack, stderr);

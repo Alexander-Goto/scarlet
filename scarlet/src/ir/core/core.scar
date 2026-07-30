@@ -319,13 +319,13 @@ memcpy_inline(&result,&mask,8);
 return result;
 }
 static atomic_bool failing=false;
-void start_failing(){
+void initiate_exit(){
 bool const already_failing=atomic_exchange(&failing,true);
 if(already_failing)do thrd_sleep(&(struct timespec const){.tv_sec=60},nullptr);while(true);
 }
 [[gnu::cold,noreturn]]
 static void fail(const char*const msg){
-start_failing();
+initiate_exit();
 fprintf(stderr,\"%s\\n\",msg);
 exit(EXIT_FAILURE);
 }
@@ -605,7 +605,7 @@ fprintf(out,\"\\n\");
 #endif
 [[gnu::cold,noreturn]]
 static void fail_with_call_stack(t_thrd_data*const thrd_data,const char*const msg,const char*const owner){
-start_failing();
+initiate_exit();
 #ifdef CALL_STACK
 call_stack__show(thrd_data->call_stack.len,thrd_data->call_stack.stack,stderr);
 #endif
@@ -12201,7 +12201,7 @@ return error__invalid_type(thrd_data,owner);
 }
 [[gnu::cold,clang::noinline,noreturn]]
 core_error void error__show_and_exit(t_thrd_data*const thrd_data,t_any const error_arg){
-start_failing();
+initiate_exit();
 assert(error_arg.bytes[15]==tid__error);
 const t_error*const error=(const t_error*)error_arg.qwords[0];
 assert(error->msg.bytes[15]==tid__string||error->msg.bytes[15]==tid__short_string);
@@ -32326,7 +32326,7 @@ return result;
 }
 [[clang::noinline,noreturn]]
 core t_any McoreFNexit(t_thrd_data*const thrd_data,const t_any*){
-start_failing();
+initiate_exit();
 exit(EXIT_SUCCESS);
 }
 core t_any McoreFNexp(t_thrd_data*const thrd_data,const t_any*const args){
@@ -32453,7 +32453,7 @@ const char*const owner=\"function - core.fail\";
 t_any msg=args[0];
 switch(msg.bytes[15]){
 case tid__short_string:case tid__string:{
-start_failing();
+initiate_exit();
 #ifdef DEBUG
 call_stack__show(thrd_data->call_stack.len,thrd_data->call_stack.stack,stderr);
 #endif
@@ -41409,7 +41409,7 @@ return exp;
 }
 static inline t_any Oguard(t_thrd_data*const thrd_data,t_any const guard_exp,const char*const file,u64 const line,u64 const row){
 if(guard_exp.bytes[15]!=tid__bool||guard_exp.bytes[0]==0)[[clang::unlikely]]{
-start_failing();
+initiate_exit();
 #ifdef CALL_STACK
 call_stack__show(thrd_data->call_stack.len,thrd_data->call_stack.stack,stderr);
 #endif
@@ -42173,7 +42173,7 @@ return error;
 }
 [[gnu::cold,noreturn]]
 static void Ounreachable(t_thrd_data*const thrd_data,const char*const file,u64 const line,u64 const row){
-start_failing();
+initiate_exit();
 #ifdef CALL_STACK
 call_stack__show(thrd_data->call_stack.len,thrd_data->call_stack.stack,stderr);
 #endif
